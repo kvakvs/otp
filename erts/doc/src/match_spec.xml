@@ -11,7 +11,7 @@
       Licensed under the Apache License, Version 2.0 (the "License");
       you may not use this file except in compliance with the License.
       You may obtain a copy of the License at
- 
+
           http://www.apache.org/licenses/LICENSE-2.0
 
       Unless required by applicable law or agreed to in writing, software
@@ -134,6 +134,7 @@
       <item>ActionFunction ::= <c><![CDATA[set_seq_token]]></c> |
         <c><![CDATA[get_seq_token]]></c> | <c><![CDATA[message]]></c> |
         <c><![CDATA[return_trace]]></c> | <c><![CDATA[exception_trace]]></c> |
+        <c><![CDATA[process_backtrace]]></c> |
         <c><![CDATA[process_dump]]></c> | <c><![CDATA[enable_trace]]></c> |
         <c><![CDATA[disable_trace]]></c> | <c><![CDATA[trace]]></c> |
         <c><![CDATA[display]]></c> | <c><![CDATA[caller]]></c> |
@@ -316,7 +317,7 @@
           <p>As a special case, <c><![CDATA[{message, false}]]></c> disables
             sending of trace messages ('call' and 'return_to') for this function
             call, just like if the match specification had not matched.
-            This can be useful if only the side effects of 
+            This can be useful if only the side effects of
             the <c><![CDATA[MatchBody]]></c> part are desired.</p>
           <p>Another special case is <c><![CDATA[{message, true}]]></c>, which
             sets the default behavior, as if the function had no match
@@ -351,6 +352,12 @@
             an <c><![CDATA[exception_from]]></c> trace message is generated,
             regardless of the exception is caught or not.</p>
         </item>
+        <tag><c>process_backtrace:</c></tag>
+        <item>
+          <p>Returns some textual information about the current process's stack
+            as a binary. Takes no arguments and is only allowed in the
+            <c><![CDATA[MatchBody]]></c> part when tracing.</p>
+        </item>
         <tag><c>process_dump</c></tag>
         <item>
           <p>Returns some textual information about
@@ -371,7 +378,7 @@
             process <c><![CDATA[P1]]></c> gets its trace messages sent to the
             same tracer as the process executing the statement uses.
             <c><![CDATA[P1]]></c> <em>cannot</em> be one of the atoms
-            <c><![CDATA[all]]></c>, <c><![CDATA[new]]></c> or 
+            <c><![CDATA[all]]></c>, <c><![CDATA[new]]></c> or
             <c><![CDATA[existing]]></c> (unless they are registered names).
             <c><![CDATA[P2]]></c> <em>cannot</em> be
             <c><![CDATA[cpu_timestamp]]></c> or <c><![CDATA[tracer]]></c>.</p>
@@ -732,7 +739,7 @@
 
     <code type="none"><![CDATA[
 [{['$1', '$2', '$3'],
-  [{'orelse', 
+  [{'orelse',
       {'=:=', '$3', {{'$1','$2'}}},
       {'and', 
         {'=:=', '$1', {hd, '$3'}},

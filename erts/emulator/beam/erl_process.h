@@ -1866,6 +1866,7 @@ void erts_cleanup_empty_process(Process* p);
 void erts_debug_verify_clean_empty_process(Process* p);
 #endif
 void erts_stack_dump(fmtfn_t to, void *to_arg, Process *);
+void erts_stack_dump_abbreviated(fmtfn_t to, void *to_arg, Process *);
 void erts_limited_stack_trace(fmtfn_t to, void *to_arg, Process *);
 void erts_program_counter_info(fmtfn_t to, void *to_arg, Process *);
 void erts_print_scheduler_info(fmtfn_t to, void *to_arg, ErtsSchedulerData *esdp);

@@ -154,6 +154,8 @@ get_default_matchspecs(funcs) ->
       "fun(_) -> exception_trace() end"},
      {"Message Caller", [{'_', [], [{message,{caller}}]}],
       "fun(_) -> message(caller()) end"},
+     {"Message Backtrace", [{'_', [], [{message,{process_backtrace}}]}],
+      "fun(_) -> message(process_backtrace()) end"},
      {"Message Dump", [{'_', [], [{message,{process_dump}}]}],
       "fun(_) -> message(process_dump()) end"}];
 get_default_matchspecs(send) ->

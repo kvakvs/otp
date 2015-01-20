@@ -609,7 +609,8 @@ do {									\
 
 static void exec_misc_ops(ErtsRunQueue *);
 static void print_function_from_pc(fmtfn_t to, void *to_arg, BeamInstr* x);
-static int stack_element_dump(fmtfn_t to, void *to_arg, Eterm* sp, int yreg);
+static int stack_element_dump(fmtfn_t to, void *to_arg, Process* p, Eterm* sp,
+        int yreg, int abbreviated);
 
 static void aux_work_timeout(void *unused);
 static void aux_work_timeout_early_init(int no_schedulers);
@@ -3431,7 +3432,7 @@ static void check_sleepers_list(ErtsSchedulerSleepList *sl,
         erts_smp_spin_lock(&sl->lock);
 
     ERTS_ASSERT(!find_not || (!find_not->next && !find_not->prev));
-    
+
     last_out = sl->list;
     if (last_out) {
         ErtsSchedulerSleepInfo *tmp = last_out;
@@ -3444,7 +3445,7 @@ static void check_sleepers_list(ErtsSchedulerSleepList *sl,
             if (tmp == find)
                 found = !0;
             tmp = tmp->next;
-            
+
         } while (tmp != last_out);
     }
     ERTS_ASSERT(!find || found);
@@ -3635,7 +3636,7 @@ scheduler_wait(int *fcalls, ErtsSchedulerData *esdp, ErtsRunQueue *rq)
 	    erts_thr_progress_active(esdp, thr_prgr_active = 1);
 	    sched_wall_time_change(esdp, 1);
         }
-        
+
 #ifdef ERTS_DIRTY_SCHEDULERS
         if (ERTS_RUNQ_IX_IS_DIRTY(rq->ix)) {
             erts_smp_spin_lock(&rq->sleepers.lock);
@@ -3659,7 +3660,7 @@ scheduler_wait(int *fcalls, ErtsSchedulerData *esdp, ErtsRunQueue *rq)
             erts_smp_spin_unlock(&rq->sleepers.lock);
         }
 #endif
-        
+
 	erts_smp_runq_lock(rq);
 	sched_active(esdp->no, rq);
 
@@ -6470,7 +6471,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
 	    erts_alloc_permanent_cache_aligned(
 		ERTS_ALC_T_SCHDLR_DATA,
 		dirty_scheds * sizeof(ErtsAlignedDirtyShadowProcess));
-						   
+
 	erts_aligned_dirty_cpu_scheduler_data =
 	    erts_alloc_permanent_cache_aligned(
 		ERTS_ALC_T_SCHDLR_DATA,
@@ -7782,7 +7783,7 @@ msb_scheduler_type_switch(ErtsSchedType sched_type,
 
         /*
          * Make sure to alternate between dirty types
-         * inbetween normal execution if highest 
+         * inbetween normal execution if highest
          * priorities are equal.
          */
 
@@ -7960,7 +7961,7 @@ suspend_scheduler(ErtsSchedulerData *esdp)
     if (sched_type != ERTS_SCHED_NORMAL)
         ERTS_HDBG_CHK_SLEEP_LIST(&esdp->run_queue->sleepers, !0, NULL, ssi);
 #endif
-    
+
     if (erts_smp_atomic32_read_nob(&ssi->flags) & ERTS_SSI_FLG_MSB_EXEC) {
         ASSERT(no == 1);
         if (!msb_scheduler_type_switch(sched_type, esdp, no))
@@ -9428,7 +9429,7 @@ pid2proc_not_running(Process *c_p, ErtsProcLocks c_p_locks,
     }
 
  done:
-	
+
     if (rp && rp != ERTS_PROC_LOCK_BUSY && !(pid_locks & ERTS_PROC_LOCK_STATUS))
 	erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_STATUS);
     if (unlock_c_p_status)
@@ -10919,7 +10920,7 @@ Process *erts_schedule(ErtsSchedulerData *esdp, Process *p, int calls)
 		   ? (state & (ERTS_PSFLG_DIRTY_CPU_PROC
 			       | ERTS_PSFLG_DIRTY_ACTIVE_SYS))
 		   : (rq == ERTS_DIRTY_IO_RUNQ
-		      && (state & ERTS_PSFLG_DIRTY_IO_PROC)));	    
+		      && (state & ERTS_PSFLG_DIRTY_IO_PROC)));
 	}
 #endif
 
@@ -11022,7 +11023,7 @@ Process *erts_schedule(ErtsSchedulerData *esdp, Process *p, int calls)
 	}
 
 	p->fcalls = reds;
-	    
+
 	ERTS_SMP_CHK_HAVE_ONLY_MAIN_PROC_LOCK(p);
 
 	/* Never run a suspended process */
@@ -11542,7 +11543,7 @@ erts_execute_dirty_system_task(Process *c_p)
 
     stasks = c_p->dirty_sys_tasks;
     c_p->dirty_sys_tasks = NULL;
-    
+
     while (stasks) {
 	Eterm st_res;
 	ErtsProcSysTask *st = stasks;
@@ -11600,7 +11601,7 @@ dispatch_system_task(Process *c_p, erts_aint_t fail_state,
 	ERTS_INTERNAL_ERROR("Non-dispatchable system task");
 	break;
     }
-	
+
     ERTS_BIF_PREP_RET(ret, am_ok);
 
     /*
@@ -13430,7 +13431,7 @@ send_exit_signal(Process *c_p,		/* current process if and only
 		if (need_locks
 		    && erts_smp_proc_trylock(rp, need_locks) == EBUSY) {
 		    /* ... but we havn't got all locks on it ... */
-		    save_pending_exiter(rp, NULL); 
+		    save_pending_exiter(rp, NULL);
 		    /*
 		     * The pending exit will be discovered when next
 		     * process is scheduled in
@@ -13466,7 +13467,7 @@ send_exit_signal(Process *c_p,		/* current process if and only
 		set_proc_exiting(rp, state, rsn_cpy, bp);
 	    }
 	    else { /* Process running... */
- 
+
 		/*
 		 * The pending exit will be discovered when the process
 		 * is scheduled out if not discovered earlier.
@@ -13688,7 +13689,7 @@ static void doit_exit_monitor(ErtsMonitor *mon, void *vpcontext)
 	    /* else: demonitor while we exited, i.e. do nothing... */
 	    erts_smp_proc_unlock(rp, rp_locks);
 	} else { /* external by pid or name */
-	    ASSERT(is_external_pid(mon->u.pid));    
+	    ASSERT(is_external_pid(mon->u.pid));
 	    dep = external_pid_dist_entry(mon->u.pid);
 	    ASSERT(dep != NULL);
 	    if (dep) {
@@ -13875,7 +13876,7 @@ erts_do_exit_process(Process* p, Eterm reason)
 {
     p->arity = 0;		/* No live registers */
     p->fvalue = reason;
-    
+
 
 #ifdef USE_VM_PROBES
     if (DTRACE_ENABLED(process_exit)) {
@@ -14246,8 +14247,22 @@ erts_continue_exit_process(Process *p)
  * Stack dump functions follow.
  */
 
+void erts_stack_dump2(fmtfn_t to, void *to_arg, Process *p, int abbreviated);
+
 void
 erts_stack_dump(fmtfn_t to, void *to_arg, Process *p)
+{
+    erts_stack_dump2(to, to_arg, p, 0);
+}
+
+void
+erts_stack_dump_abbreviated(fmtfn_t to, void *to_arg, Process *p)
+{
+    erts_stack_dump2(to, to_arg, p, 1);
+}
+
+void
+erts_stack_dump2(fmtfn_t to, void *to_arg, Process *p, int abbreviated)
 {
     Eterm* sp;
     int yreg = -1;
@@ -14257,7 +14272,7 @@ erts_stack_dump(fmtfn_t to, void *to_arg, Process *p)
     }
     erts_program_counter_info(to, to_arg, p);
     for (sp = p->stop; sp < STACK_START(p); sp++) {
-        yreg = stack_element_dump(to, to_arg, sp, yreg);
+        yreg = stack_element_dump(to, to_arg, p, sp, yreg, abbreviated);
     }
 }
 
@@ -14315,16 +14330,19 @@ print_function_from_pc(fmtfn_t to, void *to_arg, BeamInstr* x)
 }
 
 static int
-stack_element_dump(fmtfn_t to, void *to_arg, Eterm* sp, int yreg)
+stack_element_dump(fmtfn_t to, void *to_arg, Process *p, Eterm* sp, int yreg, int abbreviated)
 {
     Eterm x = *sp;
 
     if (yreg < 0 || is_CP(x)) {
         erts_print(to, to_arg, "\n%p ", sp);
     } else {
-        char sbuf[16];
-        erts_snprintf(sbuf, sizeof(sbuf), "y(%d)", yreg);
-        erts_print(to, to_arg, "%-8s ", sbuf);
+        if (! abbreviated) {
+            /* GOOFUSgoofus */
+            char sbuf[16];
+            erts_snprintf(sbuf, sizeof(sbuf), "y(%d)", yreg);
+            erts_print(to, to_arg, "%-8s ", sbuf);
+        }
         yreg++;
     }
 
@@ -14333,11 +14351,12 @@ stack_element_dump(fmtfn_t to, void *to_arg, Eterm* sp, int yreg)
         print_function_from_pc(to, to_arg, cp_val(x));
         erts_print(to, to_arg, ")\n");
         yreg = 0;
-    } else if is_catch(x) {
+    } else if (! abbreviated && is_catch(x)) {
         erts_print(to, to_arg, "Catch %p (", catch_pc(x));
         print_function_from_pc(to, to_arg, catch_pc(x));
         erts_print(to, to_arg, ")\n");
-    } else {
+    } else if (!abbreviated) {
+        /* GOOFUSgoofus */
 	erts_print(to, to_arg, "%T\n", x);
     }
     return yreg;
