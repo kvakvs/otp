@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2002-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -142,7 +142,7 @@ typedef struct ErtsAllocatorWrapper_t_ {
     void (*unlock)(void);
     struct ErtsAllocatorWrapper_t_* next;
 }ErtsAllocatorWrapper_t;
-ErtsAllocatorWrapper_t *erts_allctr_wrappers;
+extern ErtsAllocatorWrapper_t *erts_allctr_wrappers;
 extern int erts_allctr_wrapper_prelocked;
 extern erts_tsd_key_t erts_allctr_prelock_tsd_key;
 void erts_allctr_wrapper_prelock_init(ErtsAllocatorWrapper_t* wrapper);
@@ -395,7 +395,7 @@ NAME##_alloc(void)							\
 {									\
     TYPE *res = NAME##_pre_alloc();					\
     if (!res)								\
-	res = erts_alloc(ALCT, sizeof(TYPE));				\
+        res = (TYPE *)erts_alloc(ALCT, sizeof(TYPE));				\
     return res;								\
 }									\
 static ERTS_INLINE void							\

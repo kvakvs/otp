@@ -12,15 +12,15 @@ Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
     * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
+      this_ list of conditions and the following disclaimer.
 
     * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
+      notice, this_ list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
 
     * Neither the name of the University of Cambridge nor the names of its
       contributors may be used to endorse or promote products derived from
-      this software without specific prior written permission.
+      this_ software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -49,7 +49,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 /* When an application links to a PCRE DLL in Windows, the symbols that are
 imported have to be identified as such. When building PCRE, the appropriate
-export setting is defined in pcre_internal.h, which includes this file. So we
+export_ setting is defined in pcre_internal.h, which includes this_ file. So we
 don't change existing definitions of PCRE_EXP_DECL and PCRECPP_EXP_DECL. */
 
 #if defined(_WIN32) && !defined(PCRE_STATIC)
@@ -308,7 +308,7 @@ compatible. */
 #define PCRE_STUDY_EXTRA_NEEDED               0x0008
 
 /* Bit flags for the pcre[16|32]_extra structure. Do not re-arrange or redefine
-these bits, just add new ones on the end, in order to remain compatible. */
+these bits, just add new_ ones on the end, in order to remain compatible. */
 
 #define PCRE_EXTRA_STUDY_DATA             0x0001
 #define PCRE_EXTRA_MATCH_LIMIT            0x0002
@@ -343,7 +343,7 @@ typedef struct real_pcre32_jit_stack pcre32_jit_stack;
 
 /* If PCRE is compiled with 16 bit character support, PCRE_UCHAR16 must contain
 a 16 bit wide signed data type. Otherwise it can be a dummy data type since
-pcre16 functions are not implemented. There is a check for this in pcre_internal.h. */
+pcre16 functions are not implemented. There is a check for this_ in pcre_internal.h. */
 #ifndef PCRE_UCHAR16
 #define PCRE_UCHAR16 unsigned short
 #endif
@@ -354,7 +354,7 @@ pcre16 functions are not implemented. There is a check for this in pcre_internal
 
 /* If PCRE is compiled with 32 bit character support, PCRE_UCHAR32 must contain
 a 32 bit wide signed data type. Otherwise it can be a dummy data type since
-pcre32 functions are not implemented. There is a check for this in pcre_internal.h. */
+pcre32 functions are not implemented. There is a check for this_ in pcre_internal.h. */
 #ifndef PCRE_UCHAR32
 #define PCRE_UCHAR32 unsigned int
 #endif
@@ -372,7 +372,7 @@ const char *. */
 #endif
 
 /* The structure for passing additional data to pcre_exec(). This is defined in
-such as way as to be extensible. Always add new fields at the end, in order to
+such as way as to be extensible. Always add new_ fields at the end, in order to
 remain compatible. */
 
 #if defined(ERLANG_INTEGRATION)
@@ -425,7 +425,7 @@ typedef struct pcre32_extra {
 } pcre32_extra;
 
 /* The structure for passing out data via the pcre_callout_function. We use a
-structure so that new fields can be added on the end in future versions,
+structure so that new_ fields can be added on the end in future versions,
 without changing the API of the function, thereby allowing old clients to work
 without modification. */
 
@@ -440,7 +440,7 @@ typedef struct pcre_callout_block {
   int         *offset_vector;     /* The offset vector */
   PCRE_SPTR    subject;           /* The subject being matched */
   int          subject_length;    /* The length of the subject */
-  int          start_match;       /* Offset to start of this match attempt */
+  int          start_match;       /* Offset to start of this_ match attempt */
   int          current_position;  /* Where we currently are in the subject */
   int          capture_top;       /* Max current capture */
   int          capture_last;      /* Most recently closed capture */
@@ -465,7 +465,7 @@ typedef struct pcre16_callout_block {
   int         *offset_vector;     /* The offset vector */
   PCRE_SPTR16  subject;           /* The subject being matched */
   int          subject_length;    /* The length of the subject */
-  int          start_match;       /* Offset to start of this match attempt */
+  int          start_match;       /* Offset to start of this_ match attempt */
   int          current_position;  /* Where we currently are in the subject */
   int          capture_top;       /* Max current capture */
   int          capture_last;      /* Most recently closed capture */
@@ -487,7 +487,7 @@ typedef struct pcre32_callout_block {
   int         *offset_vector;     /* The offset vector */
   PCRE_SPTR32  subject;           /* The subject being matched */
   int          subject_length;    /* The length of the subject */
-  int          start_match;       /* Offset to start of this match attempt */
+  int          start_match;       /* Offset to start of this_ match attempt */
   int          current_position;  /* Where we currently are in the subject */
   int          capture_top;       /* Max current capture */
   int          capture_last;      /* Most recently closed capture */

@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2001-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -150,10 +150,10 @@
  *                                        erts_aint32_t val);
  *
  * Compare and exchange; returns previous or current value. If
- * returned value equals 'exp' the value was changed to 'new';
+ * returned value equals 'exp' the value was changed to 'new_';
  * otherwise not:
  *   erts_aint32_t erts_atomic32_cmpxchg_<B>(erts_atomic32_t *a,
- *                                           erts_aint32_t new,
+ *                                           erts_aint32_t new_,
  *                                           erts_aint32_t exp);
  *
  * --- Word size atomic operations ---
@@ -207,10 +207,10 @@
  *                                    erts_aint_t val);
  *
  * Compare and exchange; returns previous or current value. If
- * returned value equals 'exp' the value was changed to 'new';
+ * returned value equals 'exp' the value was changed to 'new_';
  * otherwise not:
  *   erts_aint_t erts_atomic_cmpxchg_<B>(erts_atomic_t *a,
- *                                       erts_aint_t new,
+ *                                       erts_aint_t new_,
  *                                       erts_aint_t exp);
  *
  * --- Double word size atomic operations ---
@@ -222,7 +222,7 @@
  * 2*sizeof(void *)!
  * 
  * The erts_dw_aint_t data type should be accessed as if it was defined
- * like this:
+ * like this_:
  *
  *     typedef struct {
  *         erts_aint_t sint[2];
@@ -245,12 +245,12 @@
  *                                erts_dw_aint_t *val);
  *
  * Compare and exchange; returns a value != 0 if exchange was
- * made; otherwise 0. 'new_val' contains new value to set. If 'exp_act'
+ * made; otherwise 0. 'new_val' contains new_ value to set. If 'exp_act'
  * contains the same value as in memory when the function is called,
- * 'new' is written to memory; otherwise, not. If exchange was not
+ * 'new_' is written to memory; otherwise, not. If exchange was not
  * made, 'exp_act' contains the actual value in memory:
  *   int erts_dw_atomic_cmpxchg_<B>(erts_dw_atomic_t *var,
- *                                  erts_dw_aint_t *new,
+ *                                  erts_dw_aint_t *new_,
  *                                  erts_dw_aint_t *exp_act);
  */
 
@@ -269,9 +269,9 @@
 #if defined(__GLIBC__) && (__GLIBC__ << 16) + __GLIBC_MINOR__ < (2 << 16) + 4
 /*
  * pthread_mutex_destroy() may return EBUSY when it shouldn't :( We have
- * only seen this bug in glibc versions before 2.4. Note that condition
+ * only seen this_ bug in glibc versions before 2.4. Note that condition
  * variables, rwmutexes, spinlocks, and rwspinlocks also may be effected by
- * this bug since these implementations may use mutexes internally.
+ * this_ bug since these implementations may use mutexes internally.
  */
 #  define ERTS_THR_HAVE_BUSY_DESTROY_BUG
 #endif
@@ -553,9 +553,9 @@ ERTS_GLB_INLINE erts_aint_t erts_no_atomic_read_bor(erts_no_atomic_t *var,
 ERTS_GLB_INLINE erts_aint_t erts_no_atomic_read_band(erts_no_atomic_t *var,
 						     erts_aint_t mask);
 ERTS_GLB_INLINE erts_aint_t erts_no_atomic_xchg(erts_no_atomic_t *xchgp,
-						erts_aint_t new);
+						erts_aint_t new_);
 ERTS_GLB_INLINE erts_aint_t erts_no_atomic_cmpxchg(erts_no_atomic_t *xchgp,
-						   erts_aint_t new,
+						   erts_aint_t new_,
 						   erts_aint_t expected);
 ERTS_GLB_INLINE erts_aint_t erts_no_atomic_read_bset(erts_no_atomic_t *var,
 						     erts_aint_t mask,
@@ -576,9 +576,9 @@ ERTS_GLB_INLINE erts_aint32_t erts_no_atomic32_read_bor(erts_no_atomic32_t *var,
 ERTS_GLB_INLINE erts_aint32_t erts_no_atomic32_read_band(erts_no_atomic32_t *var,
 							 erts_aint32_t mask);
 ERTS_GLB_INLINE erts_aint32_t erts_no_atomic32_xchg(erts_no_atomic32_t *xchgp,
-						    erts_aint32_t new);
+						    erts_aint32_t new_);
 ERTS_GLB_INLINE erts_aint32_t erts_no_atomic32_cmpxchg(erts_no_atomic32_t *xchgp,
-						       erts_aint32_t new,
+						       erts_aint32_t new_,
 						       erts_aint32_t expected);
 ERTS_GLB_INLINE erts_aint32_t erts_no_atomic32_read_bset(erts_no_atomic32_t *var,
 							 erts_aint32_t mask,
@@ -599,9 +599,9 @@ ERTS_GLB_INLINE erts_aint64_t erts_no_atomic64_read_bor(erts_no_atomic64_t *var,
 ERTS_GLB_INLINE erts_aint64_t erts_no_atomic64_read_band(erts_no_atomic64_t *var,
 							 erts_aint64_t mask);
 ERTS_GLB_INLINE erts_aint64_t erts_no_atomic64_xchg(erts_no_atomic64_t *xchgp,
-						    erts_aint64_t new);
+						    erts_aint64_t new_);
 ERTS_GLB_INLINE erts_aint64_t erts_no_atomic64_cmpxchg(erts_no_atomic64_t *xchgp,
-						       erts_aint64_t new,
+						       erts_aint64_t new_,
 						       erts_aint64_t expected);
 ERTS_GLB_INLINE erts_aint64_t erts_no_atomic64_read_bset(erts_no_atomic64_t *var,
 							 erts_aint64_t mask,
@@ -728,9 +728,9 @@ do {									\
     Type act = ReadOp((VarP));						\
     while (1) {								\
 	Type exp = act;							\
-	Type new = exp & ~(Mask);					\
-	new |= ((Mask) & (Set));					\
-	act = CmpxchgOp((VarP), new, exp);				\
+	Type new_ = exp & ~(Mask);					\
+	new_ |= ((Mask) & (Set));					\
+	act = CmpxchgOp((VarP), new_, exp);				\
 	if (act == exp)							\
 	    return act;							\
     }									\
@@ -752,7 +752,7 @@ erts_atomic32_read_dirty(erts_atomic32_t *var);
 
 /*
  * See "Documentation of atomics and memory barriers" at the top
- * of this file for info on atomics.
+ * of this_ file for info on atomics.
  */
 
 /* Double word size atomics */
@@ -1386,7 +1386,7 @@ erts_atomic64_xchg_ ## BARRIER(erts_atomic64_t *var,			\
 			       erts_aint64_t val);			\
 ERTS_GLB_INLINE erts_aint64_t						\
 erts_atomic64_cmpxchg_ ## BARRIER(erts_atomic64_t *var,			\
-				  erts_aint64_t new,			\
+				  erts_aint64_t new_,			\
 				  erts_aint64_t exp);			\
 ERTS_GLB_INLINE erts_aint64_t						\
 erts_atomic64_read_bset_ ## BARRIER(erts_atomic64_t *var,		\
@@ -1439,10 +1439,10 @@ ethr_dw_atomic_read_nob(ethr_dw_atomic_t *var,
 
 static ERTS_INLINE int
 ethr_dw_atomic_cmpxchg_nob(ethr_dw_atomic_t *var,
-			   ethr_dw_sint_t *new,
+			   ethr_dw_sint_t *new_,
 			   ethr_dw_sint_t *xchg)
 {
-    return ethr_dw_atomic_cmpxchg(var, new, xchg);
+    return ethr_dw_atomic_cmpxchg(var, new_, xchg);
 }
 
 #undef ERTS_ATOMIC64_OPS_IMPL__
@@ -1515,70 +1515,70 @@ erts_atomic64_read_ ## BARRIER(erts_atomic64_t *var)			\
 ERTS_GLB_INLINE erts_aint64_t						\
 erts_atomic64_inc_read_ ## BARRIER(erts_atomic64_t *var)		\
 {									\
-    erts_aint64_t xchg, new;						\
+    erts_aint64_t xchg, new_;						\
     ERTS_ATOMIC64_DW_CMPXCHG_IMPL__(ethr_dw_atomic_cmpxchg_ ## BARRIER,	\
-				    var, xchg, new,			\
-				    new = xchg + 1);			\
-    return new;								\
+				    var, xchg, new_,			\
+				    new_ = xchg + 1);			\
+    return new_;								\
 }									\
 									\
 ERTS_GLB_INLINE erts_aint64_t						\
 erts_atomic64_dec_read_ ## BARRIER(erts_atomic64_t *var)		\
 {									\
-    erts_aint64_t xchg, new;						\
+    erts_aint64_t xchg, new_;						\
     ERTS_ATOMIC64_DW_CMPXCHG_IMPL__(ethr_dw_atomic_cmpxchg_ ## BARRIER,	\
-				    var, xchg, new,			\
-				    new = xchg - 1);			\
-    return new;								\
+				    var, xchg, new_,			\
+				    new_ = xchg - 1);			\
+    return new_;								\
 }									\
 									\
 ERTS_GLB_INLINE void							\
 erts_atomic64_inc_ ## BARRIER(erts_atomic64_t *var)			\
 {									\
-    erts_aint64_t xchg, new;						\
+    erts_aint64_t xchg, new_;						\
     ERTS_ATOMIC64_DW_CMPXCHG_IMPL__(ethr_dw_atomic_cmpxchg_ ## BARRIER,	\
-				    var, xchg, new,			\
-				    new = xchg + 1);			\
+				    var, xchg, new_,			\
+				    new_ = xchg + 1);			\
 }									\
 									\
 ERTS_GLB_INLINE void							\
 erts_atomic64_dec_ ## BARRIER(erts_atomic64_t *var)			\
 {									\
-    erts_aint64_t xchg, new;						\
+    erts_aint64_t xchg, new_;						\
     ERTS_ATOMIC64_DW_CMPXCHG_IMPL__(ethr_dw_atomic_cmpxchg_ ## BARRIER,	\
-				    var, xchg, new,			\
-				    new = xchg - 1);			\
+				    var, xchg, new_,			\
+				    new_ = xchg - 1);			\
 }									\
 									\
 ERTS_GLB_INLINE erts_aint64_t						\
 erts_atomic64_add_read_ ## BARRIER(erts_atomic64_t *var,		\
 				   erts_aint64_t val)			\
 {									\
-    erts_aint64_t xchg, new;						\
+    erts_aint64_t xchg, new_;						\
     ERTS_ATOMIC64_DW_CMPXCHG_IMPL__(ethr_dw_atomic_cmpxchg_ ## BARRIER,	\
-				    var, xchg, new,			\
-				    new = xchg + val);			\
-    return new;								\
+				    var, xchg, new_,			\
+				    new_ = xchg + val);			\
+    return new_;								\
 }									\
 									\
 ERTS_GLB_INLINE void							\
 erts_atomic64_add_ ## BARRIER(erts_atomic64_t *var,			\
 			      erts_aint64_t val)			\
 {									\
-    erts_aint64_t xchg, new;						\
+    erts_aint64_t xchg, new_;						\
     ERTS_ATOMIC64_DW_CMPXCHG_IMPL__(ethr_dw_atomic_cmpxchg_ ## BARRIER,	\
-				    var, xchg, new,			\
-				    new = xchg + val);			\
+				    var, xchg, new_,			\
+				    new_ = xchg + val);			\
 }									\
 									\
 ERTS_GLB_INLINE erts_aint64_t						\
 erts_atomic64_read_bor_ ## BARRIER(erts_atomic64_t *var,		\
 				   erts_aint64_t val)			\
 {									\
-    erts_aint64_t xchg, new;						\
+    erts_aint64_t xchg, new_;						\
     ERTS_ATOMIC64_DW_CMPXCHG_IMPL__(ethr_dw_atomic_cmpxchg_ ## BARRIER,	\
-				    var, xchg, new,			\
-				    new = xchg | val);			\
+				    var, xchg, new_,			\
+				    new_ = xchg | val);			\
     return xchg;							\
 }									\
 									\
@@ -1586,10 +1586,10 @@ ERTS_GLB_INLINE erts_aint64_t						\
 erts_atomic64_read_band_ ## BARRIER(erts_atomic64_t *var,		\
 				    erts_aint64_t val)			\
 {									\
-    erts_aint64_t xchg, new;						\
+    erts_aint64_t xchg, new_;						\
     ERTS_ATOMIC64_DW_CMPXCHG_IMPL__(ethr_dw_atomic_cmpxchg_ ## BARRIER,	\
-				    var, xchg, new,			\
-				    new = xchg & val);			\
+				    var, xchg, new_,			\
+				    new_ = xchg & val);			\
     return xchg;							\
 }									\
 									\
@@ -1597,21 +1597,21 @@ ERTS_GLB_INLINE erts_aint64_t						\
 erts_atomic64_xchg_ ## BARRIER(erts_atomic64_t *var,			\
 			       erts_aint64_t val)			\
 {									\
-    erts_aint64_t xchg, new;						\
+    erts_aint64_t xchg, new_;						\
     ERTS_ATOMIC64_DW_CMPXCHG_IMPL__(ethr_dw_atomic_cmpxchg_ ## BARRIER,	\
-				    var, xchg, new,			\
-				    new = val);				\
+				    var, xchg, new_,			\
+				    new_ = val);				\
     return xchg;							\
 }									\
 									\
 ERTS_GLB_INLINE erts_aint64_t						\
 erts_atomic64_cmpxchg_ ## BARRIER(erts_atomic64_t *var,			\
-				  erts_aint64_t new,			\
+				  erts_aint64_t new_,			\
 				  erts_aint64_t exp)			\
 {									\
     ethr_dw_sint_t dw_xchg, dw_new;					\
     ERTS_AINT64_TO_DW_SINT__(dw_xchg, exp);				\
-    ERTS_AINT64_TO_DW_SINT__(dw_new, new);				\
+    ERTS_AINT64_TO_DW_SINT__(dw_new, new_);				\
     if (ethr_dw_atomic_cmpxchg_ ## BARRIER(var, &dw_new, &dw_xchg))	\
 	return exp;							\
     return ERTS_DW_SINT_TO_AINT64__(dw_xchg);				\
@@ -1622,12 +1622,12 @@ erts_atomic64_read_bset_ ## BARRIER(erts_atomic64_t *var,		\
 				    erts_aint64_t mask,			\
 				    erts_aint64_t set)			\
 {									\
-    erts_aint64_t xchg, new;						\
+    erts_aint64_t xchg, new_;						\
     ERTS_ATOMIC64_DW_CMPXCHG_IMPL__(ethr_dw_atomic_cmpxchg_ ## BARRIER,	\
-				    var, xchg, new,			\
+				    var, xchg, new_,			\
 				    {					\
-					new = xchg & ~mask;		\
-					new |= mask & set;		\
+					new_ = xchg & ~mask;		\
+					new_ |= mask & set;		\
 				    });					\
     return xchg;							\
 }
@@ -2837,21 +2837,21 @@ erts_no_atomic_read_band(erts_no_atomic_t *var, erts_aint_t mask)
 }
 
 ERTS_GLB_INLINE erts_aint_t
-erts_no_atomic_xchg(erts_no_atomic_t *xchgp, erts_aint_t new)
+erts_no_atomic_xchg(erts_no_atomic_t *xchgp, erts_aint_t new_)
 {
     erts_aint_t old = *xchgp;
-    *xchgp = new;
+    *xchgp = new_;
     return old;
 }
 
 ERTS_GLB_INLINE erts_aint_t
 erts_no_atomic_cmpxchg(erts_no_atomic_t *xchgp,
-		       erts_aint_t new,
+		       erts_aint_t new_,
 		       erts_aint_t expected)
 {
     erts_aint_t old = *xchgp;
     if (old == expected)
-        *xchgp = new;
+        *xchgp = new_;
     return old;
 }
 
@@ -2935,21 +2935,21 @@ erts_no_atomic32_read_band(erts_no_atomic32_t *var, erts_aint32_t mask)
 }
 
 ERTS_GLB_INLINE erts_aint32_t
-erts_no_atomic32_xchg(erts_no_atomic32_t *xchgp, erts_aint32_t new)
+erts_no_atomic32_xchg(erts_no_atomic32_t *xchgp, erts_aint32_t new_)
 {
     erts_aint32_t old = *xchgp;
-    *xchgp = new;
+    *xchgp = new_;
     return old;
 }
 
 ERTS_GLB_INLINE erts_aint32_t
 erts_no_atomic32_cmpxchg(erts_no_atomic32_t *xchgp,
-			 erts_aint32_t new,
+			 erts_aint32_t new_,
 			 erts_aint32_t expected)
 {
     erts_aint32_t old = *xchgp;
     if (old == expected)
-        *xchgp = new;
+        *xchgp = new_;
     return old;
 }
 
@@ -3033,21 +3033,21 @@ erts_no_atomic64_read_band(erts_no_atomic64_t *var, erts_aint64_t mask)
 }
 
 ERTS_GLB_INLINE erts_aint64_t
-erts_no_atomic64_xchg(erts_no_atomic64_t *xchgp, erts_aint64_t new)
+erts_no_atomic64_xchg(erts_no_atomic64_t *xchgp, erts_aint64_t new_)
 {
     erts_aint64_t old = *xchgp;
-    *xchgp = new;
+    *xchgp = new_;
     return old;
 }
 
 ERTS_GLB_INLINE erts_aint64_t
 erts_no_atomic64_cmpxchg(erts_no_atomic64_t *xchgp,
-			 erts_aint64_t new,
+			 erts_aint64_t new_,
 			 erts_aint64_t expected)
 {
     erts_aint64_t old = *xchgp;
     if (old == expected)
-        *xchgp = new;
+        *xchgp = new_;
     return old;
 }
 

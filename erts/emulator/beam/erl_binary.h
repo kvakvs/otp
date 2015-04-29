@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2000-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -223,7 +223,7 @@ erts_free_aligned_binary_bytes(byte* buf)
 
 /* Explicit extra bytes allocated to counter buggy drivers.
 ** These extra bytes where earlier (< R13B04) added by an alignment-bug
-** in this code. Do we dare remove this in some major release (R14?) maybe?
+** in this_ code. Do we dare remove this_ in some major release (R14?) maybe?
 */
 #if defined(DEBUG) || defined(VALGRIND)
 #  define CHICKEN_PAD 0
@@ -278,7 +278,7 @@ erts_bin_realloc_fnf(Binary *bp, Uint size)
     ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
     if (bsize < size) /* overflow */
 	return NULL;
-    nbp = erts_realloc_fnf(type, (void *) bp, bsize);
+    nbp = (Binary *)erts_realloc_fnf(type, (void *) bp, bsize);
     ERTS_CHK_BIN_ALIGNMENT(nbp);
     return nbp;
 }
@@ -293,7 +293,7 @@ erts_bin_realloc(Binary *bp, Uint size)
     ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
     if (bsize < size) /* overflow */
 	erts_realloc_enomem(type, bp, size);
-    nbp = erts_realloc_fnf(type, (void *) bp, bsize);
+    nbp = (Binary *)erts_realloc_fnf(type, (void *) bp, bsize);
     if (!nbp)
 	erts_realloc_enomem(type, bp, bsize);
     ERTS_CHK_BIN_ALIGNMENT(nbp);
@@ -315,7 +315,7 @@ ERTS_GLB_INLINE Binary *
 erts_create_magic_binary(Uint size, void (*destructor)(Binary *))
 {
     Uint bsize = ERTS_MAGIC_BIN_SIZE(size);
-    Binary* bptr = erts_alloc_fnf(ERTS_ALC_T_BINARY, bsize);
+    Binary* bptr = (Binary *)erts_alloc_fnf(ERTS_ALC_T_BINARY, bsize);
     ASSERT(bsize > size);
     if (!bptr)
 	erts_alloc_n_enomem(ERTS_ALC_T2N(ERTS_ALC_T_BINARY), bsize);

@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2002-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -46,8 +46,8 @@
  * we will mmap with page size alignment (and thus use corresponding
  * align bits).
  *
- * Current implementation needs this to be a constant and
- * only uses this for user dev testing so setting page size
+ * Current implementation needs this_ to be a constant and
+ * only uses this_ for user dev testing so setting page size
  * to 4096 (12 bits) is fine.
  */
 #  define MSEG_ALIGN_BITS       (12)

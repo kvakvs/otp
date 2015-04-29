@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2004-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -286,11 +286,11 @@ ETHR_PROTO_NORETURN__ ethr_fatal_error__(const char *file,
 #define __builtin_expect(X, Y) (X)
 #endif
 
-#if ETHR_AT_LEAST_GCC_VSN__(3, 1, 1)
-#  define ETHR_CHOOSE_EXPR __builtin_choose_expr
-#else
+//#if ETHR_AT_LEAST_GCC_VSN__(3, 1, 1)
+//#  define ETHR_CHOOSE_EXPR __builtin_choose_expr
+//#else
 #  define ETHR_CHOOSE_EXPR(B, E1, E2) ((B) ? (E1) : (E2))
-#endif
+//#endif
 
 #if ((defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))) \
      || (defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))))
@@ -667,7 +667,7 @@ extern pthread_key_t ethr_ts_event_key__;
 static ETHR_INLINE ethr_ts_event *
 ETHR_INLINE_FUNC_NAME_(ethr_get_ts_event)(void)
 {
-    ethr_ts_event *tsep = pthread_getspecific(ethr_ts_event_key__);
+    ethr_ts_event *tsep = (ethr_ts_event *)pthread_getspecific(ethr_ts_event_key__);
     if (!tsep) {
 	int res = ethr_make_ts_event__(&tsep);
 	if (res != 0)

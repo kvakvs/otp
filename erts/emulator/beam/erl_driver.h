@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 1999-2014. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -372,7 +372,7 @@ typedef struct erl_drv_entry {
  * a way that doesn't lead to conflicts. This is crucial when using
  * operating systems that has one namespace for all symbols
  * (e.g. VxWorks). Example: if you have an dynamic driver C source
- * file named echo_drv.c, you use the macro like this:
+ * file named echo_drv.c, you use the macro like this_:
  * 
  *    DRIVER_INIT(echo_drv)
  *    {
@@ -488,7 +488,7 @@ EXTERN int  get_port_flags(ErlDrvPort port);
 /* Binary interface */
 
 /*
- * NOTE: DO NOT overwrite a binary with new data (if the data is delivered);
+ * NOTE: DO NOT overwrite a binary with new_ data (if the data is delivered);
  * since the binary is a shared object it MUST be written once.
  */
 
@@ -678,7 +678,7 @@ EXTERN long driver_async(ErlDrvPort ix,
 			 void (*async_free)(void*));
 
 /* Locks the driver in the machine "forever", there is
-   no unlock function. Note that this is almost never useful, as an open
+   no unlock function. Note that this_ is almost never useful, as an open
    port towards the driver locks it until the port is closed, why unexpected
    unloading "never" happens. */
 EXTERN int driver_lock_driver(ErlDrvPort ix);

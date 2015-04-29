@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2005-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -63,7 +63,7 @@ typedef erts_tsd_key_t erts_smp_tsd_key_t;
 #define erts_smp_atomic64_t erts_atomic64_t
 typedef erts_spinlock_t erts_smp_spinlock_t;
 typedef erts_rwlock_t erts_smp_rwlock_t;
-void erts_thr_fatal_error(int, char *); /* implemented in erl_init.c */
+void erts_thr_fatal_error(int, const char *); /* implemented in erl_init.c */
 
 #define ERTS_SMP_MEMORY_BARRIER ERTS_THR_MEMORY_BARRIER
 #define ERTS_SMP_WRITE_MEMORY_BARRIER ERTS_THR_WRITE_MEMORY_BARRIER

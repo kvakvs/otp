@@ -8,7 +8,7 @@
 #define _UCP_H
 
 /* This file contains definitions of the property values that are returned by
-the UCD access macros. New values that are added for new releases of Unicode
+the UCD access macros. New values that are added for new_ releases of Unicode
 should always be at the end of each enum, for backwards compatibility.
 
 IMPORTANT: Note also that the specific numeric values of the enums have to be

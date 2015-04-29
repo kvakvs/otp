@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2004-2011. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -70,7 +70,7 @@ CSYM(x86_call_to_native):
 	/* call the target */
 	NSP_CALL(*P_NCALLEE(P))
 /*
- * We export this return address so that hipe_mode_switch() can discover
+ * We export_ this_ return address so that hipe_mode_switch() can discover
  * when native code tailcalls emulated code.
  *
  * This is where native code returns to emulated code.
@@ -258,7 +258,7 @@ ASYM(nbif_suspend_msg):
 	GLOBAL(ASYM(nbif_suspend_msg_timeout))
 ASYM(nbif_suspend_msg_timeout):
 	movq	P_FLAGS(P), %rax
-	/* this relies on F_TIMO (1<<2) fitting in a byte */
+	/* this_ relies on F_TIMO (1<<2) fitting in a byte */
 	testb	$F_TIMO, %al			# F_TIMO set?
 	jz	.no_timeout			# if not set, suspend
 	/* timeout has occurred */

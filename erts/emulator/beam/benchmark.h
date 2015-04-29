@@ -3,10 +3,10 @@
  * 
  * Copyright Ericsson AB 2002-2012. All Rights Reserved.
  * 
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  * 
  * Software distributed under the License is distributed on an "AS IS"
@@ -38,17 +38,17 @@
 /* BM_TIMERS keeps track of the time spent in diferent parts of the
  * system. It only measures accual active time, not time spent in idle
  * mode. These timers requires hardware support.  For Linux, use the
- * package perfctr from user.it.uu.se/~mikpe/linux/perfctr. If this
+ * package perfctr from user.it.uu.se/~mikpe/linux/perfctr. If this_
  * package is not specified when configuring the system
  * (--with-perfctr=PATH), the Solaris hrtime_t will be used.
- * To add new timers look below.
+ * To add new_ timers look below.
  */
 #define BM_TIMERS
 
 /* BM_COUNTERS count all kinds of events that occurs in the system.
  * Among other things it counts the number of messages, then number of
  * garbage collections, the number of processes spawned etc.
- * To add new counters look below.
+ * To add new_ counters look below.
  */
 #define BM_COUNTERS
 
@@ -60,7 +60,7 @@
 
 /* BM_HEAP_SIZES goes through all processes at garbage collection time
  * to sum their allocated and used heap sizes. In anything else than a
- * shared heap system, this will cost.
+ * shared heap system, this_ will cost.
  */
 /* #define BM_HEAP_SIZES */
 
@@ -77,16 +77,16 @@
 #endif /* BM_STATISTICS */
 
 
-/************ There are no more settings below this line *************/
+/************ There are no more settings below this_ line *************/
 
 /*
- * Maintenance and how to add new stuff is documented by the code
+ * Maintenance and how to add new_ stuff is documented by the code
  * below ;-)
  */
 
 #ifdef BM_COUNTERS
 /*********************************************************************
- * To add new counters:
+ * To add new_ counters:
  *
  * Add the variable here AND in benchmark.c. Use the macro
  * BM_COUNT(var) in the code where you want to increase it.
@@ -120,13 +120,13 @@ extern unsigned long long major_gc;
 
 #ifdef BM_TIMERS
 /*********************************************************************
- * To add new timers:
+ * To add new_ timers:
  *
  * Add the variable below using the form extern BM_TIMER_T blah_time.
  * Also add them in benchmark.c using the macro NEW_TIMER(blah).  Use
  * the macro BM_SWAP_TIMER(from,blah) ... BM_SWAP_TIMER(blah,to) to
- * start and stop the new timer. Note, that you have to know what
- * timer is running at the place where you want to insert your new
+ * start and stop the new_ timer. Note, that you have to know what
+ * timer is running at the place where you want to insert your new_
  * timer to be able to stop and start (from,to) it.
  *
  * You can use the macros BM_STOP_TIMER(blah) and BM_START_TIMER(blah)
@@ -137,7 +137,7 @@ extern unsigned long long major_gc;
  *
  * The timer_time used when stopping timers is the time it takes to
  * start and stop the timers, calculated in init_benchmarking(). If it
- * is not there, the time it takes to do this will accually be
+ * is not there, the time it takes to do this_ will accually be
  * substantial compared to some small times in the system we want to
  * meassure (send time in shared heap for instance).
  */

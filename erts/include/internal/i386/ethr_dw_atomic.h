@@ -142,7 +142,7 @@ ethr_native_dw_atomic_addr(ethr_native_dw_atomic_t *var)
 
 static ETHR_INLINE int
 ethr_native_dw_atomic_cmpxchg_mb(ethr_native_dw_atomic_t *var,
-				 ethr_sint_t *new,
+                                 ethr_sint_t *new_,
 				 ethr_sint_t *xchg)
 {
     ethr_native_dw_ptr_t p = (ethr_native_dw_ptr_t) ETHR_DW_NATMC_MEM__(var);
@@ -169,14 +169,14 @@ ethr_native_dw_atomic_cmpxchg_mb(ethr_native_dw_atomic_t *var,
 	: "m"(*p), "1"(xchg[1]), "2"(xchg[0]),
 #if ETHR_NO_CLOBBER_EBX__
 #  if ETHR_CMPXCHG8B_REGISTER_SHORTAGE
-	  "3"(new)
+          "3"(new_)
 #  else
-	  "3"(new[1]),
-	  "r"(new[0])
+          "3"(new_[1]),
+          "r"(new_[0])
 #  endif
 #else
-	  "3"(new[1]),
-	  "b"(new[0])
+          "3"(new_[1]),
+          "b"(new_[0])
 #endif
 	: "cc", "memory");
 

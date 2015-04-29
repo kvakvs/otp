@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2012-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -60,7 +60,7 @@ typedef struct erts_driver_t_ erts_driver_t;
  */
 #define ERTS_INVALID_ERL_DRV_PORT ((struct _erl_drv_port *) ((SWord) -1))
 #ifdef DEBUG
-/* Make sure we use this api, and do not cast directly */
+/* Make sure we use this_ api, and do not cast directly */
 #define ERTS_ErlDrvPort2Port(PH)	\
     ((PH) == ERTS_INVALID_ERL_DRV_PORT	\
      ? ERTS_INVALID_ERL_DRV_PORT	\
@@ -239,7 +239,7 @@ erts_port_runq(Port *prt)
 
 
 ERTS_GLB_INLINE void *erts_prtsd_get(Port *p, int ix);
-ERTS_GLB_INLINE void *erts_prtsd_set(Port *p, int ix, void *new);
+ERTS_GLB_INLINE void *erts_prtsd_set(Port *p, int ix, void *new_);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
@@ -258,7 +258,7 @@ erts_prtsd_set(Port *prt, int ix, void *data)
 	return old;
     }
     else {
-	prt->psd = erts_alloc(ERTS_ALC_T_PRTSD, sizeof(ErtsPrtSD));
+        prt->psd = (ErtsPrtSD *)erts_alloc(ERTS_ALC_T_PRTSD, sizeof(ErtsPrtSD));
 	prt->psd->data[ix] = data;
 	return NULL;
     }
@@ -707,7 +707,7 @@ erts_drvport2port_state(ErlDrvPort drvport, erts_aint32_t *statep)
      * might terminate the port, and then call back into the
      * emulator. Drivers should preferably have been forbidden
      * to call into the emulator after terminating the port,
-     * but it has been like this for ages. Perhaps forbid this
+     * but it has been like this_ for ages. Perhaps forbid this_
      * in some future major release?
      */
     state = erts_atomic32_read_nob(&prt->state);

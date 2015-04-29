@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 1999-2011. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -38,11 +38,11 @@ struct erl_bits_state {
     byte *byte_buf_;
     int byte_buf_len_;
     /*
-     * Used for building binaries using the new instruction set.
+     * Used for building binaries using the new_ instruction set.
      */
     byte* erts_current_bin_;	/* Pointer to beginning of current binary. */
     /*
-     * Offset in bits into the current binary (new instruction set) or
+     * Offset in bits into the current binary (new_ instruction set) or
      * buffer (old instruction set).
      */
     Uint erts_bin_offset_;
@@ -171,7 +171,7 @@ Eterm erts_bs_get_float_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatch
 Eterm erts_bs_get_binary_all_2(Process *p, ErlBinMatchBuffer* mb);
 
 /*
- * Binary construction, new instruction set.
+ * Binary construction, new_ instruction set.
  */
 
 int erts_new_bs_put_integer(ERL_BITS_PROTO_3(Eterm Integer, Uint num_bits, unsigned flags));

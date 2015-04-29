@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2012-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -25,12 +25,12 @@
  *      The basic idea is to maintain several "logical copies" of the code. These
  *      copies are identified by a global 'code index', an integer of 0, 1 or 2.
  *      The code index is used as argument to code access structures like
- *      export, module, beam_catches, beam_ranges.
+ *      export_, module, beam_catches, beam_ranges.
  *
  *      The current 'active' code index is used to access the current running
  *      code. The 'staging' code index is used by the process that performs
  *      a code change operation. When a code change operation completes
- *      succesfully, the staging code index becomes the new active code index.
+ *      succesfully, the staging code index becomes the new_ active code index.
  *
  *      The third code index is not explicitly used. It can be thought of as
  *      the "previous active" or the "next staging" index. It is needed to make
@@ -106,7 +106,7 @@ void erts_start_staging_code_ix(void);
  */
 void erts_end_staging_code_ix(void);
 
-/* Set staging code index as new active code index.
+/* Set staging code index as new_ active code index.
  * Preceded by "end".
  */
 void erts_commit_staging_code_ix(void);

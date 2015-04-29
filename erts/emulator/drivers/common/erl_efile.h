@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 1997-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -163,8 +163,8 @@ int efile_readlink(Efile_error* errInfo, char *name,
 		   char* buffer, size_t size);
 int efile_altname(Efile_error* errInfo, char *name, 
 		  char* buffer, size_t size);
-int efile_link(Efile_error* errInfo, char* old, char* new);
-int efile_symlink(Efile_error* errInfo, char* old, char* new);
+int efile_link(Efile_error* errInfo, char* old, char* new_);
+int efile_symlink(Efile_error* errInfo, char* old, char* new_);
 int efile_may_openfile(Efile_error* errInfo, char *name);
 int efile_fadvise(Efile_error* errInfo, int fd, Sint64 offset, Sint64 length,
 		  int advise);

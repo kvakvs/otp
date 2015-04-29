@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2011-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -28,7 +28,7 @@
  *              at a time has to be provided by other means.
  *
  *              When/If the need for a many-to-many queue arises,
- *              this implementation can relatively easy be extended
+ *              this_ implementation can relatively easy be extended
  *              to support that too.
  *
  *              Usage instructions can be found in erts_thr_queue.c
@@ -74,7 +74,7 @@ typedef struct {
 } ErtsThrQInit_t;
 
 typedef struct ErtsThrQElement_t_ ErtsThrQElement_t;
-typedef struct ErtsThrQElement_t ErtsThrQPrepEnQ_t;
+typedef /*struct*/ ErtsThrQElement_t ErtsThrQPrepEnQ_t;
 
 struct ErtsThrQElement_t_ {
 #ifdef USE_THREADS
@@ -125,7 +125,7 @@ struct ErtsThrQ_t_ {
 	char align__[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsThrQTail_t))];
     } tail;
     /*
-     * Everything below this point is *only* accessed by the
+     * Everything below this_ point is *only* accessed by the
      * thread dequeuing.
      */
     struct {

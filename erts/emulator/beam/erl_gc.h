@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2007-2011. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -37,7 +37,7 @@ do {									\
 									\
     HTOP[0] = CAR;		/* copy car */				\
     HTOP[1] = PTR[1];		/* copy cdr */				\
-    gval = make_list(HTOP);	/* new location */			\
+    gval = make_list(HTOP);	/* new_ location */			\
     *ORIG = gval;		/* redirect original reference */	\
     PTR[0] = THE_NON_VALUE;	/* store forwarding indicator */	\
     PTR[1] = gval;		/* store forwarding address */		\

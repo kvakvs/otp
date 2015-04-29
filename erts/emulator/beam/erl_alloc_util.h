@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2002-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -77,19 +77,19 @@ typedef struct {
 #define ERTS_DEFAULT_ALCU_INIT {                                           \
     1024*1024,		/* (bytes)  ycs:    sys_alloc carrier size       */\
     ~((UWord) 0),	/* (amount) mmc:    max mseg carriers            */\
-    1			/* (bool)   sac:    sys_alloc carriers           */\
+    1			/* (bool_)   sac:    sys_alloc carriers           */\
 }
 
 #define ERTS_DEFAULT_ALLCTR_INIT {                                         \
     NULL,                                                                  \
     ERTS_ALC_A_INVALID,	/* (number) alloc_no: allocator number           */\
-    0,			/* (bool)   force:  force enabled                */\
+    0,			/* (bool_)   force:  force enabled                */\
     0,			/* (number) ix: instance index                   */\
-    1,			/* (bool)   ts:     thread safe                  */\
-    0,			/* (bool)   tspec:  thread specific              */\
-    0,			/* (bool)   tpref:  thread preferred             */\
-    0,			/* (bool)   ramv:   realloc always moves         */\
-    0,			/* (bool)   low_mem: HALFWORD only               */\
+    1,			/* (bool_)   ts:     thread safe                  */\
+    0,			/* (bool_)   tspec:  thread specific              */\
+    0,			/* (bool_)   tpref:  thread preferred             */\
+    0,			/* (bool_)   ramv:   realloc always moves         */\
+    0,			/* (bool_)   low_mem: HALFWORD only               */\
     512*1024,		/* (bytes)  sbct:   sbc threshold                */\
     2*1024*2024,	/* (amount) asbcst: abs sbc shrink threshold     */\
     20,			/* (%)      rsbcst: rel sbc shrink threshold     */\
@@ -112,19 +112,19 @@ typedef struct {
 #define ERTS_DEFAULT_ALCU_INIT {                                           \
     128*1024,		/* (bytes)  ycs:    sys_alloc carrier size       */\
     1024,      		/* (amount) mmc:    max mseg carriers            */\
-    1			/* (bool)   sac:    sys_alloc carriers           */\
+    1			/* (bool_)   sac:    sys_alloc carriers           */\
 }
 
 #define ERTS_DEFAULT_ALLCTR_INIT {                                         \
     NULL,                                                                  \
     ERTS_ALC_A_INVALID,	/* (number) alloc_no: allocator number           */\
-    0,			/* (bool)   force:  force enabled                */\
+    0,			/* (bool_)   force:  force enabled                */\
     0,			/* (number) ix: instance index                   */\
-    1,			/* (bool)   ts:     thread safe                  */\
-    0,			/* (bool)   tspec:  thread specific              */\
-    0,			/* (bool)   tpref:  thread preferred             */\
-    0,			/* (bool)   ramv:   realloc always moves         */\
-    0,			/* (bool)   low_mem: HALFWORD only               */\
+    1,			/* (bool_)   ts:     thread safe                  */\
+    0,			/* (bool_)   tspec:  thread specific              */\
+    0,			/* (bool_)   tpref:  thread preferred             */\
+    0,			/* (bool_)   ramv:   realloc always moves         */\
+    0,			/* (bool_)   low_mem: HALFWORD only               */\
     64*1024,		/* (bytes)  sbct:   sbc threshold                */\
     2*1024*2024,	/* (amount) asbcst: abs sbc shrink threshold     */\
     20,			/* (%)      rsbcst: rel sbc shrink threshold     */\
@@ -402,12 +402,12 @@ typedef struct {
      * performance.
      */
     union {
-	/* Modified by threads returning memory to this allocator */
+	/* Modified by threads returning memory to this_ allocator */
 	ErtsDDTail_t data;
 	char align__[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsDDTail_t))];
     } tail;
     /*
-     * Everything below this point is *only* accessed by the
+     * Everything below this_ point is *only* accessed by the
      * thread owning the allocator.
      */
     struct {
@@ -507,7 +507,7 @@ struct Allctr_t_ {
 #ifdef ERTS_SMP
     struct {
 	/* pooled_list, traitor list and dc_list contain only
-           carriers _created_ by this allocator */
+           carriers _created_ by this_ allocator */
 	ErtsDoubleLink_t pooled_list;
 	ErtsDoubleLink_t traitor_list;
 	CarrierList_t	 dc_list;
@@ -557,7 +557,7 @@ struct Allctr_t_ {
     ErtsAlcFixList_t	*fix;
 
 #ifdef USE_THREADS
-    /* Mutex for this allocator */
+    /* Mutex for this_ allocator */
     erts_mtx_t		mutex;
     int			thread_safe;
     struct {

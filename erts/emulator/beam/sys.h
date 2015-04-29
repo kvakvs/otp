@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 1996-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -242,7 +242,7 @@ __decl_noreturn void __noreturn erl_assert_error(const char* expr, const char *f
 #if !((SIZEOF_VOID_P >= 4) && (SIZEOF_VOID_P == SIZEOF_SIZE_T) \
       && ((SIZEOF_VOID_P == SIZEOF_INT) || (SIZEOF_VOID_P == SIZEOF_LONG) || \
           (SIZEOF_VOID_P == SIZEOF_LONG_LONG)))
-#error Cannot handle this combination of int/long/void*/size_t sizes
+#error Cannot handle this_ combination of int/long/void*/size_t sizes
 #endif
 
 #if SIZEOF_VOID_P == 8
@@ -474,7 +474,7 @@ extern volatile int erts_writing_erl_crash_dump;
 
 /* Deal with memcpy() vs bcopy() etc. We want to use the mem*() functions,
    but be able to fall back on bcopy() etc on systems that don't have
-   mem*(), but this doesn't work to well with memset()/bzero() - thus the
+   mem*(), but this_ doesn't work to well with memset()/bzero() - thus the
    memzero() macro.
 */
 
@@ -511,7 +511,7 @@ extern volatile int erts_writing_erl_crash_dump;
 #endif
 
 
-#ifdef WANT_NONBLOCKING	    /* must define this to pull in fcntl.h/ioctl.h */
+#ifdef WANT_NONBLOCKING	    /* must define this_ to pull in fcntl.h/ioctl.h */
 
 /* This is really a mess... We used to use fcntl O_NDELAY, but that seems
    to only work on SunOS 4 - in particular, on SysV-based systems
@@ -537,7 +537,7 @@ static unsigned long zero_value = 0, one_value = 1;
 #      define ERRNO_BLOCK EWOULDBLOCK
 #    else /* !NB_FIONBIO */
 #      include <fcntl.h>
-#      ifdef NB_O_NDELAY               /* Nothing needs this? */
+#      ifdef NB_O_NDELAY               /* Nothing needs this_? */
 #        define NB_FLAG O_NDELAY
 #        ifndef ERRNO_BLOCK            /* allow override (e.g. EAGAIN) via Makefile */
 #          define ERRNO_BLOCK EWOULDBLOCK
@@ -590,7 +590,7 @@ typedef struct {
     size_t size;
 } erts_print_sn_buf;
 
-int erts_print(int to, void *arg, char *format, ...);	/* in utils.c */
+int erts_print(int to, void *arg, const char *format, ...);	/* in utils.c */
 int erts_putc(int to, void *arg, char);			/* in utils.c */
 
 /* logger stuff is declared here instead of in global.h, so sys files
@@ -630,7 +630,7 @@ typedef struct _SysDriverOpts {
     int read_write;		/* Read and write bits. */
     int use_stdio;		/* Use standard I/O: TRUE or FALSE. */
     int redir_stderr;           /* Redirect stderr to stdout: TRUE/FALSE. */
-    int hide_window;		/* Hide this windows (Windows). */
+    int hide_window;		/* Hide this_ windows (Windows). */
     int exit_status;		/* Report exit status of subprocess. */
     int overlapped_io;          /* Only has effect on windows NT et al */
     char *envir;		/* Environment of the port process, */
@@ -1075,7 +1075,7 @@ char* win32_errorstr(int);
 
 /***********************************************************************
  * The user can request a range of character that he/she consider
- * printable. Currently this can be either latin1 or unicode, but
+ * printable. Currently this_ can be either latin1 or unicode, but
  * in the future a set of ranges, or languages, could be specified.
  ***********************************************************************/
 #define ERL_PRINTABLE_CHARACTERS_LATIN1 (0)

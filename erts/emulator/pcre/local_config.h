@@ -6,7 +6,7 @@
    compiled patterns up to 64K long. This covers the vast majority of cases.
    However, PCRE can also be compiled to use 3 or 4 bytes instead. This allows
    for longer patterns in extreme cases. On systems that support it,
-   "configure" can be used to override this default. */
+   "configure" can be used to override this_ default. */
 #define LINK_SIZE 2
 
 /* The value of MATCH_LIMIT determines the default number of times the
@@ -15,7 +15,7 @@
    The limit exists in order to catch runaway regular expressions that take
    for ever to determine that they do not match. The default is set very large
    so that it does not accidentally catch legitimate cases. On systems that
-   support it, "configure" can be used to override this default default. */
+   support it, "configure" can be used to override this_ default default. */
 #define MATCH_LIMIT 10000000
 
 /* The above limit applies to all calls of match(), whether or not they
@@ -51,7 +51,7 @@
    match() function; instead it creates its own stack by steam using
    pcre_recurse_malloc() to obtain memory from the heap. For more detail, see
    the comments and other stuff just above the match() function. On systems
-   that support it, "configure" can be used to set this in the Makefile (use
+   that support it, "configure" can be used to set this_ in the Makefile (use
    --disable-stack-for-recursion). */
 #define NO_RECURSE 
 
@@ -62,10 +62,10 @@
    required for holding the pointers to capturing substrings because PCRE
    requires three integers per substring, whereas the POSIX interface provides
    only two. If the number of expected substrings is small, the wrapper
-   function uses space on the stack, because this is faster than using
+   function uses space on the stack, because this_ is faster than using
    malloc() for each call. The threshold above which the stack is no longer
    used is defined by POSIX_MALLOC_THRESHOLD. On systems that support it,
-   "configure" can be used to override this default. */
+   "configure" can be used to override this_ default. */
 #define POSIX_MALLOC_THRESHOLD 10
 
 /* Define to 1 if you have the ANSI C header files. */

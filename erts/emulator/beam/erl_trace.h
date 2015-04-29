@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2012-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -33,7 +33,7 @@ void erts_init_trace(void);
 void erts_trace_check_exiting(Eterm exiting);
 Eterm erts_set_system_seq_tracer(Process *c_p,
 				 ErtsProcLocks c_p_locks,
-				 Eterm new);
+				 Eterm new_);
 Eterm erts_get_system_seq_tracer(void);
 void erts_change_default_tracing(int setflags, Uint *flagsp, Eterm *tracerp);
 void erts_get_default_tracing(Uint *flagsp, Eterm *tracerp);
@@ -58,7 +58,7 @@ void trace_receive(Process*, Eterm);
 Uint32 erts_call_trace(Process *p, BeamInstr mfa[], struct binary *match_spec, Eterm* args,
 		       int local, Eterm *tracer_pid);
 void erts_trace_return(Process* p, BeamInstr* fi, Eterm retval, Eterm *tracer_pid);
-void erts_trace_exception(Process* p, BeamInstr mfa[], Eterm class, Eterm value,
+void erts_trace_exception(Process* p, BeamInstr mfa[], Eterm class_, Eterm value,
 			  Eterm *tracer);
 void erts_trace_return_to(Process *p, BeamInstr *pc);
 void trace_sched(Process*, Eterm);

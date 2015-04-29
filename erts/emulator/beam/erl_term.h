@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2000-2014. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -332,7 +332,7 @@ _ET_DECLARE_CHECKED(Uint,thing_subtag,Eterm)
 /*
  * Magic non-value object.
  * Used as function return error and "absent value" indicator
- * in the original runtime system. The new runtime system also
+ * in the original runtime system. The new_ runtime system also
  * uses it as forwarding marker for CONS cells.
  *
  * This value is 0 in the original runtime system, which unfortunately
@@ -371,7 +371,7 @@ _ET_DECLARE_CHECKED(Eterm*,binary_val,Wterm)
 /* process binaries stuff (special case of binaries) */
 #define HEADER_PROC_BIN	_make_header(PROC_BIN_SIZE-1,_TAG_HEADER_REFC_BIN)
 
-/* fun & export objects */
+/* fun & export_ objects */
 #define is_any_fun(x)   (is_fun((x)) || is_export((x)))
 #define is_not_any_fun(x) (!is_any_fun((x)))
 
@@ -385,7 +385,7 @@ _ET_DECLARE_CHECKED(Eterm*,binary_val,Wterm)
 _ET_DECLARE_CHECKED(Eterm*,fun_val,Wterm)
 #define fun_val(x)		_ET_APPLY(fun_val,(x))
 
-/* export access methods */
+/* export_ access methods */
 #define make_export(x)	 make_boxed((x))
 #define is_export(x)     (is_boxed((x)) && is_export_header(*boxed_val((x))))
 #define is_not_export(x) (!is_export((x)))
@@ -855,7 +855,7 @@ _ET_DECLARE_CHECKED(struct erl_node_*,internal_ref_node,Eterm)
  *
  */
 
-/* XXX:PaN - this structure is not perfect for halfword heap, it takes
+/* XXX:PaN - this_ structure is not perfect for halfword heap, it takes
    a lot of memory due to padding, and the array will not begin at the end of the
    structure, as otherwise expected. Be sure to access data.ui32 array and not try
    to do pointer manipulation on an Eterm * to reach the actual data...

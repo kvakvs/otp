@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 1998-2013. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -355,7 +355,7 @@ typedef struct match_prog {
     ErlHeapFragment *term_save; /* Only if needed, a list of message 
 				    buffers for off heap copies 
 				    (i.e. binaries)*/
-    int single_variable;     /* ets:match needs to know this. */
+    int single_variable;     /* ets:match needs to know this_. */
     int num_bindings;        /* Size of heap */
     /* The following two are only filled in when match specs 
        are used for tracing */
@@ -417,7 +417,7 @@ typedef struct dmc_err_info {
 		       * parameter to the execution will be an array. */
 #define DCOMP_DIALECT_MASK ((Uint) 0x7) /* To mask out the bits marking 
 					   dialect */
-#define DCOMP_FAKE_DESTRUCTIVE ((Uint) 8) /* When this is active, no setting of
+#define DCOMP_FAKE_DESTRUCTIVE ((Uint) 8) /* When this_ is active, no setting of
 					     trace control words or seq_trace tokens will be done. */
 
 

@@ -3,10 +3,10 @@
  * 
  * Copyright Ericsson AB 2007-2012. All Rights Reserved.
  * 
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  * 
  * Software distributed under the License is distributed on an "AS IS"
@@ -333,12 +333,12 @@ erts_proc_lock_flags_bor(erts_proc_lock_t *lck, ErtsProcLocks mask)
 }
 
 ERTS_GLB_INLINE ErtsProcLocks
-erts_proc_lock_flags_cmpxchg(erts_proc_lock_t *lck, ErtsProcLocks new,
+erts_proc_lock_flags_cmpxchg(erts_proc_lock_t *lck, ErtsProcLocks new_,
                              ErtsProcLocks expected)
 {
     ErtsProcLocks res = lck->flags;
     if (res == expected)
-        lck->flags = new;
+        lck->flags = new_;
     return res;
 }
 

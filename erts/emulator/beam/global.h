@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 1996-2014. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -107,7 +107,7 @@ typedef struct de_proc_entry {
 
 typedef struct {
     void         *handle;             /* Handle for DLL or SO (for dyn. drivers). */
-    DE_ProcEntry *procs;              /* List of pids that have loaded this driver,
+    DE_ProcEntry *procs;              /* List of pids that have loaded this_ driver,
 				         or that wait for it to change state */
     erts_refc_t  refc;                /* Number of ports/processes having
 					 references to the driver */
@@ -115,9 +115,9 @@ typedef struct {
     Uint         flags;               /* ERL_DE_FL_KILL_PORTS */
     int          status;              /* ERL_DE_xxx */
     char         *full_path;          /* Full path of the driver */
-    char         *reload_full_path;   /* If status == ERL_DE_RELOAD, this contains
+    char         *reload_full_path;   /* If status == ERL_DE_RELOAD, this_ contains
 				         full name of driver (path) */
-    char         *reload_driver_name; /* ... and this contains the driver name */
+    char         *reload_driver_name; /* ... and this_ contains the driver name */
     Uint         reload_flags;        /* flags for reloaded driver */
 } DE_Handle;
 
@@ -195,7 +195,7 @@ extern Eterm erts_ddll_monitor_driver(Process *p,
 ** ErlDrvBinary is defined in erl_driver.h.
 ** When driver_alloc_binary is called, a Binary is allocated, but 
 ** the pointer returned is to the address of the first element that
-** also occurs in the ErlDrvBinary struct (driver.*binary takes care if this).
+** also occurs in the ErlDrvBinary struct (driver.*binary takes care if this_).
 ** The driver need never know about additions to the internal Binary of the
 ** emulator. One should however NEVER be sloppy when mixing ErlDrvBinary
 ** and Binary, the macros below can convert one type to the other, as they both
@@ -249,8 +249,18 @@ typedef union {
 
 #define ERTS_MAGIC_BIN_DESTRUCTOR(BP) \
   ((ErtsBinary *) (BP))->magic_binary.destructor
-#define ERTS_MAGIC_BIN_DATA(BP) \
-  ((void *) ((ErtsBinary *) (BP))->magic_binary.magic_bin_data)
+
+//#define ERTS_MAGIC_BIN_DATA(BP) \
+//  ((void *) ((ErtsBinary *) (BP))->magic_binary.magic_bin_data)
+template <typename T>
+inline T ERTS_MAGIC_BIN_DATA(ErtsBinary *BP) {
+  return (T)((ErtsBinary *) (BP)->magic_binary.magic_bin_data);
+}
+template <typename T>
+inline T ERTS_MAGIC_BIN_DATA(Binary *BP) {
+  return (T)((ErtsBinary *) (BP))->magic_binary.magic_bin_data;
+}
+
 #define ERTS_MAGIC_BIN_DATA_SIZE(BP) \
   ((BP)->orig_size - sizeof(void (*)(Binary *)))
 #define ERTS_MAGIC_BIN_ORIG_SIZE(Sz) \
@@ -355,7 +365,7 @@ extern int stackdump_on_exit;
 /*
  * Here is an implementation of a lightweiht stack.
  *
- * Use it like this:
+ * Use it like this_:
  *
  * DECLARE_ESTACK(Stack)	(At the start of a block)
  * ...
@@ -411,14 +421,14 @@ do {							\
 
 
 /*
- * Do not free the stack after this, it may have pointers into what
+ * Do not free the stack after this_, it may have pointers into what
  * was saved in 'dst'.
  */
 #define ESTACK_SAVE(s,dst)\
 do {\
     if (s.start == ESTK_DEF_STACK(s)) {\
 	UWord _wsz = ESTACK_COUNT(s);\
-	(dst)->start = erts_alloc(s.alloc_type,\
+        (dst)->start = (Eterm *)erts_alloc(s.alloc_type,\
 				  DEF_ESTACK_SIZE * sizeof(Eterm));\
 	memcpy((dst)->start, s.start,_wsz*sizeof(Eterm));\
 	(dst)->sp = (dst)->start + _wsz;\
@@ -439,7 +449,7 @@ do {\
 #define CLEAR_SAVED_ESTACK(estack) ((void) ((estack)->start = NULL))
 
 /*
- * Use on empty stack, only the allocator can be changed before this.
+ * Use on empty stack, only the allocator can be changed before this_.
  * The src stack is reset to NULL.
  */
 #define ESTACK_RESTORE(s, src)			\
@@ -529,7 +539,7 @@ do {							\
 
 
 /*
- * Do not free the stack after this, it may have pointers into what
+ * Do not free the stack after this_, it may have pointers into what
  * was saved in 'dst'.
  */
 #define WSTACK_SAVE(s,dst)\
@@ -557,7 +567,7 @@ do {\
 #define CLEAR_SAVED_WSTACK(wstack) ((void) ((wstack)->wstart = NULL))
 
 /*
- * Use on empty stack, only the allocator can be changed before this.
+ * Use on empty stack, only the allocator can be changed before this_.
  * The src stack is reset to NULL.
  */
 #define WSTACK_RESTORE(s, src)			\
@@ -1066,7 +1076,7 @@ int erts_print_system_version(int to, void *arg, Process *c_p);
 int erts_hibernate(Process* c_p, Eterm module, Eterm function, Eterm args, Eterm* reg);
 
 /*
-** Call_trace uses this API for the parameter matching functions
+** Call_trace uses this_ API for the parameter matching functions
 */
 
 #define MatchSetRef(MPSP) 			\

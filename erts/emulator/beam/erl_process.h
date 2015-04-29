@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 1996-2014. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -372,7 +372,7 @@ typedef struct {
     ErtsRunQueue *misc_evac_runq;
     struct {
 	struct {
-	    int this;
+            int this_;
 	    int other;
 	} limit;
 	ErtsRunQueue *runq;
@@ -844,9 +844,9 @@ struct process {
     ErtsPTabElementCommon common; /* *Need* to be first in struct */
 
     /* All fields in the PCB that differs between different heap
-     * architectures, have been moved to the end of this struct to
+     * architectures, have been moved to the end of this_ struct to
      * make sure that as few offsets as possible differ. Different
-     * offsets between memory architectures in this struct, means that
+     * offsets between memory architectures in this_ struct, means that
      * native code have to use functions instead of constants.
      */
 
@@ -887,7 +887,7 @@ struct process {
 				 */
     Uint32 rcount;		/* suspend count */
     int  schedule_count;	/* Times left to reschedule a low prio process */
-    Uint reds;			/* No of reductions for this process  */
+    Uint reds;			/* No of reductions for this_ process  */
     Eterm group_leader;		/* Pid in charge
 				   (can be boxed) */
     Uint flags;			/* Trap exit, etc (no trace flags anymore) */
@@ -900,13 +900,13 @@ struct process {
     struct ErtsNodesMonitor_ *nodes_monitors;
 
     ErtsSuspendMonitor *suspend_monitors; /* Processes suspended by
-					     this process via
+                                             this_ process via
 					     erlang:suspend_process/1 */
 
     ErlMessageQueue msg;	/* Message queue */
 
     union {
-	ErtsBifTimer *bif_timers;	/* Bif timers aiming at this process */
+        ErtsBifTimer *bif_timers;	/* Bif timers aiming at this_ process */
 	void *terminate;
     } u;
 
@@ -931,7 +931,7 @@ struct process {
     /*
      * Information mainly for post-mortem use (erl crash dump).
      */
-    Eterm parent;		/* Pid of process that created this process. */
+    Eterm parent;		/* Pid of process that created this_ process. */
     erts_approx_time_t approx_started; /* Time when started. */
 
     /* This is the place, where all fields that differs between memory
@@ -972,14 +972,14 @@ struct process {
 #endif
 
 #ifdef CHECK_FOR_HOLES
-    Eterm* last_htop;		/* No need to scan the heap below this point. */
-    ErlHeapFragment* last_mbuf;	/* No need to scan beyond this mbuf. */
+    Eterm* last_htop;		/* No need to scan the heap below this_ point. */
+    ErlHeapFragment* last_mbuf;	/* No need to scan beyond this_ mbuf. */
 #endif
 
 #ifdef DEBUG
     Eterm* last_old_htop;	/*
-				 * No need to scan the old heap below this point
-				 * when looking for invalid pointers into the new heap or
+                                 * No need to scan the old heap below this_ point
+				 * when looking for invalid pointers into the new_ heap or
 				 * heap fragments.
 				 */
 #endif
@@ -1010,7 +1010,7 @@ void erts_check_for_holes(Process* p);
  * The MBUF_GC_FACTOR decides how easily a process is subject to GC 
  * due to message buffers allocated outside the heap.
  * The larger the factor, the easier the process gets GCed.
- * On a small memory system with lots of processes, this makes a significant 
+ * On a small memory system with lots of processes, this_ makes a significant
  * difference, especially since the GCs help fragmentation quite a bit too.
  */
 #if defined(SMALL_MEMORY)
@@ -1732,7 +1732,7 @@ void *erts_psd_set_init(Process *p, ErtsProcLocks plocks, int ix, void *data);
 ERTS_GLB_INLINE void *
 erts_psd_get(Process *p, int ix);
 ERTS_GLB_INLINE void *
-erts_psd_set(Process *p, ErtsProcLocks plocks, int ix, void *new);
+erts_psd_set(Process *p, ErtsProcLocks plocks, int ix, void *new_);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
@@ -1923,7 +1923,7 @@ erts_check_emigration_need(ErtsRunQueue *c_rq, int prio)
 	    /* No migration if other is non-empty */
 	    if (!(ERTS_RUNQ_FLGS_GET(rq) & ERTS_RUNQ_FLG_NONEMPTY)
 		&& erts_get_sched_util(rq, 0, 1) < mp->prio[prio].limit.other
-		&& erts_get_sched_util(c_rq, 0, 1) > mp->prio[prio].limit.this) {
+                && erts_get_sched_util(c_rq, 0, 1) > mp->prio[prio].limit.this_) {
 		return rq;
 	    }
 	}
@@ -1936,7 +1936,7 @@ erts_check_emigration_need(ErtsRunQueue *c_rq, int prio)
 	    else
 		len = RUNQ_READ_LEN(&c_rq->procs.prio_info[prio].len);
 
-	    if (len > mp->prio[prio].limit.this) {
+            if (len > mp->prio[prio].limit.this_) {
 		ErtsRunQueue *n_rq = mp->prio[prio].runq;
 		if (n_rq) {
 		    if (prio == ERTS_PORT_PRIO_LEVEL)

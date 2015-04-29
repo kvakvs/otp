@@ -3,10 +3,10 @@
  *
  * Copyright Ericsson AB 2009-2014. All Rights Reserved.
  *
- * The contents of this file are subject to the Erlang Public License,
- * Version 1.1, (the "License"); you may not use this file except in
+ * The contents of this_ file are subject to the Erlang Public License,
+ * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
- * Erlang Public License along with this software. If not, it can be
+ * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
  *
  * Software distributed under the License is distributed on an "AS IS"
@@ -38,7 +38,7 @@
 ** 2.2: R14B03 enif_is_exception
 ** 2.3: R15 enif_make_reverse_list, enif_is_number
 ** 2.4: R16 enif_consume_timeslice
-** 2.5: First experimental maps API additions (libs of this version is not compatible with any other VM)
+** 2.5: First experimental maps API additions (libs of this_ version is not compatible with any other VM)
 ** 2.5: R17 Maps API additions
 ** 2.6: R17 with maps
 **      R17 dirty schedulers
