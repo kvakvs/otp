@@ -152,7 +152,7 @@ static int print_atom_name(fmtfn_t fn, void* arg, Eterm atom, long *dcount)
     res = 0;
     i = atom_val(atom);
 
-    if ((i < 0) || (i >= atom_table_size()) ||  (atom_tab(i) == NULL)) {
+    if ((i < 0) || (i >= atom_table_size()) ||  (atom_tab(i) == nullptr)) {
 	PRINT_STRING(res, fn, arg, "<bad atom index: ");
 	PRINT_SWORD(res, fn, arg, 'd', 0, 1, (ErlPfSWord) i);
 	PRINT_CHAR(res, fn, arg, '>');
@@ -350,7 +350,7 @@ print_term(fmtfn_t fn, void* arg, Eterm obj, long *dcount,
 	    if (sz <= 64)
 		buf = &def_buf[0];
 	    else
-		buf = erts_alloc(ERTS_ALC_T_TMP, sz);
+                buf = (char*)erts_alloc(ERTS_ALC_T_TMP, sz);
 	    big_str = erts_big_to_string(wobj, buf, sz);
 	    print_res = erts_printf_string(fn, arg, big_str);
 	    if (buf != &def_buf[0])

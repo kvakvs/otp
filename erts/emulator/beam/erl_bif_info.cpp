@@ -4159,13 +4159,13 @@ static void os_info_init(void)
     Eterm type = erts_atom_put((byte *) os_type, strlen(os_type), ERTS_ATOM_ENC_LATIN1, 1);
     Eterm flav;
     int major, minor, build;
-    char* buf = erts_alloc(ERTS_ALC_T_TMP, 1024); /* More than enough */
+    char* buf = (char*)erts_alloc(ERTS_ALC_T_TMP, 1024); /* More than enough */
     Eterm* hp;
 
     os_flavor(buf, 1024);
     flav = erts_atom_put((byte *) buf, strlen(buf), ERTS_ATOM_ENC_LATIN1, 1);
     erts_free(ERTS_ALC_T_TMP, (void *) buf);
-    hp = erts_alloc(ERTS_ALC_T_LL_TEMP_TERM, (3+4)*sizeof(Eterm));
+    hp = (Eterm*)erts_alloc(ERTS_ALC_T_LL_TEMP_TERM, (3+4)*sizeof(Eterm));
     os_type_tuple = TUPLE2(hp, type, flav);
     hp += 3;
     os_version(&major, &minor, &build);

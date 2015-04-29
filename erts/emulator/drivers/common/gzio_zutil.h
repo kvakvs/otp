@@ -23,7 +23,6 @@
  * that may change or not exist at all.
  */
 
-#define local static
 #define DEF_MEM_LEVEL 8
 #define zmemcpy sys_memcpy
 

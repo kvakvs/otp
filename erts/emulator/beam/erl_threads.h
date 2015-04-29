@@ -379,7 +379,7 @@ typedef struct {
 #endif
 } erts_rwlock_t;
 
-__decl_noreturn void  __noreturn erts_thr_fatal_error(int, char *); 
+__decl_noreturn void  __noreturn erts_thr_fatal_error(int, const char *);
                                  /* implemented in erl_init.c */
 
 #define ERTS_THR_INIT_DATA_DEF_INITER	ETHR_INIT_DATA_DEFAULT_INITER
@@ -460,7 +460,7 @@ typedef struct { int gcc_is_buggy; } erts_rwlock_t;
 #define erts_no_atomic32_t erts_aint32_t
 #define erts_no_atomic64_t erts_aint64_t
 
-#define ERTS_AINT_NULL ((erts_aint_t) NULL)
+#define ERTS_AINT_NULL ((erts_aint_t) nullptr)
 
 #define ERTS_AINT_T_MAX (~(((erts_aint_t) 1) << (sizeof(erts_aint_t)*8-1)))
 #define ERTS_AINT_T_MIN ((((erts_aint_t) 1) << (sizeof(erts_aint_t)*8-1)))
@@ -2484,7 +2484,7 @@ erts_rwmtx_init_x(erts_rwmtx_t *rwmtx,
 		  char *name,
 		  Eterm extra)
 {
-    erts_rwmtx_init_opt_x(rwmtx, NULL, name, extra);
+    erts_rwmtx_init_opt_x(rwmtx, nullptr, name, extra);
 }
 
 ERTS_GLB_INLINE void
@@ -2508,7 +2508,7 @@ erts_rwmtx_init_opt(erts_rwmtx_t *rwmtx,
 ERTS_GLB_INLINE void
 erts_rwmtx_init(erts_rwmtx_t *rwmtx, char *name)
 {
-    erts_rwmtx_init_opt(rwmtx, NULL, name);
+    erts_rwmtx_init_opt(rwmtx, nullptr, name);
 }
 
 ERTS_GLB_INLINE void

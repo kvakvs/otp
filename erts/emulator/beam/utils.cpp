@@ -193,10 +193,10 @@ erl_grow_estack(ErtsEStack* s, Eterm* default_estack)
     Uint new_size = old_size * 2;
     Uint sp_offs = s->sp - s->start;
     if (s->start != default_estack) {
-	s->start = erts_realloc(s->alloc_type, s->start,
+        s->start = (Eterm*)erts_realloc(s->alloc_type, s->start,
 				new_size*sizeof(Eterm));
     } else {
-	Eterm* new_ptr = erts_alloc(s->alloc_type, new_size*sizeof(Eterm));
+        Eterm* new_ptr = (Eterm*)erts_alloc(s->alloc_type, new_size*sizeof(Eterm));
 	sys_memcpy(new_ptr, s->start, old_size*sizeof(Eterm));
 	s->start = new_ptr;
     }
@@ -213,10 +213,10 @@ erl_grow_wstack(ErtsWStack* s, UWord* default_wstack)
     Uint new_size = old_size * 2;
     Uint sp_offs = s->wsp - s->wstart;
     if (s->wstart != default_wstack) {
-	s->wstart = erts_realloc(s->alloc_type, s->wstart,
+        s->wstart = (UWord*)erts_realloc(s->alloc_type, s->wstart,
 				 new_size*sizeof(UWord));
     } else {
-	UWord* new_ptr = erts_alloc(s->alloc_type, new_size*sizeof(UWord));
+        UWord* new_ptr = (UWord*)erts_alloc(s->alloc_type, new_size*sizeof(UWord));
 	sys_memcpy(new_ptr, s->wstart, old_size*sizeof(UWord));
 	s->wstart = new_ptr;
     }
@@ -281,7 +281,7 @@ static const struct {
 		{ERTS_I64_LITERAL(0xf0), 4},
 		{ERTS_I64_LITERAL(0xff00), 8},
 		{ERTS_I64_LITERAL(0xffff0000), 16},
-		{ERTS_I64_LITERAL(0xffffffff00000000), 32}};
+                {ERTS_I64_LITERAL((Sint64)0xffffffff00000000), 32}};
 
 static ERTS_INLINE int
 fit_in_bits(Sint64 value, int start)

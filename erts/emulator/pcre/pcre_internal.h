@@ -2347,8 +2347,8 @@ typedef struct real_pcre8_or_16 {
   void             *nullpad;      /* NULL padding */
 } real_pcre8_or_16;
 
-typedef struct real_pcre8_or_16 real_pcre;
-typedef struct real_pcre8_or_16 real_pcre16;
+typedef real_pcre8_or_16 real_pcre;
+typedef real_pcre8_or_16 real_pcre16;
 
 typedef struct real_pcre32 {
   pcre_uint32 magic_number;

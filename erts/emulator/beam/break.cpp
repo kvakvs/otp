@@ -42,8 +42,8 @@
 /* Forward declarations -- should really appear somewhere else */
 static void process_killer(void);
 void do_break(void);
-void erl_crash_dump_v(char *file, int line, char* fmt, va_list args);
-void erl_crash_dump(char* file, int line, char* fmt, ...);
+void erl_crash_dump_v(const char *file, int line, const char* fmt, va_list args);
+void erl_crash_dump(const char* file, int line, const char* fmt, ...);
 
 #ifdef DEBUG
 static void bin_check(void);
@@ -666,7 +666,7 @@ bin_check(void)
 
 /* XXX THIS SHOULD BE IN SYSTEM !!!! */
 void
-erl_crash_dump_v(char *file, int line, char* fmt, va_list args)
+erl_crash_dump_v(const char *file, int line, const char* fmt, va_list args)
 {
 #ifdef ERTS_SMP
     ErtsThrPrgrData tpd_buf; /* in case we aren't a managed thread... */

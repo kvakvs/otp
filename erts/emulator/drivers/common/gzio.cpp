@@ -78,11 +78,11 @@ typedef struct gz_stream {
 					    *  this_ structure. */
 } gz_stream;
 
-local ErtsGzFile gz_open      (const char *path, const char *mode);
-local int    get_byte     (gz_stream *s);
-local void   check_header (gz_stream *s);
-local int    destroy      (gz_stream *s);
-local uLong  getLong      (gz_stream *s);
+static ErtsGzFile gz_open      (const char *path, const char *mode);
+static int    get_byte     (gz_stream *s);
+static void   check_header (gz_stream *s);
+static int    destroy      (gz_stream *s);
+static uLong  getLong      (gz_stream *s);
 
 #ifdef UNIX
 /*
@@ -145,9 +145,7 @@ local uLong  getLong      (gz_stream *s);
    can be checked to distinguish the two cases (if errno is zero, the
    zlib error is Z_MEM_ERROR).
 */
-local ErtsGzFile gz_open (path, mode)
-    const char *path;
-    const char *mode;
+static ErtsGzFile gz_open (const char* path, const char* mode)
 {
     int err;
     int level = Z_DEFAULT_COMPRESSION; /* compression level */
@@ -173,13 +171,13 @@ local ErtsGzFile gz_open (path, mode)
     s->z_err = Z_OK;
     s->z_eof = 0;
     s->crc = crc32(0L, Z_NULL, 0);
-    s->msg = NULL;
+    s->msg = nullptr;
     s->transparent = 0;
     s->position = 0;
     s->destroy = destroy;
 
     s->path = (char*)ALLOC(FILENAME_BYTELEN(path)+FILENAME_CHARSIZE);
-    if (s->path == NULL) {
+    if (s->path == nullptr) {
         return s->destroy(s), (ErtsGzFile)Z_NULL;
     }
     FILENAME_COPY(s->path, path); /* do this_ early for debugging */
@@ -268,7 +266,7 @@ local ErtsGzFile gz_open (path, mode)
    Rewind a gzfile back to the beginning.
 */
 
-local int gz_rewind (gz_stream *s)
+static int gz_rewind (gz_stream *s)
 {
     TRYFREE(s->msg);
 
@@ -284,7 +282,7 @@ local int gz_rewind (gz_stream *s)
     s->z_err = Z_OK;
     s->z_eof = 0;
     s->crc = crc32(0L, Z_NULL, 0);
-    s->msg = NULL;
+    s->msg = nullptr;
     s->position = 0;
     s->stream.next_in = s->inbuf;
 
@@ -297,9 +295,7 @@ local int gz_rewind (gz_stream *s)
 /* ===========================================================================
      Opens a gzip (.gz) file for reading or writing.
 */
-ErtsGzFile erts_gzopen (path, mode)
-    const char *path;
-    const char *mode;
+ErtsGzFile erts_gzopen (const char *path, const char *mode)
 {
     return gz_open (path, mode);
 }
@@ -310,8 +306,7 @@ ErtsGzFile erts_gzopen (path, mode)
    for end of file.
    IN assertion: the stream s has been sucessfully opened for reading.
 */
-local int get_byte(s)
-    gz_stream *s;
+static int get_byte(gz_stream *s)
 {
     if (s->z_eof) return EOF;
     if (s->stream.avail_in == 0) {
@@ -356,8 +351,7 @@ local int get_byte(s)
        s->stream.avail_in is zero for the first time, but may be non-zero
        for concatenated .gz files.
 */
-local void check_header(s)
-    gz_stream *s;
+static void check_header(gz_stream *s)
 {
     int method; /* method byte */
     int flags;  /* flags byte */
@@ -409,8 +403,7 @@ local void check_header(s)
  * Cleanup then free the given gz_stream. Return a zlib error code.
    Try freeing in the reverse order of allocations.
  */
-local int destroy (s)
-    gz_stream *s;
+static int destroy (gz_stream *s)
 {
     int err = Z_OK;
 
@@ -418,7 +411,7 @@ local int destroy (s)
 
     TRYFREE(s->msg);
 
-    if (s->stream.state != NULL) {
+    if (s->stream.state != nullptr) {
        if (s->mode == 'w') {
            err = deflateEnd(&(s->stream));
        } else if (s->mode == 'r') {
@@ -451,15 +444,15 @@ int
 erts_gzread(ErtsGzFile file, voidp buf, unsigned len)
 {
     gz_stream *s = (gz_stream*)file;
-    Bytef *start = buf; /* starting point for crc computation */
+    Bytef *start = (Bytef *)buf; /* starting point for crc computation */
     Byte  *next_out; /* == stream.next_out but not forced far (for MSDOS) */
 
-    if (s == NULL || s->mode != 'r') return Z_STREAM_ERROR;
+    if (s == nullptr || s->mode != 'r') return Z_STREAM_ERROR;
 
     if (s->z_err == Z_DATA_ERROR || s->z_err == Z_ERRNO) return -1;
     if (s->z_err == Z_STREAM_END) return 0;  /* EOF */
 
-    s->stream.next_out = next_out = buf;
+    s->stream.next_out = next_out = (Byte*)buf;
     s->stream.avail_out = len;
 
     while (s->stream.avail_out != 0) {
@@ -562,9 +555,9 @@ erts_gzwrite(ErtsGzFile file, voidp buf, unsigned len)
 {
     gz_stream *s = (gz_stream*)file;
 
-    if (s == NULL || s->mode != 'w') return Z_STREAM_ERROR;
+    if (s == nullptr || s->mode != 'w') return Z_STREAM_ERROR;
 
-    s->stream.next_in = buf;
+    s->stream.next_in = (Bytef*)buf;
     s->stream.avail_in = len;
 
     while (s->stream.avail_in != 0) {
@@ -608,7 +601,7 @@ erts_gzseek(ErtsGzFile file, int offset, int whence)
 	return -1;
     }
 
-    if (s == NULL) {
+    if (s == nullptr) {
 	errno = EINVAL;
 	return -1;
     }
@@ -671,7 +664,7 @@ erts_gzflush(ErtsGzFile file, int flush)
     int done = 0;
     gz_stream *s = (gz_stream*)file;
 
-    if (s == NULL || s->mode != 'w') return Z_STREAM_ERROR;
+    if (s == nullptr || s->mode != 'w') return Z_STREAM_ERROR;
 
     s->stream.avail_in = 0; /* should be zero already anyway */
 
@@ -705,8 +698,7 @@ erts_gzflush(ErtsGzFile file, int flush)
 /* ===========================================================================
    Reads a long in LSB order from the given gz_stream. Sets 
 */
-local uLong getLong (s)
-    gz_stream *s;
+static uLong getLong (gz_stream *s)
 {
     uLong x = (uLong)get_byte(s);
     int c;
@@ -729,7 +721,7 @@ erts_gzclose(ErtsGzFile file)
     int err;
     gz_stream *s = (gz_stream*)file;
 
-    if (s == NULL) return Z_STREAM_ERROR;
+    if (s == nullptr) return Z_STREAM_ERROR;
 
     if (s->mode == 'w') {
         err = erts_gzflush (file, Z_FINISH);
@@ -762,8 +754,8 @@ erts_gzinflate_buffer(char* start, uLong size)
     bptr = (unsigned char *) start;
     if (size < 2 || bptr[0] != gz_magic[0] || bptr[1] != gz_magic[1]) {
 	/* No GZIP header -- just copy the data into a new_ binary */
-	if ((bin = driver_alloc_binary(size)) == NULL) {
-	    return NULL;
+        if ((bin = driver_alloc_binary(size)) == nullptr) {
+            return nullptr;
 	}
 	memcpy(bin->orig_bytes, start, size);
 	return bin;
@@ -778,12 +770,12 @@ erts_gzinflate_buffer(char* start, uLong size)
     zstr.avail_in = size;
     erl_zlib_alloc_init(&zstr);
     size *= 2;
-    if ((bin = driver_alloc_binary(size)) == NULL) {
-	return NULL;
+    if ((bin = driver_alloc_binary(size)) == nullptr) {
+        return nullptr;
     }
     if (inflateInit2(&zstr, 15+16) != Z_OK) { /* Decode GZIP format */
 	driver_free(bin);
-	return NULL;
+        return nullptr;
     }
     for (;;) {
 	int status;
@@ -793,15 +785,15 @@ erts_gzinflate_buffer(char* start, uLong size)
 	status = inflate(&zstr, Z_NO_FLUSH);
 	if (status == Z_OK) {
 	    size *= 2;
-	    if ((bin2 = driver_realloc_binary(bin, size)) == NULL) {
+            if ((bin2 = driver_realloc_binary(bin, size)) == nullptr) {
 	    error:
 		driver_free_binary(bin);
 		inflateEnd(&zstr);
-		return NULL;
+                return nullptr;
 	    }
 	    bin = bin2;
 	} else if (status == Z_STREAM_END) {
-	    if ((bin2 = driver_realloc_binary(bin, zstr.total_out)) == NULL) {
+            if ((bin2 = driver_realloc_binary(bin, zstr.total_out)) == nullptr) {
 		goto error;
 	    }
 	    inflateEnd(&zstr);
@@ -839,10 +831,10 @@ erts_gzdeflate_buffer(char* start, uLong size)
 
     if (deflateInit2(&c_stream, Z_DEFAULT_COMPRESSION,
 		     Z_DEFLATED, -MAX_WBITS, DEF_MEM_LEVEL, 0) != Z_OK)
-	return NULL;
+        return nullptr;
 
-    if ((bin = driver_alloc_binary(comprLen+GZIP_X_SIZE)) == NULL)
-	return NULL;
+    if ((bin = driver_alloc_binary(comprLen+GZIP_X_SIZE)) == nullptr)
+        return nullptr;
     sprintf(bin->orig_bytes, "%c%c%c%c%c%c%c%c%c%c", gz_magic[0], gz_magic[1],
 	    Z_DEFLATED, 0 /*flags*/, 0,0,0,0 /*time*/, 0 /*xflags*/, OS_CODE);
 
@@ -853,7 +845,7 @@ erts_gzdeflate_buffer(char* start, uLong size)
 
     if (deflate(&c_stream, Z_FINISH) != Z_STREAM_END) {
 	driver_free_binary(bin);
-	return NULL;	
+        return nullptr;
     }
     crc = crc32(crc, (unsigned char*)start, size);
     ptr = c_stream.next_out;
@@ -871,11 +863,11 @@ erts_gzdeflate_buffer(char* start, uLong size)
 
     if (deflateEnd(&c_stream) != Z_OK) {
 	driver_free_binary(bin);
-	return NULL;	
+        return nullptr;
     }	
     size = ptr - (Byte*)bin->orig_bytes;
 
-    if ((bin2 = driver_realloc_binary(bin, size)) == NULL)
+    if ((bin2 = driver_realloc_binary(bin, size)) == nullptr)
 	driver_free_binary(bin);
     return bin2;
 }

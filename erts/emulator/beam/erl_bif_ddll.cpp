@@ -1546,8 +1546,7 @@ static int do_load_driver_entry(DE_Handle *dh, char *path, char *name)
 	goto error;
     }
 
-    switch (dp->extended_marker) {
-    case ERL_DRV_EXTENDED_MARKER:
+    if (dp->extended_marker == ERL_DRV_EXTENDED_MARKER) {
 	if (dp->major_version < ERL_DRV_MIN_REQUIRED_MAJOR_VERSION_ON_LOAD
 	    || (ERL_DRV_EXTENDED_MAJOR_VERSION < dp->major_version
 		|| (ERL_DRV_EXTENDED_MAJOR_VERSION == dp->major_version
@@ -1556,8 +1555,7 @@ static int do_load_driver_entry(DE_Handle *dh, char *path, char *name)
 	    res = ERL_DE_LOAD_ERROR_INCORRECT_VERSION;
 	    goto error;
 	}
-	break;
-    default:
+    } else {
 	/* Old driver; needs to be recompiled... */
 	res = ERL_DE_LOAD_ERROR_INCORRECT_VERSION;
 	goto error;

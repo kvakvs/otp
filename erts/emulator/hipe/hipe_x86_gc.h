@@ -31,7 +31,7 @@ struct nstack_walk_state {
 #ifdef SKIP_YOUNGEST_FRAME
     const struct sdesc *sdesc0;	/* .sdesc0 must be a pointer rvalue */
 #else
-    struct sdesc sdesc0[1];	/* .sdesc0 must be a pointer rvalue */
+    struct sdesc_t sdesc0[1];	/* .sdesc0 must be a pointer rvalue */
 #endif
 };
 
@@ -56,7 +56,7 @@ static inline Eterm *nstack_walk_nsp_begin(const Process *p)
 #endif
 }
 
-static inline const struct sdesc*
+static inline const struct sdesc_t*
 nstack_walk_init_sdesc(const Process *p, struct nstack_walk_state *state)
 {
 #ifdef SKIP_YOUNGEST_FRAME
@@ -80,7 +80,7 @@ nstack_walk_init_sdesc(const Process *p, struct nstack_walk_state *state)
 #endif
 }
 
-static inline void nstack_walk_update_trap(Process *p, const struct sdesc *sdesc0)
+static inline void nstack_walk_update_trap(Process *p, const struct sdesc_t *sdesc0)
 {
 #ifdef SKIP_YOUNGEST_FRAME
     Eterm *nsp = p->hipe.nsp;
@@ -119,7 +119,7 @@ static inline int nstack_walk_nsp_reached_end(const Eterm *nsp, const Eterm *nsp
     return nsp >= nsp_end;
 }
 
-static inline unsigned int nstack_walk_frame_size(const struct sdesc *sdesc)
+static inline unsigned int nstack_walk_frame_size(const struct sdesc_t *sdesc)
 {
     return sdesc_fsize(sdesc) + 1 + sdesc_arity(sdesc);
 }
@@ -130,7 +130,7 @@ static inline Eterm *nstack_walk_frame_index(Eterm *nsp, unsigned int i)
 }
 
 static inline unsigned long
-nstack_walk_frame_ra(const Eterm *nsp, const struct sdesc *sdesc)
+nstack_walk_frame_ra(const Eterm *nsp, const struct sdesc_t *sdesc)
 {
     return nsp[sdesc_fsize(sdesc)];
 }

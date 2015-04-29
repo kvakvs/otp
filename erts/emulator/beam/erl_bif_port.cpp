@@ -1382,7 +1382,7 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
     pca.bin_sz = binary_size(BIF_ARG_2);
     ERTS_GET_BINARY_BYTES(BIF_ARG_2, bin_ptr, pca.bin_bitoffs, bin_bitsz);  
     if (pca.bin_bitoffs != 0) {
-        pca.aligned_ptr = erts_alloc(ERTS_ALC_T_TMP, pca.bin_sz);
+        pca.aligned_ptr = (byte*)erts_alloc(ERTS_ALC_T_TMP, pca.bin_sz);
         erts_copy_bits(bin_ptr, pca.bin_bitoffs, 1, pca.aligned_ptr, 0, 1, pca.bin_sz*8);
     }
     else {

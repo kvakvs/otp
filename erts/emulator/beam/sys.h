@@ -676,7 +676,7 @@ ERTS_GLB_INLINE void erts_unblock_fpe(int unmasked)
 typedef struct {
     char* str;
 }ErtsSysDdllError;
-#define ERTS_SYS_DDLL_ERROR_INIT {NULL}
+#define ERTS_SYS_DDLL_ERROR_INIT {nullptr}
 extern void erts_sys_ddll_free_error(ErtsSysDdllError*);
 extern void erl_sys_ddll_init(void); /* to initialize mutexes etc */
 extern int erts_sys_ddll_open(const char *path, void **handle, ErtsSysDdllError*);
@@ -684,11 +684,11 @@ extern int erts_sys_ddll_open_noext(char *path, void **handle, ErtsSysDdllError*
 extern int erts_sys_ddll_load_driver_init(void *handle, void **function);
 extern int erts_sys_ddll_load_nif_init(void *handle, void **function,ErtsSysDdllError*);
 extern int erts_sys_ddll_close2(void *handle, ErtsSysDdllError*);
-#define erts_sys_ddll_close(H) erts_sys_ddll_close2(H,NULL)
+#define erts_sys_ddll_close(H) erts_sys_ddll_close2(H,nullptr)
 extern void *erts_sys_ddll_call_init(void *function);
 extern void *erts_sys_ddll_call_nif_init(void *function);
 extern int erts_sys_ddll_sym2(void *handle, const char *name, void **function, ErtsSysDdllError*);
-#define erts_sys_ddll_sym(H,N,F) erts_sys_ddll_sym2(H,N,F,NULL)
+#define erts_sys_ddll_sym(H,N,F) erts_sys_ddll_sym2(H,N,F,nullptr)
 extern char *erts_sys_ddll_error(int code);
 
 

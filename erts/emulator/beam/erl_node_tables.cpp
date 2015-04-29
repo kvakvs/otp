@@ -266,7 +266,7 @@ DistEntry *erts_find_or_insert_dist_entry(Eterm sysname)
 	return res;
     de.sysname = sysname;
     erts_smp_rwmtx_rwlock(&erts_dist_table_rwmtx);
-    res = hash_put(&erts_dist_table, (void *) &de);
+    res = (DistEntry*)hash_put(&erts_dist_table, (void *) &de);
     refc = erts_refc_inctest(&res->refc, 0);
     if (refc < 2) /* New or pending delete */
 	erts_refc_inc(&res->refc, 1);
@@ -280,7 +280,7 @@ DistEntry *erts_find_dist_entry(Eterm sysname)
     DistEntry de;
     de.sysname = sysname;
     erts_smp_rwmtx_rlock(&erts_dist_table_rwmtx);
-    res = hash_get(&erts_dist_table, (void *) &de);
+    res = (DistEntry*)hash_get(&erts_dist_table, (void *) &de);
     if (res) {
 	erts_aint_t refc = erts_refc_inctest(&res->refc, 1);
 	if (refc < 2) /* Pending delete */
@@ -587,7 +587,7 @@ ErlNode *erts_find_or_insert_node(Eterm sysname, Uint creation)
     ne.creation = creation;
 
     erts_smp_rwmtx_rlock(&erts_node_table_rwmtx);
-    res = hash_get(&erts_node_table, (void *) &ne);
+    res = (ErlNode*)hash_get(&erts_node_table, (void *) &ne);
     if (res && res != erts_this_node) {
 	erts_aint_t refc = erts_refc_inctest(&res->refc, 0);
 	if (refc < 2) /* New or pending delete */
@@ -598,7 +598,7 @@ ErlNode *erts_find_or_insert_node(Eterm sysname, Uint creation)
 	return res;
 
     erts_smp_rwmtx_rwlock(&erts_node_table_rwmtx);
-    res = hash_put(&erts_node_table, (void *) &ne);
+    res = (ErlNode*)hash_put(&erts_node_table, (void *) &ne);
     ASSERT(res);
     if (res != erts_this_node) {
 	erts_aint_t refc = erts_refc_inctest(&res->refc, 0);
@@ -727,7 +727,7 @@ void erts_init_node_tables(void)
     f.alloc = (HALLOC_FUN)		dist_table_alloc;
     f.free  = (HFREE_FUN)		dist_table_free;
 
-    erts_this_dist_entry = erts_alloc(ERTS_ALC_T_DIST_ENTRY, sizeof(DistEntry));
+    erts_this_dist_entry = (DistEntry*)erts_alloc(ERTS_ALC_T_DIST_ENTRY, sizeof(DistEntry));
     dist_entries = 1;
 
     hash_init(ERTS_ALC_T_DIST_TABLE, &erts_dist_table, "dist_table", 11, f);
@@ -786,7 +786,7 @@ void erts_init_node_tables(void)
 
     hash_init(ERTS_ALC_T_NODE_TABLE, &erts_node_table, "node_table", 11, f);
 
-    erts_this_node = erts_alloc(ERTS_ALC_T_NODE_ENTRY, sizeof(ErlNode));
+    erts_this_node = (ErlNode*)erts_alloc(ERTS_ALC_T_NODE_ENTRY, sizeof(ErlNode));
     node_entries = 1;
 
     erts_refc_init(&erts_this_node->refc, 1); /* The system itself */
@@ -1144,7 +1144,7 @@ insert_offheap(ErlOffHeap *oh, int type, Eterm id)
 		    erts_match_prog_foreach_offheap(u.pb->val,
 						    insert_offheap2,
 						    (void *) &a);
-		    nib = erts_alloc(ERTS_ALC_T_NC_TMP, sizeof(InsertedBin));
+                    nib = (InsertedBin*)erts_alloc(ERTS_ALC_T_NC_TMP, sizeof(InsertedBin));
 		    nib->bin_val = u.pb->val;
 		    nib->next = inserted_bins;
 		    inserted_bins = nib;
@@ -1168,7 +1168,7 @@ insert_offheap(ErlOffHeap *oh, int type, Eterm id)
 
 static void doit_insert_monitor(ErtsMonitor *monitor, void *p)
 {
-    Eterm *idp = p;
+    Eterm *idp = (Eterm*)p;
     if(is_external(monitor->pid))
 	insert_node(external_thing_ptr(monitor->pid)->node, MONITOR_REF, *idp);
     if(is_external(monitor->ref))
@@ -1177,7 +1177,7 @@ static void doit_insert_monitor(ErtsMonitor *monitor, void *p)
 
 static void doit_insert_link(ErtsLink *lnk, void *p)
 {
-    Eterm *idp = p;
+    Eterm *idp = (Eterm *)p;
     if(is_external(lnk->pid))
 	insert_node(external_thing_ptr(lnk->pid)->node, LINK_REF, 
 		    *idp);
@@ -1198,7 +1198,7 @@ insert_links(ErtsLink *lnk, Eterm id)
 
 static void doit_insert_link2(ErtsLink *lnk, void *p)
 {
-    Eterm *idp = p;
+    Eterm *idp = (Eterm *)p;
     if(is_external(lnk->pid))
 	insert_node(external_thing_ptr(lnk->pid)->node, LINK_REF, 
 		    *idp);
@@ -1272,14 +1272,14 @@ setup_reference_table(void)
     inserted_bins = NULL;
 
     hash_get_info(&hi, &erts_node_table);
-    referred_nodes = erts_alloc(ERTS_ALC_T_NC_TMP,
+    referred_nodes = (ReferredNode*)erts_alloc(ERTS_ALC_T_NC_TMP,
 				hi.objs*sizeof(ReferredNode));
     no_referred_nodes = 0;
     hash_foreach(&erts_node_table, init_referred_node, NULL);
     ASSERT(no_referred_nodes == hi.objs);
 
     hash_get_info(&hi, &erts_dist_table);
-    referred_dists = erts_alloc(ERTS_ALC_T_NC_TMP,
+    referred_dists = (ReferredDist*)erts_alloc(ERTS_ALC_T_NC_TMP,
 				hi.objs*sizeof(ReferredDist));
     no_referred_dists = 0;
     hash_foreach(&erts_dist_table, init_referred_dist, NULL);
@@ -1322,7 +1322,7 @@ setup_reference_table(void)
 			    insert_dist_entry(msg->data.dist_ext->dep,
 					      HEAP_REF, proc->common.id, 0);
 			if (is_not_nil(ERL_MESSAGE_TOKEN(msg)))
-			    heap_frag = erts_dist_ext_trailer(msg->data.dist_ext);
+                            heap_frag = (ErlHeapFragment*)erts_dist_ext_trailer(msg->data.dist_ext);
 		    }
 		}
 		if (heap_frag)
@@ -1341,7 +1341,7 @@ setup_reference_table(void)
 			    insert_dist_entry(msg->data.dist_ext->dep,
 					      HEAP_REF, proc->common.id, 0);
 			if (is_not_nil(ERL_MESSAGE_TOKEN(msg)))
-			    heap_frag = erts_dist_ext_trailer(msg->data.dist_ext);
+                            heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(msg->data.dist_ext);
 		    }
 		}
 		if (heap_frag)

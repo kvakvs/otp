@@ -47,14 +47,14 @@
 typedef int ssize_t;
 #endif
 
-int (*erts_printf_stdout_func)(char *, va_list) = NULL;
-int (*erts_printf_stderr_func)(char *, va_list) = NULL;
+int (*erts_printf_stdout_func)(char *, va_list) = nullptr;
+int (*erts_printf_stderr_func)(char *, va_list) = nullptr;
 
 int erts_printf_add_cr_to_stdout = 0;
 int erts_printf_add_cr_to_stderr = 0;
 
-int (*erts_printf_block_fpe)(void) = NULL;
-void (*erts_printf_unblock_fpe)(int) = NULL;
+int (*erts_printf_block_fpe)(void) = nullptr;
+void (*erts_printf_unblock_fpe)(int) = nullptr;
 
 #undef FLOCKFILE
 #undef FUNLOCKFILE

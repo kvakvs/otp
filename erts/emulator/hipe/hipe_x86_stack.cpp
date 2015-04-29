@@ -157,7 +157,7 @@ void hipe_print_nstack(Process *p)
 #define MINSTACK	128
 #define NSKIPFRAMES	4
 
-void hipe_update_stack_trap(Process *p, const struct sdesc *sdesc)
+void hipe_update_stack_trap(Process *p, const struct sdesc_t *sdesc)
 {
     Eterm *nsp;
     Eterm *nsp_end;

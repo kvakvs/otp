@@ -326,7 +326,7 @@ static Port *create_port(char *name,
 
     size += sys_strlen(name) + 1;
 
-    p = erts_alloc_fnf(ERTS_ALC_T_PORT, size);
+    p = (char*)erts_alloc_fnf(ERTS_ALC_T_PORT, size);
     if (!p) {
 	if (enop)
 	    *enop = ENOMEM;
@@ -1961,7 +1961,7 @@ erts_port_output(Process *c_p,
 	    evp = &ev;
 	}
 	else {
-	    char *ptr = erts_alloc((try_call
+            char *ptr = (char*)erts_alloc((try_call
 				    ? ERTS_ALC_T_TMP
 				    : ERTS_ALC_T_DRV_CMD_DATA), alloc_size);
 
@@ -2075,7 +2075,7 @@ erts_port_output(Process *c_p,
 		if (bvp[i])
 		    driver_binary_inc_refc(bvp[i]);
 
-	    new_evp = erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, alloc_size);
+            new_evp = (ErlIOVec*)erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, alloc_size);
 
 	    if (evp != &ev) {
 		sys_memcpy((void *) new_evp, (void *) evp, alloc_size);
@@ -2145,7 +2145,7 @@ erts_port_output(Process *c_p,
 	    if (erts_iolist_size(list, &size))
 		goto bad_value;
 
-	    buf = erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, size + 1);
+            buf = (char*)erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, size + 1);
 
 	    r = erts_iolist_to_buf(list, buf, size);
 	    ASSERT(ERTS_IOLIST_TO_BUF_SUCCEEDED(r));
@@ -2165,7 +2165,7 @@ erts_port_output(Process *c_p,
 	    /* Try with an 8KB buffer first (will often be enough I guess). */
 	    size = 8*1024;
 
-	    buf = erts_alloc(ERTS_ALC_T_TMP, size + 1);
+            buf = (char*)erts_alloc(ERTS_ALC_T_TMP, size + 1);
 	    r = erts_iolist_to_buf(list, buf, size);
 
 	    if (ERTS_IOLIST_TO_BUF_SUCCEEDED(r)) {
@@ -2179,7 +2179,7 @@ erts_port_output(Process *c_p,
 		ASSERT(r == ERTS_IOLIST_TO_BUF_OVERFLOW);
 		if (erts_iolist_size(list, &size))
 		    goto bad_value;
-		buf = erts_alloc(ERTS_ALC_T_TMP, size + 1); 
+                buf = (char*)erts_alloc(ERTS_ALC_T_TMP, size + 1);
 		r = erts_iolist_to_buf(list, buf, size);
 		ASSERT(ERTS_IOLIST_TO_BUF_SUCCEEDED(r));
 	    }
@@ -2224,7 +2224,7 @@ erts_port_output(Process *c_p,
 		break;
 	    }
 
-	    new_buf = erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, size + 1);
+            new_buf = (char*)erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, size + 1);
 	    sys_memcpy(new_buf, buf, size);
 	    erts_free(ERTS_ALC_T_TMP, buf);
 	    buf = new_buf;
@@ -2906,8 +2906,7 @@ void erts_lcnt_enable_io_lock_count(int enable)
  * Parameters:
  * bufsiz - The (maximum) size of the line buffer.
  */
-LineBuf *allocate_linebuf(bufsiz)
-int bufsiz;
+LineBuf *allocate_linebuf(int bufsiz)
 {
     int ovsiz = (bufsiz < LINEBUF_INITIAL) ? bufsiz : LINEBUF_INITIAL;
     LineBuf *lb = (LineBuf *) erts_alloc(ERTS_ALC_T_LINEBUF,
@@ -3306,7 +3305,7 @@ deliver_vec_message(Port* prt,			/* Port */
 	Eterm* thp = hp;
 	while (vsize--) {
 	    iov--;
-	    listp = buf_to_intlist(&thp, iov->iov_base, iov->iov_len, listp);
+            listp = buf_to_intlist(&thp, (const char*)iov->iov_base, iov->iov_len, listp);
 	}
 	hp = thp;
     } else {
@@ -3325,7 +3324,7 @@ deliver_vec_message(Port* prt,			/* Port */
 	    } else {
 		/* Must increment reference count, caller calls free */
 		driver_binary_inc_refc(b);
-		base = iov->iov_base;
+                base = (byte*)iov->iov_base;
 	    }
 	    pb->thing_word = HEADER_PROC_BIN;
 	    pb->size = iov->iov_len;
@@ -3547,7 +3546,7 @@ typedef struct {
 
 static void sweep_one_link(ErtsLink *lnk, void *vpsc)
 {
-    SweepContext *psc = vpsc;
+    SweepContext *psc = (SweepContext *)vpsc;
     DistEntry *dep;
     Process *rp;
     
@@ -4028,14 +4027,14 @@ erts_port_control(Process* c_p,
 	if (!try_call) {
 	    if (erts_iolist_size(data, &size))
 		return ERTS_PORT_OP_BADARG;
-	    bufp = erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA, size);
+            bufp = (char*)erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA, size);
 	    r = erts_iolist_to_buf(data, bufp, size);
 	    ASSERT(r == 0);
 	}
 	else {
 	    /* Try with an 8KB buffer first (will often be enough I guess). */
 	    size = 8*1024;
-	    bufp = erts_alloc(ERTS_ALC_T_TMP, size);
+            bufp = (char*)erts_alloc(ERTS_ALC_T_TMP, size);
 	    tmp_alloced = 1;
 
 	    r = erts_iolist_to_buf(data, bufp, size);
@@ -4052,7 +4051,7 @@ erts_port_control(Process* c_p,
 		    if (erts_iolist_size(data, &size))
 			return ERTS_PORT_OP_BADARG; /* Type error */
 		}
-		bufp = erts_alloc(ERTS_ALC_T_TMP, size);
+                bufp = (char*)erts_alloc(ERTS_ALC_T_TMP, size);
 		r = erts_iolist_to_buf(data, bufp, size);
 		ASSERT(r == 0);
 	    }
@@ -4146,7 +4145,7 @@ erts_port_control(Process* c_p,
 
     if (copy) {
 	char *old_bufp = bufp;
-	bufp = erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA, size);
+        bufp = (char*)erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA, size);
 	sys_memcpy(bufp, old_bufp, size);
 	if (tmp_alloced)
 	    erts_free(ERTS_ALC_T_TMP, old_bufp);
@@ -4345,11 +4344,11 @@ erts_port_call(Process* c_p,
     size = erts_encode_ext_size(data);
 
     if (!try_call)
-	bufp = erts_alloc(ERTS_ALC_T_DRV_CALL_DATA, size);
+        bufp = (char*)erts_alloc(ERTS_ALC_T_DRV_CALL_DATA, size);
     else if (size <= sizeof(input_buf))
 	bufp = &input_buf[0];
     else
-	bufp = erts_alloc(ERTS_ALC_T_TMP, size);
+        bufp = (char*)erts_alloc(ERTS_ALC_T_TMP, size);
 
     endp = (byte *) bufp;
     erts_encode_ext(data, &endp);

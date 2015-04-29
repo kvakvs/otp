@@ -2770,7 +2770,8 @@ get_map_elements_fail:
      */
  OpCase(call_bif_e):
     {
-	Eterm (*bf)(Process*, Eterm*, BeamInstr*) = GET_BIF_ADDRESS(Arg(0));
+        typedef Eterm (*bf_t)(Process*, Eterm*, BeamInstr*);
+        bf_t bf = (bf_t)GET_BIF_ADDRESS(Arg(0));
 	Eterm result;
 	BeamInstr *next;
 
@@ -3127,7 +3128,7 @@ get_map_elements_fail:
 	 SET_I(next);
 	 Dispatch();
      }
-     I = handle_error(c_p, I, reg, apply_3);
+     I = handle_error(c_p, I, reg, (BifFunction)apply_3);
      goto post_error_handling;
  }
 
@@ -3141,7 +3142,7 @@ get_map_elements_fail:
 	 SET_I(next);
 	 Dispatch();
      }
-     I = handle_error(c_p, I, reg, apply_3);
+     I = handle_error(c_p, I, reg, (BifFunction)apply_3);
      goto post_error_handling;
  }
 
@@ -3158,7 +3159,7 @@ get_map_elements_fail:
 	 SET_I(next);
 	 Dispatch();
      }
-     I = handle_error(c_p, I, reg, apply_3);
+     I = handle_error(c_p, I, reg, (BifFunction)apply_3);
      goto post_error_handling;
  }
 
@@ -3176,7 +3177,7 @@ get_map_elements_fail:
 	 SET_I(next);
 	 Dispatch();
      }
-     I = handle_error(c_p, I, reg, apply_3);
+     I = handle_error(c_p, I, reg, (BifFunction)apply_3);
      goto post_error_handling;
  }
 
@@ -3524,7 +3525,8 @@ get_map_elements_fail:
 	    ASSERT(!ERTS_PROC_IS_EXITING(c_p));
 	    {
 		typedef Eterm NifF(struct enif_environment_t*, int argc, Eterm argv[]);
-		NifF* fp = vbf = (NifF*) I[1];
+                NifF* fp;
+                vbf = (BifFunction)(fp = (NifF*) I[1]);
 		struct enif_environment_t env;
 		erts_pre_nif(&env, c_p, (struct erl_module_nif*)I[2]);
 		reg[0] = r(0);
@@ -3566,7 +3568,8 @@ get_map_elements_fail:
 	    ERTS_SMP_UNREQ_PROC_MAIN_LOCK(c_p);
 	    reg[0] = r(0);
 	    {
-		Eterm (*bf)(Process*, Eterm*, BeamInstr*) = vbf;
+                typedef Eterm (*bf_t)(Process*, Eterm*, BeamInstr*);
+                bf_t bf = (bf_t)vbf;
 		ASSERT(!ERTS_PROC_IS_EXITING(c_p));
 		nif_bif_result = (*bf)(c_p, reg, I);
 		ASSERT(!ERTS_PROC_IS_EXITING(c_p) ||
@@ -3946,8 +3949,10 @@ get_map_elements_fail:
  OpCase(i_bs_add_jId): {
      Uint Unit = Arg(1);
      if (is_both_small(tmp_arg1, tmp_arg2)) {
-	 Sint Arg1 = signed_val(tmp_arg1);
-	 Sint Arg2 = signed_val(tmp_arg2);
+         Sint Arg1;
+         Arg1 = signed_val(tmp_arg1);
+         Sint Arg2;
+         Arg2 = signed_val(tmp_arg2);
 
 	 if (Arg1 >= 0 && Arg2 >= 0) {
 	     BsSafeMul(Arg2, Unit, goto system_limit, tmp_arg1);
@@ -5100,7 +5105,7 @@ get_map_elements_fail:
 	 c_p->flags &= ~F_HIBERNATE_SCHED;
 	 goto do_schedule;
      } else {
-	 I = handle_error(c_p, I, reg, hibernate_3);
+         I = handle_error(c_p, I, reg, (BifFunction)hibernate_3);
 	 goto post_error_handling;
      }
  }
@@ -5169,9 +5174,9 @@ get_map_elements_fail:
      }
 #endif /* NO_JUMP_TABLE */
      
-     em_call_error_handler = OpCode(call_error_handler);
-     em_apply_bif = OpCode(apply_bif);
-     em_call_nif = OpCode(call_nif);
+     em_call_error_handler = (BeamInstr*)OpCode(call_error_handler);
+     em_apply_bif = (BeamInstr*)OpCode(apply_bif);
+     em_call_nif = (BeamInstr*)OpCode(call_nif);
 
      beam_apply[0]             = (BeamInstr) OpCode(i_apply);
      beam_apply[1]             = (BeamInstr) OpCode(normal_exit);
@@ -5223,27 +5228,27 @@ static BifFunction
 translate_gc_bif(void* gcf)
 {
     if (gcf == erts_gc_length_1) {
-	return length_1;
+        return (BifFunction)length_1;
     } else if (gcf == erts_gc_size_1) {
-	return size_1;
+        return (BifFunction)size_1;
     } else if (gcf == erts_gc_bit_size_1) {
-	return bit_size_1;
+        return (BifFunction)bit_size_1;
     } else if (gcf == erts_gc_byte_size_1) {
-	return byte_size_1;
+        return (BifFunction)byte_size_1;
     } else if (gcf == erts_gc_map_size_1) {
-	return map_size_1;
+        return (BifFunction)map_size_1;
     } else if (gcf == erts_gc_abs_1) {
-	return abs_1;
+        return (BifFunction)abs_1;
     } else if (gcf == erts_gc_float_1) {
-	return float_1;
+        return (BifFunction)float_1;
     } else if (gcf == erts_gc_round_1) {
-	return round_1;
+        return (BifFunction)round_1;
     } else if (gcf == erts_gc_trunc_1) {
-	return round_1;
+        return (BifFunction)round_1;
     } else if (gcf == erts_gc_binary_part_2) {
-	return binary_part_2;
+        return (BifFunction)binary_part_2;
     } else if (gcf == erts_gc_binary_part_3) {
-	return binary_part_3;
+        return (BifFunction)binary_part_3;
     } else {
 	erl_exit(1, "bad gc bif");
     }
@@ -5920,7 +5925,7 @@ call_error_handler(Process* p, BeamInstr* fi, Eterm* reg, Eterm func)
     reg[0] = fi[0];
     reg[1] = fi[1];
     reg[2] = args;
-    return ep->addressv[erts_active_code_ix()];
+    return (BeamInstr*)ep->addressv[erts_active_code_ix()];
 }
 
 static Export*
@@ -6052,7 +6057,7 @@ apply(Process* p, Eterm module, Eterm function, Eterm args, Eterm* reg)
 	DTRACE_GLOBAL_CALL(p, (Eterm)fptr[-3], (Eterm)fptr[-2], (Uint)fptr[-1]);
     }
 #endif
-    return ep->addressv[erts_active_code_ix()];
+    return (BeamInstr*)ep->addressv[erts_active_code_ix()];
 }
 
 static BeamInstr*
@@ -6107,7 +6112,7 @@ fixed_apply(Process* p, Eterm* reg, Uint arity)
 	DTRACE_GLOBAL_CALL(p, (Eterm)fptr[-3], (Eterm)fptr[-2], (Uint)fptr[-1]);
     }
 #endif
-    return ep->addressv[erts_active_code_ix()];
+    return (BeamInstr*)ep->addressv[erts_active_code_ix()];
 }
 
 int
@@ -6319,7 +6324,7 @@ call_fun(Process* p,		/* Current process. */
 		reg[1] = fun;
 		reg[2] = args;
 		reg[3] = NIL;
-		return ep->addressv[erts_active_code_ix()];
+                return (BeamInstr*)ep->addressv[erts_active_code_ix()];
 	    }
 	}
     } else if (is_export_header(hdr)) {
@@ -6331,7 +6336,7 @@ call_fun(Process* p,		/* Current process. */
 
 	if (arity == actual_arity) {
 	    DTRACE_GLOBAL_CALL(p, ep->code[0], ep->code[1], (Uint)ep->code[2]);
-	    return ep->addressv[erts_active_code_ix()];
+            return (BeamInstr*)ep->addressv[erts_active_code_ix()];
 	} else {
 	    /*
 	     * Wrong arity. First build a list of the arguments.

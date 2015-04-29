@@ -111,7 +111,7 @@ void erts_init_trace(void) {
 #endif
 }
 
-static Eterm system_seq_tracer;
+//static Eterm system_seq_tracer;
 
 #ifdef ERTS_SMP
 #define ERTS_ALLOC_SYSMSG_HEAP(SZ, BPP, OHPP, UNUSED) \
@@ -2204,13 +2204,13 @@ trace_gc(Process *p, Eterm what)
     };
 
     UWord values[] = {
-	OLD_HEAP(p) ? OLD_HEND(p) - OLD_HEAP(p) : 0,
+        (UWord)(OLD_HEAP(p) ? OLD_HEND(p) - OLD_HEAP(p) : 0),
 	HEAP_SIZE(p),
 	MBUF_SIZE(p),
-	HIGH_WATER(p) - HEAP_START(p),
-	STACK_START(p) - p->stop,
-	OLD_HEAP(p) ? OLD_HTOP(p) - OLD_HEAP(p) : 0,
-	HEAP_TOP(p) - HEAP_START(p),
+        (UWord)(HIGH_WATER(p) - HEAP_START(p)),
+        (UWord)(STACK_START(p) - p->stop),
+        (UWord)(OLD_HEAP(p) ? OLD_HTOP(p) - OLD_HEAP(p) : 0),
+        (UWord)(HEAP_TOP(p) - HEAP_START(p)),
 	MSO(p).overhead,
 	BIN_VHEAP_SZ(p),
 	BIN_OLD_VHEAP(p),
@@ -2436,12 +2436,12 @@ monitor_long_gc(Process *p, Uint time) {
     };
     UWord values[] = {
 	time,
-	OLD_HEAP(p) ? OLD_HEND(p) - OLD_HEAP(p) : 0,
+        (UWord)(OLD_HEAP(p) ? OLD_HEND(p) - OLD_HEAP(p) : 0),
 	HEAP_SIZE(p),
 	MBUF_SIZE(p),
-	STACK_START(p) - p->stop,
-	OLD_HEAP(p) ? OLD_HTOP(p) - OLD_HEAP(p) : 0,
-	HEAP_TOP(p) - HEAP_START(p)
+        (UWord)(STACK_START(p) - p->stop),
+        (UWord)(OLD_HEAP(p) ? OLD_HTOP(p) - OLD_HEAP(p) : 0),
+        (UWord)(HEAP_TOP(p) - HEAP_START(p))
     };
 #ifdef DEBUG
     Eterm *hp_end;
@@ -2509,12 +2509,12 @@ monitor_large_heap(Process *p) {
 	am_heap_size
     };
     UWord values[] = {
-	OLD_HEAP(p) ? OLD_HEND(p) - OLD_HEAP(p) : 0,
+        (UWord)(OLD_HEAP(p) ? OLD_HEND(p) - OLD_HEAP(p) : 0),
 	HEAP_SIZE(p),
 	MBUF_SIZE(p),
-	STACK_START(p) - p->stop,
-	OLD_HEAP(p) ? OLD_HTOP(p) - OLD_HEAP(p) : 0,
-	HEAP_TOP(p) - HEAP_START(p)
+        (UWord)(STACK_START(p) - p->stop),
+        (UWord)(OLD_HEAP(p) ? OLD_HTOP(p) - OLD_HEAP(p) : 0),
+        (UWord)(HEAP_TOP(p) - HEAP_START(p))
     };
 #ifdef DEBUG
     Eterm *hp_end;

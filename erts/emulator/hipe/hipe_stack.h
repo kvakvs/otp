@@ -29,10 +29,10 @@
 
 #include <stddef.h>	/* offsetof() */
 
-struct sdesc {
+typedef struct sdesc_t {
     struct {
 	unsigned long hvalue;	/* return address */
-	struct sdesc *next;	/* hash collision chain */
+        struct sdesc_t *next;	/* hash collision chain */
     } bucket;
     unsigned int summary; /* frame size, exn handler presence flag, arity */
 #ifdef DEBUG
@@ -40,29 +40,29 @@ struct sdesc {
     unsigned dbg_A;
 #endif
     unsigned int livebits[1]; /* size depends on arch & data in summary field */
-};
+} sdesc_t;
 
-struct sdesc_with_exnra {
+struct sdesc_with_exnra_t {
     unsigned long exnra;
-    struct sdesc sdesc;
+    struct sdesc_t sdesc;
 };
 
-static __inline__ unsigned int sdesc_fsize(const struct sdesc *sdesc)
+static __inline__ unsigned int sdesc_fsize(const struct sdesc_t *sdesc)
 {
     return sdesc->summary >> 9;
 }
 
-static __inline__ unsigned int sdesc_arity(const struct sdesc *sdesc)
+static __inline__ unsigned int sdesc_arity(const struct sdesc_t *sdesc)
 {
     return sdesc->summary & 0xFF;
 }
 
-static __inline__ unsigned long sdesc_exnra(const struct sdesc *sdesc)
+static __inline__ unsigned long sdesc_exnra(const struct sdesc_t *sdesc)
 {
     if ((sdesc->summary & (1<<8))) {
 	const char *tmp;
-	tmp = (const char*)sdesc - offsetof(struct sdesc_with_exnra, sdesc);
-	return ((const struct sdesc_with_exnra*)tmp)->exnra;
+	tmp = (const char*)sdesc - offsetof(struct sdesc_with_exnra_t, sdesc);
+	return ((const struct sdesc_with_exnra_t*)tmp)->exnra;
     }
     return 0;
 }
@@ -71,12 +71,12 @@ struct hipe_sdesc_table {
     unsigned int log2size;
     unsigned int mask;		/* INV: mask == (1 << log2size)-1 */
     unsigned int used;
-    struct sdesc **bucket;
+    struct sdesc_t **bucket;
 };
 extern struct hipe_sdesc_table hipe_sdesc_table;
 
-extern struct sdesc *hipe_put_sdesc(struct sdesc*);
-extern void hipe_init_sdesc_table(struct sdesc*);
+extern struct sdesc *hipe_put_sdesc(struct sdesc_t*);
+extern void hipe_init_sdesc_table(struct sdesc_t*);
 extern struct sdesc *hipe_decode_sdesc(Eterm);
 
 #if !defined(__GNUC__) || (__GNUC__ < 2) || (__GNUC__ == 2 && __GNUC_MINOR__ < 96)
@@ -85,10 +85,10 @@ extern struct sdesc *hipe_decode_sdesc(Eterm);
 #define likely(x)	__builtin_expect((x),1)
 #define unlikely(x)	__builtin_expect((x),0)
 
-static __inline__ const struct sdesc *hipe_find_sdesc(unsigned long ra)
+static __inline__ const struct sdesc_t *hipe_find_sdesc(unsigned long ra)
 {
     unsigned int i = (ra >> HIPE_RA_LSR_COUNT) & hipe_sdesc_table.mask;
-    const struct sdesc *sdesc = hipe_sdesc_table.bucket[i];
+    const struct sdesc_t *sdesc = hipe_sdesc_table.bucket[i];
     if (likely(sdesc->bucket.hvalue == ra))
 	return sdesc;
     do {
@@ -102,7 +102,7 @@ AEXTERN(void,nbif_stack_trap_ra,(void));
 extern void hipe_print_nstack(Process*);
 extern void hipe_find_handler(Process*);
 extern void (*hipe_handle_stack_trap(Process*))(void);
-extern void hipe_update_stack_trap(Process*, const struct sdesc*);
+extern void hipe_update_stack_trap(Process*, const struct sdesc_t*);
 extern int hipe_fill_stacktrace(Process*, int, Eterm**);
 
 #if 0 && defined(HIPE_NSTACK_GROWS_UP)

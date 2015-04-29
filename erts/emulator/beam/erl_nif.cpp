@@ -241,7 +241,7 @@ void enif_free(void* ptr)
     erts_free(ERTS_ALC_T_NIF, ptr);
 }
 
-struct enif_msg_environment_t
+typedef struct enif_msg_environment_t
 {
     ErlNifEnv env;
     Process phony_proc;
@@ -249,8 +249,8 @@ struct enif_msg_environment_t
 
 ErlNifEnv* enif_alloc_env(void)
 {
-    struct enif_msg_environment_t* msg_env =
-	erts_alloc_fnf(ERTS_ALC_T_NIF, sizeof(struct enif_msg_environment_t));
+    auto msg_env = (enif_msg_environment_t*)erts_alloc_fnf(
+                    ERTS_ALC_T_NIF, sizeof(struct enif_msg_environment_t));
     Eterm* phony_heap = (Eterm*) msg_env; /* dummy non-NULL ptr */
 	
     msg_env->env.hp = phony_heap; 
@@ -528,7 +528,7 @@ int enif_inspect_iolist_as_binary(ErlNifEnv* env, Eterm term, ErlNifBinary* bin)
     }
 
     allocator = is_proc_bound(env) ? ERTS_ALC_T_TMP : ERTS_ALC_T_NIF;
-    tobj = erts_alloc(allocator, sz + sizeof(struct enif_tmp_obj_t));
+    tobj = (struct enif_tmp_obj_t*)erts_alloc(allocator, sz + sizeof(struct enif_tmp_obj_t));
     tobj->allocator = allocator;
     tobj->next = env->tmp_obj_list;
     tobj->dtor = &tmp_alloc_dtor;
@@ -591,7 +591,7 @@ int enif_realloc_binary(ErlNifBinary* bin, size_t size)
 void enif_release_binary(ErlNifBinary* bin)
 {
     if (bin->ref_bin != NULL) {
-	Binary* refbin = bin->ref_bin;
+        Binary* refbin = (Binary*)bin->ref_bin;
 	ASSERT(bin->bin_term == THE_NON_VALUE);
 	if (erts_refc_dectest(&refbin->refc, 0) == 0) {
 	    erts_bin_free(refbin);
@@ -681,7 +681,7 @@ Eterm enif_make_binary(ErlNifEnv* env, ErlNifBinary* bin)
 	return bin->bin_term;
     }
     else if (bin->ref_bin != NULL) {
-	Binary* bptr = bin->ref_bin;
+        Binary* bptr = (Binary*)bin->ref_bin;
 	ProcBin* pb;
 	Eterm bin_term;
 	
@@ -1282,7 +1282,7 @@ enif_open_resource_type(ErlNifEnv* env,
     type = find_resource_type(module_am, name_am);
     if (type == NULL) {
 	if (flags & ERL_NIF_RT_CREATE) {
-	    type = erts_alloc(ERTS_ALC_T_NIF,
+            type = (ErlNifResourceType*)erts_alloc(ERTS_ALC_T_NIF,
 			      sizeof(struct enif_resource_type_t));
 	    type->module = module_am;
 	    type->name = name_am;
@@ -1305,7 +1305,7 @@ enif_open_resource_type(ErlNifEnv* env,
 	}
     }
     if (type != NULL) {
-	struct opened_resource_type* ort = erts_alloc(ERTS_ALC_T_TMP,
+        struct opened_resource_type* ort = (opened_resource_type*)erts_alloc(ERTS_ALC_T_TMP,
 						sizeof(struct opened_resource_type));
 	ort->op = op;
 	ort->type = type;
@@ -1366,7 +1366,7 @@ static void rollback_opened_resource_types(void)
 
 static void nif_resource_dtor(Binary* bin)
 {
-    ErlNifResource* resource = (ErlNifResource*) ERTS_MAGIC_BIN_DATA(bin);
+    ErlNifResource* resource = ERTS_MAGIC_BIN_DATA<ErlNifResource*>(bin);
     ErlNifResourceType* type = resource->type;
     ASSERT(ERTS_MAGIC_BIN_DESTRUCTOR(bin) == &nif_resource_dtor);
 
@@ -1388,7 +1388,7 @@ static void nif_resource_dtor(Binary* bin)
 void* enif_alloc_resource(ErlNifResourceType* type, size_t size)
 {
     Binary* bin = erts_create_magic_binary(SIZEOF_ErlNifResource(size), &nif_resource_dtor);
-    ErlNifResource* resource = ERTS_MAGIC_BIN_DATA(bin);
+    ErlNifResource* resource = ERTS_MAGIC_BIN_DATA<ErlNifResource*>(bin);
 
     ASSERT(type->owner && type->next && type->prev); /* not allowed in load/upgrade */
     resource->type = type;
@@ -1458,7 +1458,7 @@ int enif_get_resource(ErlNifEnv* env, ERL_NIF_TERM term, ErlNifResourceType* typ
 	return 0; / * Or should we allow "resource binaries" as handles? * /
     }*/
     mbin = pb->val;
-    resource = (ErlNifResource*) ERTS_MAGIC_BIN_DATA(mbin);
+    resource = ERTS_MAGIC_BIN_DATA<ErlNifResource*>(mbin);
     if (ERTS_MAGIC_BIN_DESTRUCTOR(mbin) != &nif_resource_dtor
 	|| resource->type != type) {	
 	return 0;
@@ -1578,7 +1578,7 @@ allocate_nif_sched_data(Process* proc, int argc)
 
     argv_extra = argc > 1 ? sizeof(Eterm)*(argc-1) : 0;
     total = sizeof(NifExport) + argv_extra;
-    ep = erts_alloc(ERTS_ALC_T_NIF_TRAP_EXPORT, total);
+    ep = (NifExport*)erts_alloc(ERTS_ALC_T_NIF_TRAP_EXPORT, total);
     sys_memset((void*) ep, 0, total);
     ep->alloced_argv_sz = argc;
     for (i=0; i<ERTS_NUM_CODE_IX; i++) {
@@ -2135,7 +2135,7 @@ static void add_taint(Eterm mod_atom)
 	    return;
 	}
     }
-    t = erts_alloc_fnf(ERTS_ALC_T_TAINT, sizeof(*t));
+    t = (tainted_module_t*)erts_alloc_fnf(ERTS_ALC_T_TAINT, sizeof(*t));
     if (t != NULL) {
 	t->module_atom = mod_atom;
 	t->next = first_tainted_module;
@@ -2289,7 +2289,7 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
     ASSERT(mod != NULL);
 
     mod_atomp = atom_tab(atom_val(mod_atom));
-    init_func = erts_static_nif_get_nif_init((char*)mod_atomp->name, mod_atomp->len);
+    init_func = (void*)erts_static_nif_get_nif_init((char*)mod_atomp->name, mod_atomp->len);
     if (init_func != NULL)
       handle = init_func;
 
@@ -2316,7 +2316,7 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
 	
     }
     else if ((add_taint(mod_atom),
-	      (entry = erts_sys_ddll_call_nif_init(init_func)) == NULL)) {
+              (entry = (ErlNifEntry*)erts_sys_ddll_call_nif_init(init_func)) == NULL)) {
 	ret = load_nif_error(BIF_P, bad_lib, "Library init-call unsuccessful");
     }
     else if (entry->major < ERL_NIF_MIN_REQUIRED_MAJOR_VERSION_ON_LOAD
@@ -2393,7 +2393,7 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
      */
 
 
-    lib = erts_alloc(ERTS_ALC_T_NIF, sizeof(struct erl_module_nif));
+    lib = (erl_module_nif*)erts_alloc(ERTS_ALC_T_NIF, sizeof(struct erl_module_nif));
     lib->handle = handle;
     lib->entry = entry;
     erts_refc_init(&lib->rt_cnt, 0);

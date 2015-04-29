@@ -359,7 +359,7 @@ send_trace_buffer(void)
 
 
 static int
-write_trace_header(char *nodename, char *pid, char *hostname)
+write_trace_header(const char *nodename, const char *pid, const char *hostname)
 {
 #ifdef DEBUG
     byte *startp;

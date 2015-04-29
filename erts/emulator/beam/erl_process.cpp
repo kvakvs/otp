@@ -813,7 +813,10 @@ int
 erts_get_sched_util(ErtsRunQueue *rq, int initially_locked, int short_interval)
 {
     /* Average scheduler utilization in ppm */
-    int util, is_working, try = 0, locked = initially_locked;
+    int util;
+    int is_working;
+    int try_ = 0;
+    int locked = initially_locked;
     Uint64 worktime, old_worktime, now, last, interval, *old_worktimep;
 
     if (short_interval) {
@@ -836,7 +839,7 @@ erts_get_sched_util(ErtsRunQueue *rq, int initially_locked, int short_interval)
 	if (chk_last == last)
 	    break;
 	if (!locked) {
-	    if (++try >= ERTS_GET_AVG_MAX_UNLOCKED_TRY) {
+            if (++try_ >= ERTS_GET_AVG_MAX_UNLOCKED_TRY) {
 		/* Writer will eventually block on runq-lock */
 		erts_smp_runq_lock(rq);
 		locked = 1;
@@ -1038,7 +1041,7 @@ reply_sched_wall_time(void *vswtrp)
     erts_smp_proc_dec_refc(rp);
 
     if (erts_smp_atomic32_dec_read_nob(&swtrp->refc) == 0)
-	swtreq_free(vswtrp);
+        swtreq_free((ErtsSchedWallTimeReq*)vswtrp);
 }
 
 Eterm
@@ -1116,7 +1119,7 @@ erts_psd_set_init(Process *p, ErtsProcLocks plocks, int ix, void *data)
     void *old;
     ErtsProcLocks xplocks;
     int refc = 0;
-    ErtsPSD *psd = erts_alloc(ERTS_ALC_T_PSD, sizeof(ErtsPSD));
+    ErtsPSD *psd = (ErtsPSD *)erts_alloc(ERTS_ALC_T_PSD, sizeof(ErtsPSD));
     int i;
     for (i = 0; i < ERTS_PSD_SIZE; i++)
 	psd->data[i] = NULL;
@@ -1423,7 +1426,7 @@ init_misc_aux_work(void)
 
     init_misc_aux_work_alloc();
 
-    misc_aux_work_queues = 
+    misc_aux_work_queues = (erts_algnd_misc_aux_work_q_t*)
 	erts_alloc_permanent_cache_aligned(ERTS_ALC_T_MISC_AUX_WORK_Q,
 					   sizeof(erts_algnd_misc_aux_work_q_t)
 					   * (erts_no_schedulers+1));
@@ -1469,7 +1472,7 @@ handle_misc_aux_work(ErtsAuxWorkData *awdp,
 
     unset_aux_work_flags(awdp->ssi, ERTS_SSI_AUX_WORK_MISC);
     while (1) {
-	erts_misc_aux_work_t *mawp = erts_thr_q_dequeue(q);
+        auto mawp = (erts_misc_aux_work_t *)erts_thr_q_dequeue(q);
 	if (!mawp)
 	    break;
 	mawp->func(mawp->arg);
@@ -1716,7 +1719,7 @@ handle_delayed_dealloc(ErtsAuxWorkData *awdp, erts_aint32_t aux_work, int waitin
 	haw_thr_prgr_soft_wakeup(awdp, wakeup);
     }
     else if (awdp->dd.completed_callback) {
-	awdp->dd.completed_callback(awdp->dd.completed_arg);
+        awdp->dd.completed_callback((void*)awdp->dd.completed_arg);
 	awdp->dd.completed_callback = NULL;
 	awdp->dd.completed_arg = NULL;
     }
@@ -1762,7 +1765,7 @@ handle_delayed_dealloc_thr_prgr(ErtsAuxWorkData *awdp, erts_aint32_t aux_work, i
     else {
 	unset_aux_work_flags(ssi, ERTS_SSI_AUX_WORK_DD_THR_PRGR);
 	if (awdp->dd.completed_callback) {
-	    awdp->dd.completed_callback(awdp->dd.completed_arg);
+            awdp->dd.completed_callback((void*)awdp->dd.completed_arg);
 	    awdp->dd.completed_callback = NULL;
 	    awdp->dd.completed_arg = NULL;
 	}
@@ -1883,7 +1886,7 @@ setup_completed_dealloc(void *vproc)
     erts_alloc_fix_alloc_shrink(awdp->sched_id, 0);
     set_aux_work_flags_wakeup_nob(awdp->ssi, ERTS_SSI_AUX_WORK_DD);
     awdp->dd.completed_callback = completed_dealloc;
-    awdp->dd.completed_arg = vproc;
+    awdp->dd.completed_arg = (void (*)(void *))vproc;
 }
 
 static void
@@ -4065,7 +4068,7 @@ init_migration_paths(void)
     mpaths.size += sizeof(ErtsMigrationPath)*(erts_no_schedulers-1);
     mpaths.size = ERTS_ALC_CACHE_LINE_ALIGN_SIZE(mpaths.size);
 
-    p = erts_alloc_permanent_cache_aligned(ERTS_ALC_T_LL_MPATHS,
+    p = (char*)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_LL_MPATHS,
 					   (mpaths.size
 					    * ERTS_PRE_ALLOCED_MPATHS));
     mpaths.freelist = NULL;
@@ -4105,7 +4108,7 @@ alloc_mpaths(void)
 	res->block = NULL;
 	return res;
     }
-    res = erts_alloc(ERTS_ALC_T_SL_MPATHS,
+    res = (ErtsMigrationPaths*)erts_alloc(ERTS_ALC_T_SL_MPATHS,
 		     mpaths.size+ERTS_CACHE_LINE_SIZE);
     block = (void *) res;
     if (((UWord) res) & ERTS_CACHE_LINE_MASK)
@@ -5242,12 +5245,9 @@ init_scheduler_data(ErtsSchedulerData* esdp, int num,
     esdp->match_pseudo_process = NULL;
     esdp->free_process = NULL;
 #endif
-    esdp->x_reg_array =
-	erts_alloc_permanent_cache_aligned(ERTS_ALC_T_BEAM_REGISTER,
-					   ERTS_X_REGS_ALLOCATED *
-					   sizeof(Eterm));
-    esdp->f_reg_array =
-	erts_alloc_permanent_cache_aligned(ERTS_ALC_T_BEAM_REGISTER,
+    esdp->x_reg_array = (Eterm*)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_BEAM_REGISTER,
+                                           ERTS_X_REGS_ALLOCATED * sizeof(Eterm));
+    esdp->f_reg_array =	(FloatDef*)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_BEAM_REGISTER,
 					   MAX_REG * sizeof(FloatDef));
 #if !HEAP_ON_C_STACK
     esdp->num_tmp_heap_used = 0;
@@ -5329,7 +5329,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
     n = no_schedulers;
     size_runqs = sizeof(ErtsAlignedRunQueue) * (n + ERTS_NUM_DIRTY_RUNQS);
     erts_aligned_run_queues =
-	erts_alloc_permanent_cache_aligned(ERTS_ALC_T_RUNQS, size_runqs);
+        (ErtsAlignedRunQueue*)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_RUNQS, size_runqs);
 #ifdef ERTS_SMP
 #ifdef ERTS_DIRTY_SCHEDULERS
     erts_aligned_run_queues += ERTS_NUM_DIRTY_RUNQS;
@@ -5413,10 +5413,10 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
 #ifdef ERTS_SMP
 
     if (erts_no_run_queues != 1) {
-	run_queue_info = erts_alloc(ERTS_ALC_T_RUNQ_BLNS,
+        run_queue_info = (ErtsRunQueueBalance*)erts_alloc(ERTS_ALC_T_RUNQ_BLNS,
 				    (sizeof(ErtsRunQueueBalance)
 				    * erts_no_run_queues));
-	run_queue_compare = erts_alloc(ERTS_ALC_T_RUNQ_BLNS,
+        run_queue_compare = (ErtsRunQueueCompare*)erts_alloc(ERTS_ALC_T_RUNQ_BLNS,
 				       (sizeof(ErtsRunQueueCompare)
 					* erts_no_run_queues));
     }
@@ -5437,7 +5437,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
     no_ssi = 1;
 #endif
     aligned_sched_sleep_info =
-	erts_alloc_permanent_cache_aligned(
+        (ErtsAlignedSchedulerSleepInfo*)erts_alloc_permanent_cache_aligned(
 	    ERTS_ALC_T_SCHDLR_SLP_INFO,
 	    no_ssi*sizeof(ErtsAlignedSchedulerSleepInfo));
     for (ix = 0; ix < no_ssi; ix++) {
@@ -5485,7 +5485,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
 #ifdef ERTS_SMP
     daww_sz = ERTS_ALC_CACHE_LINE_ALIGN_SIZE((sizeof(ErtsDelayedAuxWorkWakeupJob)
 					      + sizeof(int))*(n+1));
-    daww_ptr = erts_alloc_permanent_cache_aligned(ERTS_ALC_T_SCHDLR_DATA,
+    daww_ptr = (char*)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_SCHDLR_DATA,
 						  daww_sz*n);
 #else
     daww_sz = 0;
@@ -5493,7 +5493,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
 #endif
 
     erts_aligned_scheduler_data = 
-	erts_alloc_permanent_cache_aligned(ERTS_ALC_T_SCHDLR_DATA,
+        (ErtsAlignedSchedulerData*)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_SCHDLR_DATA,
 					   n*sizeof(ErtsAlignedSchedulerData));					   
 
     for (ix = 0; ix < n; ix++) {
@@ -5536,7 +5536,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
     erts_atomic32_init_nob(&completed_dealloc_count, 0); /* debug only */
 
     aux_thread_aux_work_data =
-	erts_alloc_permanent_cache_aligned(ERTS_ALC_T_SCHDLR_DATA,
+        (ErtsAuxWorkData*)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_SCHDLR_DATA,
 					   sizeof(ErtsAuxWorkData));
 
     erts_smp_mtx_init(&schdlr_sspnd.mtx, "schdlr_sspnd");
@@ -5687,7 +5687,7 @@ make_proxy_proc(Process *prev_proxy, Process *proc, erts_aint32_t prio)
 #endif
     }
     else {
-	proxy = erts_alloc(ERTS_ALC_T_PROC, sizeof(Process));
+        proxy = (Process*)erts_alloc(ERTS_ALC_T_PROC, sizeof(Process));
 #ifdef DEBUG
 	{
 	    int i;
@@ -6888,7 +6888,7 @@ erts_schedulers_state(Uint *total,
     if (dirty_io)
 	*dirty_io = erts_no_dirty_io_schedulers;
 #endif
-    return res;
+    return (ErtsSchedSuspendResult)res;
 }
 
 #ifdef ERTS_DIRTY_SCHEDULERS
@@ -7292,7 +7292,7 @@ erts_set_schedulers_online(Process *p,
     if (have_unlocked_plocks)
 	erts_smp_proc_lock(p, plocks);
 
-    return res;
+    return (ErtsSchedSuspendResult)res;
 }
 
 #endif
@@ -7547,7 +7547,7 @@ erts_block_multi_scheduling(Process *p, ErtsProcLocks plocks, int on, int all)
     erts_smp_mtx_unlock(&schdlr_sspnd.mtx);
     if (have_unlocked_plocks)
 	erts_smp_proc_lock(p, plocks);
-    return res;
+    return (ErtsSchedSuspendResult)res;
 }
 
 #ifdef DEBUG
@@ -7613,7 +7613,7 @@ static void *
 sched_thread_func(void *vesdp)
 {
     ErtsThrPrgrCallbacks callbacks;
-    ErtsSchedulerData *esdp = vesdp;
+    ErtsSchedulerData *esdp = (ErtsSchedulerData *)vesdp;
     Uint no = esdp->no;
 #ifdef ERTS_SMP
     ERTS_SCHED_SLEEP_INFO_IX(no - 1)->event = erts_tse_fetch();
@@ -7969,7 +7969,7 @@ add_pend_suspend(Process *suspendee,
 				     int,
 				     Eterm))
 {
-    ErtsPendingSuspend *psp = erts_alloc(ERTS_ALC_T_PEND_SUSPEND,
+    ErtsPendingSuspend *psp = (ErtsPendingSuspend *)erts_alloc(ERTS_ALC_T_PEND_SUSPEND,
 					 sizeof(ErtsPendingSuspend));
     psp->next = NULL;
 #ifdef DEBUG
@@ -9878,7 +9878,7 @@ erts_internal_request_system_task_3(BIF_ALIST_3)
 		}
 	    }
 	}
-	st = erts_alloc(ERTS_ALC_T_PROC_SYS_TSK,
+        st = (ErtsProcSysTask *)erts_alloc(ERTS_ALC_T_PROC_SYS_TSK,
 			ERTS_PROC_SYS_TASK_SIZE(tot_sz));
 	st->next = st->prev = st; /* Prep for empty prio queue */
 	ERTS_INIT_OFF_HEAP(&st->off_heap);
@@ -10428,7 +10428,7 @@ alloc_process(ErtsRunQueue *rq, erts_aint32_t state)
     ErtsEarlyProcInit init_arg;
     Process *p;
 
-    p = erts_alloc_fnf(ERTS_ALC_T_PROC, sizeof(Process));
+    p = (Process*)erts_alloc_fnf(ERTS_ALC_T_PROC, sizeof(Process));
     if (!p)
 	return NULL;
 
@@ -10986,7 +10986,7 @@ delete_process(Process* p)
      * The mso list should not be used anymore, but if it is, make sure that
      * we'll notice.
      */
-    p->off_heap.first = (void *) 0x8DEFFACD;
+    p->off_heap.first = (erl_off_heap_header*)((void *) 0x8DEFFACD);
 
     if (p->arg_reg != p->def_arg_reg) {
 	erts_free(ERTS_ALC_T_ARG_REG, p->arg_reg);

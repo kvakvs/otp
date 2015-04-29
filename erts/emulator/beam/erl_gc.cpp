@@ -627,7 +627,7 @@ erts_garbage_collect_hibernate(Process* p)
     ASSERT(p->hend - p->stop == 0); /* Empty stack */
     ASSERT(actual_size < p->heap_sz);
 
-    heap = ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP, sizeof(Eterm)*heap_size);
+    heap = (Eterm*)ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP, sizeof(Eterm)*heap_size);
     sys_memcpy((void *) heap, (void *) p->heap, actual_size*sizeof(Eterm));
     ERTS_HEAP_FREE(ERTS_ALC_T_TMP_HEAP, p->heap, p->heap_sz*sizeof(Eterm));
 
@@ -2040,11 +2040,11 @@ setup_rootset(Process *p, Eterm *objv, int nobj, Rootset *rootset)
 	if (avail == 0) {
 	    Uint new_size = 2*rootset->size;
 	    if (roots == rootset->def) {
-		roots = erts_alloc(ERTS_ALC_T_ROOTSET,
+                roots = (Roots*)erts_alloc(ERTS_ALC_T_ROOTSET,
 				   new_size*sizeof(Roots));
 		sys_memcpy(roots, rootset->def, sizeof(rootset->def));
 	    } else {
-		roots = erts_realloc(ERTS_ALC_T_ROOTSET,
+                roots = (Roots*)erts_realloc(ERTS_ALC_T_ROOTSET,
 				     (void *) roots,
 				     new_size*sizeof(Roots));
 	    }
@@ -2661,7 +2661,7 @@ reply_gc_info(void *vgcirp)
     erts_smp_proc_dec_refc(rp);
 
     if (erts_smp_atomic32_dec_read_nob(&gcirp->refc) == 0)
-	gcireq_free(vgcirp);
+        gcireq_free((ErtsGCInfoReq *)vgcirp);
 }
 
 Eterm

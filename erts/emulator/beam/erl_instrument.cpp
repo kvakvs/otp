@@ -1219,7 +1219,7 @@ erts_instr_init(int stat, int map_stat)
     if (!stat && !map_stat)
 	return 0;
 
-    stats = erts_alloc(ERTS_ALC_T_INSTR_INFO, sizeof(struct stats_));
+    stats = (stats_*)erts_alloc(ERTS_ALC_T_INSTR_INFO, sizeof(struct stats_));
 
     erts_mtx_init(&instr_mutex, "instr");
 

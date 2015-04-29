@@ -61,12 +61,15 @@
 #define PD_SZ2BYTES(Sz) (sizeof(ProcDict) + ((Sz) - 1)*sizeof(Eterm))
 
 /* Memory allocation macros */
-#define PD_ALLOC(Sz)				\
-     erts_alloc(ERTS_ALC_T_PROC_DICT, (Sz))
-#define PD_FREE(P, Sz)				\
-     erts_free(ERTS_ALC_T_PROC_DICT, (P))
-#define PD_REALLOC(P, OSz, NSz) 		\
-     erts_realloc(ERTS_ALC_T_PROC_DICT, (P), (NSz))
+inline ProcDict* PD_ALLOC(size_t Sz) {
+     return (ProcDict*)erts_alloc(ERTS_ALC_T_PROC_DICT, (Sz));
+}
+inline void PD_FREE(ProcDict* P) {
+     erts_free(ERTS_ALC_T_PROC_DICT, (P));
+}
+inline ProcDict* PD_REALLOC(ProcDict* P, size_t NSz) {
+     return (ProcDict*)erts_realloc(ERTS_ALC_T_PROC_DICT, (P), (NSz));
+}
 
 
 #define TCAR(Term) CAR(list_val(Term))
@@ -373,7 +376,7 @@ static void pd_hash_erase(Process *p, Eterm id, Eterm *ret)
 static void pd_hash_erase_all(Process *p)
 {
     if (p->dictionary != NULL) {
-	PD_FREE(p->dictionary, PD_SZ2BYTES(p->dictionary->size));
+        PD_FREE(p->dictionary /*PD_SZ2BYTES(p->dictionary->size)*/);
 	p->dictionary = NULL;
     }
 }
@@ -829,8 +832,8 @@ static void array_shrink(ProcDict **ppd, unsigned int need)
     if (siz > (*ppd)->size)
 	return; /* Only shrink */
 
-    *ppd = PD_REALLOC(((void *) *ppd),
-		      PD_SZ2BYTES((*ppd)->size),
+    *ppd = PD_REALLOC(*ppd,
+                      //PD_SZ2BYTES((*ppd)->size),
 		      PD_SZ2BYTES(siz));
 
     (*ppd)->size = siz;
@@ -854,10 +857,10 @@ static Eterm array_put(ProcDict **ppdict, unsigned int ndx, Eterm term)
 	p->homeSize = p->splitPosition = p->numElements = p->used = 0;
 	*ppdict = p;
     } else if (ndx >= (*ppdict)->size) {
-	Uint osize = (*ppdict)->size;
+        Uint osize = (*ppdict)->size;
 	Uint nsize = next_array_size(ndx+1);
-	*ppdict = PD_REALLOC(((void *) *ppdict),
-			     PD_SZ2BYTES(osize),
+        *ppdict = PD_REALLOC(*ppdict,
+                             //PD_SZ2BYTES(osize),
 			     PD_SZ2BYTES(nsize));
 	for (i = osize; i < nsize; ++i)
 	    (*ppdict)->data[i] = NIL;

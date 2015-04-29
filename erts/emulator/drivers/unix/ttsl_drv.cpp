@@ -212,7 +212,7 @@ struct erl_drv_entry ttsl_driver_entry = {
     NULL, /* flush */
     NULL, /* call */
     NULL, /* event */
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0, /* ERL_DRV_FLAGs */
@@ -387,7 +387,7 @@ static ErlDrvSSizeT ttysl_control(ErlDrvData drv_data,
 	return 0;
     }
     if (rlen < res_size) {
-	*rbuf = driver_alloc(res_size);
+        *rbuf = (char*)driver_alloc(res_size);
     }
     memcpy(*rbuf,resbuff,res_size);
     return res_size;
@@ -639,7 +639,7 @@ static int check_buf_size(byte *s, int n)
     if (size + lpos >= lbuf_size) {
 
 	lbuf_size = size + lpos + BUFSIZ;
-	if ((lbuf = driver_realloc(lbuf, lbuf_size * sizeof(Uint32))) == NULL) {
+        if ((lbuf = (Uint32*)driver_realloc(lbuf, lbuf_size * sizeof(Uint32))) == NULL) {
 	    driver_failure(ttysl_port, -1);
 	    return(0);
 	}
@@ -802,7 +802,7 @@ static int ins_chars(byte *s, int l)
 
     /* Move tail of buffer to make space. */
     if ((tl = llen - lpos) > 0) {
-	if ((tbuf = driver_alloc(tl * sizeof(Uint32))) == NULL)
+        if ((tbuf = (Uint32*)driver_alloc(tl * sizeof(Uint32))) == NULL)
 	    return FALSE;
 	memcpy(tbuf, lbuf + lpos, tl * sizeof(Uint32));
     }
@@ -1022,7 +1022,7 @@ static int write_buf(Uint32 *s, int n)
 	    DEBUGLOG(("Escaped: %d", ch));
 	    octbytes = octal_or_hex_positions(ch);
 	    if (octbytes > 256) {
-		octbuff = driver_alloc(octbytes);
+                octbuff = (byte*)driver_alloc(octbytes);
 	    } else {
 		octbuff = octtmp;
 	    }
@@ -1099,34 +1099,34 @@ static int start_termcap(void)
     char *env = NULL;
     char *c;
 
-    capbuf = driver_alloc(1024);
+    capbuf = (char*)driver_alloc(1024);
     if (!capbuf)
-	goto false;
+        goto false_;
     eres = erl_drv_getenv("TERM", capbuf, &envsz);
     if (eres == 0)
 	env = capbuf;
     else if (eres < 0)
-	goto false;
+        goto false_;
     else /* if (eres > 1) */ {
-      char *envbuf = driver_alloc(envsz);
+      char *envbuf = (char*)driver_alloc(envsz);
       if (!envbuf)
-	  goto false;
+          goto false_;
       while (1) {
 	  char *newenvbuf;
 	  eres = erl_drv_getenv("TERM", envbuf, &envsz);
 	  if (eres == 0)
 	      break;
-	  newenvbuf = driver_realloc(envbuf, envsz);
+          newenvbuf = (char*)driver_realloc(envbuf, envsz);
 	  if (eres < 0 || !newenvbuf) {
 	      env = newenvbuf ? newenvbuf : envbuf;
-	      goto false;
+              goto false_;
 	  }
 	  envbuf = newenvbuf;
       }
       env = envbuf;
     }
     if (tgetent((char*)lbuf, env) <= 0)
-      goto false;
+      goto false_;
     if (env != capbuf) {
 	env = NULL;
 	driver_free(env);
@@ -1139,12 +1139,12 @@ static int start_termcap(void)
     up = tgetstr("up", &c);
     if (!(down = tgetstr("do", &c)))
       down = "\n";
-    if (!(left = tgetflag("bs") ? "\b" : tgetstr("bc", &c)))
+    if (!(left = (char*)(tgetflag("bs") ? "\b" : tgetstr("bc", &c))))
       left = "\b";		/* Can't happen - but does on Solaris 2 */
     right = tgetstr("nd", &c);
     if (up && down && left && right)
       return TRUE;
- false:
+ false_:
     if (env && env != capbuf)
 	driver_free(env);
     if (capbuf)

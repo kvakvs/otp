@@ -546,7 +546,7 @@ do {							\
 do {\
     if (s.wstart == WSTK_DEF_STACK(s)) {\
 	UWord _wsz = WSTACK_COUNT(s);\
-	(dst)->wstart = erts_alloc(s.alloc_type,\
+        (dst)->wstart = (UWord*)erts_alloc(s.alloc_type,\
 				  DEF_WSTACK_SIZE * sizeof(UWord));\
 	memcpy((dst)->wstart, s.wstart,_wsz*sizeof(UWord));\
 	(dst)->wsp = (dst)->wstart + _wsz;\
@@ -717,9 +717,9 @@ void loaded(int, void *);
 
 /* config.c */
 
-__decl_noreturn void __noreturn erl_exit(int n, char*, ...);
-__decl_noreturn void __noreturn erl_exit_flush_async(int n, char*, ...);
-void erl_error(char*, va_list);
+__decl_noreturn void __noreturn erl_exit(int n, const char*, ...);
+__decl_noreturn void __noreturn erl_exit_flush_async(int n, const char*, ...);
+void erl_error(const char*, va_list);
 
 /* copy.c */
 Eterm copy_object(Eterm, Process*);

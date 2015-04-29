@@ -576,7 +576,7 @@ erts_make_dist_ext_copy(ErtsDistExternal *edep, Uint xsize)
 
     align_sz = ERTS_EXTRA_DATA_ALIGN_SZ(dist_ext_sz + ext_sz);
 
-    new_edep = erts_alloc(ERTS_ALC_T_EXT_TERM_DATA,
+    new_edep = (ErtsDistExternal*)erts_alloc(ERTS_ALC_T_EXT_TERM_DATA,
 			  dist_ext_sz + ext_sz + align_sz + xsize);
 
     ep = (byte *) new_edep;
@@ -1083,7 +1083,8 @@ BIF_RETTYPE term_to_binary_2(BIF_ALIST_2)
     Eterm res;
 
     while (is_list(Flags)) {
-	Eterm arg = CAR(list_val(Flags));
+        Eterm arg;
+        arg = CAR(list_val(Flags));
 	Eterm* tp;
 	if (arg == am_compressed) {
 	    level = Z_DEFAULT_COMPRESSION;
@@ -1198,7 +1199,7 @@ static uLongf binary2term_uncomp_size(byte* data, Sint size)
 
     stream.next_in = (Bytef*)data;
     stream.avail_in = (uInt)size;
-    stream.next_out = tmp_buf;
+    stream.next_out = (Bytef*)tmp_buf;
     stream.avail_out = (uInt)chunk_size;
 
     erl_zlib_alloc_init(&stream);
@@ -1206,7 +1207,7 @@ static uLongf binary2term_uncomp_size(byte* data, Sint size)
     err = inflateInit(&stream);
     if (err == Z_OK) {
 	do {
-	    stream.next_out = tmp_buf;
+            stream.next_out = (Bytef*)tmp_buf;
 	    stream.avail_out = chunk_size;	   
 	    err = inflate(&stream, Z_NO_FLUSH);
 	    uncomp_size += chunk_size - stream.avail_out;
@@ -1241,7 +1242,7 @@ binary2term_prepare(ErtsBinary2TermState *state, byte *data, Sint data_size,
 	bytes += 5;
 	size -= 5;	
 	if (dest_len > 32*1024*1024
-	    || (state->extp = erts_alloc_fnf(ERTS_ALC_T_EXT_TERM_DATA, dest_len)) == NULL) {
+            || (state->extp = (byte*)erts_alloc_fnf(ERTS_ALC_T_EXT_TERM_DATA, dest_len)) == NULL) {
             /*
              * Try avoid out-of-memory crash due to corrupted 'dest_len'
              * by checking the actual length of the uncompressed data.
@@ -1250,7 +1251,7 @@ binary2term_prepare(ErtsBinary2TermState *state, byte *data, Sint data_size,
 	    if (dest_len != binary2term_uncomp_size(bytes, size)) {
                 return -1;
 	    }
-	    state->extp = erts_alloc(ERTS_ALC_T_EXT_TERM_DATA, dest_len);
+            state->extp = (byte*)erts_alloc(ERTS_ALC_T_EXT_TERM_DATA, dest_len);
             ctx->reds -= dest_len;
 	}
 	state->exttmp = 1;
@@ -1339,7 +1340,7 @@ static void b2t_destroy_context(B2TContext* context)
 
 static void b2t_context_destructor(Binary *context_bin)
 {
-    B2TContext* ctx = (B2TContext*) ERTS_MAGIC_BIN_DATA(context_bin);
+    B2TContext* ctx = ERTS_MAGIC_BIN_DATA<B2TContext*>(context_bin);
     ASSERT(ERTS_MAGIC_BIN_DESTRUCTOR(context_bin) == b2t_context_destructor);
 
     b2t_destroy_context(ctx);
@@ -1375,7 +1376,7 @@ static B2TContext* b2t_export_context(Process* p, B2TContext* src)
 {
     Binary* context_b = erts_create_magic_binary(sizeof(B2TContext),
                                                  b2t_context_destructor);
-    B2TContext* ctx = ERTS_MAGIC_BIN_DATA(context_b);
+    B2TContext* ctx = ERTS_MAGIC_BIN_DATA<B2TContext*>(context_b);
     Eterm* hp;
     sys_memcpy(ctx, src, sizeof(B2TContext));
     if (ctx->state >= B2TDecode && ctx->u.dc.next == &src->u.dc.res) {
@@ -1412,7 +1413,7 @@ static BIF_RETTYPE binary_to_term_int(Process* p, Uint32 flags, Eterm bin, Binar
         IF_DEBUG(ctx->trap_bin = THE_NON_VALUE;)
     } else {
         is_first_call = 0;
-	ctx = ERTS_MAGIC_BIN_DATA(context_b);
+        ctx = ERTS_MAGIC_BIN_DATA<B2TContext_t*>(context_b);
         ASSERT(ctx->state != B2TPrepare);
     }
     ctx->reds = initial_reds;
@@ -1621,7 +1622,8 @@ external_size_2(BIF_ALIST_2)
     Uint flags = TERM_TO_BINARY_DFLAGS;
 
     while (is_list(BIF_ARG_2)) {
-        Eterm arg = CAR(list_val(BIF_ARG_2));
+        Eterm arg;
+        arg = CAR(list_val(BIF_ARG_2));
         Eterm* tp;
 
         if (is_tuple(arg) && *(tp = tuple_val(arg)) == make_arityval(2)) {
@@ -1671,7 +1673,7 @@ erts_term_to_binary_simple(Process* p, Eterm Term, Uint size, int level, Uint fl
 	uLongf dest_len;
 
 	if (sizeof(buf) < size) {
-	    bytes = erts_alloc(ERTS_ALC_T_TMP, size);
+            bytes = (byte*)erts_alloc(ERTS_ALC_T_TMP, size);
 	}
 
 	if ((endp = enc_term(NULL, Term, bytes, flags, NULL))
@@ -1791,7 +1793,7 @@ typedef struct {
 
 static void ttb_context_destructor(Binary *context_bin)
 {
-    TTBContext *context = ERTS_MAGIC_BIN_DATA(context_bin);
+    TTBContext *context = ERTS_MAGIC_BIN_DATA<TTBContext *>(context_bin);
     if (context->alive) {
 	context->alive = 0;
 	switch (context->state) {
@@ -1845,7 +1847,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 	if (context_b == NULL) {					\
 	    context_b = erts_create_magic_binary(sizeof(TTBContext),    \
                                                  ttb_context_destructor);   \
-	    context =  ERTS_MAGIC_BIN_DATA(context_b);			\
+            context =  ERTS_MAGIC_BIN_DATA<TTBContext*>(context_b);	\
 	    memcpy(context,&c_buff,sizeof(TTBContext));			\
 	}								\
     } while (0)
@@ -1868,7 +1870,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 	context->s.sc.flags = flags;
 	context->s.sc.level = level;
     } else {
-	context = ERTS_MAGIC_BIN_DATA(context_b);
+        context = ERTS_MAGIC_BIN_DATA<TTBContext *>(context_b);
     }	    
     /* Initialization done, now we will go through the states */
     for (;;) {

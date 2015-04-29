@@ -158,7 +158,7 @@ Hash* hash_new(ErtsAlcType_t type, char* name, int size, HashFunctions fun)
 {
     Hash* h;
 
-    h = erts_alloc(type, sizeof(Hash));
+    h = (Hash*)erts_alloc(type, sizeof(Hash));
 
     h = hash_init(type, h, name, size, fun);
     h->is_allocated =  1;

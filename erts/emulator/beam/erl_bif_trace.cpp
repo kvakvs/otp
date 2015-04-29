@@ -1485,7 +1485,7 @@ erts_set_trace_pattern(Process*p, Eterm* mfa, int specified,
 			m = 1;
 		    }
 		    if (flags.call_time) {
-			erts_set_time_trace_bif(pc, on);
+                        erts_set_time_trace_bif(pc, (erts_break_op)on);
 			/* I don't want to remove any other tracers */
 			m = 1;
 		    }
@@ -1524,10 +1524,10 @@ erts_set_trace_pattern(Process*p, Eterm* mfa, int specified,
 				      meta_tracer_pid);
 	    }
 	    if (flags.call_count) {
-		erts_set_count_break(&finish_bp.f, on);
+                erts_set_count_break(&finish_bp.f, (erts_break_op)on);
 	    }
 	    if (flags.call_time) {
-		erts_set_time_break(&finish_bp.f, on);
+                erts_set_time_break(&finish_bp.f, (erts_break_op)on);
 	    }
 	}
     } else {

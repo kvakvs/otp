@@ -59,13 +59,14 @@
 #define __USE_GNU		/* to un-hide RTLD_NEXT */
 #endif
 #include <dlfcn.h>
-static int (*__next_sigaction)(int, const struct sigaction*, struct sigaction*);
+typedef int (*sigact_t)(int, const struct sigaction*, struct sigaction*);
+static sigact_t __next_sigaction;
 #define init_done()	(__next_sigaction != 0)
 extern int __sigaction(int, const struct sigaction*, struct sigaction*);
 #define __SIGACTION __sigaction
 static void do_init(void)
 {
-    __next_sigaction = dlsym(RTLD_NEXT, "__sigaction");
+    __next_sigaction = (sigact_t)dlsym(RTLD_NEXT, "__sigaction");
     if (__next_sigaction != 0)
 	return;
     perror("dlsym");

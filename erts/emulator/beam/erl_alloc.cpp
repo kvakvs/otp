@@ -3496,7 +3496,7 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
 	    ethr_mutex_unlock((ethr_mutex *) a1);
 	    break;
 	case 0xf0c: {
-            auto cnd = erts_alloc<ethr_cond *>(ERTS_ALC_T_UNDEF, sizeof(ethr_cond));
+            auto cnd = (ethr_cond *)erts_alloc(ERTS_ALC_T_UNDEF, sizeof(ethr_cond));
 	    if (ethr_cond_init(cnd) != 0)
 		ERTS_ALC_TEST_ABORT;
 	    return (UWord) cnd;
@@ -3519,7 +3519,7 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
 	    break;
 	}
 	case 0xf10: {
-	    ethr_tid *tid = erts_alloc(ERTS_ALC_T_UNDEF, sizeof(ethr_tid));
+            auto tid = (ethr_tid *)erts_alloc(ERTS_ALC_T_UNDEF, sizeof(ethr_tid));
 	    if (ethr_thr_create(tid,
 				(void * (*)(void *)) a1,
 				(void *) a2,

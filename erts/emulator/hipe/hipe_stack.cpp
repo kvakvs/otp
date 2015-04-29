@@ -45,7 +45,7 @@ struct hipe_sdesc_table hipe_sdesc_table;
 static struct sdesc **alloc_bucket(unsigned int size)
 {
     unsigned long nbytes = size * sizeof(struct sdesc*);
-    struct sdesc **bucket = erts_alloc(ERTS_ALC_T_HIPE, nbytes);
+    struct sdesc **bucket = (sdesc **)erts_alloc(ERTS_ALC_T_HIPE, nbytes);
     sys_memzero(bucket, nbytes);
     return bucket;
 }
@@ -53,7 +53,7 @@ static struct sdesc **alloc_bucket(unsigned int size)
 static void hipe_grow_sdesc_table(void)
 {
     unsigned int old_size, new_size, new_mask;
-    struct sdesc **old_bucket, **new_bucket;
+    struct sdesc_t **old_bucket, **new_bucket;
     unsigned int i;
 
     old_size = 1 << hipe_sdesc_table.log2size;
@@ -62,12 +62,12 @@ static void hipe_grow_sdesc_table(void)
     new_mask = new_size - 1;
     hipe_sdesc_table.mask = new_mask;
     old_bucket = hipe_sdesc_table.bucket;
-    new_bucket = alloc_bucket(new_size);
+    new_bucket = (sdesc_t**)alloc_bucket(new_size);
     hipe_sdesc_table.bucket = new_bucket;
     for (i = 0; i < old_size; ++i) {
-	struct sdesc *b = old_bucket[i];
+        struct sdesc_t *b = old_bucket[i];
 	while (b != NULL) {
-	    struct sdesc *next = b->bucket.next;
+            struct sdesc_t *next = b->bucket.next;
 	    unsigned int j = (b->bucket.hvalue >> HIPE_RA_LSR_COUNT) & new_mask;
 	    b->bucket.next = new_bucket[j];
 	    new_bucket[j] = b;
@@ -77,11 +77,11 @@ static void hipe_grow_sdesc_table(void)
     erts_free(ERTS_ALC_T_HIPE, old_bucket);
 }
 
-struct sdesc *hipe_put_sdesc(struct sdesc *sdesc)
+struct sdesc_t *hipe_put_sdesc(struct sdesc_t *sdesc)
 {
     unsigned long ra;
     unsigned int i;
-    struct sdesc *chain;
+    struct sdesc_t *chain;
     unsigned int size;
 
     ra = sdesc->bucket.hvalue;
@@ -127,7 +127,7 @@ struct sdesc *hipe_decode_sdesc(Eterm arg)
     Uint fsize, arity, nlive, i, nslots, off;
     Uint livebitswords, sdescbytes;
     void *p;
-    struct sdesc *sdesc;
+    struct sdesc_t *sdesc;
 
     if (is_not_tuple(arg) ||
 	(tuple_val(arg))[0] != make_arityval(6) ||
@@ -158,18 +158,18 @@ struct sdesc *hipe_decode_sdesc(Eterm arg)
     /* Calculate number of bytes needed for the stack descriptor. */
     sdescbytes =
 	(exnra
-	 ? offsetof(struct sdesc_with_exnra, sdesc.livebits)
-	 : offsetof(struct sdesc, livebits))
+         ? offsetof(struct sdesc_with_exnra_t, sdesc.livebits)
+         : offsetof(struct sdesc_t, livebits))
 	+ livebitswords * sizeof(int);
     p = erts_alloc(ERTS_ALC_T_HIPE, sdescbytes);
     /* If we have an exception handler use the
        special sdesc_with_exnra structure. */
     if (exnra) {
-	struct sdesc_with_exnra *sdesc_we = p;
+        struct sdesc_with_exnra_t *sdesc_we = (sdesc_with_exnra_t *)p;
 	sdesc_we->exnra = exnra;
 	sdesc = &(sdesc_we->sdesc);
     } else
-	sdesc = p;
+        sdesc = (sdesc_t*)p;
 
     /* Initialise head of sdesc. */
     sdesc->bucket.next = 0;
@@ -191,5 +191,5 @@ struct sdesc *hipe_decode_sdesc(Eterm arg)
 	sdesc->dbg_A = tuple_val(mfa_tpl)[3];
     }
 #endif
-    return sdesc;
+    return sdesc_t;
 }

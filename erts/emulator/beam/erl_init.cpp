@@ -123,7 +123,7 @@ const int etp_big_endian = 0;
  * inherit previous values.
  */
 
-extern void erl_crash_dump_v(char *, int, char *, va_list);
+extern void erl_crash_dump_v(const char *, int, const char *, va_list);
 #ifdef __WIN32__
 extern void ConNormalExit(void);
 extern void ConWaitForExit(void);
@@ -276,7 +276,7 @@ this_rel_num(void)
  * that don't go to the error logger go through here.
  */
 
-void erl_error(char *fmt, va_list args)
+void erl_error(const char *fmt, va_list args)
 {
     erts_vfprintf(stderr, fmt, args);
 }
@@ -397,7 +397,7 @@ erl_first_process_otp(char* modname, void* code, unsigned size, int argc, char**
 	args = CONS(hp, new_binary(&parent, (byte*)argv[i], len), args);
 	hp += 2;
     }
-    env = new_binary(&parent, code, size);
+    env = new_binary(&parent, (byte*)code, size);
     args = CONS(hp, args, NIL);
     hp += 2;
     args = CONS(hp, env, args);
@@ -2090,7 +2090,7 @@ system_cleanup(int flush_async)
 }
 
 static __decl_noreturn void __noreturn
-erl_exit_vv(int n, int flush_async, char *fmt, va_list args1, va_list args2)
+erl_exit_vv(int n, int flush_async, const char *fmt, va_list args1, va_list args2)
 {
     unsigned int an;
 

@@ -466,14 +466,19 @@ typedef struct LoaderState {
    (Stp)->free_genop = (Genop); \
  } while (0)
 
-#define GENOP_ARITY(Genop, Arity) \
-  do { \
-   ASSERT((Genop)->a == (Genop)->def_args); \
-   (Genop)->arity = (Arity); \
-   (Genop)->a = erts_alloc(ERTS_ALC_T_LOADER_TMP, \
-			   (Genop)->arity * sizeof(GenOpArg)); \
-  } while (0)
-
+//#define GENOP_ARITY(Genop, Arity) \
+//  do { \
+//   ASSERT((Genop)->a == (Genop)->def_args); \
+//   (Genop)->arity = (Arity); \
+//   (Genop)->a = erts_alloc(ERTS_ALC_T_LOADER_TMP, \
+//			   (Genop)->arity * sizeof(GenOpArg)); \
+//  } while (0)
+inline void GENOP_ARITY(GenOp *Genop, int Arity) {
+   ASSERT((Genop)->a == (Genop)->def_args);
+   (Genop)->arity = (Arity);
+   (Genop)->a = (GenOpArg *)erts_alloc(ERTS_ALC_T_LOADER_TMP,
+                           (Genop)->arity * sizeof(GenOpArg));
+}
 
 static void free_loader_state(Binary* magic);
 static void loader_state_dtor(Binary* magic);
@@ -2832,6 +2837,15 @@ gen_get_integer2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms, GenOpArg Live,
  * Generate the fastest instruction to fetch a binary from a binary.
  */
 
+inline GenOp *gen_get_bin__error(GenOp *op, GenOpArg Fail) {
+  op->op = genop_jump_1;
+  op->arity = 1;
+  op->a[0] = Fail;
+
+  op->next = NULL;
+  return op;
+}
+
 static GenOp*
 gen_get_binary2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms, GenOpArg Live,
 		GenOpArg Size, GenOpArg Unit,
@@ -2865,7 +2879,8 @@ gen_get_binary2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms, GenOpArg Live,
 	op->a[2] = Live;
 	op->a[3].type = TAG_u;
 	if (!safe_mul(Size.val, Unit.val, &op->a[3].val)) {
-	    goto error;
+            //goto error;
+          return gen_get_bin__error(op, Fail);
 	}
 	op->a[4] = Flags;
 	op->a[5] = Dst;
@@ -2875,9 +2890,10 @@ gen_get_binary2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms, GenOpArg Live,
 
 	if (!term_to_Uint(big, &bigval)) {
         //error:
-	    op->op = genop_jump_1;
-	    op->arity = 1;
-	    op->a[0] = Fail;
+          return gen_get_bin__error(op, Fail);
+//	    op->op = genop_jump_1;
+//	    op->arity = 1;
+//	    op->a[0] = Fail;
 	} else {
 	    op->op = genop_i_bs_get_binary_imm2_6;
 	    op->arity = 6;
@@ -2886,9 +2902,7 @@ gen_get_binary2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms, GenOpArg Live,
 	    op->a[2] = Live;
 	    op->a[3].type = TAG_u;
 	    if (!safe_mul(bigval, Unit.val, &op->a[3].val)) {
-              op->op = genop_jump_1;
-              op->arity = 1;
-              op->a[0] = Fail;
+              return gen_get_bin__error(op, Fail);
 //		goto error;
             }
 	    op->a[4] = Flags;
@@ -3088,6 +3102,15 @@ gen_get_float2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms, GenOpArg Live,
  * Generate the fastest instruction for bs_skip_bits.
  */
 
+inline GenOp *gen_skip_bits__error(GenOp *op, GenOpArg Fail) {
+  op->op = genop_jump_1;
+  op->arity = 1;
+  op->a[0] = Fail;
+
+  op->next = NULL;
+  return op;
+}
+
 static GenOp*
 gen_skip_bits2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms, 
 	       GenOpArg Size, GenOpArg Unit, GenOpArg Flags)
@@ -3109,7 +3132,8 @@ gen_skip_bits2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms,
 	op->a[1] = Ms; 
 	op->a[2].type = TAG_u;
 	if (!safe_mul(Size.val, Unit.val, &op->a[2].val)) {
-	    goto error;
+//	    goto error;
+          return gen_skip_bits__error(op, Fail);
 	}
     } else if (Size.type == TAG_q) {
 	Eterm big = stp->literals[Size.val].term;
@@ -3117,9 +3141,10 @@ gen_skip_bits2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms,
 
 	if (!term_to_Uint(big, &bigval)) {
         //error:
-	    op->op = genop_jump_1;
-	    op->arity = 1;
-	    op->a[0] = Fail;
+          return gen_skip_bits__error(op, Fail);
+//	    op->op = genop_jump_1;
+//	    op->arity = 1;
+//	    op->a[0] = Fail;
 	} else {
 	    op->op = genop_i_bs_skip_bits_imm2_3;
 	    op->arity = 3;
@@ -3127,9 +3152,7 @@ gen_skip_bits2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms,
 	    op->a[1] = Ms; 
 	    op->a[2].type = TAG_u;
 	    if (!safe_mul(bigval, Unit.val, &op->a[2].val)) {
-              op->op = genop_jump_1;
-              op->arity = 1;
-              op->a[0] = Fail;
+              return gen_skip_bits__error(op, Fail);
               //goto error;
 	    }
 	}
@@ -4652,7 +4675,7 @@ transform_engine(LoaderState* st)
 		int j = formal_arity;
 
 		num_vars = n + (instr->arity - formal_arity);
-		var = erts_alloc(ERTS_ALC_T_LOADER_TMP,
+                var = (GenOpArg *)erts_alloc(ERTS_ALC_T_LOADER_TMP,
 				 num_vars * sizeof(GenOpArg));
 		for (i = 0; i < n; i++) {
 		    var[i] = def_vars[i];
@@ -4942,7 +4965,7 @@ get_tag_and_value(LoaderState* stp, Uint len_code,
      */
 
     if (count+8 > sizeof(default_buf)) {
-	bigbuf = erts_alloc(ERTS_ALC_T_LOADER_TMP, count+8);
+        bigbuf = (byte*)erts_alloc(ERTS_ALC_T_LOADER_TMP, count+8);
     }
 
     /*
@@ -5052,7 +5075,7 @@ new_label(LoaderState* stp)
 static void
 new_literal_patch(LoaderState* stp, int pos)
 {
-    LiteralPatch* p = erts_alloc(ERTS_ALC_T_PREPARED_CODE,
+    auto p = (LiteralPatch*)erts_alloc(ERTS_ALC_T_PREPARED_CODE,
 				 sizeof(LiteralPatch));
     p->pos = pos;
     p->next = stp->literal_patches;
@@ -5062,7 +5085,7 @@ new_literal_patch(LoaderState* stp, int pos)
 static void
 new_string_patch(LoaderState* stp, int pos)
 {
-    StringPatch* p = erts_alloc(ERTS_ALC_T_PREPARED_CODE, sizeof(StringPatch));
+    auto p = (StringPatch*)erts_alloc(ERTS_ALC_T_PREPARED_CODE, sizeof(StringPatch));
     p->pos = pos;
     p->next = stp->string_patches;
     stp->string_patches = p;
@@ -5096,7 +5119,7 @@ new_literal(LoaderState* stp, Eterm** hpp, Uint heap_size)
     lit = stp->literals + stp->num_literals;
     lit->offset = 0;
     lit->heap_size = heap_size;
-    lit->heap = erts_alloc(ERTS_ALC_T_PREPARED_CODE, heap_size*sizeof(Eterm));
+    lit->heap = (Eterm *)erts_alloc(ERTS_ALC_T_PREPARED_CODE, heap_size*sizeof(Eterm));
     lit->term = make_boxed(lit->heap);
     lit->off_heap.first = 0;
     lit->off_heap.overhead = 0;
@@ -5484,7 +5507,7 @@ code_get_chunk_2(BIF_ALIST_2)
     byte* temp_alloc = NULL;
 
     magic = erts_alloc_loader_state();
-    stp = ERTS_MAGIC_BIN_DATA(magic);
+    stp = ERTS_MAGIC_BIN_DATA<LoaderState*>(magic);
     if ((start = erts_get_aligned_binary_bytes(Bin, &temp_alloc)) == NULL) {
     error:
 	erts_free_aligned_binary_bytes(temp_alloc);
@@ -5554,7 +5577,7 @@ code_module_md5_1(BIF_ALIST_1)
     Eterm res;
 
     magic = erts_alloc_loader_state();
-    stp = ERTS_MAGIC_BIN_DATA(magic);
+    stp = ERTS_MAGIC_BIN_DATA<LoaderState*>(magic);
     if ((bytes = erts_get_aligned_binary_bytes(Bin, &temp_alloc)) == NULL) {
 	free_loader_state(magic);
 	BIF_ERROR(p, BADARG);
@@ -5878,7 +5901,7 @@ erts_make_stub_module(Process* p, Eterm Mod, Eterm Beam, Eterm Info)
      * at label 'error' uses it.
      */
     magic = erts_alloc_loader_state();
-    stp = ERTS_MAGIC_BIN_DATA(magic);
+    stp = ERTS_MAGIC_BIN_DATA<LoaderState *>(magic);
 
     if (is_not_atom(Mod)) {
 	goto error;
@@ -5942,7 +5965,7 @@ erts_make_stub_module(Process* p, Eterm Mod, Eterm Beam, Eterm Info)
     code_size = ((WORDS_PER_FUNCTION+1)*n + MI_FUNCTIONS + 2) * sizeof(BeamInstr);
     code_size += stp->chunks[ATTR_CHUNK].size;
     code_size += stp->chunks[COMPILE_CHUNK].size;
-    code = erts_alloc_fnf(ERTS_ALC_T_CODE, code_size);
+    code = (BeamInstr*)erts_alloc_fnf(ERTS_ALC_T_CODE, code_size);
     if (!code) {
 	goto error;
     }

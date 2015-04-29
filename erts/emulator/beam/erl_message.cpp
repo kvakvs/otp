@@ -246,7 +246,7 @@ erts_msg_distext2heap(Process *pp,
     if (sz < 0)
 	goto decode_error;
     if (is_not_nil(*tokenp)) {
-	ErlHeapFragment *heap_frag = erts_dist_ext_trailer(dist_extp);
+        auto heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(dist_extp);
 	tok_sz = heap_frag->used_size;
 	sz += tok_sz;
     }
@@ -262,7 +262,7 @@ erts_msg_distext2heap(Process *pp,
     if (is_non_value(msg))
 	goto decode_error;
     if (is_not_nil(*tokenp)) {
-	ErlHeapFragment *heap_frag = erts_dist_ext_trailer(dist_extp);
+        auto heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(dist_extp);
 	*tokenp = copy_struct(*tokenp, tok_sz, &hp, ohp);
 	erts_cleanup_offheap(&heap_frag->off_heap);
     }
@@ -284,7 +284,7 @@ erts_msg_distext2heap(Process *pp,
 
  decode_error:
     if (is_not_nil(*tokenp)) {
-	ErlHeapFragment *heap_frag = erts_dist_ext_trailer(dist_extp);
+        auto heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(dist_extp);
 	erts_cleanup_offheap(&heap_frag->off_heap);
     }
     erts_free_dist_ext_copy(dist_extp);
@@ -336,8 +336,7 @@ erts_queue_dist_message(Process *rcvr,
 	    erts_smp_proc_unlock(rcvr, ERTS_PROC_LOCK_MSGQ);
 	/* Drop message if receiver is exiting or has a pending exit ... */
 	if (is_not_nil(token)) {
-	    ErlHeapFragment *heap_frag;
-	    heap_frag = erts_dist_ext_trailer(mp->data.dist_ext);
+            auto heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(mp->data.dist_ext);
 	    erts_cleanup_offheap(&heap_frag->off_heap);
 	}
 	erts_free_dist_ext_copy(dist_ext);
@@ -836,8 +835,7 @@ erts_msg_attached_data_size_aux(ErlMessage *msg)
     if (sz < 0) {
 	/* Bad external; remove it */
 	if (is_not_nil(ERL_MESSAGE_TOKEN(msg))) {
-	    ErlHeapFragment *heap_frag;
-	    heap_frag = erts_dist_ext_trailer(msg->data.dist_ext);
+            auto heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(msg->data.dist_ext);
 	    erts_cleanup_offheap(&heap_frag->off_heap);
 	}
 	erts_free_dist_ext_copy(msg->data.dist_ext);
@@ -847,8 +845,7 @@ erts_msg_attached_data_size_aux(ErlMessage *msg)
 
     msg->data.dist_ext->heap_size = sz;
     if (is_not_nil(msg->m[1])) {
-	ErlHeapFragment *heap_frag;
-	heap_frag = erts_dist_ext_trailer(msg->data.dist_ext);
+        auto heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(msg->data.dist_ext);
 	sz += heap_frag->used_size;
     }
     return sz;
@@ -862,8 +859,7 @@ erts_move_msg_attached_data_to_heap(Eterm **hpp, ErlOffHeap *ohp, ErlMessage *ms
     else if (msg->data.dist_ext) {
 	ASSERT(msg->data.dist_ext->heap_size >= 0);
 	if (is_not_nil(ERL_MESSAGE_TOKEN(msg))) {
-	    ErlHeapFragment *heap_frag;
-	    heap_frag = erts_dist_ext_trailer(msg->data.dist_ext);
+            auto heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(msg->data.dist_ext);
 	    ERL_MESSAGE_TOKEN(msg) = copy_struct(ERL_MESSAGE_TOKEN(msg),
 						 heap_frag->used_size,
 						 hpp,

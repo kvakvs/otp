@@ -49,7 +49,7 @@ BIF_RETTYPE hipe_bifs_call_count_on_1(BIF_ALIST_1)
 	BIF_ERROR(BIF_P, BADARG);
     if (pc[0] == BeamOpCode(op_hipe_call_count))
 	BIF_RET(NIL);
-    hcc = erts_alloc(ERTS_ALC_T_HIPE, sizeof(*hcc));
+    hcc = (hipe_call_count*)erts_alloc(ERTS_ALC_T_HIPE, sizeof(*hcc));
     hcc->count = 0;
     hcc->opcode = pc[0];
     pc[-4] = (Eterm)hcc;
@@ -248,8 +248,8 @@ BIF_RETTYPE hipe_bifs_trap_count_clear_0(BIF_ALIST_0)
  *
  * gc_timer/0 -> { Time in minor collection,
  *		   Time in major collection,
- *		   Max time in minor collection (µs),
- *		   Max time in major collection (µs) }
+ *		   Max time in minor collection (Âµs),
+ *		   Max time in major collection (Âµs) }
  *
  *   Total time spent in garbage collection of the private heaps. The
  *   max times are for one separate collection.
@@ -257,8 +257,8 @@ BIF_RETTYPE hipe_bifs_trap_count_clear_0(BIF_ALIST_0)
  *
  * shared_gc_timer/0 -> { Time in minor collection,
  *			  Time in major collection,
- *			  Max time in minor collection (µs),
- *			  Max time in major collection (µs) }
+ *			  Max time in minor collection (Âµs),
+ *			  Max time in major collection (Âµs) }
  *
  *   Total time spent in garbage collection of the shared heap /
  *   message area. The max times are for one separate collection.

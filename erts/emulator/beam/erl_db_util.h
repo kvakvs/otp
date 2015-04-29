@@ -458,7 +458,7 @@ int erts_db_is_compiled_ms(Eterm term);
 
 #define Binary2MatchProg(BP) \
   (ASSERT(IsMatchProgBinary((BP))), \
-   ((MatchProg *) ERTS_MAGIC_BIN_DATA((BP))))
+   (ERTS_MAGIC_BIN_DATA<MatchProg *>((BP))))
 /*
 ** Debugging 
 */
