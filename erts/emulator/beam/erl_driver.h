@@ -297,72 +297,82 @@ typedef struct erl_drv_port_data_lock * ErlDrvPDL;
  */
 
 typedef struct erl_drv_entry {
-    int (*init)(void);		/* called at system start up for statically
+  typedef int (*init_fn_t)(void);
+  init_fn_t init;               /* called at system start up for statically
 				   linked drivers, and after loading for
 				   dynamically loaded drivers */ 
 
 #ifndef ERL_SYS_DRV
-    ErlDrvData (*start)(ErlDrvPort port, char *command);
+  typedef ErlDrvData (*start_fn_t)(ErlDrvPort port, char *command);
 				/* called when open_port/2 is invoked.
 				   return value -1 means failure. */
 #else
-    ErlDrvData (*start)(ErlDrvPort port, char *command, SysDriverOpts* opts);
+  typedef ErlDrvData (*start_fn_t)(ErlDrvPort port, char *command, SysDriverOpts* opts);
 				/* special options, only for system driver */
 #endif
-    void (*stop)(ErlDrvData drv_data);
-                                /* called when port is closed, and when the
+  start_fn_t start;
+
+  typedef void (*stop_fn_t)(ErlDrvData drv_data);
+  stop_fn_t stop;               /* called when port is closed, and when the
 				   emulator is halted. */
-    void (*output)(ErlDrvData drv_data, char *buf, ErlDrvSizeT len);
-				/* called when we have output from erlang to
+  typedef void (*output_fn_t)(ErlDrvData drv_data, char *buf, ErlDrvSizeT len);
+  output_fn_t output;           /* called when we have output from erlang to
 				   the port */
-    void (*ready_input)(ErlDrvData drv_data, ErlDrvEvent event); 
-				/* called when we have input from one of 
+  typedef void (*ready_input_fn_t)(ErlDrvData drv_data, ErlDrvEvent event);
+  ready_input_fn_t ready_input; /* called when we have input from one of
 				   the driver's handles */
-    void (*ready_output)(ErlDrvData drv_data, ErlDrvEvent event);  
-				/* called when output is possible to one of 
+  typedef void (*ready_output_fn_t)(ErlDrvData drv_data, ErlDrvEvent event);
+  ready_output_fn_t ready_output; /* called when output is possible to one of
 				   the driver's handles */
-    char *driver_name;		/* name supplied as command 
+  char *driver_name;		/* name supplied as command
 				   in open_port XXX ? */
-    void (*finish)(void);        /* called before unloading the driver -
-				   DYNAMIC DRIVERS ONLY */
-    void *handle;		/* Reserved -- Used by emulator internally */
-    ErlDrvSSizeT (*control)(ErlDrvData drv_data, unsigned int command,
-			    char *buf, ErlDrvSizeT len, char **rbuf,
-			    ErlDrvSizeT rlen); /* "ioctl" for drivers - invoked by
-						  port_control/3 */
-    void (*timeout)(ErlDrvData drv_data);	/* Handling of timeout in driver */
-    void (*outputv)(ErlDrvData drv_data, ErlIOVec *ev);
-				/* called when we have output from erlang
+  typedef void (*finish_fn_t)(void);        /* called before unloading the driver -*/
+  finish_fn_t finish;		   /* DYNAMIC DRIVERS ONLY */
+
+  void *handle;		/* Reserved -- Used by emulator internally */
+  typedef ErlDrvSSizeT (*control_fn_t)(ErlDrvData drv_data, unsigned int command,
+                            char *buf, ErlDrvSizeT len, char **rbuf, ErlDrvSizeT rlen);
+  control_fn_t control;     /* "ioctl" for drivers - invoked by port_control/3 */
+
+  typedef void (*timeout_fn_t)(ErlDrvData drv_data);	/* Handling of timeout in driver */
+  timeout_fn_t timeout;
+
+  typedef void (*outputv_fn_t)(ErlDrvData drv_data, ErlIOVec *ev);
+  outputv_fn_t outputv;         /* called when we have output from erlang
 				   to the port */
-    void (*ready_async)(ErlDrvData drv_data, ErlDrvThreadData thread_data);
-    void (*flush)(ErlDrvData drv_data);
-                                /* called when the port is about to be 
+  typedef void (*ready_async_fn_t)(ErlDrvData drv_data, ErlDrvThreadData thread_data);
+  ready_async_fn_t ready_async;
+
+  typedef void (*flush_fn_t)(ErlDrvData drv_data);
+  flush_fn_t flush;             /* called when the port is about to be
 				   closed, and there is data in the 
 				   driver queue that needs to be flushed
 				   before 'stop' can be called */
-    ErlDrvSSizeT (*call)(ErlDrvData drv_data,
+  typedef ErlDrvSSizeT (*call_fn_t)(ErlDrvData drv_data,
 			 unsigned int command, char *buf, ErlDrvSizeT len,
 			 char **rbuf, ErlDrvSizeT rlen,
-			 unsigned int *flags); /* Works mostly like 'control',
-						  a synchronous
-						  call into the driver. */
-    void (*event)(ErlDrvData drv_data, ErlDrvEvent event,
+                         unsigned int *flags);
+  call_fn_t call;               /* Works mostly like 'control', a synchronous
+                                    call into the driver. */
+  typedef void (*event_fn_t)(ErlDrvData drv_data, ErlDrvEvent event,
 		  ErlDrvEventData event_data);
+  event_fn_t event;
                                 /* Called when an event selected by 
 				   driver_event() has occurred */
-    int extended_marker;	/* ERL_DRV_EXTENDED_MARKER */
-    int major_version;		/* ERL_DRV_EXTENDED_MAJOR_VERSION */
-    int minor_version;		/* ERL_DRV_EXTENDED_MINOR_VERSION */
-    int driver_flags;		/* ERL_DRV_FLAGs */
-    void *handle2;              /* Reserved -- Used by emulator internally */
-    void (*process_exit)(ErlDrvData drv_data, ErlDrvMonitor *monitor);
-                                /* Called when a process monitor fires */
-    void (*stop_select)(ErlDrvEvent event, void* reserved);
-    	                        /* Called on behalf of driver_select when
+  int extended_marker;	/* ERL_DRV_EXTENDED_MARKER */
+  int major_version;		/* ERL_DRV_EXTENDED_MAJOR_VERSION */
+  int minor_version;		/* ERL_DRV_EXTENDED_MINOR_VERSION */
+  int driver_flags;		/* ERL_DRV_FLAGs */
+  void *handle2;              /* Reserved -- Used by emulator internally */
+  typedef void (*process_exit_fn_t)(ErlDrvData drv_data, ErlDrvMonitor *monitor);
+  process_exit_fn_t process_exit;  /* Called when a process monitor fires */
+
+  typedef void (*stop_select_fn_t)(ErlDrvEvent event, void* reserved);
+  stop_select_fn_t stop_select; /* Called on behalf of driver_select when
 				   it is safe to release 'event'. A typical
 				   unix driver would call close(event) */
-    void (*emergency_close)(ErlDrvData drv_data);
-                                /* called when the port is closed abruptly.
+  typedef void (*emergency_close_fn_t)(ErlDrvData drv_data);
+  emergency_close_fn_t emergency_close; /* called when the port is closed abruptly.
 				   specifically when erl_crash_dump is called. */
     /* When adding entries here, dont forget to pad in obsolete/driver.h */
 } ErlDrvEntry;

@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* WARNING: this_ file should *not* be used by applications. It is
+/* WARNING: this file should *not* be used by applications. It is
    part of the implementation of the compression library and is
    subject to change. Applications should only use zlib.h.
  */
@@ -95,7 +95,7 @@ typedef unsigned IPos;
  */
 
 typedef struct internal_state {
-    z_streamp strm;      /* pointer back to this_ zlib stream */
+    z_streamp strm;      /* pointer back to this zlib stream */
     int   status;        /* as the name implies */
     Bytef *pending_buf;  /* output still pending */
     ulg   pending_buf_size; /* size of pending_buf */
@@ -116,8 +116,8 @@ typedef struct internal_state {
     Bytef *window;
     /* Sliding window. Input bytes are read into the second half of the window,
      * and move to the first half later to keep a dictionary of at least wSize
-     * bytes. With this_ organization, matches are limited to a distance of
-     * wSize-MAX_MATCH bytes, but this_ ensures that IO is always
+     * bytes. With this organization, matches are limited to a distance of
+     * wSize-MAX_MATCH bytes, but this ensures that IO is always
      * performed with a length multiple of the block size. Also, it limits
      * the window size to 64K, which is quite useful on MSDOS.
      * To do: use the user input buffer as sliding window.
@@ -129,9 +129,9 @@ typedef struct internal_state {
      */
 
     Posf *prev;
-    /* Link to older string with same hash index. To limit the size of this_
-     * array to 64K, this_ link is maintained only for the last 32K strings.
-     * An index in this_ array is thus a window index modulo 32K.
+    /* Link to older string with same hash index. To limit the size of this
+     * array to 64K, this link is maintained only for the last 32K strings.
+     * An index in this array is thus a window index modulo 32K.
      */
 
     Posf *head; /* Heads of the hash chains or NIL. */
@@ -161,24 +161,24 @@ typedef struct internal_state {
     uInt lookahead;              /* number of valid bytes ahead in window */
 
     uInt prev_length;
-    /* Length of the best match at previous step. Matches not greater than this_
+    /* Length of the best match at previous step. Matches not greater than this
      * are discarded. This is used in the lazy match evaluation.
      */
 
     uInt max_chain_length;
-    /* To speed up deflation, hash chains are never searched beyond this_
+    /* To speed up deflation, hash chains are never searched beyond this
      * length.  A higher limit improves compression ratio but degrades the
      * speed.
      */
 
     uInt max_lazy_match;
     /* Attempt to find a better match only when the current match is strictly
-     * smaller than this_ value. This mechanism is used only for compression
+     * smaller than this value. This mechanism is used only for compression
      * levels >= 4.
      */
 #   define max_insert_length  max_lazy_match
-    /* Insert new_ strings in the hash table only if the match length is not
-     * greater than this_ length. This saves time but degrades compression.
+    /* Insert new strings in the hash table only if the match length is not
+     * greater than this length. This saves time but degrades compression.
      * max_insert_length is used only for compression levels <= 3.
      */
 
@@ -186,9 +186,9 @@ typedef struct internal_state {
     int strategy; /* favor or force Huffman coding*/
 
     uInt good_match;
-    /* Use a faster search when the previous match is longer than this_ */
+    /* Use a faster search when the previous match is longer than this */
 
-    int nice_match; /* Stop searching when current match exceeds this_ */
+    int nice_match; /* Stop searching when current match exceeds this */
 
                 /* used by trees.c: */
     /* Didn't use ct_data typedef below to suppress compiler warning */
@@ -227,7 +227,7 @@ typedef struct internal_state {
      *   - if compression is not successful for a file smaller than 64K, we can
      *     even emit a stored file instead of a stored block (saving 5 bytes).
      *     This is applicable only for zip (not gzip or zlib).
-     *   - creating new_ Huffman trees less frequently may not provide fast
+     *   - creating new Huffman trees less frequently may not provide fast
      *     adaptation to changes in the input data statistics. (Take for
      *     example a binary file with poorly compressible code followed by
      *     a highly compressible string table.) Smaller buffer sizes give
@@ -265,9 +265,9 @@ typedef struct internal_state {
 
     ulg high_water;
     /* High water mark offset in window for initialized bytes -- bytes above
-     * this_ are set to zero in order to avoid memory check warnings when
+     * this are set to zero in order to avoid memory check warnings when
      * longest match routines access bytes past the input.  This is then
-     * updated to the new_ high water mark.
+     * updated to the new high water mark.
      */
 
 } FAR deflate_state;

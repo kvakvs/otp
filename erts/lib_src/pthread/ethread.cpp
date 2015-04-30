@@ -86,7 +86,7 @@ static void *thr_wrapper(void *vtwd)
     ethr_thr_wrap_data__ *twd = (ethr_thr_wrap_data__ *) vtwd;
     void *(*thr_func)(void *) = twd->thr_func;
     void *arg = twd->arg;
-    ethr_ts_event *tsep = NULL;
+    ethr_ts_event *tsep = nullptr;
 
     result = (ethr_sint32_t) ethr_make_ts_event__(&tsep);
 
@@ -103,7 +103,7 @@ static void *thr_wrapper(void *vtwd)
 
     ethr_event_set(&tsep->event);
 
-    res = result == 0 ? (*thr_func)(arg) : NULL;
+    res = result == 0 ? (*thr_func)(arg) : nullptr;
 
     thr_exit_cleanup();
     return res;
@@ -118,7 +118,7 @@ int ethr_set_tse__(ethr_ts_event *tsep)
 
 ethr_ts_event *ethr_get_tse__(void)
 {
-    return pthread_getspecific(ethr_ts_event_key__);
+    return (ethr_ts_event*)pthread_getspecific(ethr_ts_event_key__);
 }
 
 #if defined(ETHR_PPC_RUNTIME_CONF__)
@@ -362,7 +362,7 @@ ethr_thr_create(ethr_tid *tid, void * (*func)(void *), void *arg,
     if (ethr_thr_prepare_func__)
 	twd.prep_func_res = ethr_thr_prepare_func__();
     else
-	twd.prep_func_res = NULL;
+	twd.prep_func_res = nullptr;
 
     res = pthread_create((pthread_t *) tid, &attr, thr_wrapper, (void*) &twd);
 
@@ -484,7 +484,7 @@ ethr_tsd_key_create(ethr_tsd_key *keyp, char *keyname)
 	return EINVAL;
     }
 #endif
-    return pthread_key_create((pthread_key_t *) keyp, NULL);
+    return pthread_key_create((pthread_key_t *) keyp, nullptr);
 }
 
 int
@@ -517,7 +517,7 @@ ethr_tsd_get(ethr_tsd_key key)
 #if ETHR_XCHK
     if (ethr_not_inited__) {
 	ETHR_ASSERT(0);
-	return NULL;
+	return nullptr;
     }
 #endif
     return pthread_getspecific((pthread_key_t) key);

@@ -54,7 +54,7 @@ int ZEXPORT erl_zlib_deflate_start(z_stream *streamp, const Bytef* source,
     streamp->next_in = (Bytef*)source;
     streamp->avail_in = (uInt)sourceLen;
     streamp->total_out = streamp->avail_out = 0;
-    streamp->next_out = NULL;
+    streamp->next_out = nullptr;
     erl_zlib_alloc_init(streamp);
     return deflateInit(streamp, level);
 }
@@ -93,7 +93,7 @@ int ZEXPORT erl_zlib_inflate_start(z_stream *streamp, const Bytef* source,
     streamp->next_in = (Bytef*)source;
     streamp->avail_in = (uInt)sourceLen;
     streamp->total_out = streamp->avail_out = 0;
-    streamp->next_out = NULL;
+    streamp->next_out = nullptr;
     erl_zlib_alloc_init(streamp);
     return inflateInit(streamp);
 }

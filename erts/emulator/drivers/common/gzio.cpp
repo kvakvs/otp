@@ -140,7 +140,7 @@ static uLong  getLong      (gz_stream *s);
      Opens a gzip (.gz) file for reading or writing. The mode parameter
    is as in fopen ("rb" or "wb"). The file is given either by file descriptor
    or path name (if fd == -1).
-     gz_open return NULL if the file could not be opened or if there was
+     gz_open return nullptr if the file could not be opened or if there was
    insufficient memory to allocate the (de)compression state; errno
    can be checked to distinguish the two cases (if errno is zero, the
    zlib error is Z_MEM_ERROR).
@@ -166,7 +166,7 @@ static ErtsGzFile gz_open (const char* path, const char* mode)
 #ifdef UNIX
     s->file = -1;
 #else
-    s->file = NULL;
+    s->file = nullptr;
 #endif
     s->z_err = Z_OK;
     s->z_eof = 0;
@@ -237,7 +237,7 @@ static ErtsGzFile gz_open (const char* path, const char* mode)
 	}
 	wfmode[i++] = L'\0';
 	s->file = efile_wfopen((WCHAR *)path, wfmode);
-	if (s->file == NULL) {
+	if (s->file == nullptr) {
 	    return s->destroy(s), (ErtsGzFile)Z_NULL;
 	}
     }
@@ -252,7 +252,7 @@ static ErtsGzFile gz_open (const char* path, const char* mode)
     }
 #else
     s->file = fopen(path, fmode);
-    if (s->file == NULL) {
+    if (s->file == nullptr) {
         return s->destroy(s), (ErtsGzFile)Z_NULL;
     }
 #endif
@@ -423,7 +423,7 @@ static int destroy (gz_stream *s)
         err = Z_ERRNO;
     }
 #else
-    if (s->file != NULL && fclose(s->file)) {
+    if (s->file != nullptr && fclose(s->file)) {
         err = Z_ERRNO;
     }
 #endif
@@ -737,7 +737,7 @@ erts_gzclose(ErtsGzFile file)
    will be copied unchanged into the binary.
 
    If a `gzip' header was found, but there were subsequent errors,
-   a NULL pointer is returned.
+   a nullptr pointer is returned.
 */
 
 ErlDrvBinary*
@@ -806,7 +806,7 @@ erts_gzinflate_buffer(char* start, uLong size)
 
 /* ===========================================================================
    Compresses the buffer given and returns a pointer to a binary.
-   A NULL pointer is returned if any error occurs.
+   A nullptr pointer is returned if any error occurs.
    Writes a gzip header as well.
 */
 

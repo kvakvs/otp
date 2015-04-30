@@ -105,7 +105,7 @@ erts_sspa_create(size_t blk_sz, int pa_size)
 	    blk->next_ptr = (erts_sspa_blk_t *) p;
 	}
 
-	blk->next_ptr = NULL;
+	blk->next_ptr = nullptr;
 	chdr->local.last = blk;
 	chdr->local.cnt = no_blocks_per_chunk;
 	chdr->local.lim = no_blocks_per_chunk / 3;
@@ -250,7 +250,7 @@ fetch_remote(erts_sspa_chunk_header_t *chdr, int max)
 
 		if (chdr->head.unref_end != (erts_sspa_blk_t *) ilast) {
 		    chdr->head.next.unref_end = (erts_sspa_blk_t *) ilast;
-		    chdr->head.next.thr_progress = erts_thr_progress_later(NULL);
+		    chdr->head.next.thr_progress = erts_thr_progress_later(nullptr);
 		    erts_atomic32_set_relb(&chdr->tail.data.um_refc_ix,
 					   um_refc_ix);
 		    chdr->head.next.um_refc_ix = um_refc_ix == 0 ? 1 : 0;
@@ -291,7 +291,7 @@ fetch_remote(erts_sspa_chunk_header_t *chdr, int max)
 	    else
 		chdr->local.last->next_ptr = first;
 	    chdr->local.last = last;
-	    last->next_ptr = NULL;
+	    last->next_ptr = nullptr;
 	    chdr->local.cnt += new_local;
 
 	    ERTS_SSPA_DBG_CHK_LCL(chdr);
@@ -316,7 +316,7 @@ erts_sspa_process_remote_frees(erts_sspa_chunk_header_t *chdr,
 	chdr->local.first = res->next_ptr;
 	chdr->local.cnt--;
 	if (!chdr->local.first)
-	    chdr->local.last = NULL;
+	    chdr->local.last = nullptr;
 
 	ERTS_SSPA_DBG_CHK_LCL(chdr);
     }

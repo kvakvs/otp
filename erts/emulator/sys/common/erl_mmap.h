@@ -50,7 +50,7 @@ typedef struct {
 }ErtsMMapInit;
 
 #define ERTS_MMAP_INIT_DEFAULT_INITER \
-    {{NULL, NULL}, {NULL, NULL}, 0, 1, (1 << 16), 1}
+    {{nullptr, nullptr}, {nullptr, nullptr}, 0, 1, (1 << 16), 1}
 
 void *erts_mmap(Uint32 flags, UWord *sizep);
 void erts_munmap(Uint32 flags, void *ptr, UWord size);

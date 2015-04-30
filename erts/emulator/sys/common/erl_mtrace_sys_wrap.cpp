@@ -33,8 +33,8 @@ extern char _end;
 static int inited = 0;
 static int init(void);
 
-static volatile char *heap_start = NULL;
-static volatile char *heap_end = NULL;
+static volatile char *heap_start = nullptr;
+static volatile char *heap_end = nullptr;
 
 #if defined(ERTS___AFTER_MORECORE_HOOK_CAN_TRACK_MALLOC) /* ----------------- */
 
@@ -51,7 +51,7 @@ init_hook(void)
     __after_morecore_hook = erts_mtrace_update_heap_size;
     if (inited)
 	return;
-    heap_end = NULL;
+    heap_end = nullptr;
 #if defined(HAVE_END_SYMBOL)
     heap_start = &end;
 #elif defined(HAVE__END_SYMBOL)
@@ -59,7 +59,7 @@ init_hook(void)
 #else
     heap_start = SBRK_0;
     if (heap_start == (SBRK_RET_TYPE) -1) {
-	heap_start = NULL;
+	heap_start = nullptr;
 	return;
     }
 #endif
@@ -94,7 +94,7 @@ static void update_heap_size(char *new_end);
 
 #define SBRK_IMPL(RET_TYPE, FUNC, ARG_TYPE)			\
 RET_TYPE FUNC (ARG_TYPE);					\
-static RET_TYPE (*real_ ## FUNC)(ARG_TYPE) = NULL;		\
+static RET_TYPE (*real_ ## FUNC)(ARG_TYPE) = nullptr;		\
 RET_TYPE FUNC (ARG_TYPE arg)					\
 {								\
     RET_TYPE res;						\
@@ -108,7 +108,7 @@ RET_TYPE FUNC (ARG_TYPE arg)					\
 
 #define BRK_IMPL(RET_TYPE, FUNC, ARG_TYPE)			\
 RET_TYPE FUNC (ARG_TYPE);					\
-static RET_TYPE (*real_ ## FUNC)(ARG_TYPE) = NULL;		\
+static RET_TYPE (*real_ ## FUNC)(ARG_TYPE) = nullptr;		\
 RET_TYPE FUNC (ARG_TYPE arg)					\
 {								\
     RET_TYPE res;						\
@@ -156,7 +156,7 @@ do {						\
     }						\
 } while (0)
 
-    heap_end = NULL;
+    heap_end = nullptr;
 #if defined(HAVE_END_SYMBOL)
     heap_start = &end;
 #elif defined(HAVE__END_SYMBOL)
@@ -210,7 +210,7 @@ update_heap_size(char *new_end)
 				  ERTS_MTRACE_SEGMENT_ID,
 				  size);
 	else
-	    heap_end = NULL;
+	    heap_end = nullptr;
     }
     else {
 	if (old_end != new_end || old_start != new_start) {
@@ -226,7 +226,7 @@ update_heap_size(char *new_end)
 		    erts_mtrace_crr_free(ERTS_ALC_A_SYSTEM,
 					 ERTS_MTRACE_SEGMENT_ID,
 					 (void *) old_start);
-		heap_end = NULL;
+		heap_end = nullptr;
 	    }
 	}
     }

@@ -192,7 +192,7 @@ erts_cleanup_offheap(ErlOffHeap *offheap)
 void
 free_message_buffer(ErlHeapFragment* bp)
 {
-    ASSERT(bp != NULL);
+    ASSERT(bp != nullptr);
     do {
 	ErlHeapFragment* next_bp = bp->next;
 
@@ -200,7 +200,7 @@ free_message_buffer(ErlHeapFragment* bp)
 	ERTS_HEAP_FREE(ERTS_ALC_T_HEAP_FRAG, (void *) bp,
 		       ERTS_HEAP_FRAG_SIZE(bp->size));	
 	bp = next_bp;
-    }while (bp != NULL);
+    }while (bp != nullptr);
 }
 
 static ERTS_INLINE void
@@ -214,14 +214,14 @@ link_mbuf_to_proc(Process *proc, ErlHeapFragment *bp)
 	FLAGS(proc) |= F_FORCE_GC;
 
 	/* Move any off_heap's into the process */
-	if (bp->off_heap.first != NULL) {
+	if (bp->off_heap.first != nullptr) {
 	    struct erl_off_heap_header** next_p = &bp->off_heap.first;
-	    while (*next_p != NULL) {
+	    while (*next_p != nullptr) {
 		next_p = &((*next_p)->next);
 	    }
 	    *next_p = MSO(proc).first;
 	    MSO(proc).first = bp->off_heap.first;
-	    bp->off_heap.first = NULL;
+	    bp->off_heap.first = nullptr;
 	    OH_OVERHEAD(&(MSO(proc)), bp->off_heap.overhead);
 	}
     }
@@ -236,12 +236,12 @@ erts_msg_distext2heap(Process *pp,
 {
     Eterm msg;
     Uint tok_sz = 0;
-    Eterm *hp = NULL;
-    Eterm *hp_end = NULL;
+    Eterm *hp = nullptr;
+    Eterm *hp_end = nullptr;
     ErlOffHeap *ohp;
     Sint sz;
 
-    *bpp = NULL;
+    *bpp = nullptr;
     sz = erts_decode_dist_ext_size(dist_extp);
     if (sz < 0)
 	goto decode_error;
@@ -290,7 +290,7 @@ erts_msg_distext2heap(Process *pp,
     erts_free_dist_ext_copy(dist_extp);
     if (*bpp) {
 	free_message_buffer(*bpp);
-	*bpp = NULL;
+	*bpp = nullptr;
     }    
     else if (hp) {
 	HRelease(pp, hp_end, hp);
@@ -388,7 +388,7 @@ erts_queue_dist_message(Process *rcvr,
 #ifdef USE_VM_PROBES
 	}
 #endif
-	mp->next = NULL;
+	mp->next = nullptr;
 
 #ifdef USE_VM_PROBES
         if (DTRACE_ENABLED(message_queued)) {
@@ -444,7 +444,7 @@ queue_message(Process *c_p,
     erts_aint_t state;
 
 #ifndef ERTS_SMP
-    ASSERT(bp != NULL || receiver->mbuf == NULL);
+    ASSERT(bp != nullptr || receiver->mbuf == nullptr);
 #endif
 
     ERTS_SMP_LC_ASSERT(*receiver_locks == erts_proc_lc_my_proc_locks(receiver));
@@ -496,7 +496,7 @@ queue_message(Process *c_p,
 #ifdef USE_VM_PROBES
     ERL_MESSAGE_DT_UTAG(mp) = dt_utag;
 #endif
-    mp->next = NULL;
+    mp->next = nullptr;
     mp->data.heap_frag = bp;
 
 #ifndef ERTS_SMP
@@ -572,10 +572,10 @@ erts_queue_message(Process* receiver,
 #endif
     )
 {
-    queue_message(NULL,
+    queue_message(nullptr,
 		  receiver,
 		  receiver_locks,
-		  NULL,
+		  nullptr,
 		  bp,
 		  message,
 		  seq_trace_token
@@ -661,7 +661,7 @@ erts_move_msg_mbuf_to_heap(Eterm** hpp, ErlOffHeap* off_heap, ErlMessage *msg)
    dbg_thp_start = *hpp;
 #endif
 
-    if (bp->next != NULL) {
+    if (bp->next != nullptr) {
 	move_multi_frags(hpp, off_heap, bp, msg->m, 
 #ifdef USE_VM_PROBES
 			 3
@@ -682,7 +682,7 @@ erts_move_msg_mbuf_to_heap(Eterm** hpp, ErlOffHeap* off_heap, ErlMessage *msg)
     hp = *hpp;
     offs = hp - fhp;
 
-    oh = NULL;
+    oh = nullptr;
     while (sz--) {
 	Uint cpy_sz;
 	Eterm val = *fhp++;
@@ -742,7 +742,7 @@ erts_move_msg_mbuf_to_heap(Eterm** hpp, ErlOffHeap* off_heap, ErlMessage *msg)
 		    off_heap->first = oh;
 		    ASSERT(*hpp <= (Eterm*)oh);
 		    ASSERT(hp > (Eterm*)oh);
-		    oh = NULL;
+		    oh = nullptr;
 		}
 		break;
 	    }
@@ -807,9 +807,9 @@ copy_done:
 #endif
 	    
 
-    bp->off_heap.first = NULL;
+    bp->off_heap.first = nullptr;
     free_message_buffer(bp);
-    msg->data.heap_frag = NULL;
+    msg->data.heap_frag = nullptr;
 
 #ifdef HARD_DEBUG
     ASSERT(eq(ERL_MESSAGE_TERM(msg), dbg_term));
@@ -839,7 +839,7 @@ erts_msg_attached_data_size_aux(ErlMessage *msg)
 	    erts_cleanup_offheap(&heap_frag->off_heap);
 	}
 	erts_free_dist_ext_copy(msg->data.dist_ext);
-	msg->data.dist_ext = NULL;
+	msg->data.dist_ext = nullptr;
 	return 0;
     }
 
@@ -870,7 +870,7 @@ erts_move_msg_attached_data_to_heap(Eterm **hpp, ErlOffHeap *ohp, ErlMessage *ms
 						     ohp,
 						     msg->data.dist_ext);
 	erts_free_dist_ext_copy(msg->data.dist_ext);
-	msg->data.dist_ext = NULL;
+	msg->data.dist_ext = nullptr;
     }
     /* else: bad external detected when calculating size */
 }
@@ -887,7 +887,7 @@ erts_send_message(Process* sender,
 		  unsigned flags)
 {
     Uint msize;
-    ErlHeapFragment* bp = NULL;
+    ErlHeapFragment* bp = nullptr;
     Eterm token = NIL;
     Sint res = 0;
 #ifdef USE_VM_PROBES
@@ -978,10 +978,10 @@ erts_send_message(Process* sender,
 		    msize, tok_label, tok_lastcnt, tok_serial);
         }
 #endif
-        res = queue_message(NULL,
+        res = queue_message(nullptr,
 			    receiver,
 			    receiver_locks,
-			    NULL,
+			    nullptr,
 			    bp,
 			    message,
 			    token
@@ -1013,13 +1013,13 @@ erts_send_message(Process* sender,
 
             DTRACE6(message_send, sender_name, receiver_name,
                     size_object(message), tok_label, tok_lastcnt, tok_serial);
-	    mp->data.attached = NULL;
+	    mp->data.attached = nullptr;
 	    ERL_MESSAGE_TERM(mp) = message;
 	    ERL_MESSAGE_TOKEN(mp) = NIL;
 #ifdef USE_VM_PROBES
 	    ERL_MESSAGE_DT_UTAG(mp) = NIL;
 #endif
-	    mp->next = NULL;
+	    mp->next = nullptr;
 	    /*
 	     * We move 'in queue' to 'private queue' and place
 	     * message at the end of 'private queue' in order
@@ -1092,7 +1092,7 @@ erts_deliver_exit_message(Eterm from, Process *to, ErtsProcLocks *to_locksp,
     Uint sz_from;
     Eterm* hp;
     Eterm temptoken;
-    ErlHeapFragment* bp = NULL;
+    ErlHeapFragment* bp = nullptr;
 
     if (token != NIL
 #ifdef USE_VM_PROBES
@@ -1111,7 +1111,7 @@ erts_deliver_exit_message(Eterm from, Process *to, ErtsProcLocks *to_locksp,
 	save = TUPLE3(hp, am_EXIT, from_copy, mess);
 	hp += 4;
 	/* the trace token must in this_ case be updated by the caller */
-	seq_trace_output(token, save, SEQ_TRACE_SEND, to->common.id, NULL);
+	seq_trace_output(token, save, SEQ_TRACE_SEND, to->common.id, nullptr);
 	temptoken = copy_struct(token, sz_token, &hp, &bp->off_heap);
 	erts_queue_message(to, to_locksp, bp, save, temptoken
 #ifdef USE_VM_PROBES

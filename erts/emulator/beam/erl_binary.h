@@ -95,7 +95,7 @@ typedef struct erl_heap_bin {
  */
 
 #define ERTS_GET_BINARY_BYTES(Bin,Bytep,Bitoffs,Bitsize) \
-     ERTS_GET_BINARY_BYTES_REL(Bin,Bytep,Bitoffs,Bitsize,NULL)
+     ERTS_GET_BINARY_BYTES_REL(Bin,Bytep,Bitoffs,Bitsize,nullptr)
 
 #define ERTS_GET_BINARY_BYTES_REL(Bin,Bytep,Bitoffs,Bitsize,BasePtr)    \
 do {									\
@@ -130,7 +130,7 @@ do {									\
  */
 
 #define ERTS_GET_REAL_BIN(Bin, RealBin, ByteOffset, BitOffset, BitSize) \
-     ERTS_GET_REAL_BIN_REL(Bin, RealBin, ByteOffset, BitOffset, BitSize, NULL)
+     ERTS_GET_REAL_BIN_REL(Bin, RealBin, ByteOffset, BitOffset, BitSize, nullptr)
 
 #define ERTS_GET_REAL_BIN_REL(Bin, RealBin, ByteOffset, BitOffset, BitSize, BasePtr) \
   do {									\
@@ -237,7 +237,7 @@ erts_bin_drv_alloc_fnf(Uint size)
     Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
     void *res;
     if (bsize < size) /* overflow */
-	return NULL;
+        return nullptr;
     res = erts_alloc_fnf(ERTS_ALC_T_DRV_BINARY, bsize);
     ERTS_CHK_BIN_ALIGNMENT(res);
     return (Binary *) res;
@@ -277,7 +277,7 @@ erts_bin_realloc_fnf(Binary *bp, Uint size)
 	                                            : ERTS_ALC_T_BINARY;
     ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
     if (bsize < size) /* overflow */
-	return NULL;
+        return nullptr;
     nbp = (Binary *)erts_realloc_fnf(type, (void *) bp, bsize);
     ERTS_CHK_BIN_ALIGNMENT(nbp);
     return nbp;

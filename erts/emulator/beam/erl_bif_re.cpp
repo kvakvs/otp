@@ -40,9 +40,9 @@
 static const unsigned char *default_table;
 static Uint max_loop_limit;
 static Export re_exec_trap_export;
-static Export *grun_trap_exportp = NULL;
-static Export *urun_trap_exportp = NULL;
-static Export *ucompile_trap_exportp = NULL;
+static Export *grun_trap_exportp = nullptr;
+static Export *urun_trap_exportp = nullptr;
+static Export *ucompile_trap_exportp = nullptr;
 
 static BIF_RETTYPE re_exec_trap(BIF_ALIST_3);
 static BIF_RETTYPE re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3);
@@ -69,7 +69,7 @@ void erts_init_bif_re(void)
     erts_pcre_free = &erts_erts_pcre_free;
     erts_pcre_stack_malloc = &erts_erts_pcre_stack_malloc;
     erts_pcre_stack_free = &erts_erts_pcre_stack_free;
-    default_table = NULL; /* ISO8859-1 default, forced into pcre */
+    default_table = nullptr; /* ISO8859-1 default, forced into pcre */
     max_loop_limit = CONTEXT_REDS * LOOP_FACTOR;
 
     erts_init_trap_export(&re_exec_trap_export, am_erlang, am_re_run_trap, 3,
@@ -216,7 +216,7 @@ parse_options(Eterm listp, /* in */
 		Eterm *tp = tuple_val(item);
 		if (arityval(*tp) != 2 || is_not_atom(tp[1])) {
 		    if (arityval(*tp) == 3 && tp[1] == am_capture) {
-			if (capture_spec != NULL) {
+                        if (capture_spec != nullptr) {
 			    capture_spec[CAPSPEC_VALUES] = tp[2];
 			    capture_spec[CAPSPEC_TYPE] = tp[3];
 			}
@@ -229,7 +229,7 @@ parse_options(Eterm listp, /* in */
 		}
 		switch(tp[1]) {
 		case am_capture:
-		    if (capture_spec != NULL) {
+                    if (capture_spec != nullptr) {
 			capture_spec[CAPSPEC_VALUES] = tp[2];
 			capture_spec[CAPSPEC_TYPE] = am_index;
 		    }
@@ -242,7 +242,7 @@ parse_options(Eterm listp, /* in */
 			if (!term_to_int(tp[2],&tmp) || tmp < 0) {
 			    return -1; 
 			}
-			if (startoffset != NULL) {
+                        if (startoffset != nullptr) {
 			    *startoffset = tmp;
 			}
 		    }
@@ -254,7 +254,7 @@ parse_options(Eterm listp, /* in */
 			if (!term_to_int(tp[2],&tmp) || tmp < 0) {
 			    return -1; 
 			}
-			if (match_limit != NULL) {
+                        if (match_limit != nullptr) {
 			    *match_limit = tmp;
 			}
 		    }
@@ -266,7 +266,7 @@ parse_options(Eterm listp, /* in */
 			if (!term_to_int(tp[2],&tmp) || tmp < 0) {
 			    return -1; 
 			}
-			if (match_limit_recursion != NULL) {
+                        if (match_limit_recursion != nullptr) {
 			    *match_limit_recursion = tmp;
 			}
 		    }
@@ -406,13 +406,13 @@ parse_options(Eterm listp, /* in */
 	    return -1;
 	}
     }
-    if (compile_options != NULL) {
+    if (compile_options != nullptr) {
 	*compile_options = copt;
     }
-   if (exec_options != NULL) {
+   if (exec_options != nullptr) {
 	*exec_options = eopt;
     }
-    if (flags != NULL) {
+    if (flags != nullptr) {
 	*flags = fl;
     }
     return 0;
@@ -450,9 +450,9 @@ build_compile_result(Process *p, Eterm error_tag, pcre *result, int errcode, con
 	}
 	ret = TUPLE2(hp, error_tag, ret);
     } else {
-	erts_pcre_fullinfo(result, NULL, PCRE_INFO_SIZE, &pattern_size);
-	erts_pcre_fullinfo(result, NULL, PCRE_INFO_CAPTURECOUNT, &capture_count);
-	erts_pcre_fullinfo(result, NULL, PCRE_INFO_OPTIONS, &options);
+        erts_pcre_fullinfo(result, nullptr, PCRE_INFO_SIZE, &pattern_size);
+        erts_pcre_fullinfo(result, nullptr, PCRE_INFO_CAPTURECOUNT, &capture_count);
+        erts_pcre_fullinfo(result, nullptr, PCRE_INFO_OPTIONS, &options);
 	options &= PCRE_NEWLINE_CR|PCRE_NEWLINE_LF | PCRE_NEWLINE_CRLF |
                PCRE_NEWLINE_ANY | PCRE_NEWLINE_ANYCRLF;
 	use_crlf = (options == PCRE_NEWLINE_ANY ||
@@ -494,7 +494,7 @@ re_compile(Process* p, Eterm arg1, Eterm arg2)
 #endif
 
 
-    if (parse_options(arg2,&options,NULL,&pflags,NULL,NULL,NULL,NULL)
+    if (parse_options(arg2,&options,nullptr,&pflags,nullptr,nullptr,nullptr,nullptr)
 	< 0) {
 	BIF_ERROR(p,BADARG);
     }
@@ -577,25 +577,25 @@ typedef struct _restart_context {
 
 static void cleanup_restart_context(RestartContext *rc) 
 {
-    if (rc->restart_data != NULL) {
+    if (rc->restart_data != nullptr) {
 	erts_pcre_free_restart_data(rc->restart_data);
-	rc->restart_data = NULL;
+        rc->restart_data = nullptr;
     }
-    if (rc->ovector != NULL) {
+    if (rc->ovector != nullptr) {
 	erts_free(ERTS_ALC_T_RE_SUBJECT, rc->ovector);
-	rc->ovector = NULL;
+        rc->ovector = nullptr;
     }
-    if (rc->subject != NULL && !(rc->flags & RESTART_FLAG_SUBJECT_IN_BINARY)) {
+    if (rc->subject != nullptr && !(rc->flags & RESTART_FLAG_SUBJECT_IN_BINARY)) {
 	erts_free(ERTS_ALC_T_RE_SUBJECT, rc->subject);    
     }
-    rc->subject = NULL;
-    if (rc->code != NULL) {
+    rc->subject = nullptr;
+    if (rc->code != nullptr) {
 	erts_free(ERTS_ALC_T_RE_SUBJECT, rc->code);
-	rc->code = NULL;
+        rc->code = nullptr;
     }
-    if (rc->ret_info != NULL) {
+    if (rc->ret_info != nullptr) {
 	erts_free(ERTS_ALC_T_RE_SUBJECT, rc->ret_info);
-	rc->ret_info = NULL;
+        rc->ret_info = nullptr;
     }
 }
 
@@ -631,7 +631,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
 	ReturnInfo *ri;
 	ReturnInfo defri = {RetIndex,0,{0}};
 
-	if (restartp->ret_info == NULL) {
+        if (restartp->ret_info == nullptr) {
 	    ri = &defri;
 	} else {
 	    ri = restartp->ret_info;
@@ -881,7 +881,7 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 {
     auto ri = (ReturnInfo *)erts_alloc(ERTS_ALC_T_RE_SUBJECT, RINFO_SIZ(0));
     int sallocated = 0;
-    char *tmpb = NULL;
+    char *tmpb = nullptr;
     int tmpbsiz = 0;
     Eterm l;
 
@@ -927,28 +927,28 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 	{
 	    int rc,i,top;
 	    int entrysize;
-	    unsigned char *nametable, *last = NULL;
+            unsigned char *nametable, *last = nullptr;
 	    int has_dupnames;
 	    unsigned long options;
 
-	    if (erts_pcre_fullinfo(code, NULL, PCRE_INFO_OPTIONS, &options) != 0)
+            if (erts_pcre_fullinfo(code, nullptr, PCRE_INFO_OPTIONS, &options) != 0)
 		goto error;
-	    if ((rc = erts_pcre_fullinfo(code, NULL, PCRE_INFO_NAMECOUNT, &top)) != 0)
+            if ((rc = erts_pcre_fullinfo(code, nullptr, PCRE_INFO_NAMECOUNT, &top)) != 0)
 		goto error;
 	    if (top <= 0) {
 		ri->num_spec = 0;
 		ri->type = RetNone;
 		break;
 	    }
-	    if (erts_pcre_fullinfo(code, NULL, PCRE_INFO_NAMEENTRYSIZE, &entrysize) != 0)
+            if (erts_pcre_fullinfo(code, nullptr, PCRE_INFO_NAMEENTRYSIZE, &entrysize) != 0)
 		goto error;
-	    if (erts_pcre_fullinfo(code, NULL, PCRE_INFO_NAMETABLE, &nametable) != 0)
+            if (erts_pcre_fullinfo(code, nullptr, PCRE_INFO_NAMETABLE, &nametable) != 0)
 		goto error;
 	    
 	    has_dupnames = ((options & PCRE_DUPNAMES) != 0);
 
 	    for(i=0;i<top;++i) {
-		if (last == NULL || !has_dupnames || strcmp((char *) last+2,(char *) nametable+2)) {
+                if (last == nullptr || !has_dupnames || strcmp((char *) last+2,(char *) nametable+2)) {
 		    ASSERT(ri->num_spec >= 0);
 		    ++(ri->num_spec);
 		    if(ri->num_spec > sallocated) {
@@ -985,7 +985,7 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 		} else if (is_atom(val) || is_binary(val) || is_list(val)) {
 		    int has_dupnames;
 		    unsigned long options;
-		    if (erts_pcre_fullinfo(code, NULL, PCRE_INFO_OPTIONS, &options) != 0)
+                    if (erts_pcre_fullinfo(code, nullptr, PCRE_INFO_OPTIONS, &options) != 0)
 			goto error;
 		    has_dupnames = ((options & PCRE_DUPNAMES) != 0);
 		    if (is_atom(val)) {
@@ -1039,16 +1039,16 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 	break;
     }
     
-    if(tmpb != NULL) {
+    if(tmpb != nullptr) {
 	erts_free(ERTS_ALC_T_RE_TMP_BUF,tmpb);
     }
     return ri;
  error:
-    if(tmpb != NULL) {
+    if(tmpb != nullptr) {
 	erts_free(ERTS_ALC_T_RE_TMP_BUF,tmpb);
     }
     erts_free(ERTS_ALC_T_RE_SUBJECT, ri);
-    return NULL;
+    return nullptr;
 }    
 
 
@@ -1060,7 +1060,7 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
 {
     const pcre *code_tmp;
     RestartContext restart;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
     ErlDrvSizeT slength;
     int startoffset = 0;
     int options = 0, comp_options = 0;
@@ -1156,8 +1156,8 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
 		BIF_TRAP3(grun_trap_exportp, p, arg1, precompiled, r);
 	    }
 
-	    erts_pcre_fullinfo(result, NULL, PCRE_INFO_SIZE, &code_size);
-	    erts_pcre_fullinfo(result, NULL, PCRE_INFO_CAPTURECOUNT, &capture_count);
+            erts_pcre_fullinfo(result, nullptr, PCRE_INFO_SIZE, &code_size);
+            erts_pcre_fullinfo(result, nullptr, PCRE_INFO_CAPTURECOUNT, &capture_count);
 	    ovsize = 3*(capture_count+1);
             restart.code = (pcre*)erts_alloc(ERTS_ALC_T_RE_SUBJECT, code_size);
 	    memcpy(restart.code, result, code_size);
@@ -1197,7 +1197,7 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
 	ovsize = 3*(unsigned_val(tp[2])+1);
 	code_size = binary_size(tp[5]);
 	code_tmp = (const pcre *) erts_get_aligned_binary_bytes(tp[5], &temp_alloc);
-	if (code_tmp == NULL || code_size < 4) {
+        if (code_tmp == nullptr || code_size < 4) {
 	    erts_free_aligned_binary_bytes(temp_alloc);
 	    BIF_ERROR(p, BADARG);
 	}
@@ -1217,11 +1217,11 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
     if (restart.extra.loop_limit > loop_limit_tmp) {
 	restart.extra.loop_limit = loop_limit_tmp;
     }
-    restart.restart_data = NULL;
+    restart.restart_data = nullptr;
     restart.extra.restart_data = &restart.restart_data;
     restart.extra.restart_flags = 0;
     restart.extra.loop_counter_return = &loop_count;
-    restart.ret_info = NULL;
+    restart.ret_info = nullptr;
 
     if (pflags & PARSE_FLAG_MATCH_LIMIT) {
 	restart.extra.flags |= PCRE_EXTRA_MATCH_LIMIT;
@@ -1234,7 +1234,7 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
     }
     
     if (pflags & PARSE_FLAG_CAPTURE_OPT) {
-	if ((restart.ret_info = build_capture(capture,restart.code)) == NULL) {
+        if ((restart.ret_info = build_capture(capture,restart.code)) == nullptr) {
 	    erts_free(ERTS_ALC_T_RE_SUBJECT, restart.ovector);
 	    erts_free(ERTS_ALC_T_RE_SUBJECT, restart.code);
 	    BIF_ERROR(p,BADARG);
@@ -1274,7 +1274,7 @@ handle_iolist:
 	if (erts_iolist_size(arg1, &slength)) {
 	    erts_free(ERTS_ALC_T_RE_SUBJECT, restart.ovector);
 	    erts_free(ERTS_ALC_T_RE_SUBJECT, restart.code);
-	    if (restart.ret_info != NULL) {
+            if (restart.ret_info != nullptr) {
 		erts_free(ERTS_ALC_T_RE_SUBJECT, restart.ret_info);
 	    }
 	    BIF_ERROR(p,BADARG);
@@ -1381,7 +1381,7 @@ static BIF_RETTYPE re_exec_trap(BIF_ALIST_3)
 #ifdef DEBUG
     loop_count = 0xFFFFFFFF;
 #endif
-    rc = erts_pcre_exec(NULL, &(restartp->extra), NULL, 0, 0, 0, NULL, 0);
+    rc = erts_pcre_exec(nullptr, &(restartp->extra), nullptr, 0, 0, 0, nullptr, 0);
     ASSERT(loop_count != 0xFFFFFFFF);
     BUMP_REDS(BIF_P, loop_count / LOOP_FACTOR);
     if (rc == PCRE_ERROR_LOOP_LIMIT) {
@@ -1408,7 +1408,7 @@ re_inspect_2(BIF_ALIST_2)
     int num_names;
     Eterm res;
     const pcre *code;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
 #ifdef DEBUG
     int infores;
 #endif
@@ -1427,19 +1427,19 @@ re_inspect_2(BIF_ALIST_2)
 	goto error;
     }
     if ((code = (const pcre *) 
-	 erts_get_aligned_binary_bytes(tp[5], &temp_alloc)) == NULL) {
+         erts_get_aligned_binary_bytes(tp[5], &temp_alloc)) == nullptr) {
 	goto error;
     }
 
     /* OK, so let's try to get some info */
     
-    if (erts_pcre_fullinfo(code, NULL, PCRE_INFO_OPTIONS, &options) != 0)
+    if (erts_pcre_fullinfo(code, nullptr, PCRE_INFO_OPTIONS, &options) != 0)
 	goto error;
 
 #ifdef DEBUG
     infores =
 #endif
-    erts_pcre_fullinfo(code, NULL, PCRE_INFO_NAMECOUNT, &top);
+    erts_pcre_fullinfo(code, nullptr, PCRE_INFO_NAMECOUNT, &top);
 
     ASSERT(infores == 0);
 
@@ -1452,24 +1452,24 @@ re_inspect_2(BIF_ALIST_2)
 #ifdef DEBUG
     infores =
 #endif
-    erts_pcre_fullinfo(code, NULL, PCRE_INFO_NAMEENTRYSIZE, &entrysize);
+    erts_pcre_fullinfo(code, nullptr, PCRE_INFO_NAMEENTRYSIZE, &entrysize);
 
     ASSERT(infores == 0);
 
 #ifdef DEBUG
     infores =
 #endif
-    erts_pcre_fullinfo(code, NULL, PCRE_INFO_NAMETABLE, &nametable);
+    erts_pcre_fullinfo(code, nullptr, PCRE_INFO_NAMETABLE, &nametable);
 
     ASSERT(infores == 0);
     
     has_dupnames = ((options & PCRE_DUPNAMES) != 0);
     /* First, count the names */
     num_names = 0;
-    last = NULL;
+    last = nullptr;
     name = nametable;
     for(i=0;i<top;++i) {
-	if (last == NULL || !has_dupnames || strcmp((char *) last+2,
+        if (last == nullptr || !has_dupnames || strcmp((char *) last+2,
 						    (char *) name+2)) {
 	    ++num_names;
 	}
@@ -1479,11 +1479,11 @@ re_inspect_2(BIF_ALIST_2)
     tmp_vec = (Eterm*)erts_alloc(ERTS_ALC_T_RE_TMP_BUF,
 			  num_names * sizeof(Eterm));
     /* Re-iterate and fill tmp_vec */
-    last = NULL;
+    last = nullptr;
     name = nametable;
     j = 0;
     for(i=0;i<top;++i) {
-	if (last == NULL || !has_dupnames || strcmp((char *) last+2,
+        if (last == nullptr || !has_dupnames || strcmp((char *) last+2,
 						    (char *) name+2)) {
 	    tmp_vec[j++] = new_binary(BIF_P, (byte *) name+2, strlen((char *) name+2));
 	}

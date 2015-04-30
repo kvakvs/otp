@@ -581,8 +581,7 @@ enqueue_update_request(ErtsPollSet ps, int fd)
 
     if (urqbp->len == ERTS_POLLSET_UPDATE_REQ_BLOCK_SIZE) {
 	ASSERT(!urqbp->next);
-	urqbp = erts_alloc(ERTS_ALC_T_POLLSET_UPDREQ,
-			   sizeof(ErtsPollSetUpdateRequestsBlock));
+        urqbp = erts::alloc<ErtsPollSetUpdateRequestsBlock>(ERTS_ALC_T_POLLSET_UPDREQ, 1);
 	ps->curr_upd_req_block->next = urqbp;
 	ps->curr_upd_req_block = urqbp;
 	urqbp->next = NULL;
@@ -649,7 +648,7 @@ grow_res_events(ErtsPollSet ps, int new_len)
     /* We do not need to save previously stored data */
     if (ps->res_events)
 	erts_free(ERTS_ALC_T_POLL_RES_EVS, ps->res_events);
-    ps->res_events = erts_alloc(ERTS_ALC_T_POLL_RES_EVS, new_size);
+    ps->res_events = erts::alloc_bytes<epoll_event>(ERTS_ALC_T_POLL_RES_EVS, new_size);
     ps->res_events_len = new_len;
 }
 #endif /* ERTS_POLL_USE_KERNEL_POLL */
@@ -663,11 +662,8 @@ grow_poll_fds(ErtsPollSet ps, int min_ix)
     if (new_len > max_fds)
 	new_len = max_fds;
     ps->poll_fds = (ps->poll_fds_len
-		    ? erts_realloc(ERTS_ALC_T_POLL_FDS,
-				   ps->poll_fds,
-				   sizeof(struct pollfd)*new_len)
-		    : erts_alloc(ERTS_ALC_T_POLL_FDS,
-				 sizeof(struct pollfd)*new_len));
+                    ? erts::realloc<pollfd>(ERTS_ALC_T_POLL_FDS, ps->poll_fds, new_len)
+                    : erts::alloc<pollfd>(ERTS_ALC_T_POLL_FDS, new_len));
     for (i = ps->poll_fds_len; i < new_len; i++) {
 	ps->poll_fds[i].fd = -1;
 	ps->poll_fds[i].events = (short) 0;
@@ -713,11 +709,8 @@ grow_fds_status(ErtsPollSet ps, int min_fd)
     if (new_len > max_fds)
 	new_len = max_fds;
     ps->fds_status = (ps->fds_status_len
-		      ? erts_realloc(ERTS_ALC_T_FD_STATUS,
-				     ps->fds_status,
-				     sizeof(ErtsFdStatus)*new_len)
-		      : erts_alloc(ERTS_ALC_T_FD_STATUS,
-				   sizeof(ErtsFdStatus)*new_len));
+                      ? erts::realloc<ErtsFdStatus>(ERTS_ALC_T_FD_STATUS, ps->fds_status, new_len)
+                      : erts::alloc<ErtsFdStatus>(ERTS_ALC_T_FD_STATUS, new_len));
     for (i = ps->fds_status_len; i < new_len; i++) {
 #if ERTS_POLL_USE_POLL
 	ps->fds_status[i].pix = -1;
@@ -2334,8 +2327,7 @@ ERTS_POLL_EXPORT(erts_poll_create_pollset)(void)
 #if ERTS_POLL_USE_KERNEL_POLL
     int kp_fd;
 #endif
-    ErtsPollSet ps = erts_alloc(ERTS_ALC_T_POLLSET,
-				sizeof(struct ErtsPollSet_));
+    ErtsPollSet ps = erts::alloc<ErtsPollSet_>(ERTS_ALC_T_POLLSET, 1);
     ps->internal_fd_limit = 0;
     ps->fds_status = NULL;
     ps->fds_status_len = 0;

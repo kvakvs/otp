@@ -158,11 +158,11 @@ static RETSIGTYPE winch(int);
 /*#define LOG_DEBUG*/
 
 #ifdef LOG_DEBUG
-FILE *debuglog = NULL;
+FILE *debuglog = nullptr;
 
 #define DEBUGLOG(X) 				\
 do {						\
-    if (debuglog != NULL) {			\
+    if (debuglog != nullptr) {			\
 	my_debug_printf X;    			\
     }						\
 } while (0)
@@ -191,7 +191,7 @@ static int utf8buf_size; /* size of incomplete input */
 
 #  define IF_IMPL(x) x
 #else
-#  define IF_IMPL(x) NULL
+#  define IF_IMPL(x) nullptr
 #endif /* HAVE_TERMCAP */
 
 /* Define the driver table entry. */
@@ -201,23 +201,23 @@ struct erl_drv_entry ttsl_driver_entry = {
     IF_IMPL(ttysl_stop),
     IF_IMPL(ttysl_from_erlang),
     IF_IMPL(ttysl_from_tty),
-    NULL,
+    nullptr,
     "tty_sl",
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     IF_IMPL(ttysl_control),
-    NULL, /* timeout */
-    NULL, /* outputv */
-    NULL, /* ready_async */
-    NULL, /* flush */
-    NULL, /* call */
-    NULL, /* event */
+    nullptr, /* timeout */
+    nullptr, /* outputv */
+    nullptr, /* ready_async */
+    nullptr, /* flush */
+    nullptr, /* call */
+    nullptr, /* event */
     (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0, /* ERL_DRV_FLAGs */
-    NULL,
-    NULL, /* process_exit */
+    nullptr,
+    nullptr, /* process_exit */
     IF_IMPL(ttysl_stop_select)
 };
 
@@ -227,16 +227,16 @@ static int ttysl_init(void)
 #ifdef HAVE_TERMCAP
     ttysl_port = (ErlDrvPort)-1;
     ttysl_fd = -1;
-    lbuf = NULL;		/* For line buffer handling */
-    capbuf = NULL;		/* For termcap handling */
+    lbuf = nullptr;		/* For line buffer handling */
+    capbuf = nullptr;		/* For termcap handling */
 #endif
 #ifdef LOG_DEBUG
     {
 	char *dl;
-	if ((dl = getenv("TTYSL_DEBUG_LOG")) != NULL && *dl) {
+	if ((dl = getenv("TTYSL_DEBUG_LOG")) != nullptr && *dl) {
 	    debuglog = fopen(dl,"w+");
-	    if (debuglog != NULL)
-		setbuf(debuglog,NULL);
+	    if (debuglog != nullptr)
+		setbuf(debuglog,nullptr);
 	}
 	DEBUGLOG(("Debuglog = %s(0x%ld)\n",dl,(long) debuglog));
     }
@@ -311,7 +311,7 @@ static ErlDrvData ttysl_start(ErlDrvPort port, char* buf)
     
 #else
     l = setlocale(LC_CTYPE, "");  /* Set international environment */
-    if (l != NULL) {
+    if (l != nullptr) {
 	utf8_mode = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0);
 	DEBUGLOG(("setlocale: %s\n",l));
     }
@@ -639,7 +639,7 @@ static int check_buf_size(byte *s, int n)
     if (size + lpos >= lbuf_size) {
 
 	lbuf_size = size + lpos + BUFSIZ;
-        if ((lbuf = (Uint32*)driver_realloc(lbuf, lbuf_size * sizeof(Uint32))) == NULL) {
+        if ((lbuf = (Uint32*)driver_realloc(lbuf, lbuf_size * sizeof(Uint32))) == nullptr) {
 	    driver_failure(ttysl_port, -1);
 	    return(0);
 	}
@@ -759,7 +759,7 @@ static int stop_lbuf(void)
 {
     if (lbuf) {
 	driver_free(lbuf);
-	lbuf = NULL;
+	lbuf = nullptr;
     }
     return TRUE;
 }
@@ -798,11 +798,11 @@ static int move_rel(int n)
 static int ins_chars(byte *s, int l)
 {
     int n, tl;
-    Uint32 *tbuf = NULL;    /* Suppress warning about use-before-set */
+    Uint32 *tbuf = nullptr;    /* Suppress warning about use-before-set */
 
     /* Move tail of buffer to make space. */
     if ((tl = llen - lpos) > 0) {
-        if ((tbuf = (Uint32*)driver_alloc(tl * sizeof(Uint32))) == NULL)
+        if ((tbuf = (Uint32*)driver_alloc(tl * sizeof(Uint32))) == nullptr)
 	    return FALSE;
 	memcpy(tbuf, lbuf + lpos, tl * sizeof(Uint32));
     }
@@ -1096,7 +1096,7 @@ static int start_termcap(void)
 {
     int eres;
     size_t envsz = 1024;
-    char *env = NULL;
+    char *env = nullptr;
     char *c;
 
     capbuf = (char*)driver_alloc(1024);
@@ -1128,7 +1128,7 @@ static int start_termcap(void)
     if (tgetent((char*)lbuf, env) <= 0)
       goto false_;
     if (env != capbuf) {
-	env = NULL;
+	env = nullptr;
 	driver_free(env);
     }
     c = capbuf;
@@ -1149,14 +1149,14 @@ static int start_termcap(void)
 	driver_free(env);
     if (capbuf)
 	driver_free(capbuf);
-    capbuf = NULL;
+    capbuf = nullptr;
     return FALSE;
 }
 
 static int stop_termcap(void)
 {
     if (capbuf) driver_free(capbuf);
-    capbuf = NULL;
+    capbuf = nullptr;
     return TRUE;
 }
 

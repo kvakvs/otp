@@ -107,7 +107,7 @@ do {									\
 #define seq_trace_output(token, msg, type, receiver, process) \
 seq_trace_output_generic((token), (msg), (type), (receiver), (process), NIL)
 #define seq_trace_output_exit(token, msg, type, receiver, exitfrom) \
-seq_trace_output_generic((token), (msg), (type), (receiver), NULL, (exitfrom))
+seq_trace_output_generic((token), (msg), (type), (receiver), nullptr, (exitfrom))
 void seq_trace_output_generic(Eterm token, Eterm msg, Uint type, 
 			      Eterm receiver, Process *process, Eterm exitfrom);
 

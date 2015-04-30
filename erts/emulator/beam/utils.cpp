@@ -87,8 +87,8 @@ static void
 dispatch_profile_msg_q(profile_sched_msg_q *psmq)
 {
     int i = 0;
-    profile_sched_msg *msg = NULL;
-    ASSERT(psmq != NULL);
+    profile_sched_msg *msg = nullptr;
+    ASSERT(psmq != nullptr);
     for (i = 0; i < psmq->n; i++) {
         msg = &(psmq->msg[i]);
 	profile_scheduler_q(make_small(msg->scheduler_id), msg->state, am_undefined, msg->Ms, msg->s, msg->us);
@@ -110,7 +110,7 @@ erts_heap_alloc(Process* p, Uint need, Uint xtra)
 #endif
 
 #ifdef FORCE_HEAP_FRAGS
-    if (p->space_verified && p->space_verified_from!=NULL
+    if (p->space_verified && p->space_verified_from!=nullptr
 	&& HEAP_TOP(p) >= p->space_verified_from
 	&& HEAP_TOP(p) + need <= p->space_verified_from + p->space_verified
 	&& HEAP_LIMIT(p) - HEAP_TOP(p) >= need) {
@@ -123,12 +123,12 @@ erts_heap_alloc(Process* p, Uint need, Uint xtra)
 	return HEAP_TOP(p) - need;
     }
     p->space_verified = 0;
-    p->space_verified_from = NULL;
+    p->space_verified_from = nullptr;
 #endif /* FORCE_HEAP_FRAGS */
 
     n = need + xtra;
     bp = MBUF(p);
-    if (bp != NULL && need <= (bp->alloc_size - bp->used_size)) {
+    if (bp != nullptr && need <= (bp->alloc_size - bp->used_size)) {
 	Eterm* ret = bp->mem + bp->used_size;
 	bp->used_size += need;
 	return ret;
@@ -164,7 +164,7 @@ erts_heap_alloc(Process* p, Uint need, Uint xtra)
     bp->alloc_size = n;
     bp->used_size = need;
     MBUF_SIZE(p) += n;
-    bp->off_heap.first = NULL;
+    bp->off_heap.first = nullptr;
     bp->off_heap.overhead = 0;
     return bp->mem;
 }
@@ -504,7 +504,7 @@ Eterm erts_bld_tuplev(Uint **hpp, Uint *szp, Uint arity, Eterm terms[])
 {
     Eterm res = THE_NON_VALUE;
     /*
-     * Note callers expect that 'terms' is *not* accessed if hpp == NULL.
+     * Note callers expect that 'terms' is *not* accessed if hpp == nullptr.
      */
 
     ASSERT(arity < (((Uint)1) << (sizeof(Uint)*8 - _HEADER_ARITY_OFFS)));
@@ -1770,7 +1770,7 @@ static int do_send_to_logger(Eterm tag, Eterm gleader, char *buf, int len)
     Eterm gl;
     Eterm list,plist,format,tuple1,tuple2,tuple3;
     ErlOffHeap *ohp;
-    ErlHeapFragment *bp = NULL;
+    ErlHeapFragment *bp = nullptr;
 #if !defined(ERTS_SMP)
     Process *p;
 #endif
@@ -1783,15 +1783,15 @@ static int do_send_to_logger(Eterm tag, Eterm gleader, char *buf, int len)
 
 #ifndef ERTS_SMP
 #ifdef USE_THREADS
-    p = NULL;
+    p = nullptr;
     if (erts_get_scheduler_data()) /* Must be scheduler thread */
 #endif
     {
-	p = erts_whereis_process(NULL, 0, am_error_logger, 0, 0);
+        p = erts_whereis_process(nullptr, 0, am_error_logger, 0, 0);
 	if (p) {
 	    erts_aint32_t state = erts_smp_atomic32_read_acqb(&p->state);
 	    if (state & (ERTS_PSFLG_RUNNING|ERTS_PSFLG_RUNNING_SYS))
-		p = NULL;
+                p = nullptr;
 	}
     }
 
@@ -1847,7 +1847,7 @@ static int do_send_to_logger(Eterm tag, Eterm gleader, char *buf, int len)
 	erts_queue_error_logger_message(from, tuple3, bp);
     }
 #else
-    erts_queue_message(p, NULL /* only used for smp build */, bp, tuple3, NIL
+    erts_queue_message(p, nullptr /* only used for smp build */, bp, tuple3, NIL
 #ifdef USE_VM_PROBES
 		       , NIL
 #endif
@@ -1909,7 +1909,7 @@ erts_dsprintf_buf_t *
 erts_create_logger_dsbuf(void)
 {
     erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_logger_dsbuf);
-    erts_dsprintf_buf_t *dsbufp = erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
+    erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
 					     sizeof(erts_dsprintf_buf_t));
     sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
     dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
@@ -2037,7 +2037,7 @@ erts_create_tmp_dsbuf(Uint size)
 {
     Uint init_size = size ? size : TMP_DSBUF_INC_SZ;
     erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_tmp_dsbuf);
-    erts_dsprintf_buf_t *dsbufp = erts_alloc(ERTS_ALC_T_TMP_DSBUF,
+    erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)erts_alloc(ERTS_ALC_T_TMP_DSBUF,
 					     sizeof(erts_dsprintf_buf_t));
     sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
     dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_TMP_DSBUF, init_size);
@@ -3251,7 +3251,7 @@ do {									\
 } while (0)
 
     ErlDrvSizeT res, len;
-    Eterm* objp = NULL;
+    Eterm* objp = nullptr;
     int init_yield_count;
     int yield_count;
     DECLARE_ESTACK(s);
@@ -3302,7 +3302,7 @@ do {									\
 	    buf = state->buf;
 	    len = state->len;
 	    objp = state->objp;
-	    state->objp = NULL;
+            state->objp = nullptr;
 	    if (objp)
 		goto L_tail;
 	    if (!chk_stack)
@@ -3345,14 +3345,14 @@ do {									\
 		if (is_list(obj)) {
 		    continue; /* Tail loop */
 		} else if (is_binary(obj)) {
-		    IOLIST_TO_BUF_BCOPY(NULL);
+                    IOLIST_TO_BUF_BCOPY(nullptr);
 		} else if (is_not_nil(obj)) {
 		    goto L_type_error;
 		}
 		break;
 	    }
 	} else if (is_binary(obj)) {
-	    IOLIST_TO_BUF_BCOPY(NULL);
+            IOLIST_TO_BUF_BCOPY(nullptr);
 	} else if (is_not_nil(obj)) {
 	    goto L_type_error;
 	} else if (yield_support && --yield_count <= 0)
@@ -3436,7 +3436,7 @@ iolist_to_buf_bcopy(ErtsIOList2BufState *state, Eterm obj, int *yield_countp)
 	bptr = state->bcopy.bptr;
 	size = state->bcopy.size;
 	bitoffs = state->bcopy.bitoffs;
-	state->bcopy.bptr = NULL;
+        state->bcopy.bptr = nullptr;
     }
     else {
 	Uint bitsize;
@@ -3494,7 +3494,7 @@ ErlDrvSizeT erts_iolist_to_buf_yielding(ErtsIOList2BufState *state)
 
 ErlDrvSizeT erts_iolist_to_buf(Eterm obj, char* buf, ErlDrvSizeT alloced_len)
 {
-    return iolist_to_buf(0, NULL, obj, buf, alloced_len);
+    return iolist_to_buf(0, nullptr, obj, buf, alloced_len);
 }
 
 /*
@@ -3640,7 +3640,7 @@ int erts_iolist_size_yielding(ErtsIOListState *state)
 int erts_iolist_size(Eterm obj, ErlDrvSizeT* sizep)
 {
     *sizep = 0;
-    return iolist_size(0, NULL, obj, sizep);
+    return iolist_size(0, nullptr, obj, sizep);
 }
 
 /* return 0 if item is not a non-empty flat list of bytes */
@@ -3720,7 +3720,7 @@ ptimer_timeout(ErtsSmpPTimer *ptimer)
 {
     if (is_internal_pid(ptimer->timer.id)) {
 	Process *p;
-	p = erts_pid2proc_opt(NULL,
+        p = erts_pid2proc_opt(nullptr,
 			      0,
 			      ptimer->timer.id,
 			      ERTS_PROC_LOCK_MAIN|ERTS_PROC_LOCK_STATUS,
@@ -3729,7 +3729,7 @@ ptimer_timeout(ErtsSmpPTimer *ptimer)
 	    if (!ERTS_PROC_IS_EXITING(p)
 		&& !(ptimer->timer.flags & ERTS_PTMR_FLG_CANCELLED)) {
 		ASSERT(*ptimer->timer.timer_ref == ptimer);
-		*ptimer->timer.timer_ref = NULL;
+                *ptimer->timer.timer_ref = nullptr;
 		(*ptimer->timer.timeout_func)(p);
 	    }
 	    erts_smp_proc_unlock(p, ERTS_PROC_LOCK_MAIN|ERTS_PROC_LOCK_STATUS);
@@ -3739,13 +3739,13 @@ ptimer_timeout(ErtsSmpPTimer *ptimer)
 	Port *p;
 	ASSERT(is_internal_port(ptimer->timer.id));
 	p = erts_id2port_sflgs(ptimer->timer.id,
-			       NULL,
+                               nullptr,
 			       0,
 			       ERTS_PORT_SFLGS_DEAD);
 	if (p) {
 	    if (!(ptimer->timer.flags & ERTS_PTMR_FLG_CANCELLED)) {
 		ASSERT(*ptimer->timer.timer_ref == ptimer);
-		*ptimer->timer.timer_ref = NULL;
+                *ptimer->timer.timer_ref = nullptr;
 		(*ptimer->timer.timeout_func)(p);
 	    }
 	    erts_port_release(p);
@@ -3765,11 +3765,11 @@ erts_create_smp_ptimer(ErtsSmpPTimer **timer_ref,
 	res->timer.flags = ERTS_PTMR_FLGS_PREALLCD;
     else {
 	if (timeout < ERTS_ALC_MIN_LONG_LIVED_TIME) {
-	    res = erts_alloc(ERTS_ALC_T_SL_PTIMER, sizeof(ErtsSmpPTimer));
+            res = (ErtsSmpPTimer*)erts_alloc(ERTS_ALC_T_SL_PTIMER, sizeof(ErtsSmpPTimer));
 	    res->timer.flags = ERTS_PTMR_FLGS_SLALLCD;
 	}
 	else {
-	    res = erts_alloc(ERTS_ALC_T_LL_PTIMER, sizeof(ErtsSmpPTimer));
+            res = (ErtsSmpPTimer*)erts_alloc(ERTS_ALC_T_LL_PTIMER, sizeof(ErtsSmpPTimer));
 	    res->timer.flags = ERTS_PTMR_FLGS_LLALLCD;
 	}
     }
@@ -3794,7 +3794,7 @@ erts_cancel_smp_ptimer(ErtsSmpPTimer *ptimer)
 {
     if (ptimer) {
 	ASSERT(*ptimer->timer.timer_ref == ptimer);
-	*ptimer->timer.timer_ref = NULL;
+        *ptimer->timer.timer_ref = nullptr;
 	ptimer->timer.flags |= ERTS_PTMR_FLG_CANCELLED;
 	erts_cancel_timer(&ptimer->timer.tm);
     }
@@ -3892,17 +3892,17 @@ char *
 erts_read_env(char *key)
 {
     size_t value_len = 256;
-    char *value = erts_alloc(ERTS_ALC_T_TMP, value_len);
+    char *value = (char*)erts_alloc(ERTS_ALC_T_TMP, value_len);
     int res;
     while (1) {
 	res = erts_sys_getenv_raw(key, value, &value_len);
 	if (res <= 0)
 	    break;
-	value = erts_realloc(ERTS_ALC_T_TMP, value, value_len);
+        value = (char*)erts_realloc(ERTS_ALC_T_TMP, value, value_len);
     }
     if (res != 0) {
 	erts_free(ERTS_ALC_T_TMP, value);
-	return NULL;
+        return nullptr;
     }
     return value;
 }
@@ -4012,11 +4012,11 @@ Eterm
 erts_get_ethread_info(Process *c_p)
 {
     Uint sz, *szp;
-    Eterm res, *hp, **hpp, *end_hp = NULL;
+    Eterm res, *hp, **hpp, *end_hp = nullptr;
 
     sz = 0;
     szp = &sz;
-    hpp = NULL;
+    hpp = nullptr;
 
     while (1) {
 	Eterm tup, list, name;
@@ -4198,7 +4198,7 @@ erts_get_ethread_info(Process *c_p)
 	hp = HAlloc(c_p, sz);
 	end_hp = hp + sz;
 	hpp = &hp;
-	szp = NULL;
+        szp = nullptr;
     }
 }
 
@@ -4372,7 +4372,7 @@ Uint64 erts_timestamp_millis(void)
 
 void upp(byte *buf, size_t sz)
 {
-    bin_write(ERTS_PRINT_STDERR, NULL, buf, sz);
+    bin_write(ERTS_PRINT_STDERR, nullptr, buf, sz);
 }
 
 void pat(Eterm atom)
@@ -4384,7 +4384,7 @@ void pat(Eterm atom)
 
 void pinfo()
 {
-    process_info(ERTS_PRINT_STDOUT, NULL);
+    process_info(ERTS_PRINT_STDOUT, nullptr);
 }
 
 
@@ -4392,7 +4392,7 @@ void pp(p)
 Process *p;
 {
     if(p)
-	print_process_info(ERTS_PRINT_STDERR, NULL, p);
+        print_process_info(ERTS_PRINT_STDERR, nullptr, p);
 }
     
 void ppi(Eterm pid)

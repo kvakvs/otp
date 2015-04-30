@@ -465,7 +465,7 @@ erts_set_mtrace_bif(BeamInstr *pc, Binary *match_spec, Eterm tracer_pid)
 void
 erts_set_time_trace_bif(BeamInstr *pc, enum erts_break_op count_op)
 {
-    set_function_break(pc, NULL,
+    set_function_break(pc, nullptr,
 		       ERTS_BPF_TIME_TRACE|ERTS_BPF_TIME_TRACE_ACTIVE,
 		       count_op, NIL);
 }
@@ -477,7 +477,7 @@ erts_clear_time_trace_bif(BeamInstr *pc) {
 
 void
 erts_set_debug_break(BpFunctions* f) {
-    set_break(f, NULL, ERTS_BPF_DEBUG, (erts_break_op)0, NIL);
+    set_break(f, nullptr, ERTS_BPF_DEBUG, (erts_break_op)0, NIL);
 }
 
 void
@@ -559,7 +559,7 @@ erts_clear_module_break(Module *modp) {
     ERTS_SMP_LC_ASSERT(erts_smp_thr_progress_is_blocking());
     ASSERT(modp);
     code_base = (BeamInstr **) modp->curr.code;
-    if (code_base == NULL) {
+    if (code_base == nullptr) {
 	return 0;
     }
     n = (Uint)(UWord) code_base[MI_NUM_FUNCTIONS];
@@ -700,7 +700,7 @@ erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
                                            * export_ entry */
     BeamInstr *cp = p->cp;
     GenericBp* g;
-    GenericBpData* bp = NULL;
+    GenericBpData* bp = nullptr;
     Uint bp_flags = 0;
 
     ERTS_SMP_CHK_HAVE_ONLY_MAIN_PROC_LOCK(p);
@@ -769,7 +769,7 @@ erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
 		/* A return_to trace message is going to be generated
 		 * by normal means, so we do not have to.
 		 */
-		cp = NULL;
+                cp = nullptr;
 		break;
 	    } else break;
 	}
@@ -882,7 +882,7 @@ do_call_trace(Process* c_p, BeamInstr* I, Eterm* reg,
     } else if (w == (BeamInstr) BeamOp(op_i_return_time_trace)) {
 	cpp = &E[0];
     } else {
-	cpp = NULL;
+        cpp = nullptr;
     }
     if (cpp) {
 	for (;;) {
@@ -955,10 +955,10 @@ void
 erts_trace_time_call(Process* c_p, BeamInstr* I, BpDataTime* bdt)
 {
     Uint ms,s,us;
-    process_breakpoint_time_t *pbt = NULL;
-    bp_data_time_item_t sitem, *item = NULL;
-    bp_time_hash_t *h = NULL;
-    BpDataTime *pbdt = NULL;
+    process_breakpoint_time_t *pbt = nullptr;
+    bp_data_time_item_t sitem, *item = nullptr;
+    bp_time_hash_t *h = nullptr;
+    BpDataTime *pbdt = nullptr;
 
     ASSERT(c_p);
     ASSERT(erts_smp_atomic32_read_acqb(&c_p->state) & ERTS_PSFLG_RUNNING);
@@ -1035,10 +1035,10 @@ void
 erts_trace_time_return(Process *p, BeamInstr *pc)
 {
     Uint ms,s,us;
-    process_breakpoint_time_t *pbt = NULL;
-    bp_data_time_item_t sitem, *item = NULL;
-    bp_time_hash_t *h = NULL;
-    BpDataTime *pbdt = NULL;
+    process_breakpoint_time_t *pbt = nullptr;
+    bp_data_time_item_t sitem, *item = nullptr;
+    bp_time_hash_t *h = nullptr;
+    BpDataTime *pbdt = nullptr;
 
     ASSERT(p);
     ASSERT(erts_smp_atomic32_read_acqb(&p->state) & ERTS_PSFLG_RUNNING);
@@ -1156,7 +1156,7 @@ int erts_is_time_break(Process *p, BeamInstr *pc, Eterm *retval) {
     bp_time_hash_t hash;
     Uint size;
     Eterm *hp, t;
-    bp_data_time_item_t *item = NULL;
+    bp_data_time_item_t *item = nullptr;
     BpDataTime *bdt = get_time_break(pc);
 
     if (bdt) {
@@ -1214,10 +1214,10 @@ erts_find_local_func(Eterm mfa[3]) {
     BeamInstr* code_ptr;
     Uint i,n;
 
-    if ((modp = erts_get_module(mfa[0], erts_active_code_ix())) == NULL)
-	return NULL;
-    if ((code_base = (BeamInstr **) modp->curr.code) == NULL)
-	return NULL;
+    if ((modp = erts_get_module(mfa[0], erts_active_code_ix())) == nullptr)
+        return nullptr;
+    if ((code_base = (BeamInstr **) modp->curr.code) == nullptr)
+        return nullptr;
     n = (BeamInstr) code_base[MI_NUM_FUNCTIONS];
     for (i = 0; i < n; ++i) {
 	code_ptr = code_base[MI_FUNCTIONS+i];
@@ -1229,7 +1229,7 @@ erts_find_local_func(Eterm mfa[3]) {
 	    return code_ptr + 5;
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 static void bp_hash_init(bp_time_hash_t *hash, Uint n) {
@@ -1247,7 +1247,7 @@ static void bp_hash_init(bp_time_hash_t *hash, Uint n) {
 }
 
 static void bp_hash_rehash(bp_time_hash_t *hash, Uint n) {
-    bp_data_time_item_t *item = NULL;
+    bp_data_time_item_t *item = nullptr;
     Uint ix;
     Uint hval;
 
@@ -1282,12 +1282,12 @@ static void bp_hash_rehash(bp_time_hash_t *hash, Uint n) {
 static ERTS_INLINE bp_data_time_item_t * bp_hash_get(bp_time_hash_t *hash, bp_data_time_item_t *sitem) {
     Eterm pid = sitem->pid;
     Uint hval = (pid >> 4) % hash->n;
-    bp_data_time_item_t *item = NULL;
+    bp_data_time_item_t *item = nullptr;
 
     item = hash->item;
 
     while (item[hval].pid != pid) {
-	if (item[hval].pid == NIL) return NULL;
+        if (item[hval].pid == NIL) return nullptr;
 	hval = (hval + 1) % hash->n;
     }
 
@@ -1331,7 +1331,7 @@ static void bp_hash_delete(bp_time_hash_t *hash) {
     hash->n = 0;
     hash->used = 0;
     Free(hash->item);
-    hash->item = NULL;
+    hash->item = nullptr;
 }
 
 static void bp_time_diff(bp_data_time_item_t *item, /* out */
@@ -1369,10 +1369,10 @@ static void bp_time_diff(bp_data_time_item_t *item, /* out */
 
 void erts_schedule_time_break(Process *p, Uint schedule) {
     Uint ms, s, us;
-    process_breakpoint_time_t *pbt = NULL;
-    bp_data_time_item_t sitem, *item = NULL;
-    bp_time_hash_t *h = NULL;
-    BpDataTime *pbdt = NULL;
+    process_breakpoint_time_t *pbt = nullptr;
+    bp_data_time_item_t sitem, *item = nullptr;
+    bp_time_hash_t *h = nullptr;
+    BpDataTime *pbdt = nullptr;
 
     ASSERT(p);
 
@@ -1624,9 +1624,9 @@ bp_time_unref(BpDataTime* bdt)
     if (erts_refc_dectest(&bdt->refc, 0) <= 0) {
 	Uint i = 0;
 	Uint j = 0;
-	Process *h_p = NULL;
-	bp_data_time_item_t* item = NULL;
-	process_breakpoint_time_t* pbt = NULL;
+        Process *h_p = nullptr;
+        bp_data_time_item_t* item = nullptr;
+        process_breakpoint_time_t* pbt = nullptr;
 
 	/* remove all psd associated with the hash
 	 * and then delete the hash.
@@ -1638,12 +1638,12 @@ bp_time_unref(BpDataTime* bdt)
 		for (j = 0; j < bdt->hash[i].n; ++j) {
 		    item = &(bdt->hash[i].item[j]);
 		    if (item->pid != NIL) {
-			h_p = erts_pid2proc(NULL, 0, item->pid,
+                        h_p = erts_pid2proc(nullptr, 0, item->pid,
 					    ERTS_PROC_LOCK_MAIN);
 			if (h_p) {
 			    pbt = ERTS_PROC_SET_CALL_TIME(h_p,
 							  ERTS_PROC_LOCK_MAIN,
-							  NULL);
+                                                          nullptr);
 			    if (pbt) {
 				Free(pbt);
 			    }

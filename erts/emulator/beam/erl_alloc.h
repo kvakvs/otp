@@ -186,7 +186,7 @@ void *sys_realloc(void *, Uint)      __deprecated; /* erts_realloc_fnf() */
  *   configuration file.
  * * The erts_alloc() and erts_realloc() functions terminate the
  *   emulator if memory cannot be obtained. The _fnf (Failure Not
- *   Fatal) suffixed versions return NULL if memory cannot be
+ *   Fatal) suffixed versions return nullptr if memory cannot be
  *   obtained.
  * * They may be static functions so function pointers to "the same"
  *   function may differ.
@@ -216,6 +216,7 @@ void *erts_alloc_permanent_cache_aligned(ErtsAlcType_t type, Uint size);
 
 #if ERTS_ALC_DO_INLINE || defined(ERTS_ALC_INTERNAL__)
 
+// TODO: Template this and replace size with count/alternate templated version
 ERTS_ALC_INLINE
 void *erts_alloc(ErtsAlcType_t type, Uint size)
 {
@@ -228,6 +229,19 @@ void *erts_alloc(ErtsAlcType_t type, Uint size)
 	erts_alloc_n_enomem(ERTS_ALC_T2N(type), size);
     return res;
 }
+
+#ifdef __cplusplus
+namespace erts {
+  // multiplies count by type size
+  template <typename T> T* alloc(ErtsAlcType_t type, size_t count) {
+    return (T*)erts_alloc(type, sizeof(T) * count);
+  }
+  // for those moments when you need bytes
+  template <typename T> T* alloc_bytes(ErtsAlcType_t type, size_t bytes) {
+    return (T*)erts_alloc(type, bytes);
+  }
+}
+#endif
 
 ERTS_ALC_INLINE
 void *erts_realloc(ErtsAlcType_t type, void *ptr, Uint size)
@@ -242,6 +256,19 @@ void *erts_realloc(ErtsAlcType_t type, void *ptr, Uint size)
 	erts_realloc_n_enomem(ERTS_ALC_T2N(type), ptr, size);
     return res;
 }
+
+#ifdef __cplusplus
+namespace erts {
+  // multiplies count by type size
+  template <typename T> T* realloc(ErtsAlcType_t type, T* ptr, size_t count) {
+    return (T*)erts_realloc(type, ptr, sizeof(T) * count);
+  }
+  // for those moments when you need bytes
+  template <typename T> T* realloc_bytes(ErtsAlcType_t type, T* ptr, size_t bytes) {
+    return (T*)erts_realloc(type, ptr, bytes);
+  }
+}
+#endif
 
 ERTS_ALC_INLINE
 void erts_free(ErtsAlcType_t type, void *ptr)
@@ -433,7 +460,7 @@ init_##NAME##_alloc(void)						\
     }									\
     ERTS_PRE_ALLOC_CLOBBER(&qa_prealcd_##NAME[ERTS_PRE_ALLOC_SIZE((PASZ))-1],\
 			   union erts_qa_##NAME##__);			\
-    qa_prealcd_##NAME[ERTS_PRE_ALLOC_SIZE((PASZ))-1].next = NULL;	\
+    qa_prealcd_##NAME[ERTS_PRE_ALLOC_SIZE((PASZ))-1].next = nullptr;	\
     ILCK;								\
 }									\
 static ERTS_INLINE TYPE *						\
@@ -442,7 +469,7 @@ NAME##_alloc(void)							\
     TYPE *res;								\
     LCK;								\
     if (!qa_freelist_##NAME)						\
-	res = NULL;							\
+        res = nullptr;							\
     else {								\
 	res = &qa_freelist_##NAME->type;				\
 	qa_freelist_##NAME = qa_freelist_##NAME->next;			\
@@ -493,7 +520,7 @@ NAME##_alloc(void)							\
 {									\
     ErtsSchedulerData *esdp = erts_get_scheduler_data();		\
     if (!esdp || ERTS_SCHEDULER_IS_DIRTY(esdp))				\
-	return NULL;							\
+        return nullptr;							\
     return (TYPE *) erts_sspa_alloc(sspa_data_##NAME##__,		\
 				    (int) esdp->no - 1);		\
 }									\

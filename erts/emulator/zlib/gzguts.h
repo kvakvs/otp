@@ -97,7 +97,7 @@
 
 /* unlike snprintf (which is required in C99, yet still not supported by
    Microsoft more than a decade later!), _snprintf does not guarantee null
-   termination of the result -- however this_ is only used in gzlib.c where
+   termination of the result -- however this is only used in gzlib.c where
    the result is assured to fit in the space provided */
 #ifdef _MSC_VER
 #  define snprintf _snprintf
@@ -142,8 +142,8 @@
 #  define DEF_MEM_LEVEL  MAX_MEM_LEVEL
 #endif
 
-/* default i/o buffer size -- double this_ for output when reading (this_ and
-   twice this_ must be able to fit in an unsigned type) */
+/* default i/o buffer size -- double this for output when reading (this and
+   twice this must be able to fit in an unsigned type) */
 #define GZBUFSIZE 8192
 
 /* gzip modes, also provide a little integrity check on the passed structure */

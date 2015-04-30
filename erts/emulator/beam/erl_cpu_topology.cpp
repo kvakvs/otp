@@ -400,7 +400,7 @@ cpu_bind_order_sort(erts_cpu_topology_t *cpudata,
 	    cmp_func = cpu_no_spread_order_cmp;
 	    break;
 	default:
-	    cmp_func = NULL;
+	    cmp_func = nullptr;
 	    erl_exit(ERTS_ABORT_EXIT,
 		     "Bad cpu bind type: %d\n",
 		     (int) cpu_bind_order);
@@ -784,7 +784,7 @@ int
 erts_sched_bind_atthrcreate_prepare(void)
 {
     ErtsSchedulerData *esdp = erts_get_scheduler_data();
-    return esdp != NULL && erts_is_scheduler_bound(esdp);
+    return esdp != nullptr && erts_is_scheduler_bound(esdp);
 }
 
 int
@@ -809,7 +809,7 @@ int
 erts_sched_bind_atfork_prepare(void)
 {
     ErtsSchedulerData *esdp = erts_get_scheduler_data();
-    int unbind = esdp != NULL && erts_is_scheduler_bound(esdp);
+    int unbind = esdp != nullptr && erts_is_scheduler_bound(esdp);
     if (unbind)
 	erts_smp_rwmtx_rlock(&cpuinfo_rwmtx);
     return unbind;
@@ -1352,7 +1352,7 @@ static Eterm get_cpu_topology_term(Process *c_p, int type);
 Eterm
 erts_set_cpu_topology(Process *c_p, Eterm term)
 {
-    erts_cpu_topology_t *cpudata = NULL;
+    erts_cpu_topology_t *cpudata = nullptr;
     int cpudata_size = 0;
     Eterm res;
 
@@ -1361,7 +1361,7 @@ erts_set_cpu_topology(Process *c_p, Eterm term)
     if (term == am_undefined) {
 	if (user_cpudata)
 	    erts_free(ERTS_ALC_T_CPUDATA, user_cpudata);
-	user_cpudata = NULL;
+	user_cpudata = nullptr;
 	user_cpudata_size = 0;
 
 	if (cpu_bind_order != ERTS_CPU_BIND_NONE && system_cpudata) {
@@ -1504,7 +1504,7 @@ create_tmp_cpu_topology_copy(erts_cpu_topology_t **cpudata, int *cpudata_size)
 		   sizeof(erts_cpu_topology_t)*(*cpudata_size));
     }
     else {
-	*cpudata = NULL;
+	*cpudata = nullptr;
 	*cpudata_size = 0;
     }
 }
@@ -1556,7 +1556,7 @@ get_cpu_topology_term(Process *c_p, int type)
     Eterm *hp;
     Uint hsz;
     Eterm res = THE_NON_VALUE;
-    erts_cpu_topology_t *cpudata = NULL;
+    erts_cpu_topology_t *cpudata = nullptr;
     int size = 0;
 
     switch (type) {
@@ -1600,7 +1600,7 @@ get_cpu_topology_term(Process *c_p, int type)
 
     hsz = 0;
 
-    bld_topology_term(NULL, &hsz,
+    bld_topology_term(nullptr, &hsz,
 		      cpudata, size);
 
     hp = HAlloc(c_p, hsz);
@@ -1609,7 +1609,7 @@ get_cpu_topology_term(Process *c_p, int type)
     hp_end = hp + hsz;
 #endif
 
-    res = bld_topology_term(&hp, NULL,
+    res = bld_topology_term(&hp, nullptr,
 			    cpudata, size);
 
     ASSERT(hp_end == hp);
@@ -1667,7 +1667,7 @@ erts_pre_early_init_cpu_topology(int *max_rg_p,
 				 int *onln_p,
 				 int *avail_p)
 {
-    cpu_groups_maps = NULL;
+    cpu_groups_maps = nullptr;
     no_cpu_groups_callbacks = 0;
     *max_rg_p = ERTS_MAX_READER_GROUPS;
     cpuinfo = erts_cpu_info_create();
@@ -1680,7 +1680,7 @@ erts_early_init_cpu_topology(int no_schedulers,
 			     int max_reader_groups,
 			     int *reader_groups_p)
 {
-    user_cpudata = NULL;
+    user_cpudata = nullptr;
     user_cpudata_size = 0;
 
     system_cpudata_size = erts_get_cpu_topology_size(cpuinfo);
@@ -1694,7 +1694,7 @@ erts_early_init_cpu_topology(int no_schedulers,
 	|| ERTS_INIT_CPU_TOPOLOGY_OK != verify_topology(system_cpudata,
 							system_cpudata_size)) {
 	erts_free(ERTS_ALC_T_CPUDATA, system_cpudata);
-	system_cpudata = NULL;
+	system_cpudata = nullptr;
 	system_cpudata_size = 0;
     }
 
@@ -1732,7 +1732,7 @@ erts_init_cpu_topology(void)
 
     reader_groups_map = add_cpu_groups(reader_groups,
 				       reader_groups_callback,
-				       NULL);
+				       nullptr);
 
     if (cpu_bind_order == ERTS_CPU_BIND_NONE)
 	erts_smp_rwmtx_rwunlock(&cpuinfo_rwmtx);
@@ -1762,7 +1762,7 @@ erts_update_cpu_info(void)
 
 	system_cpudata_size = erts_get_cpu_topology_size(cpuinfo);
 	if (!system_cpudata_size)
-	    system_cpudata = NULL;
+	    system_cpudata = nullptr;
 	else {
             system_cpudata = (erts_cpu_topology_t*)erts_alloc(ERTS_ALC_T_CPUDATA,
 					(sizeof(erts_cpu_topology_t)
@@ -1773,7 +1773,7 @@ erts_update_cpu_info(void)
 		    != verify_topology(system_cpudata,
 				       system_cpudata_size))) {
 		erts_free(ERTS_ALC_T_CPUDATA, system_cpudata);
-		system_cpudata = NULL;
+		system_cpudata = nullptr;
 		system_cpudata_size = 0;
 	    }
 	}
@@ -1813,7 +1813,7 @@ erts_debug_reader_groups_map(Process *c_p, int groups)
     Eterm res;
     erts_cpu_groups_map_t test;
 
-    test.array = NULL;
+    test.array = nullptr;
     test.groups = groups;
     make_cpu_groups_map(&test, 1);
     if (!test.array)
@@ -2059,7 +2059,7 @@ make_cpu_groups_map(erts_cpu_groups_map_t *map, int test)
     if (map->array)
 	erts_free(alc_type, map->array);
 
-    map->array = NULL;
+    map->array = nullptr;
     map->logical_processors = 0;
     map->size = 0;
 
@@ -2218,7 +2218,7 @@ add_cpu_groups(int groups,
 	use_groups = max_main_threads;
 
     if (!use_groups)
-	return NULL;
+	return nullptr;
 
     no_cpu_groups_callbacks++;
     cgcl = (erts_cpu_groups_callback_list_t*)erts_alloc(ERTS_ALC_T_CPU_GRPS_MAP,
@@ -2239,12 +2239,12 @@ add_cpu_groups(int groups,
 		     sizeof(erts_cpu_groups_map_t));
     cgm->next = cpu_groups_maps;
     cgm->groups = use_groups;
-    cgm->array = NULL;
+    cgm->array = nullptr;
     cgm->size = 0;
     cgm->logical_processors = 0;
     cgm->callback_list = cgcl;
 
-    cgcl->next = NULL;
+    cgcl->next = nullptr;
 
     make_cpu_groups_map(cgm, 0);
 
@@ -2263,9 +2263,9 @@ remove_cpu_groups(erts_cpu_groups_callback_t callback, void *arg)
 
     no_cpu_groups_callbacks--;
 
-    prev_cgm = NULL;
+    prev_cgm = nullptr;
     for (cgm = cpu_groups_maps; cgm; cgm = cgm->next) {
-	prev_cgcl = NULL;
+	prev_cgcl = nullptr;
 	for (cgcl = cgm->callback_list; cgcl; cgcl = cgcl->next) {
 	    if (cgcl->callback == callback && cgcl->arg == arg) {
 		if (prev_cgcl)

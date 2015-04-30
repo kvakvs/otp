@@ -2154,7 +2154,7 @@ erts_mtx_init_x(erts_mtx_t *mtx, char *name, Eterm extra, int enable_lcnt)
     if (enable_lcnt)
       erts_lcnt_init_lock_x(&mtx->lcnt, name, ERTS_LCNT_LT_MUTEX, extra);
     else
-      erts_lcnt_init_lock_x(&mtx->lcnt, NULL, ERTS_LCNT_LT_MUTEX, extra);
+      erts_lcnt_init_lock_x(&mtx->lcnt, nullptr, ERTS_LCNT_LT_MUTEX, extra);
 #endif
 #endif
 }
@@ -2174,7 +2174,7 @@ erts_mtx_init_x_opt(erts_mtx_t *mtx, char *name, Eterm extra, Uint16 opt,
     if (enable_lcnt)
       erts_lcnt_init_lock_x(&mtx->lcnt, name, ERTS_LCNT_LT_MUTEX | opt, extra);
     else
-      erts_lcnt_init_lock_x(&mtx->lcnt, NULL, ERTS_LCNT_LT_MUTEX | opt, extra);
+      erts_lcnt_init_lock_x(&mtx->lcnt, nullptr, ERTS_LCNT_LT_MUTEX | opt, extra);
 #endif
 #endif
 }
@@ -2194,7 +2194,7 @@ erts_mtx_init_locked_x(erts_mtx_t *mtx, char *name, Eterm extra, int enable_lcnt
     if (enable_lcnt)
       erts_lcnt_init_lock_x(&mtx->lcnt, name, ERTS_LCNT_LT_MUTEX, extra);
     else
-      erts_lcnt_init_lock_x(&mtx->lcnt, NULL, ERTS_LCNT_LT_MUTEX, extra);
+      erts_lcnt_init_lock_x(&mtx->lcnt, nullptr, ERTS_LCNT_LT_MUTEX, extra);
 #endif
     ethr_mutex_lock(&mtx->mtx);
 #ifdef ERTS_ENABLE_LOCK_CHECK
@@ -2472,12 +2472,16 @@ erts_rwmtx_init_opt_x(erts_rwmtx_t *rwmtx,
 #endif
 #ifdef ERTS_ENABLE_LOCK_COUNT
     if (name && name[0] == '\0')
-      erts_lcnt_init_lock_x(&rwmtx->lcnt, NULL, ERTS_LCNT_LT_RWMUTEX, extra);
+      erts_lcnt_init_lock_x(&rwmtx->lcnt, nullptr, ERTS_LCNT_LT_RWMUTEX, extra);
     else
       erts_lcnt_init_lock_x(&rwmtx->lcnt, name, ERTS_LCNT_LT_RWMUTEX, extra);
 #endif
 #endif
 }
+
+#ifndef __cplusplus
+#define nullptr NULL
+#endif
 
 ERTS_GLB_INLINE void
 erts_rwmtx_init_x(erts_rwmtx_t *rwmtx,
@@ -3421,7 +3425,7 @@ erts_tsd_get(erts_tsd_key_t key)
 #ifdef USE_THREADS
     return ethr_tsd_get(key);
 #else
-    return NULL;
+    return nullptr;
 #endif
 }
 
@@ -3430,7 +3434,7 @@ ERTS_GLB_INLINE erts_tse_t *erts_tse_fetch(void)
 #ifdef USE_THREADS
     return (erts_tse_t *) ethr_get_ts_event();
 #else
-    return (erts_tse_t *) NULL;
+    return (erts_tse_t *) nullptr;
 #endif
 }
 

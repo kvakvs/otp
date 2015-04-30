@@ -75,9 +75,9 @@ struct hipe_sdesc_table {
 };
 extern struct hipe_sdesc_table hipe_sdesc_table;
 
-extern struct sdesc *hipe_put_sdesc(struct sdesc_t*);
-extern void hipe_init_sdesc_table(struct sdesc_t*);
-extern struct sdesc *hipe_decode_sdesc(Eterm);
+extern sdesc_t *hipe_put_sdesc(sdesc_t*);
+extern void hipe_init_sdesc_table(sdesc_t*);
+extern sdesc_t *hipe_decode_sdesc(Eterm);
 
 #if !defined(__GNUC__) || (__GNUC__ < 2) || (__GNUC__ == 2 && __GNUC_MINOR__ < 96)
 #define __builtin_expect(x, expected_value) (x)
@@ -85,7 +85,7 @@ extern struct sdesc *hipe_decode_sdesc(Eterm);
 #define likely(x)	__builtin_expect((x),1)
 #define unlikely(x)	__builtin_expect((x),0)
 
-static __inline__ const struct sdesc_t *hipe_find_sdesc(unsigned long ra)
+static __inline__ const sdesc_t *hipe_find_sdesc(unsigned long ra)
 {
     unsigned int i = (ra >> HIPE_RA_LSR_COUNT) & hipe_sdesc_table.mask;
     const struct sdesc_t *sdesc = hipe_sdesc_table.bucket[i];

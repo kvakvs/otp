@@ -268,7 +268,7 @@ erts_aoffalc_start(AOFFAllctr_t *alc,
     allctr->unlink_free_block           = aoff_unlink_free_block;
     allctr->info_options		= info_options;
 
-    allctr->get_next_mbc_size		= NULL;
+    allctr->get_next_mbc_size		= nullptr;
     allctr->creating_mbc		= aoff_creating_mbc;
     allctr->destroying_mbc		= aoff_destroying_mbc;
     allctr->add_mbc                     = aoff_add_mbc;
@@ -277,14 +277,14 @@ erts_aoffalc_start(AOFFAllctr_t *alc,
     allctr->init_atoms			= init_atoms;
 
 #ifdef ERTS_ALLOC_UTIL_HARD_DEBUG
-    allctr->check_block			= NULL;
-    allctr->check_mbc			= NULL;
+    allctr->check_block			= nullptr;
+    allctr->check_mbc			= nullptr;
 #endif
 
     allctr->atoms_initialized		= 0;
 
     if (!erts_alcu_start(allctr, init))
-	return NULL;
+	return nullptr;
 
     return allctr;
 }
@@ -524,7 +524,7 @@ aoff_unlink_free_block(Allctr_t *allctr, Block_t *blk)
     else {
 	crr->rbt_node.hdr.bhdr = 0;
     }
-    lower_max_size(&crr->rbt_node, NULL);
+    lower_max_size(&crr->rbt_node, nullptr);
 }
 
 
@@ -538,7 +538,7 @@ rbt_delete(AOFF_RBTree_t** root, AOFF_RBTree_t* del)
 
     HARD_CHECK_IS_MEMBER(*root, del);
 
-    null_x.parent = NULL;
+    null_x.parent = nullptr;
 
     /* Remove node from tree... */
 
@@ -558,7 +558,7 @@ rbt_delete(AOFF_RBTree_t** root, AOFF_RBTree_t* del)
 	x = &null_x;
 	x->flags = 0;
 	SET_BLACK(x);
-	x->right = x->left = NULL;
+	x->right = x->left = nullptr;
 	x->max_sz = 0;
 	x->parent = y->parent;
 	y->left = x;
@@ -577,14 +577,14 @@ rbt_delete(AOFF_RBTree_t** root, AOFF_RBTree_t* del)
 	    y->parent->right = x;
 	}
 	if (y->parent != z) {
-	    lower_max_size(y->parent, (y==z ? NULL : z));
+	    lower_max_size(y->parent, (y==z ? nullptr : z));
 	}
     }
     if (y != z) {
 	/* We spliced out the successor of z; replace z by the successor */
 	ASSERT(z != &null_x);
 	replace(root, z, y);
-	lower_max_size(y, NULL);
+	lower_max_size(y, nullptr);
     }
 
     if (spliced_is_black) {
@@ -681,16 +681,16 @@ rbt_delete(AOFF_RBTree_t** root, AOFF_RBTree_t* del)
 
 	if (null_x.parent) {
 	    if (null_x.parent->left == &null_x)
-		null_x.parent->left = NULL;
+		null_x.parent->left = nullptr;
 	    else {
 		RBT_ASSERT(null_x.parent->right == &null_x);
-		null_x.parent->right = NULL;
+		null_x.parent->right = nullptr;
 	    }
 	    RBT_ASSERT(!null_x.left);
 	    RBT_ASSERT(!null_x.right);
 	}
 	else if (*root == &null_x) {
-	    *root = NULL;
+	    *root = nullptr;
 	    RBT_ASSERT(!null_x.left);
 	    RBT_ASSERT(!null_x.right);
 	}
@@ -737,12 +737,12 @@ rbt_insert(enum AOFF_Flavor flavor, AOFF_RBTree_t** root, AOFF_RBTree_t* blk)
 #else
     blk->flags  = 0; 
 #endif
-    blk->left	= NULL;
-    blk->right	= NULL;
+    blk->left	= nullptr;
+    blk->right	= nullptr;
     blk->max_sz = blk_sz;
 
     if (!*root) {
-	blk->parent = NULL;
+	blk->parent = nullptr;
 	SET_BLACK(blk);
 	*root = blk;
     }
@@ -793,7 +793,7 @@ rbt_insert(enum AOFF_Flavor flavor, AOFF_RBTree_t** root, AOFF_RBTree_t* blk)
     }
     if (flavor == AOFF_BF) {
 	SET_TREE_NODE(blk);
-	LIST_NEXT(blk) = NULL;
+	LIST_NEXT(blk) = nullptr;
     }
 }
 
@@ -813,7 +813,7 @@ rbt_search(AOFF_RBTree_t* root, Uint size)
 	else {
 	    x = x->right;
 	    if (!x) {
-		return NULL;
+		return nullptr;
 	    }
 	}
     }
@@ -826,7 +826,7 @@ aoff_get_free_block(Allctr_t *allctr, Uint size,
     AOFFAllctr_t *alc = (AOFFAllctr_t *) allctr;
     AOFF_RBTree_t *crr_node = alc->mbc_root;
     AOFF_Carrier_t* crr;
-    AOFF_RBTree_t *blk = NULL;
+    AOFF_RBTree_t *blk = nullptr;
 #ifdef HARD_DEBUG
     AOFF_RBTree_t* dbg_blk;
 #endif
@@ -836,7 +836,7 @@ aoff_get_free_block(Allctr_t *allctr, Uint size,
     /* Get first-fit carrier
      */
     if (!crr_node || !(blk=rbt_search(crr_node, size))) {
-	return NULL;
+	return nullptr;
     }
     crr = RBT_NODE_TO_MBC(blk);
 
@@ -854,10 +854,10 @@ aoff_get_free_block(Allctr_t *allctr, Uint size,
 #endif
 
     if (!blk)
-	return NULL;
+	return nullptr;
 
     if (cand_blk && cmp_cand_blk(alc->flavor, cand_blk, blk) < 0) {
-	return NULL; /* cand_blk was better */
+	return nullptr; /* cand_blk was better */
     }
 
     aoff_unlink_free_block(allctr, (Block_t *) blk);
@@ -871,7 +871,7 @@ static void aoff_creating_mbc(Allctr_t *allctr, Carrier_t *carrier)
     AOFF_Carrier_t *crr = (AOFF_Carrier_t*) carrier;
     AOFF_RBTree_t **root = &alc->mbc_root;
 
-    HARD_CHECK_TREE(NULL, 0, *root, 0);
+    HARD_CHECK_TREE(nullptr, 0, *root, 0);
 
     /* Link carrier in address order tree
      */
@@ -879,9 +879,9 @@ static void aoff_creating_mbc(Allctr_t *allctr, Carrier_t *carrier)
     rbt_insert(AOFF_AOFF, root, &crr->rbt_node);
 
     /* aoff_link_free_block will add free block later */
-    crr->root = NULL;
+    crr->root = nullptr;
 
-    HARD_CHECK_TREE(NULL, 0, *root, 0);
+    HARD_CHECK_TREE(nullptr, 0, *root, 0);
 }
 
 static void aoff_destroying_mbc(Allctr_t *allctr, Carrier_t *carrier)
@@ -902,13 +902,13 @@ static void aoff_add_mbc(Allctr_t *allctr, Carrier_t *carrier)
     AOFF_Carrier_t *crr = (AOFF_Carrier_t*) carrier;
     AOFF_RBTree_t **root = &alc->mbc_root;
 
-    HARD_CHECK_TREE(NULL, 0, *root, 0);   
+    HARD_CHECK_TREE(nullptr, 0, *root, 0);   
 
     /* Link carrier in address order tree
      */
     rbt_insert(AOFF_AOFF, root, &crr->rbt_node);
 
-    HARD_CHECK_TREE(NULL, 0, *root, 0);
+    HARD_CHECK_TREE(nullptr, 0, *root, 0);
 }
 
 static void aoff_remove_mbc(Allctr_t *allctr, Carrier_t *carrier)
@@ -918,15 +918,15 @@ static void aoff_remove_mbc(Allctr_t *allctr, Carrier_t *carrier)
     AOFF_RBTree_t **root = &alc->mbc_root;
 
     ASSERT(allctr == ERTS_ALC_CARRIER_TO_ALLCTR(carrier));
-    HARD_CHECK_TREE(NULL, 0, *root, 0);
+    HARD_CHECK_TREE(nullptr, 0, *root, 0);
 
     rbt_delete(root, &crr->rbt_node);
-    crr->rbt_node.parent = NULL;
-    crr->rbt_node.left = NULL;
-    crr->rbt_node.right = NULL;
+    crr->rbt_node.parent = nullptr;
+    crr->rbt_node.left = nullptr;
+    crr->rbt_node.right = nullptr;
     crr->rbt_node.max_sz = crr->rbt_node.hdr.bhdr;
 
-    HARD_CHECK_TREE(NULL, 0, *root, 0);
+    HARD_CHECK_TREE(nullptr, 0, *root, 0);
 }
 
 static UWord aoff_largest_fblk_in_mbc(Allctr_t* allctr, Carrier_t* carrier)
@@ -1048,8 +1048,8 @@ erts_aoffalc_test(UWord op, UWord a1, UWord a2)
     case 0x501: {
 	AOFF_RBTree_t *node = ((AOFFAllctr_t *) a1)->mbc_root; 
 	Uint size = (Uint) a2;
-	node = node ? rbt_search(node, size) : NULL;
-	return (UWord) (node ? RBT_NODE_TO_MBC(node)->root : NULL);
+	node = node ? rbt_search(node, size) : nullptr;
+	return (UWord) (node ? RBT_NODE_TO_MBC(node)->root : nullptr);
     }
     case 0x502:	return (UWord) ((AOFF_RBTree_t *) a1)->parent;
     case 0x503:	return (UWord) ((AOFF_RBTree_t *) a1)->left;
@@ -1121,7 +1121,7 @@ static void print_tree(AOFF_RBTree_t*);
 static AOFF_RBTree_t *
 check_tree(Carrier_t* within_crr, enum AOFF_Flavor flavor, AOFF_RBTree_t* root, Uint size)
 {
-    AOFF_RBTree_t *res = NULL;
+    AOFF_RBTree_t *res = nullptr;
     Sint blacks;
     Sint curr_blacks;
     AOFF_RBTree_t *x;

@@ -156,7 +156,7 @@ typedef time_t erts_time_t;
 
 typedef struct timeval SysTimeval;
 
-#define sys_gettimeofday(Arg) ((void) gettimeofday((Arg), NULL))
+#define sys_gettimeofday(Arg) ((void) gettimeofday((Arg), nullptr))
 
 typedef struct tms SysTimes;
 
@@ -249,7 +249,7 @@ extern void sys_stop_cat(void);
 
 #ifdef NO_FPE_SIGNALS
 
-#define erts_get_current_fp_exception() NULL
+#define erts_get_current_fp_exception() nullptr
 #ifdef ERTS_SMP
 #define erts_thread_init_fp_exception() do{}while(0)
 #endif

@@ -56,8 +56,8 @@ typedef enum {
 	ERTS_THR_Q_LIVE_UNDEF,						\
 	ERTS_THR_Q_LIVE_SHORT						\
     },									\
-    NULL,								\
-    NULL,								\
+    nullptr,								\
+    nullptr,								\
     1									\
 }
 

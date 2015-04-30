@@ -451,7 +451,7 @@ thr_create_prepare(void)
 {
     erts_thr_create_data_t *tcdp;
 
-    tcdp = erts_alloc(ERTS_ALC_T_TMP, sizeof(erts_thr_create_data_t));
+    tcdp = erts::alloc<erts_thr_create_data_t>(ERTS_ALC_T_TMP, 1);
 
 #ifdef ERTS_THR_HAVE_SIG_FUNCS
     erts_thr_sigmask(SIG_BLOCK, &thr_create_sigmask, &tcdp->saved_sigmask);
@@ -472,7 +472,7 @@ thr_create_cleanup(void *vtcdp)
 
 #ifdef ERTS_THR_HAVE_SIG_FUNCS
     /* Restore signalmask... */
-    erts_thr_sigmask(SIG_SETMASK, &tcdp->saved_sigmask, NULL);
+    erts_thr_sigmask(SIG_SETMASK, &tcdp->saved_sigmask, nullptr);
 #endif
 
     erts_free(ERTS_ALC_T_TMP, tcdp);
@@ -525,7 +525,7 @@ erts_sys_pre_init(void)
 
     erts_thr_init(&eid);
 
-    report_exit_list = NULL;
+    report_exit_list = nullptr;
 
 #ifdef ERTS_ENABLE_LOCK_COUNT
     erts_lcnt_init();
@@ -536,7 +536,7 @@ erts_sys_pre_init(void)
 #endif
 #if CHLDWTHR
 #ifndef ERTS_SMP
-    report_exit_transit_list = NULL;
+    report_exit_transit_list = nullptr;
 #endif
     erts_cnd_init(&chld_stat_cnd);
     children_alive = 0;
@@ -612,7 +612,7 @@ erl_sys_init(void)
 		   + 1 /* DIR_SEPARATOR_CHAR */
 		   + sizeof(CHILD_SETUP_PROG_NAME)
 		   + 1);
-    child_setup_prog = erts_alloc(ERTS_ALC_T_CS_PROG_PATH, csp_path_sz);
+    child_setup_prog = erts::alloc<char>(ERTS_ALC_T_CS_PROG_PATH, csp_path_sz);
     erts_smp_atomic_add_nob(&sys_misc_mem_sz, csp_path_sz);
     erts_snprintf(child_setup_prog, csp_path_sz,
             "%s%c%s",
@@ -625,7 +625,7 @@ erl_sys_init(void)
 #ifdef USE_SETLINEBUF
     setlinebuf(stdout);
 #else
-    setvbuf(stdout, (char *)NULL, _IOLBF, BUFSIZ);
+    setvbuf(stdout, (char *)nullptr, _IOLBF, BUFSIZ);
 #endif
 
     erts_sys_init_float();
@@ -694,7 +694,7 @@ void sys_sigblock(int sig)
 
     sigemptyset(&mask);
     sigaddset(&mask, sig);
-    sigprocmask(SIG_BLOCK, &mask, (sigset_t *)NULL);
+    sigprocmask(SIG_BLOCK, &mask, (sigset_t *)nullptr);
 }
 
 void sys_sigrelease(int sig)
@@ -703,7 +703,7 @@ void sys_sigrelease(int sig)
 
     sigemptyset(&mask);
     sigaddset(&mask, sig);
-    sigprocmask(SIG_UNBLOCK, &mask, (sigset_t *)NULL);
+    sigprocmask(SIG_UNBLOCK, &mask, (sigset_t *)nullptr);
 }
 #endif /* !SIG_SIGNAL */
 #endif /* !SIG_SIGSET */
@@ -766,8 +766,8 @@ prepare_crash_dump(int secs)
 	has_heart = 1;
 	list = CONS(hp, make_small(8), list); hp += 2;
 	/* send to heart port, CMD = 8, i.e. prepare crash dump =o */
-	erts_port_output(NULL, ERTS_PORT_SIG_FLG_FORCE_IMM_CALL, heart_port,
-			 heart_port->common.id, list, NULL);
+	erts_port_output(nullptr, ERTS_PORT_SIG_FLG_FORCE_IMM_CALL, heart_port,
+			 heart_port->common.id, list, nullptr);
     }
 
     /* Make sure we have a fd for our crashdump file. */
@@ -1000,11 +1000,11 @@ static int
 get_number(char **str_ptr)
 {
     char* s = *str_ptr;		/* Pointer to beginning of string. */
-    char* dot;			/* Pointer to dot in string or NULL. */
+    char* dot;			/* Pointer to dot in string or nullptr. */
 
     if (!isdigit((int) *s))
 	return 0;
-    if ((dot = strchr(s, '.')) == NULL) {
+    if ((dot = strchr(s, '.')) == nullptr) {
 	*str_ptr = s+strlen(s);
 	return atoi(s);
     } else {
@@ -1031,10 +1031,7 @@ os_flavor(char* namebuf, 	/* Where to return the name. */
 }
 
 void
-os_version(pMajor, pMinor, pBuild)
-int* pMajor;			/* Pointer to major version. */
-int* pMinor;			/* Pointer to minor version. */
-int* pBuild;			/* Pointer to build number. */
+os_version(int* pMajor, int* pMinor, int* pBuild)
 {
     struct utsname uts;		/* Information about the system. */
     char* release;		/* Pointer to the release string:
@@ -1051,7 +1048,7 @@ int* pBuild;			/* Pointer to build number. */
 void init_getenv_state(GETENV_STATE *state)
 {
    erts_smp_rwmtx_rlock(&environ_rwmtx);
-   *state = NULL;
+   *state = nullptr;
 }
 
 char *getenv_string(GETENV_STATE *state0)
@@ -1061,7 +1058,7 @@ char *getenv_string(GETENV_STATE *state0)
 
    ERTS_SMP_LC_ASSERT(erts_smp_lc_rwmtx_is_rlocked(&environ_rwmtx));
 
-   if (state == NULL)
+   if (state == nullptr)
       state = environ;
 
    cp = *state++;
@@ -1072,7 +1069,7 @@ char *getenv_string(GETENV_STATE *state0)
 
 void fini_getenv_state(GETENV_STATE *state)
 {
-   *state = NULL;
+   *state = nullptr;
    erts_smp_rwmtx_runlock(&environ_rwmtx);
 }
 
@@ -1114,70 +1111,70 @@ struct erl_drv_entry spawn_driver_entry = {
     ready_input,
     ready_output,
     "spawn",
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
     ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     ERL_DRV_FLAG_USE_PORT_LOCKING,
-    NULL, NULL,
+    nullptr, nullptr,
     stop_select
 };
 struct erl_drv_entry fd_driver_entry = {
-    NULL,
+    nullptr,
     fd_start,
     fd_stop,
     output,
     ready_input,
     ready_output, 
     "fd",
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     fd_control,
-    NULL,
+    nullptr,
     outputv,
-    NULL, /* ready_async */
-    NULL, /* flush */
-    NULL, /* call */
-    NULL, /* event */
+    nullptr, /* ready_async */
+    nullptr, /* flush */
+    nullptr, /* call */
+    nullptr, /* event */
     ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0, /* ERL_DRV_FLAGs */
-    NULL, /* handle2 */
-    NULL, /* process_exit */
+    nullptr, /* handle2 */
+    nullptr, /* process_exit */
     stop_select
 };
 struct erl_drv_entry vanilla_driver_entry = {
-    NULL,
+    nullptr,
     vanilla_start,
     stop,
     output,
     ready_input,
     ready_output,
     "vanilla",
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL, /* flush */
-    NULL, /* call */
-    NULL, /* event */
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr, /* flush */
+    nullptr, /* call */
+    nullptr, /* event */
     ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0, /* ERL_DRV_FLAGs */
-    NULL, /* handle2 */
-    NULL, /* process_exit */
+    nullptr, /* handle2 */
+    nullptr, /* process_exit */
     stop_select
 };
 
@@ -1210,10 +1207,9 @@ static int set_driver_data(ErlDrvPort port_num,
     ErtsSysReportExit *report_exit;
 
     if (!exit_status)
-	report_exit = NULL;
+	report_exit = nullptr;
     else {
-	report_exit = erts_alloc(ERTS_ALC_T_PRT_REP_EXIT,
-				 sizeof(ErtsSysReportExit));
+        report_exit = erts::alloc<ErtsSysReportExit>(ERTS_ALC_T_PRT_REP_EXIT, 1);
 	report_exit->next = report_exit_list;
 	report_exit->port = erts_drvport2id(port_num);
 	report_exit->pid = pid;
@@ -1282,7 +1278,7 @@ static int spawn_init()
    sys_sigset(SIGCHLD, onchld); /* Reap children */
 
 #if CHLDWTHR
-   erts_thr_create(&child_waiter_tid, child_waiter, NULL, &thr_opts);
+   erts_thr_create(&child_waiter_tid, child_waiter, nullptr, &thr_opts);
 #endif
 
    return 1;
@@ -1302,8 +1298,8 @@ static void close_pipes(int ifd[2], int ofd[2], int read_write)
 
 static void init_fd_data(int fd, ErlDrvPort port_num)
 {
-    fd_data[fd].buf = NULL;
-    fd_data[fd].cpos = NULL;
+    fd_data[fd].buf = nullptr;
+    fd_data[fd].cpos = nullptr;
     fd_data[fd].remain = 0;
     fd_data[fd].sz = 0;
     fd_data[fd].psz = 0;
@@ -1327,14 +1323,14 @@ static char **build_unix_environment(char *block)
 	len++;
     }
     old_env = environ;
-    while (*old_env++ != NULL) {
+    while (*old_env++ != nullptr) {
 	len++;
     }
     
     cpp = (char **) erts_alloc_fnf(ERTS_ALC_T_ENVIRONMENT,
 				   sizeof(char *) * (len+1));
-    if (cpp == NULL) {
-	return NULL;
+    if (cpp == nullptr) {
+	return nullptr;
     }
 
     cp = block;
@@ -1382,7 +1378,7 @@ static char **build_unix_environment(char *block)
 	}
     }
 
-    cpp[len] = NULL;
+    cpp[len] = nullptr;
     return cpp;
 }
 
@@ -1499,9 +1495,9 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name, SysDriverOpts* op
 
     erts_smp_rwmtx_rlock(&environ_rwmtx);
 
-    if (opts->envir == NULL) {
+    if (opts->envir == nullptr) {
 	new_environ = environ;
-    } else if ((new_environ = build_unix_environment(opts->envir)) == NULL) {
+    } else if ((new_environ = build_unix_environment(opts->envir)) == nullptr) {
 	erts_smp_rwmtx_runlock(&environ_rwmtx);
 	erts_free(ERTS_ALC_T_TMP, (void *) cmd_line);
 	errno = ENOMEM;
@@ -1581,8 +1577,8 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name, SysDriverOpts* op
 	    unblock_signals();
 
 	    if (opts->spawn_type == ERTS_SPAWN_EXECUTABLE) {
-		if (opts->argv == NULL) {
-		    execle(cmd_line,cmd_line,(char *) NULL, new_environ);
+		if (opts->argv == nullptr) {
+		    execle(cmd_line,cmd_line,(char *) nullptr, new_environ);
 		} else {
 		    if (opts->argv[0] == erts_default_arg0) {
 			opts->argv[0] = cmd_line;
@@ -1593,7 +1589,7 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name, SysDriverOpts* op
 		    }
 		}
 	    } else {
-		execle(SHELL, "sh", "-c", cmd_line, (char *) NULL, new_environ);
+		execle(SHELL, "sh", "-c", cmd_line, (char *) nullptr, new_environ);
 	    }
 	child_error:
 	    _exit(1);
@@ -1602,8 +1598,7 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name, SysDriverOpts* op
     }
 #define ENOUGH_BYTES (44)
     else { /* Use vfork() */
-	char **cs_argv= erts_alloc(ERTS_ALC_T_TMP,(CS_ARGV_NO_OF_ARGS + 1)*
-				   sizeof(char *));
+        char **cs_argv= erts::alloc<char*>(ERTS_ALC_T_TMP,(CS_ARGV_NO_OF_ARGS + 1));
 	char fd_close_range[ENOUGH_BYTES];                  /* 44 bytes are enough to  */
 	char dup2_op[CS_ARGV_NO_OF_DUP2_OPS][ENOUGH_BYTES]; /* hold any "%d:%d" string */
                                                             /* on a 64-bit machine.    */
@@ -1633,7 +1628,7 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name, SysDriverOpts* op
 	erts_snprintf(fd_close_range, ENOUGH_BYTES, "%d:%d", opts->use_stdio ? 3 : 5, max_files-1);
 
 	cs_argv[CS_ARGV_PROGNAME_IX] = child_setup_prog;
-	cs_argv[CS_ARGV_WD_IX] = opts->wd ? opts->wd : ".";
+        cs_argv[CS_ARGV_WD_IX] = (char*)(opts->wd ? opts->wd : ".");
 	cs_argv[CS_ARGV_UNBIND_IX] = erts_sched_bind_atvfork_child(unbind);
 	cs_argv[CS_ARGV_FD_CR_IX] = fd_close_range;
 	for (i = 0; i < CS_ARGV_NO_OF_DUP2_OPS; i++)
@@ -1642,15 +1637,15 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name, SysDriverOpts* op
 	if (opts->spawn_type == ERTS_SPAWN_EXECUTABLE) {
 	    int num = 0;
 	    int j = 0;
-	    if (opts->argv != NULL) {
-		for(; opts->argv[num] != NULL; ++num)
+	    if (opts->argv != nullptr) {
+		for(; opts->argv[num] != nullptr; ++num)
 		    ;
 	    }
-	    cs_argv = erts_realloc(ERTS_ALC_T_TMP,cs_argv, (CS_ARGV_NO_OF_ARGS + 1 + num + 1) * sizeof(char *));
+            cs_argv = erts::realloc<char*>(ERTS_ALC_T_TMP,cs_argv, (CS_ARGV_NO_OF_ARGS + 1 + num + 1));
 	    cs_argv[CS_ARGV_CMD_IX] = "-";
 	    cs_argv[CS_ARGV_NO_OF_ARGS] = cmd_line;
-	    if (opts->argv != NULL) {
-		for (;opts->argv[j] != NULL; ++j) {
+	    if (opts->argv != nullptr) {
+		for (;opts->argv[j] != nullptr; ++j) {
 		    if (opts->argv[j] == erts_default_arg0) {
 			cs_argv[CS_ARGV_NO_OF_ARGS + 1 + j] = cmd_line;
 		    } else {
@@ -1658,10 +1653,10 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name, SysDriverOpts* op
 		    }
 		}
 	    }
-	    cs_argv[CS_ARGV_NO_OF_ARGS + 1 + j] = NULL;
+	    cs_argv[CS_ARGV_NO_OF_ARGS + 1 + j] = nullptr;
 	} else {
 	    cs_argv[CS_ARGV_CMD_IX] = cmd_line; /* Command */
-	    cs_argv[CS_ARGV_NO_OF_ARGS] = NULL;
+	    cs_argv[CS_ARGV_NO_OF_ARGS] = nullptr;
 	}
 	DEBUGF(("Using vfork\n"));
 	pid = vfork();
@@ -1820,7 +1815,7 @@ static ErlDrvSSizeT fd_control(ErlDrvData drv_data,
 	return 0;
     }
     if (rlen < 2*sizeof(Uint32)) {
-	*rbuf = driver_alloc(2*sizeof(Uint32));
+        *rbuf = (char*)driver_alloc(2*sizeof(Uint32));
     }
     memcpy(*rbuf,resbuff,2*sizeof(Uint32));
     return 2*sizeof(Uint32);
@@ -1962,7 +1957,7 @@ static ErlDrvData fd_start(ErlDrvPort port_num, char* name,
 		    char *tty;
 		    int nfd;
 
-		    if ((tty = ttyname(opts->ofd)) != NULL &&
+		    if ((tty = ttyname(opts->ofd)) != nullptr &&
 			(nfd = open(tty, O_WRONLY)) != -1) {
 			dup2(nfd, opts->ofd);
 			close(nfd);
@@ -1987,10 +1982,10 @@ static void clear_fd_data(int fd)
 	ASSERT(erts_smp_atomic_read_nob(&sys_misc_mem_sz) >= fd_data[fd].sz);
 	erts_smp_atomic_add_nob(&sys_misc_mem_sz, -1*fd_data[fd].sz);
     }
-    fd_data[fd].buf = NULL;
+    fd_data[fd].buf = nullptr;
     fd_data[fd].sz = 0;
     fd_data[fd].remain = 0;
-    fd_data[fd].cpos = NULL;
+    fd_data[fd].cpos = nullptr;
     fd_data[fd].psz = 0;
 }
 
@@ -2102,7 +2097,7 @@ static void outputv(ErlDrvData e, ErlIOVec* ev)
     else {
 	int vsize = ev->vsize > MAX_VSIZE ? MAX_VSIZE : ev->vsize;
 
-	n = writev(ofd, (const void *) (ev->iov), vsize);
+        n = writev(ofd, (const iovec *) (ev->iov), vsize);
 	if (n == ev->size)
 	    return; /* 0;*/
 	if (n < 0) {
@@ -2317,7 +2312,7 @@ static void ready_input(ErlDrvData e, ErlDrvEvent ready_fd)
 		    continue;
 		}
 		else {		/* The last message we got was split */
-		        char *buf = erts_alloc_fnf(ERTS_ALC_T_FD_ENTRY_BUF, h);
+                        char *buf = (char*)erts_alloc_fnf(ERTS_ALC_T_FD_ENTRY_BUF, h);
 		    if (!buf) {
 			errno = ENOMEM;
 			port_inp_failure(port_num, ready_fd, -1);
@@ -2352,7 +2347,7 @@ static void ready_output(ErlDrvData e, ErlDrvEvent ready_fd)
     int vsize;
     
 
-    if ((iv = (struct iovec*) driver_peekq(ix, &vsize)) == NULL) {
+    if ((iv = (struct iovec*) driver_peekq(ix, &vsize)) == nullptr) {
 	driver_select(ix, ready_fd, ERL_DRV_WRITE, 0);
 	return; /* 0; */
     }
@@ -2446,7 +2441,7 @@ erts_sys_putenv(char *key, char *value)
 #ifdef HAVE_COPYING_PUTENV
     env = erts_alloc(ERTS_ALC_T_TMP, need);
 #else
-    env = erts_alloc(ERTS_ALC_T_PUTENV_STR, need);
+    env = erts::alloc<char>(ERTS_ALC_T_PUTENV_STR, need);
     erts_smp_atomic_add_nob(&sys_misc_mem_sz, need);
 #endif
     strcpy(env,key);
@@ -2556,7 +2551,7 @@ void erts_sys_alloc_init(void)
 void *erts_sys_aligned_alloc(UWord alignment, UWord size)
 {
 #ifdef HAVE_POSIX_MEMALIGN
-    void *ptr = NULL;
+    void *ptr = nullptr;
     int error;
     ASSERT(alignment && (alignment & (alignment-1)) == 0); /* power of 2 */
     error = posix_memalign(&ptr, (size_t) alignment, (size_t) size);
@@ -2568,7 +2563,7 @@ void *erts_sys_aligned_alloc(UWord alignment, UWord size)
 #endif
     if (error) {
 	errno = error;
-	return NULL;
+	return nullptr;
     }
     if (!ptr)
 	errno = ENOMEM;
@@ -2650,8 +2645,7 @@ void sys_preload_end(Preload* p)
 
 /* Read a key from console (?) */
 
-int sys_get_key(fd)
-int fd;
+int sys_get_key(int fd)
 {
     int c;
     unsigned char rbuf[64];
@@ -2716,7 +2710,7 @@ report_exit_status(ErtsSysReportExit *rep, int status)
     CHLD_STAT_LOCK;
 #else
     pp = erts_id2port_sflgs(rep->port,
-			    NULL,
+			    nullptr,
 			    0,
 			    ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP);
 #endif
@@ -2810,13 +2804,13 @@ static int check_children(void)
     ErtsSysReportExit *rep;
     CHLD_STAT_LOCK;
     rep = report_exit_transit_list;
-    res = rep != NULL;
+    res = rep != nullptr;
     while (rep) {
 	ErtsSysReportExit *curr_rep = rep;
 	rep = rep->next;
 	report_exit_status(curr_rep, curr_rep->status);
     }
-    report_exit_transit_list = NULL;
+    report_exit_transit_list = nullptr;
     CHLD_STAT_UNLOCK;
     return res;
 }
@@ -2873,7 +2867,7 @@ child_waiter(void *unused)
       CHLD_STAT_UNLOCK;
   }
 
-  return NULL;
+  return nullptr;
 }
 
 #endif
@@ -2999,7 +2993,7 @@ signal_dispatcher_thread_func(void *unused)
 	}
 	ERTS_SMP_LC_ASSERT(!erts_thr_progress_is_blocking());
     }
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -3018,7 +3012,7 @@ init_smp_sig_notify(void)
     /* Start signal handler thread */
     erts_smp_thr_create(&sig_dispatcher_tid,
 			signal_dispatcher_thread_func,
-			NULL,
+			nullptr,
 			&thr_opts);
 }
 #ifdef __DARWIN__
@@ -3060,7 +3054,7 @@ erts_sys_main_thread(void)
 
 	FD_ZERO(&readfds);
 	FD_SET(erts_darwin_main_thread_pipe[0], &readfds);
-	res = select(erts_darwin_main_thread_pipe[0] + 1, &readfds, NULL, NULL, NULL);
+	res = select(erts_darwin_main_thread_pipe[0] + 1, &readfds, nullptr, nullptr, nullptr);
 	if (res > 0 && FD_ISSET(erts_darwin_main_thread_pipe[0],&readfds)) {
 	    void* (*func)(void*);
 	    void* arg;
@@ -3076,7 +3070,7 @@ erts_sys_main_thread(void)
 #else
 	(void)
 #endif
-	    select(0, NULL, NULL, NULL, NULL);
+	    select(0, nullptr, nullptr, nullptr, nullptr);
 	ASSERT(res < 0);
 	ASSERT(errno == EINTR);
 #endif
@@ -3089,12 +3083,12 @@ erts_sys_main_thread(void)
 				  kernel-poll is enabled */
 
 /* Get arg marks argument as handled by
-   putting NULL in argv */
+   putting nullptr in argv */
 static char *
 get_value(char* rest, char** argv, int* ip)
 {
     char *param = argv[*ip]+1;
-    argv[*ip] = NULL;
+    argv[*ip] = nullptr;
     if (*rest == '\0') {
 	char *next = argv[*ip + 1];
 	if (next[0] == '-'
@@ -3104,7 +3098,7 @@ get_value(char* rest, char** argv, int* ip)
 	    erts_usage();
 	}
 	(*ip)++;
-	argv[*ip] = NULL;
+	argv[*ip] = nullptr;
 	return next;
     }
     return rest;
@@ -3173,7 +3167,7 @@ erl_sys_args(int* argc, char** argv)
     init_smp_sig_notify();
 #endif
 
-    /* Handled arguments have been marked with NULL. Slide arguments
+    /* Handled arguments have been marked with nullptr. Slide arguments
        not handled towards the beginning of argv. */
     for (i = 0, j = 0; i < *argc; i++) {
 	if (argv[i])

@@ -55,7 +55,7 @@ struct erl_module_nif {
     struct enif_entry_t* entry;
     erts_refc_t rt_cnt;       /* number of resource types */
     erts_refc_t rt_dtor_cnt;  /* number of resource types with destructors */
-    Module* mod;           /* Can be NULL if orphan with dtor-resources left */ 
+    Module* mod;           /* Can be nullptr if orphan with dtor-resources left */ 
 };
 
 #ifdef DEBUG
@@ -92,7 +92,7 @@ static ERTS_INLINE Eterm* alloc_heap(ErlNifEnv* env, unsigned need)
 static Eterm* alloc_heap_heavy(ErlNifEnv* env, unsigned need, Eterm* hp)
 {    
     env->hp = hp;
-    if (env->heap_frag == NULL) {       
+    if (env->heap_frag == nullptr) {       
 	ASSERT(HEAP_LIMIT(env->proc) == env->hp_end);
 	HEAP_TOP(env->proc) = env->hp;	
     }
@@ -124,20 +124,20 @@ void erts_pre_nif(ErlNifEnv* env, Process* p, struct erl_module_nif* mod_nif)
     env->proc = p;
     env->hp = HEAP_TOP(p);
     env->hp_end = HEAP_LIMIT(p);
-    env->heap_frag = NULL;
+    env->heap_frag = nullptr;
     env->fpe_was_unmasked = erts_block_fpe();
-    env->tmp_obj_list = NULL;
+    env->tmp_obj_list = nullptr;
 }
 
 static void pre_nif_noproc(ErlNifEnv* env, struct erl_module_nif* mod_nif)
 {
     env->mod_nif = mod_nif;
-    env->proc = NULL;
-    env->hp = NULL;
-    env->hp_end = NULL;
-    env->heap_frag = NULL;
+    env->proc = nullptr;
+    env->hp = nullptr;
+    env->hp_end = nullptr;
+    env->heap_frag = nullptr;
     env->fpe_was_unmasked = erts_block_fpe();
-    env->tmp_obj_list = NULL;
+    env->tmp_obj_list = nullptr;
 }
 
 /* Temporary object header, auto-deallocated when NIF returns
@@ -152,7 +152,7 @@ struct enif_tmp_obj_t {
 
 static ERTS_INLINE void free_tmp_objs(ErlNifEnv* env)
 {
-    while (env->tmp_obj_list != NULL) {
+    while (env->tmp_obj_list != nullptr) {
 	struct enif_tmp_obj_t* free_me = env->tmp_obj_list;
 	env->tmp_obj_list = free_me->next;
 	free_me->dtor(free_me);
@@ -162,7 +162,7 @@ static ERTS_INLINE void free_tmp_objs(ErlNifEnv* env)
 void erts_post_nif(ErlNifEnv* env)
 {
     erts_unblock_fpe(env->fpe_was_unmasked);
-    if (env->heap_frag == NULL) {
+    if (env->heap_frag == nullptr) {
 	ASSERT(env->hp_end == HEAP_LIMIT(env->proc));
 	ASSERT(env->hp >= HEAP_TOP(env->proc));
 	ASSERT(env->hp <= HEAP_LIMIT(env->proc));	
@@ -188,7 +188,7 @@ static void post_nif_noproc(ErlNifEnv* env)
 */
 static void flush_env(ErlNifEnv* env)
 {
-    if (env->heap_frag == NULL) {
+    if (env->heap_frag == nullptr) {
 	ASSERT(env->hp_end == HEAP_LIMIT(env->proc));
 	ASSERT(env->hp >= HEAP_TOP(env->proc));
 	ASSERT(env->hp <= HEAP_LIMIT(env->proc));	
@@ -206,7 +206,7 @@ static void flush_env(ErlNifEnv* env)
 */
 static void cache_env(ErlNifEnv* env)
 {
-    if (env->heap_frag == NULL) {
+    if (env->heap_frag == nullptr) {
 	ASSERT(env->hp_end == HEAP_LIMIT(env->proc));
 	ASSERT(env->hp <= HEAP_TOP(env->proc));
 	ASSERT(env->hp <= HEAP_LIMIT(env->proc));	
@@ -216,7 +216,7 @@ static void cache_env(ErlNifEnv* env)
 	ASSERT(env->hp_end != HEAP_LIMIT(env->proc));
 	ASSERT(env->hp_end - env->hp <= env->heap_frag->alloc_size);       
 	env->heap_frag = MBUF(env->proc);
-	ASSERT(env->heap_frag != NULL);
+	ASSERT(env->heap_frag != nullptr);
 	env->hp = env->heap_frag->mem + env->heap_frag->used_size;
 	env->hp_end = env->heap_frag->mem + env->heap_frag->alloc_size;
     }
@@ -251,24 +251,24 @@ ErlNifEnv* enif_alloc_env(void)
 {
     auto msg_env = (enif_msg_environment_t*)erts_alloc_fnf(
                     ERTS_ALC_T_NIF, sizeof(struct enif_msg_environment_t));
-    Eterm* phony_heap = (Eterm*) msg_env; /* dummy non-NULL ptr */
+    Eterm* phony_heap = (Eterm*) msg_env; /* dummy non-nullptr ptr */
 	
     msg_env->env.hp = phony_heap; 
     msg_env->env.hp_end = phony_heap;
-    msg_env->env.heap_frag = NULL;
-    msg_env->env.mod_nif = NULL;
-    msg_env->env.tmp_obj_list = NULL;
+    msg_env->env.heap_frag = nullptr;
+    msg_env->env.mod_nif = nullptr;
+    msg_env->env.tmp_obj_list = nullptr;
     msg_env->env.proc = &msg_env->phony_proc;
     memset(&msg_env->phony_proc, 0, sizeof(Process));
     HEAP_START(&msg_env->phony_proc) = phony_heap;
     HEAP_TOP(&msg_env->phony_proc) = phony_heap;
     HEAP_LIMIT(&msg_env->phony_proc) = phony_heap;
     HEAP_END(&msg_env->phony_proc) = phony_heap;
-    MBUF(&msg_env->phony_proc) = NULL;
+    MBUF(&msg_env->phony_proc) = nullptr;
     msg_env->phony_proc.common.id = ERTS_INVALID_PID;
 #ifdef FORCE_HEAP_FRAGS
     msg_env->phony_proc.space_verified = 0;
-    msg_env->phony_proc.space_verified_from = NULL;
+    msg_env->phony_proc.space_verified_from = nullptr;
 #endif
     return &msg_env->env;
 }
@@ -280,7 +280,7 @@ void enif_free_env(ErlNifEnv* env)
 
 static ERTS_INLINE void clear_offheap(ErlOffHeap* oh)
 {
-    oh->first = NULL;
+    oh->first = nullptr;
     oh->overhead = 0;
 }
 
@@ -291,12 +291,12 @@ void enif_clear_env(ErlNifEnv* env)
     ASSERT(p == menv->env.proc);
     ASSERT(p->common.id == ERTS_INVALID_PID);
     ASSERT(MBUF(p) == menv->env.heap_frag);
-    if (MBUF(p) != NULL) {
+    if (MBUF(p) != nullptr) {
 	erts_cleanup_offheap(&MSO(p));
 	clear_offheap(&MSO(p));
 	free_message_buffer(MBUF(p));
-	MBUF(p) = NULL;
-	menv->env.heap_frag = NULL;
+	MBUF(p) = nullptr;
+	menv->env.heap_frag = nullptr;
     }
     ASSERT(HEAP_TOP(p) == HEAP_END(p));
     menv->env.hp = menv->env.hp_end = HEAP_TOP(p);
@@ -316,7 +316,7 @@ int enif_send(ErlNifEnv* env, const ErlNifPid* to_pid,
     int flush_me = 0;
     int scheduler = erts_get_scheduler_id() != 0;
 
-    if (env != NULL) {
+    if (env != nullptr) {
 	c_p = env->proc;
 	if (receiver == c_p->common.id) {
 	    rp_locks = ERTS_PROC_LOCK_MAIN;
@@ -325,9 +325,9 @@ int enif_send(ErlNifEnv* env, const ErlNifPid* to_pid,
     }
     else {
 #ifdef ERTS_SMP
-	c_p = NULL;
+	c_p = nullptr;
 #else
-	erl_exit(ERTS_ABORT_EXIT,"enif_send: env==NULL on non-SMP VM");
+	erl_exit(ERTS_ABORT_EXIT,"enif_send: env==nullptr on non-SMP VM");
 #endif
     }    
 
@@ -335,21 +335,21 @@ int enif_send(ErlNifEnv* env, const ErlNifPid* to_pid,
 	  ? erts_proc_lookup(receiver)
 	  : erts_pid2proc_opt(c_p, ERTS_PROC_LOCK_MAIN,
 			      receiver, rp_locks, ERTS_P2P_FLG_SMP_INC_REFC));
-    if (rp == NULL) {
-	ASSERT(env == NULL || receiver != c_p->common.id);
+    if (rp == nullptr) {
+	ASSERT(env == nullptr || receiver != c_p->common.id);
 	return 0;
     }
     flush_env(msg_env);
     frags = menv->env.heap_frag; 
     ASSERT(frags == MBUF(&menv->phony_proc));
-    if (frags != NULL) {
+    if (frags != nullptr) {
 	/* Move all offheap's from phony proc to the first fragment.
 	   Quick and dirty, but erts_move_msg_mbuf_to_heap doesn't care. */
 	ASSERT(!is_offheap(&frags->off_heap));
 	frags->off_heap = MSO(&menv->phony_proc);
 	clear_offheap(&MSO(&menv->phony_proc));
-	menv->env.heap_frag = NULL; 
-	MBUF(&menv->phony_proc) = NULL;
+	menv->env.heap_frag = nullptr; 
+	MBUF(&menv->phony_proc) = nullptr;
     }
     ASSERT(!is_offheap(&MSO(&menv->phony_proc)));
 
@@ -386,7 +386,7 @@ ERL_NIF_TERM enif_make_copy(ErlNifEnv* dst_env, ERL_NIF_TERM src_term)
 #ifdef DEBUG
 static int is_offheap(const ErlOffHeap* oh)
 {
-    return oh->first != NULL;
+    return oh->first != nullptr;
 }
 #endif
 
@@ -457,7 +457,7 @@ int enif_is_number(ErlNifEnv* env, ERL_NIF_TERM term)
 
 static ERTS_INLINE int is_proc_bound(ErlNifEnv* env)
 {
-    return env->mod_nif != NULL;
+    return env->mod_nif != nullptr;
 }
 
 static void aligned_binary_dtor(struct enif_tmp_obj_t* obj)
@@ -484,13 +484,13 @@ int enif_inspect_binary(ErlNifEnv* env, Eterm bin_term, ErlNifBinary* bin)
 	    }
 	}
     }
-    u.tmp = NULL;
+    u.tmp = nullptr;
     bin->data = erts_get_aligned_binary_bytes_extra(bin_term, &u.raw_ptr, allocator,
 						    sizeof(struct enif_tmp_obj_t));
-    if (bin->data == NULL) {
+    if (bin->data == nullptr) {
 	return 0;
     }
-    if (u.tmp != NULL) {
+    if (u.tmp != nullptr) {
 	u.tmp->allocator = allocator;
 	u.tmp->next = env->tmp_obj_list;
 	u.tmp->dtor = &aligned_binary_dtor;
@@ -498,7 +498,7 @@ int enif_inspect_binary(ErlNifEnv* env, Eterm bin_term, ErlNifBinary* bin)
     }
     bin->bin_term = bin_term;
     bin->size = binary_size(bin_term);
-    bin->ref_bin = NULL;
+    bin->ref_bin = nullptr;
     ADD_READONLY_CHECK(env, bin->data, bin->size); 
     return 1;
 }
@@ -517,10 +517,10 @@ int enif_inspect_iolist_as_binary(ErlNifEnv* env, Eterm term, ErlNifBinary* bin)
 	return enif_inspect_binary(env,term,bin);
     }
     if (is_nil(term)) {
-	bin->data = (unsigned char*) &bin->data; /* dummy non-NULL */
+	bin->data = (unsigned char*) &bin->data; /* dummy non-nullptr */
 	bin->size = 0;
 	bin->bin_term = THE_NON_VALUE;
-	bin->ref_bin = NULL;
+	bin->ref_bin = nullptr;
 	return 1;
     }
     if (erts_iolist_size(term, &sz)) {
@@ -537,7 +537,7 @@ int enif_inspect_iolist_as_binary(ErlNifEnv* env, Eterm term, ErlNifBinary* bin)
     bin->data = (unsigned char*) &tobj[1]; 
     bin->size = sz;
     bin->bin_term = THE_NON_VALUE;
-    bin->ref_bin = NULL;
+    bin->ref_bin = nullptr;
     erts_iolist_to_buf(term, (char*) bin->data, sz);
     ADD_READONLY_CHECK(env, bin->data, bin->size); 
     return 1;
@@ -548,7 +548,7 @@ int enif_alloc_binary(size_t size, ErlNifBinary* bin)
     Binary* refbin;
 
     refbin = erts_bin_drv_alloc_fnf(size); /* BUGBUG: alloc type? */
-    if (refbin == NULL) {
+    if (refbin == nullptr) {
 	return 0; /* The NIF must take action */
     }
     refbin->flags = BIN_FLAG_DRV; /* BUGBUG: Flag? */
@@ -564,7 +564,7 @@ int enif_alloc_binary(size_t size, ErlNifBinary* bin)
 
 int enif_realloc_binary(ErlNifBinary* bin, size_t size)
 {
-    if (bin->ref_bin != NULL) {
+    if (bin->ref_bin != nullptr) {
 	Binary* oldbin;
 	Binary* newbin;
     
@@ -590,7 +590,7 @@ int enif_realloc_binary(ErlNifBinary* bin, size_t size)
 
 void enif_release_binary(ErlNifBinary* bin)
 {
-    if (bin->ref_bin != NULL) {
+    if (bin->ref_bin != nullptr) {
         Binary* refbin = (Binary*)bin->ref_bin;
 	ASSERT(bin->bin_term == THE_NON_VALUE);
 	if (erts_refc_dectest(&refbin->refc, 0) == 0) {
@@ -598,9 +598,9 @@ void enif_release_binary(ErlNifBinary* bin)
 	}
     }
 #ifdef DEBUG
-    bin->data = NULL;
+    bin->data = nullptr;
     bin->bin_term = THE_NON_VALUE;
-    bin->ref_bin = NULL;
+    bin->ref_bin = nullptr;
 #endif
 }
 
@@ -608,7 +608,7 @@ unsigned char* enif_make_new_binary(ErlNifEnv* env, size_t size,
 				    ERL_NIF_TERM* termp)
 {
     flush_env(env);
-    *termp = new_binary(env->proc, NULL, size);
+    *termp = new_binary(env->proc, nullptr, size);
     cache_env(env);
     return binary_bytes(*termp);
 }
@@ -680,7 +680,7 @@ Eterm enif_make_binary(ErlNifEnv* env, ErlNifBinary* bin)
     if (bin->bin_term != THE_NON_VALUE) {
 	return bin->bin_term;
     }
-    else if (bin->ref_bin != NULL) {
+    else if (bin->ref_bin != nullptr) {
         Binary* bptr = (Binary*)bin->ref_bin;
 	ProcBin* pb;
 	Eterm bin_term;
@@ -699,7 +699,7 @@ Eterm enif_make_binary(ErlNifEnv* env, ErlNifBinary* bin)
 	bin_term = make_binary(pb);	
 	if (erts_refc_read(&bptr->refc, 1) == 1) {
 	    /* Total ownership transfer */
-	    bin->ref_bin = NULL;
+	    bin->ref_bin = nullptr;
 	    bin->bin_term = bin_term;
 	}
 	return bin_term;
@@ -947,18 +947,18 @@ ERL_NIF_TERM enif_make_int64(ErlNifEnv* env, ErlNifSInt64 i)
 {
     Uint* hp;
     Uint need = 0;
-    erts_bld_sint64(NULL, &need, i);
+    erts_bld_sint64(nullptr, &need, i);
     hp = alloc_heap(env, need);
-    return erts_bld_sint64(&hp, NULL, i);
+    return erts_bld_sint64(&hp, nullptr, i);
 }
 
 ERL_NIF_TERM enif_make_uint64(ErlNifEnv* env, ErlNifUInt64 i)
 {
     Uint* hp;
     Uint need = 0;
-    erts_bld_uint64(NULL, &need, i);
+    erts_bld_uint64(nullptr, &need, i);
     hp = alloc_heap(env, need);
-    return erts_bld_uint64(&hp, NULL, i);
+    return erts_bld_uint64(&hp, nullptr, i);
 }
 #endif /* HAVE_INT64 && SIZEOF_LONG != 8 */
 
@@ -1084,7 +1084,7 @@ ERL_NIF_TERM enif_make_string_len(ErlNifEnv* env, const char* string,
 {
     Eterm* hp = alloc_heap(env,len*2);
     ASSERT(encoding == ERL_NIF_LATIN1);
-    return erts_bld_string_n(&hp,NULL,string,len);
+    return erts_bld_string_n(&hp,nullptr,string,len);
 }
 
 ERL_NIF_TERM enif_make_ref(ErlNifEnv* env)
@@ -1208,7 +1208,7 @@ static ErlNifResourceType* find_resource_type(Eterm module, Eterm name)
 	    return type;
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 #define in_area(ptr,start,nbytes) \
@@ -1217,11 +1217,11 @@ static ErlNifResourceType* find_resource_type(Eterm module, Eterm name)
 
 static void close_lib(struct erl_module_nif* lib)
 {
-    ASSERT(lib != NULL);
-    ASSERT(lib->handle != NULL);
+    ASSERT(lib != nullptr);
+    ASSERT(lib->handle != nullptr);
     ASSERT(erts_refc_read(&lib->rt_dtor_cnt,0) == 0);
 
-    if (lib->entry != NULL && lib->entry->unload != NULL) {
+    if (lib->entry != nullptr && lib->entry->unload != nullptr) {
 	ErlNifEnv env;
 	pre_nif_noproc(&env, lib);
 	lib->entry->unload(&env, lib->priv_data);
@@ -1229,22 +1229,22 @@ static void close_lib(struct erl_module_nif* lib)
     }
     if (!erts_is_static_nif(lib->handle))
       erts_sys_ddll_close(lib->handle);
-    lib->handle = NULL;
+    lib->handle = nullptr;
 }
 
 static void steal_resource_type(ErlNifResourceType* type)
 {
     struct erl_module_nif* lib = type->owner;
 
-    if (type->dtor != NULL
+    if (type->dtor != nullptr
 	&& erts_refc_dectest(&lib->rt_dtor_cnt, 0) == 0
-	&& lib->mod == NULL) {
+	&& lib->mod == nullptr) {
 	/* last type with destructor gone, close orphan lib */
 
 	close_lib(lib);
     }
     if (erts_refc_dectest(&lib->rt_cnt, 0) == 0
-	&& lib->mod == NULL) {
+	&& lib->mod == nullptr) {
 	erts_free(ERTS_ALC_T_NIF, lib);
     }
 }
@@ -1260,7 +1260,7 @@ struct opened_resource_type
     ErlNifResourceType* type;
     ErlNifResourceDtor* new_dtor;
 };
-static struct opened_resource_type* opened_rt_list = NULL;
+static struct opened_resource_type* opened_rt_list = nullptr;
 
 ErlNifResourceType*
 enif_open_resource_type(ErlNifEnv* env,
@@ -1270,17 +1270,17 @@ enif_open_resource_type(ErlNifEnv* env,
 			ErlNifResourceFlags flags,
 			ErlNifResourceFlags* tried)
 {
-    ErlNifResourceType* type = NULL;
+    ErlNifResourceType* type = nullptr;
     ErlNifResourceFlags op = flags;
     Eterm module_am, name_am;
 
     ASSERT(erts_smp_thr_progress_is_blocking());
-    ASSERT(module_str == NULL); /* for now... */
+    ASSERT(module_str == nullptr); /* for now... */
     module_am = make_atom(env->mod_nif->mod->module);
     name_am = enif_make_atom(env, name_str);
 
     type = find_resource_type(module_am, name_am);
-    if (type == NULL) {
+    if (type == nullptr) {
 	if (flags & ERL_NIF_RT_CREATE) {
             type = (ErlNifResourceType*)erts_alloc(ERTS_ALC_T_NIF,
 			      sizeof(struct enif_resource_type_t));
@@ -1301,10 +1301,10 @@ enif_open_resource_type(ErlNifEnv* env,
 	    op = ERL_NIF_RT_TAKEOVER;
 	}
 	else {
-	    type = NULL;
+	    type = nullptr;
 	}
     }
-    if (type != NULL) {
+    if (type != nullptr) {
         struct opened_resource_type* ort = (opened_resource_type*)erts_alloc(ERTS_ALC_T_TMP,
 						sizeof(struct opened_resource_type));
 	ort->op = op;
@@ -1313,7 +1313,7 @@ enif_open_resource_type(ErlNifEnv* env,
 	ort->next = opened_rt_list;
 	opened_rt_list = ort;
     }
-    if (tried != NULL) {
+    if (tried != nullptr) {
 	*tried = op;
     }
     return type;
@@ -1339,7 +1339,7 @@ static void commit_opened_resource_types(struct erl_module_nif* lib)
 	type->owner = lib;
 	type->dtor = ort->new_dtor;
 
-	if (type->dtor != NULL) {
+	if (type->dtor != nullptr) {
 	    erts_refc_inc(&lib->rt_dtor_cnt, 1);
 	}
 	erts_refc_inc(&lib->rt_cnt, 1);
@@ -1370,16 +1370,16 @@ static void nif_resource_dtor(Binary* bin)
     ErlNifResourceType* type = resource->type;
     ASSERT(ERTS_MAGIC_BIN_DESTRUCTOR(bin) == &nif_resource_dtor);
 
-    if (type->dtor != NULL) {
+    if (type->dtor != nullptr) {
 	ErlNifEnv env;
 	pre_nif_noproc(&env, type->owner);
 	type->dtor(&env,resource->data);
 	post_nif_noproc(&env);
     }
     if (erts_refc_dectest(&type->refc, 0) == 0) {
-	ASSERT(type->next == NULL);
-	ASSERT(type->owner != NULL);
-	ASSERT(type->owner->mod == NULL);
+	ASSERT(type->next == nullptr);
+	ASSERT(type->owner != nullptr);
+	ASSERT(type->owner->mod == nullptr);
 	steal_resource_type(type);
 	erts_free(ERTS_ALC_T_NIF, type);
     }
@@ -1487,10 +1487,10 @@ void* enif_dlopen(const char* lib,
 	}
     }
     else {
-	if (err_handler != NULL) {
+	if (err_handler != nullptr) {
 	    (*err_handler)(err_arg, errdesc.str);
 	}
-	handle = NULL;
+	handle = nullptr;
     }
     erts_sys_ddll_free_error(&errdesc);
     return handle;
@@ -1502,11 +1502,11 @@ void* enif_dlsym(void* handle, const char* symbol,
     ErtsSysDdllError errdesc = ERTS_SYS_DDLL_ERROR_INIT;
     void* ret;
     if (erts_sys_ddll_sym2(handle, symbol, &ret, &errdesc) != ERL_DE_NO_ERROR) {
-	if (err_handler != NULL) {
+	if (err_handler != nullptr) {
 	    (*err_handler)(err_arg, errdesc.str);
 	}
 	erts_sys_ddll_free_error(&errdesc);
-	return NULL;
+	return nullptr;
     }
     return ret;
 }
@@ -1604,7 +1604,7 @@ erts_destroy_nif_export(void *nif_export)
 /*
  * Initialize a NifExport struct. Create it if needed and store it in the
  * proc. The direct_fp function is what will be invoked by op_call_nif, and
- * the indirect_fp function, if not NULL, is what the direct_fp function
+ * the indirect_fp function, if not nullptr, is what the direct_fp function
  * will call. If the allocated NifExport isn't enough to hold all of argv,
  * allocate a larger one. Save MFA and registers only if the need_save
  * parameter is true.
@@ -1677,8 +1677,8 @@ restore_nif_mfa(Process* proc, NifExport* ep, int exception)
  * switch the process off a dirty scheduler thread and back onto a regular
  * scheduler thread, and then return the result from the dirty NIF. It also
  * restores the original NIF MFA when necessary based on the value of
- * ep->fp set by execute_dirty_nif via init_nif_sched_data -- non-NULL
- * means restore, NULL means do not restore.
+ * ep->fp set by execute_dirty_nif via init_nif_sched_data -- non-nullptr
+ * means restore, nullptr means do not restore.
  */
 static ERL_NIF_TERM
 dirty_nif_finalizer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
@@ -1728,22 +1728,22 @@ execute_dirty_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
     ASSERT(ERTS_SCHEDULER_IS_DIRTY(env->proc->scheduler_data));
 
     /*
-     * Set ep->fp to NULL before the native call so we know later whether it scheduled another NIF for execution
+     * Set ep->fp to nullptr before the native call so we know later whether it scheduled another NIF for execution
      */
     ep = (NifExport*) ERTS_PROC_GET_NIF_TRAP_EXPORT(proc);
     ASSERT(ep);
-    ep->fp = NULL;
+    ep->fp = nullptr;
     result = (*fp)(env, argc, argv);
     erts_smp_atomic32_read_band_mb(&proc->state,
 				   ~(ERTS_PSFLG_DIRTY_CPU_PROC
 				     |ERTS_PSFLG_DIRTY_IO_PROC
 				     |ERTS_PSFLG_DIRTY_CPU_PROC_IN_Q
 				     |ERTS_PSFLG_DIRTY_IO_PROC_IN_Q));
-    if (erts_refc_dectest(&env->mod_nif->rt_dtor_cnt, 0) == 0 && env->mod_nif->mod == NULL)
+    if (erts_refc_dectest(&env->mod_nif->rt_dtor_cnt, 0) == 0 && env->mod_nif->mod == nullptr)
 	close_lib(env->mod_nif);
     /*
      * If no more NIFs were scheduled by the native call via
-     * enif_schedule_nif(), then ep->fp will still be NULL as set above, in
+     * enif_schedule_nif(), then ep->fp will still be nullptr as set above, in
      * which case we need to restore the original NIF calling
      * context. Reuse fp essentially as a boolean for this_, passing it to
      * init_nif_sched_data below. Both dirty_nif_exception and
@@ -1753,13 +1753,13 @@ execute_dirty_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
     ep = (NifExport*) ERTS_PROC_GET_NIF_TRAP_EXPORT(proc);
     ASSERT(ep);
     if (ep->fp)
-	fp = NULL;
+	fp = nullptr;
     if (is_non_value(result)) {
 	if (proc->freason != TRAP) {
 	    ASSERT(proc->freason == BADARG);
 	    return init_nif_sched_data(env, dirty_nif_exception, fp, 0, argc, argv);
 	} else {
-	    if (ep->fp == NULL)
+	    if (ep->fp == nullptr)
 		restore_nif_mfa(proc, ep, 1);
 	    return result;
 	}
@@ -1804,7 +1804,7 @@ schedule_dirty_nif(ErlNifEnv* env, int flags, int argc, const ERL_NIF_TERM argv[
     }
     erts_refc_inc(&env->mod_nif->rt_dtor_cnt, 1);
     ep = (NifExport*) ERTS_PROC_GET_NIF_TRAP_EXPORT(proc);
-    need_save = (ep == NULL || is_non_value(ep->saved_mfa[0]));
+    need_save = (ep == nullptr || is_non_value(ep->saved_mfa[0]));
     return init_nif_sched_data(env, execute_dirty_nif, fp, need_save, argc, argv);
 }
 
@@ -1837,16 +1837,16 @@ execute_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
     ep = (NifExport*) ERTS_PROC_GET_NIF_TRAP_EXPORT(proc);
     ASSERT(ep);
-    ep->fp = NULL;
+    ep->fp = nullptr;
     result = (*fp)(env, argc, argv);
     ep = (NifExport*) ERTS_PROC_GET_NIF_TRAP_EXPORT(proc);
     ASSERT(ep);
     /*
      * If no NIFs were scheduled by the native call via
-     * enif_schedule_nif(), then ep->fp will still be NULL as set above, in
+     * enif_schedule_nif(), then ep->fp will still be nullptr as set above, in
      * which case we need to restore the original NIF MFA.
      */
-    if (ep->fp == NULL)
+    if (ep->fp == nullptr)
 	restore_nif_mfa(proc, ep, is_non_value(result) && proc->freason != TRAP);
     return result;
 }
@@ -1868,7 +1868,7 @@ enif_schedule_nif(ErlNifEnv* env, const char* fun_name, int flags,
 	return fun_name_atom;
 
     ep = (NifExport*) ERTS_PROC_GET_NIF_TRAP_EXPORT(proc);
-    need_save = (ep == NULL || is_non_value(ep->saved_mfa[0]));
+    need_save = (ep == nullptr || is_non_value(ep->saved_mfa[0]));
 
     if (flags) {
 #ifdef ERTS_DIRTY_SCHEDULERS
@@ -2113,7 +2113,7 @@ static BeamInstr** get_func_pp(BeamInstr* mod_code, Eterm f_atom, unsigned arity
 	    return (BeamInstr**) &mod_code[MI_FUNCTIONS+j];
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 static Eterm mkatom(const char *str)
@@ -2125,18 +2125,18 @@ static struct tainted_module_t
 {
     struct tainted_module_t* next;
     Eterm module_atom;
-}*first_tainted_module = NULL;
+}*first_tainted_module = nullptr;
 
 static void add_taint(Eterm mod_atom)
 {
     struct tainted_module_t* t;
-    for (t=first_tainted_module ; t!=NULL; t=t->next) {
+    for (t=first_tainted_module ; t!=nullptr; t=t->next) {
 	if (t->module_atom == mod_atom) {
 	    return;
 	}
     }
     t = (tainted_module_t*)erts_alloc_fnf(ERTS_ALC_T_TAINT, sizeof(*t));
-    if (t != NULL) {
+    if (t != nullptr) {
 	t->module_atom = mod_atom;
 	t->next = first_tainted_module;
 	first_tainted_module = t;
@@ -2149,11 +2149,11 @@ Eterm erts_nif_taints(Process* p)
     unsigned cnt = 0;
     Eterm list = NIL;
     Eterm* hp;
-    for (t=first_tainted_module ; t!=NULL; t=t->next) {
+    for (t=first_tainted_module ; t!=nullptr; t=t->next) {
 	cnt++;
     }
     hp = HAlloc(p,cnt*2);
-    for (t=first_tainted_module ; t!=NULL; t=t->next) {
+    for (t=first_tainted_module ; t!=nullptr; t=t->next) {
 	list = CONS(hp, t->module_atom, list);
 	hp += 2;
     }
@@ -2164,7 +2164,7 @@ void erts_print_nif_taints(int to, void* to_arg)
 {
     struct tainted_module_t* t;
     const char* delim = "";
-    for (t=first_tainted_module ; t!=NULL; t=t->next) {
+    for (t=first_tainted_module ; t!=nullptr; t=t->next) {
 	const Atom* atom = atom_tab(atom_val(t->module_atom));
 	erts_print(to,to_arg,"%s%.*s", delim, atom->len, atom->name);
 	delim = ",";
@@ -2178,7 +2178,7 @@ static Eterm load_nif_error(Process* p, const char* atom, const char* format, ..
     erts_dsprintf_buf_t* dsbufp = erts_create_tmp_dsbuf(0);
     Eterm ret;
     Eterm* hp;
-    Eterm** hpp = NULL;
+    Eterm** hpp = nullptr;
     Uint sz = 0;
     Uint* szp = &sz;
     va_list arglist;   
@@ -2191,12 +2191,12 @@ static Eterm load_nif_error(Process* p, const char* atom, const char* format, ..
 	Eterm txt = erts_bld_string_n(hpp, &sz, dsbufp->str, dsbufp->str_len);
 	ret = erts_bld_tuple(hpp, szp, 2, am_error,
 			     erts_bld_tuple(hpp, szp, 2, mkatom(atom), txt));
-	if (hpp != NULL) {
+	if (hpp != nullptr) {
 	    break;
 	}
 	hp = HAlloc(p,sz);
 	hpp = &hp;
-	szp = NULL;
+	szp = nullptr;
     }
     erts_destroy_tmp_dsbuf(dsbufp);
     return ret;
@@ -2236,10 +2236,10 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
     static const char bad_lib[] = "bad_lib";
     static const char reload[] = "reload";
     static const char upgrade[] = "upgrade";
-    char* lib_name = NULL;
-    void* handle = NULL;
-    void* init_func = NULL;
-    ErlNifEntry* entry = NULL;
+    char* lib_name = nullptr;
+    void* handle = nullptr;
+    void* init_func = nullptr;
+    ErlNifEntry* entry = nullptr;
     ErlNifEnv env;
     int i, err, encoding;
     Module* mod;
@@ -2250,7 +2250,7 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
     ErtsSysDdllError errdesc = ERTS_SYS_DDLL_ERROR_INIT;
     Eterm ret = am_ok;
     int veto;
-    struct erl_module_nif* lib = NULL;
+    struct erl_module_nif* lib = nullptr;
     int reload_warning = 0;
 
     encoding = erts_get_native_filename_encoding();
@@ -2259,9 +2259,9 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
         /* since lib_name is used in error messages */
         encoding = ERL_FILENAME_UTF8;
     }
-    lib_name = erts_convert_filename_to_encoding(BIF_ARG_1, NULL, 0,
+    lib_name = erts_convert_filename_to_encoding(BIF_ARG_1, nullptr, 0,
                                                  ERTS_ALC_T_TMP, 1, 0, encoding,
-						 NULL, 0);
+						 nullptr, 0);
     if (!lib_name) {
 	BIF_ERROR(BIF_P, BADARG);
     }
@@ -2277,20 +2277,20 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
     erts_smp_thr_progress_block();
 
     /* Find calling module */
-    ASSERT(BIF_P->current != NULL);
+    ASSERT(BIF_P->current != nullptr);
     ASSERT(BIF_P->current[0] == am_erlang
 	   && BIF_P->current[1] == am_load_nif 
 	   && BIF_P->current[2] == 2);
     caller = find_function_from_pc(BIF_P->cp);
-    ASSERT(caller != NULL);
+    ASSERT(caller != nullptr);
     mod_atom = caller[0];
     ASSERT(is_atom(mod_atom));
     mod=erts_get_module(mod_atom, erts_active_code_ix());
-    ASSERT(mod != NULL);
+    ASSERT(mod != nullptr);
 
     mod_atomp = atom_tab(atom_val(mod_atom));
     init_func = (void*)erts_static_nif_get_nif_init((char*)mod_atomp->name, mod_atomp->len);
-    if (init_func != NULL)
+    if (init_func != nullptr)
       handle = init_func;
 
     if (!in_area(caller, mod->curr.code, mod->curr.code_length)) {
@@ -2299,24 +2299,24 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
 	ret = load_nif_error(BIF_P, "old_code", "Calling load_nif from old "
 			     "module '%T' not allowed", mod_atom);
     }    
-    else if (init_func == NULL &&
+    else if (init_func == nullptr &&
 	     (err=erts_sys_ddll_open(lib_name, &handle, &errdesc)) != ERL_DE_NO_ERROR) {
 	const char slogan[] = "Failed to load NIF library";
-	if (strstr(errdesc.str, lib_name) != NULL) {
+	if (strstr(errdesc.str, lib_name) != nullptr) {
 	    ret = load_nif_error(BIF_P, "load_failed", "%s: '%s'", slogan, errdesc.str);
 	}
 	else {
 	    ret = load_nif_error(BIF_P, "load_failed", "%s %s: '%s'", slogan, lib_name, errdesc.str);
 	}
     }
-    else if (init_func == NULL &&
+    else if (init_func == nullptr &&
 	     erts_sys_ddll_load_nif_init(handle, &init_func, &errdesc) != ERL_DE_NO_ERROR) {
 	ret  = load_nif_error(BIF_P, bad_lib, "Failed to find library init"
 			      " function: '%s'", errdesc.str);
 	
     }
     else if ((add_taint(mod_atom),
-              (entry = (ErlNifEntry*)erts_sys_ddll_call_nif_init(init_func)) == NULL)) {
+              (entry = (ErlNifEntry*)erts_sys_ddll_call_nif_init(init_func)) == nullptr)) {
 	ret = load_nif_error(BIF_P, bad_lib, "Library init-call unsuccessful");
     }
     else if (entry->major < ERL_NIF_MIN_REQUIRED_MAJOR_VERSION_ON_LOAD
@@ -2348,7 +2348,7 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
 	for (i=0; i < entry->num_of_funcs && ret==am_ok; i++) {
 	    BeamInstr** code_pp;
 	    if (!erts_atom_get(f->name, sys_strlen(f->name), &f_atom, ERTS_ATOM_ENC_LATIN1)
-		|| (code_pp = get_func_pp(mod->curr.code, f_atom, f->arity))==NULL) {
+		|| (code_pp = get_func_pp(mod->curr.code, f_atom, f->arity))==nullptr) {
 		ret = load_nif_error(BIF_P,bad_lib,"Function not found %T:%s/%u",
 				     mod_atom, f->name, f->arity);
 	    }
@@ -2398,10 +2398,10 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
     lib->entry = entry;
     erts_refc_init(&lib->rt_cnt, 0);
     erts_refc_init(&lib->rt_dtor_cnt, 0);
-    ASSERT(opened_rt_list == NULL);
+    ASSERT(opened_rt_list == nullptr);
     lib->mod = mod;
     env.mod_nif = lib;
-    if (mod->curr.nif != NULL) { /*************** Reload ******************/
+    if (mod->curr.nif != nullptr) { /*************** Reload ******************/
 	/*
 	 * Repeated load_nif calls from same Erlang module instance ("reload")
 	 * is deprecated and was only ment as a development feature not to
@@ -2411,8 +2411,8 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
 	ErlNifFunc* old_func;
         lib->priv_data = mod->curr.nif->priv_data;
 
-	ASSERT(mod->curr.nif->entry != NULL);
-	if (entry->reload == NULL) {
+	ASSERT(mod->curr.nif->entry != nullptr);
+	if (entry->reload == nullptr) {
 	    ret = load_nif_error(BIF_P,reload,"Reload not supported by this_ NIF library.");
 	    goto error;
 	}
@@ -2444,16 +2444,16 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
 	}
 	else {
 	    commit_opened_resource_types(lib);
-	    mod->curr.nif->entry = NULL; /* to prevent 'unload' callback */
+	    mod->curr.nif->entry = nullptr; /* to prevent 'unload' callback */
 	    erts_unload_nif(mod->curr.nif);
 	    reload_warning = 1;
 	}
     }
     else {
-	lib->priv_data = NULL;
-	if (mod->old.nif != NULL) { /**************** Upgrade ***************/
+	lib->priv_data = nullptr;
+	if (mod->old.nif != nullptr) { /**************** Upgrade ***************/
 	    void* prev_old_data = mod->old.nif->priv_data;
-	    if (entry->upgrade == NULL) {
+	    if (entry->upgrade == nullptr) {
 		ret = load_nif_error(BIF_P, upgrade, "Upgrade not supported by this_ NIF library.");
 		goto error;
 	    }
@@ -2467,7 +2467,7 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
 	    else
 		commit_opened_resource_types(lib);
 	}
-	else if (entry->load != NULL) { /********* Initial load ***********/
+	else if (entry->load != nullptr) { /********* Initial load ***********/
 	    erts_pre_nif(&env, BIF_P, lib);
 	    veto = entry->load(&env, &lib->priv_data, BIF_ARG_2);
 	    erts_post_nif(&env);
@@ -2521,10 +2521,10 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
     error:
 	rollback_opened_resource_types();
 	ASSERT(ret != am_ok);
-        if (lib != NULL) {
+        if (lib != nullptr) {
 	    erts_free(ERTS_ALC_T_NIF, lib);
 	}
-	if (handle != NULL && !erts_is_static_nif(handle)) {
+	if (handle != nullptr && !erts_is_static_nif(handle)) {
 	    erts_sys_ddll_close(handle);
 	}
 	erts_sys_ddll_free_error(&errdesc);
@@ -2553,8 +2553,8 @@ erts_unload_nif(struct erl_module_nif* lib)
     ErlNifResourceType* rt;
     ErlNifResourceType* next;
     ASSERT(erts_smp_thr_progress_is_blocking());
-    ASSERT(lib != NULL);
-    ASSERT(lib->mod != NULL);
+    ASSERT(lib != nullptr);
+    ASSERT(lib->mod != nullptr);
     for (rt = resource_type_list.next;
 	 rt != &resource_type_list;
 	 rt = next) {
@@ -2563,10 +2563,10 @@ erts_unload_nif(struct erl_module_nif* lib)
 	if (rt->owner == lib) {
 	    rt->next->prev = rt->prev;
 	    rt->prev->next = rt->next;
-	    rt->next = NULL;
-	    rt->prev = NULL;
+	    rt->next = nullptr;
+	    rt->prev = nullptr;
 	    if (erts_refc_dectest(&rt->refc, 0) == 0) {
-		if (rt->dtor != NULL) {
+		if (rt->dtor != nullptr) {
 		    erts_refc_dec(&lib->rt_dtor_cnt, 0);
 		}
 		erts_refc_dec(&lib->rt_cnt, 0);
@@ -2584,15 +2584,15 @@ erts_unload_nif(struct erl_module_nif* lib)
     else {
 	ASSERT(erts_refc_read(&lib->rt_cnt, 1) > 0);
     }
-    lib->mod = NULL;   /* orphan lib */
+    lib->mod = nullptr;   /* orphan lib */
 }	
 
 void erl_nif_init()
 {
     resource_type_list.next = &resource_type_list;
     resource_type_list.prev = &resource_type_list;
-    resource_type_list.dtor = NULL;
-    resource_type_list.owner = NULL;
+    resource_type_list.dtor = nullptr;
+    resource_type_list.owner = nullptr;
     resource_type_list.module = THE_NON_VALUE;
     resource_type_list.name = THE_NON_VALUE;
 }
@@ -2663,7 +2663,7 @@ static void get_string_maybe(ErlNifEnv *env, const ERL_NIF_TERM term,
 
     if (!enif_inspect_iolist_as_binary(env, term, &str_bin) ||
         str_bin.size > bufsiz) {
-        *ptr = NULL;
+        *ptr = nullptr;
     } else {
         memcpy(buf, (char *) str_bin.data, str_bin.size);
         buf[str_bin.size] = '\0';
@@ -2696,13 +2696,13 @@ ERL_NIF_TERM erl_nif_user_trace_i4s4(ErlNifEnv* env, int argc,
 {
     DTRACE_CHARBUF(procbuf, 32 + 1);
     DTRACE_CHARBUF(user_tagbuf, MESSAGE_BUFSIZ + 1);
-    char *utbuf = NULL;
+    char *utbuf = nullptr;
     ErlNifSInt64 i1, i2, i3, i4;
     DTRACE_CHARBUF(messagebuf1, MESSAGE_BUFSIZ + 1);
     DTRACE_CHARBUF(messagebuf2, MESSAGE_BUFSIZ + 1);
     DTRACE_CHARBUF(messagebuf3, MESSAGE_BUFSIZ + 1);
     DTRACE_CHARBUF(messagebuf4, MESSAGE_BUFSIZ + 1);
-    char *mbuf1 = NULL, *mbuf2 = NULL, *mbuf3 = NULL, *mbuf4 = NULL;
+    char *mbuf1 = nullptr, *mbuf2 = nullptr, *mbuf3 = nullptr, *mbuf4 = nullptr;
     
     if (DTRACE_ENABLED(user_trace_i4s4)) {
 	dtrace_nifenv_str(env, procbuf);
@@ -2759,13 +2759,13 @@ ERL_NIF_TERM erl_nif_user_trace_n(ErlNifEnv* env, int argc,
 {
     DTRACE_CHARBUF(procbuf, 32 + 1);
     DTRACE_CHARBUF(user_tagbuf, MESSAGE_BUFSIZ + 1);
-    char *utbuf = NULL;
+    char *utbuf = nullptr;
     ErlNifSInt64 i1, i2, i3, i4;
     DTRACE_CHARBUF(messagebuf1, MESSAGE_BUFSIZ + 1);
     DTRACE_CHARBUF(messagebuf2, MESSAGE_BUFSIZ + 1);
     DTRACE_CHARBUF(messagebuf3, MESSAGE_BUFSIZ + 1);
     DTRACE_CHARBUF(messagebuf4, MESSAGE_BUFSIZ + 1);
-    char *mbuf1 = NULL, *mbuf2 = NULL, *mbuf3 = NULL, *mbuf4 = NULL;
+    char *mbuf1 = nullptr, *mbuf2 = nullptr, *mbuf3 = nullptr, *mbuf4 = nullptr;
     ErlNifSInt64 label = 0;
 
     if (! enif_get_int64(env, argv[0], &label) || label < 0 || label > 1023) {

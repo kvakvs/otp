@@ -575,7 +575,7 @@ void erts_mtrace_init(char *receiver, char *nodename)
     char pid[21]; /* enough for a 64 bit number */
 
     socket_desc = ERTS_SOCK_INVALID_SOCKET;
-    erts_mtrace_enabled = receiver != NULL;
+    erts_mtrace_enabled = receiver != nullptr;
 
     if (erts_mtrace_enabled) {
 	unsigned a, b, c, d, p;

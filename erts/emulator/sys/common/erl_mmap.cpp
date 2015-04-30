@@ -164,10 +164,10 @@ static ErtsMMapOp mmap_ops[ERTS_MMAP_OP_RINGBUF_SZ];
 	int ix__;						\
 	for (ix__ = 0; ix__ < ERTS_MMAP_OP_RINGBUF_SZ; ix__++) {\
 	    mmap_ops[ix__].type = ERTS_OP_TYPE_NONE;		\
-	    mmap_ops[ix__].result = NULL;			\
+	    mmap_ops[ix__].result = nullptr;			\
 	    mmap_ops[ix__].in_size = 0;				\
 	    mmap_ops[ix__].out_size = 0;			\
-	    mmap_ops[ix__].old_ptr = NULL;			\
+	    mmap_ops[ix__].old_ptr = nullptr;			\
 	    mmap_ops[ix__].old_size = 0;			\
 	}							\
 	mmap_op_ix = ERTS_MMAP_OP_RINGBUF_SZ-1;			\
@@ -180,10 +180,10 @@ static ErtsMMapOp mmap_ops[ERTS_MMAP_OP_RINGBUF_SZ];
 	    mmap_op_ix = 0;					\
 	ix__ = mmap_op_ix;					\
 	mmap_ops[ix__].type = ERTS_OP_TYPE_MMAP;		\
-	mmap_ops[ix__].result = NULL;				\
+	mmap_ops[ix__].result = nullptr;				\
 	mmap_ops[ix__].in_size = (SZ);				\
 	mmap_ops[ix__].out_size = 0;				\
-	mmap_ops[ix__].old_ptr = NULL;				\
+	mmap_ops[ix__].old_ptr = nullptr;				\
 	mmap_ops[ix__].old_size = 0;				\
     } while (0)
 
@@ -209,7 +209,7 @@ static ErtsMMapOp mmap_ops[ERTS_MMAP_OP_RINGBUF_SZ];
 	    mmap_op_ix = 0;					\
 	ix__ = mmap_op_ix;					\
 	mmap_ops[ix__].type = ERTS_OP_TYPE_MUNMAP;		\
-	mmap_ops[ix__].result = NULL;				\
+	mmap_ops[ix__].result = nullptr;				\
 	mmap_ops[ix__].in_size = 0;				\
 	mmap_ops[ix__].out_size = 0;				\
 	mmap_ops[ix__].old_ptr = (PTR);				\
@@ -230,7 +230,7 @@ static ErtsMMapOp mmap_ops[ERTS_MMAP_OP_RINGBUF_SZ];
 	    mmap_op_ix = 0;					\
 	ix__ = mmap_op_ix;					\
 	mmap_ops[ix__].type = ERTS_OP_TYPE_MREMAP;		\
-	mmap_ops[ix__].result = NULL;				\
+	mmap_ops[ix__].result = nullptr;				\
 	mmap_ops[ix__].in_size = (IN_SZ);			\
 	mmap_ops[ix__].out_size = (OLD_SZ);			\
 	mmap_ops[ix__].old_ptr = (OLD_PTR);			\
@@ -256,10 +256,10 @@ static ErtsMMapOp mmap_ops[ERTS_MMAP_OP_RINGBUF_SZ];
     do {							\
 	int ix__ = mmap_op_ix;					\
 	mmap_ops[ix__].type = ERTS_OP_TYPE_NONE;		\
-	mmap_ops[ix__].result = NULL;				\
+	mmap_ops[ix__].result = nullptr;				\
 	mmap_ops[ix__].in_size = 0;				\
 	mmap_ops[ix__].out_size = 0;				\
-	mmap_ops[ix__].old_ptr = NULL;				\
+	mmap_ops[ix__].old_ptr = nullptr;				\
 	mmap_ops[ix__].old_size = 0;				\
 	if (--mmap_op_ix < 0)					\
 	    mmap_op_ix = ERTS_MMAP_OP_RINGBUF_SZ-1;		\
@@ -423,7 +423,7 @@ add_unused_free_desc_area(void)
 {
     char *ptr;
     if (!mmap_state.desc.unused_start)
-	return NULL;
+	return nullptr;
 
     ERTS_MMAP_ASSERT(mmap_state.desc.unused_end);
     ERTS_MMAP_ASSERT(ERTS_PAGEALIGNED_SIZE
@@ -435,7 +435,7 @@ add_unused_free_desc_area(void)
     if ((mmap_state.desc.unused_end - ptr) >= ERTS_PAGEALIGNED_SIZE)
 	mmap_state.desc.unused_start = ptr;
     else
-	mmap_state.desc.unused_end = mmap_state.desc.unused_start = NULL;
+	mmap_state.desc.unused_end = mmap_state.desc.unused_start = nullptr;
 
     ERTS_MMAP_ASSERT(mmap_state.desc.free_list);
     return (ErtsFreeSegDesc *) mmap_state.desc.free_list;
@@ -449,7 +449,7 @@ alloc_desc(void)
     if (!res) {
 	res = add_unused_free_desc_area();
 	if (!res)
-	    return NULL;
+	    return nullptr;
     }
     mmap_state.desc.free_list = res->start;
     ASSERT(mmap_state.no.free_segs.curr < mmap_state.no.free_seg_descs);
@@ -713,7 +713,7 @@ rbt_delete(RBTree* tree, RBTNode* del)
     HARD_CHECK_IS_MEMBER(tree->root, del);
     HARD_CHECK_TREE(tree, 0);
 
-    null_x.parent_and_color = parent_and_color(NULL, !RED_FLG);
+    null_x.parent_and_color = parent_and_color(nullptr, !RED_FLG);
 
     /* Remove node from tree... */
 
@@ -732,7 +732,7 @@ rbt_delete(RBTree* tree, RBTNode* del)
     }
     else if (spliced_is_black) {
 	x = &null_x;
-	x->right = x->left = NULL;
+	x->right = x->left = nullptr;
 	x->parent_and_color = parent_and_color(papa_y, !RED_FLG);
 	y->left = x;
     }
@@ -857,16 +857,16 @@ rbt_delete(RBTree* tree, RBTNode* del)
         papa_x = parent(&null_x);
 	if (papa_x) {
 	    if (papa_x->left == &null_x)
-		papa_x->left = NULL;
+		papa_x->left = nullptr;
 	    else {
 		RBT_ASSERT(papa_x->right == &null_x);
-		papa_x->right = NULL;
+		papa_x->right = nullptr;
 	    }
 	    RBT_ASSERT(!null_x.left);
 	    RBT_ASSERT(!null_x.right);
 	}
 	else if (tree->root == &null_x) {
-	    tree->root = NULL;
+	    tree->root = nullptr;
 	    RBT_ASSERT(!null_x.left);
 	    RBT_ASSERT(!null_x.right);
 	}
@@ -879,7 +879,7 @@ static void
 rbt_insert(RBTree* tree, RBTNode* node)
 {
 #ifdef RBT_DEBUG
-    ErtsFreeSegDesc *dbg_under=NULL, *dbg_over=NULL;
+    ErtsFreeSegDesc *dbg_under=nullptr, *dbg_over=nullptr;
 #endif
     ErtsFreeSegDesc* desc = node_to_desc(tree->order, node);
     char* seg_addr = desc->start;
@@ -887,11 +887,11 @@ rbt_insert(RBTree* tree, RBTNode* node)
 
     HARD_CHECK_TREE(tree, 0);
 
-    node->left	= NULL;
-    node->right	= NULL;
+    node->left	= nullptr;
+    node->right	= nullptr;
 
     if (!tree->root) {
-	node->parent_and_color = parent_and_color(NULL, !RED_FLG);
+	node->parent_and_color = parent_and_color(nullptr, !RED_FLG);
 	tree->root = node;
     }
     else {
@@ -1047,7 +1047,7 @@ static RBTNode* rbt_prev_node(RBTNode* node)
         if (parent(x)->right == x)
             return parent(x);
     }
-    return NULL;
+    return nullptr;
 }
 static RBTNode* rbt_next_node(RBTNode* node)
 {
@@ -1061,7 +1061,7 @@ static RBTNode* rbt_next_node(RBTNode* node)
         if (parent(x)->left == x)
             return parent(x);
     }
-    return NULL;
+    return nullptr;
 }
 #endif /* RBT_DEBUG || HARD_DEBUG_MSEG */
 
@@ -1080,9 +1080,9 @@ static ErtsFreeSegDesc* lookup_free_seg(ErtsFreeSegMap*, SWord sz);
 
 static void init_free_seg_map(ErtsFreeSegMap* map, enum SortOrder order)
 {
-    map->atree.root = NULL;
+    map->atree.root = nullptr;
     map->atree.order = ADDR_ORDER;
-    map->stree.root = NULL;
+    map->stree.root = nullptr;
     map->stree.order = order;
     map->nseg = 0;
 }
@@ -1095,8 +1095,8 @@ static void adjacent_free_seg(ErtsFreeSegMap* map, char* start, char* end,
 {
     RBTNode* x = map->atree.root;
 
-    *under = NULL;
-    *over = NULL;
+    *under = nullptr;
+    *over = nullptr;
     while (x) {
 	if (start < anode_to_desc(x)->start) {
             RBT_ASSERT(end <= anode_to_desc(x)->start);
@@ -1163,7 +1163,7 @@ static void delete_free_seg(ErtsFreeSegMap* map, ErtsFreeSegDesc* desc)
 static ErtsFreeSegDesc* lookup_free_seg(ErtsFreeSegMap* map, SWord need_sz)
 {
     RBTNode* x = map->stree.root;
-    ErtsFreeSegDesc* best_desc = NULL;
+    ErtsFreeSegDesc* best_desc = nullptr;
     const enum SortOrder order = map->stree.order;
 
     while (x) {
@@ -1192,8 +1192,8 @@ static void build_free_seg_tuple(RBTNode* node, void* arg)
 {
     struct build_arg_t* a = (struct build_arg_t*)arg;
     ErtsFreeSegDesc* desc = anode_to_desc(node);
-    Eterm start= erts_bld_uword(&a->hp, NULL, (UWord)desc->start);
-    Eterm end = erts_bld_uword(&a->hp, NULL, (UWord)desc->end);
+    Eterm start= erts_bld_uword(&a->hp, nullptr, (UWord)desc->start);
+    Eterm end = erts_bld_uword(&a->hp, nullptr, (UWord)desc->end);
     Eterm tpl = TUPLE2(a->hp, start, end);
 
     a->hp += 3;
@@ -1250,10 +1250,10 @@ os_mmap(void *hint_ptr, UWord size, int try_superalign)
 	res = mmap((void *) hint_ptr, size, ERTS_MMAP_PROT,
 		   ERTS_MMAP_FLAGS, ERTS_MMAP_FD, 0);
     if (res == MAP_FAILED)
-	return NULL;
+	return nullptr;
     return res;
 #elif HAVE_VIRTUALALLOC
-    return (void *) VirtualAlloc(NULL, (SIZE_T) size,
+    return (void *) VirtualAlloc(nullptr, (SIZE_T) size,
 				 MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
 #else
 #  error "missing mmap() or similar"
@@ -1295,11 +1295,11 @@ os_mremap(void *ptr, UWord old_size, UWord new_size, int try_superalign)
 #if HAVE_MREMAP
     new_seg = mremap(ptr, (size_t) old_size,
 #  if defined(__NetBSD__)
-		     NULL,
+		     nullptr,
 #  endif
 		     (size_t) new_size, ERTS_MREMAP_FLAGS);
     if (new_seg == (void *) MAP_FAILED)
-	return NULL;
+	return nullptr;
     return new_seg;
 #else
 #  error "missing mremap() or similar"
@@ -1342,7 +1342,7 @@ os_mmap_virtual(char *ptr, UWord size)
     void *res = mmap((void *) ptr, (size_t) size, ERTS_MMAP_VIRTUAL_PROT,
 		     ERTS_MMAP_VIRTUAL_FLAGS, ERTS_MMAP_FD, 0);
     if (res == (void *) MAP_FAILED)
-	return NULL;
+	return nullptr;
     return res;
 }
 
@@ -1395,7 +1395,7 @@ alloc_desc_insert_free_seg(ErtsFreeSegMap *map, char* start, char* end)
 
 #if ERTS_HAVE_OS_MMAP
     if (!mmap_state.no_os_mmap) {
-        ptr = os_mmap(mmap_state.desc.new_area_hint, ERTS_PAGEALIGNED_SIZE, 0);
+        ptr = (char*)os_mmap(mmap_state.desc.new_area_hint, ERTS_PAGEALIGNED_SIZE, 0);
         if (ptr) {
             mmap_state.desc.new_area_hint = ptr+ERTS_PAGEALIGNED_SIZE;
             ERTS_MMAP_SIZE_OS_INC(ERTS_PAGEALIGNED_SIZE);
@@ -1417,7 +1417,7 @@ alloc_desc_insert_free_seg(ErtsFreeSegMap *map, char* start, char* end)
 	if (mmap_state.reserve_physical(desc->start, ERTS_PAGEALIGNED_SIZE))
 	    ERTS_MMAP_SIZE_SC_SUA_INC(ERTS_PAGEALIGNED_SIZE);
 	else
-	    desc = NULL;
+	    desc = nullptr;
 	
     }
     else {
@@ -1427,7 +1427,7 @@ alloc_desc_insert_free_seg(ErtsFreeSegMap *map, char* start, char* end)
 	    if (mmap_state.reserve_physical(desc->start, ERTS_PAGEALIGNED_SIZE))
 		ERTS_MMAP_SIZE_SC_SA_INC(ERTS_PAGEALIGNED_SIZE);
 	    else
-		desc = NULL;
+		desc = nullptr;
 	}
     }
     if (desc) {
@@ -1577,7 +1577,7 @@ erts_mmap(Uint32 flags, UWord *sizep)
 		if (org_start != seg) {
 		    ERTS_MMAP_ASSERT(org_start < seg);
 		    resize_free_seg(&mmap_state.sua.map, desc, org_start, seg);
-		    desc = NULL;
+		    desc = nullptr;
 		}
 		if (end != org_end) {
 		    UWord ad_sz = 0;
@@ -1604,13 +1604,13 @@ erts_mmap(Uint32 flags, UWord *sizep)
     /* Map using OS primitives */
     if (!(ERTS_MMAPFLG_SUPERCARRIER_ONLY & flags) && !mmap_state.no_os_mmap) {
 	if (!(ERTS_MMAPFLG_SUPERALIGNED & flags)) {
-	    seg = os_mmap(NULL, asize, 0);
+            seg = (char*)os_mmap(nullptr, asize, 0);
 	    if (!seg)
 		goto failure;
 	}
 	else {
 	    asize = ERTS_SUPERALIGNED_CEILING(*sizep);
-	    seg = os_mmap(NULL, asize, 1);
+            seg = (char*)os_mmap(nullptr, asize, 1);
 	    if (!seg)
 		goto failure;
 
@@ -1620,7 +1620,7 @@ erts_mmap(Uint32 flags, UWord *sizep)
 
 		os_munmap(seg, asize);
 
-		ptr = os_mmap(NULL, asize + ERTS_SUPERALIGNED_SIZE, 1);
+                ptr = (char*)os_mmap(nullptr, asize + ERTS_SUPERALIGNED_SIZE, 1);
 		if (!ptr)
 		    goto failure;
 
@@ -1642,9 +1642,9 @@ erts_mmap(Uint32 flags, UWord *sizep)
     }
 failure:
 #endif
-    ERTS_MMAP_OP_LCK(NULL, *sizep, 0);
+    ERTS_MMAP_OP_LCK(nullptr, *sizep, 0);
     *sizep = 0;
-    return NULL;
+    return nullptr;
 
 supercarrier_success:
 
@@ -1668,7 +1668,7 @@ supercarrier_success:
 supercarrier_reserve_failure:
     erts_smp_mtx_unlock(&mmap_state.mtx);
     *sizep = 0;
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -1734,7 +1734,7 @@ erts_munmap(Uint32 flags, void *ptr, UWord size)
 	    }
 	}
 
-	desc = NULL;
+	desc = nullptr;
 
 	if (next) {
 	    ERTS_MMAP_ASSERT(end < next->end);
@@ -1776,7 +1776,7 @@ remap_move(Uint32 flags, void *ptr, UWord old_size, UWord *sizep)
     UWord size = *sizep;
     void *new_ptr = erts_mmap(flags, &size);
     if (!new_ptr)
-	return NULL;
+	return nullptr;
     *sizep = size;
     if (old_size < size)
 	size = old_size;
@@ -1808,8 +1808,8 @@ erts_mremap(Uint32 flags, void *ptr, UWord old_size, UWord *sizep)
 	}
 
 	if (ERTS_MMAPFLG_SUPERCARRIER_ONLY & flags) {
-	    ERTS_MREMAP_OP_LCK(NULL, ptr, old_size, *sizep, old_size);
-	    return NULL;
+	    ERTS_MREMAP_OP_LCK(nullptr, ptr, old_size, *sizep, old_size);
+	    return nullptr;
 	}
 
 #if ERTS_HAVE_OS_MREMAP || ERTS_HAVE_GENUINE_OS_MMAP
@@ -1853,7 +1853,7 @@ erts_mremap(Uint32 flags, void *ptr, UWord old_size, UWord *sizep)
 	else {
 	    new_ptr = os_mremap(ptr, old_size, asize, 0);
 	    if (!new_ptr)
-		return NULL;
+		return nullptr;
 	    if (asize > old_size)
 		ERTS_MMAP_SIZE_OS_INC(asize - old_size);
 	    else
@@ -2027,10 +2027,10 @@ supercarrier_resize_success:
     return new_ptr;
 
 supercarrier_reserve_failure:
-    ERTS_MREMAP_OP_END(NULL, old_size);
+    ERTS_MREMAP_OP_END(nullptr, old_size);
     erts_smp_mtx_unlock(&mmap_state.mtx);
     *sizep = old_size;
-    return NULL;
+    return nullptr;
     
 }
 
@@ -2105,7 +2105,7 @@ void
 erts_mmap_init(ErtsMMapInit *init)
 {
     int virtual_map = 0;
-    char *start = NULL, *end = NULL;
+    char *start = nullptr, *end = nullptr;
     UWord pagesize;
 #if defined(__WIN32__)
     SYSTEM_INFO sysinfo;
@@ -2152,7 +2152,7 @@ erts_mmap_init(ErtsMMapInit *init)
 	ptr = (char *) ERTS_PAGEALIGNED_CEILING(init->virtual_range.start);
 	end = (char *) ERTS_PAGEALIGNED_FLOOR(init->virtual_range.end);
 	sz = end - ptr;
-	start = os_mmap_virtual(ptr, sz);
+        start = (char*)os_mmap_virtual(ptr, sz);
 	if (!start || start > ptr || start >= end)
 	    erl_exit(-1,
 		     "erts_mmap: Failed to create virtual range for super carrier\n");
@@ -2177,7 +2177,7 @@ erts_mmap_init(ErtsMMapInit *init)
 	sz = ERTS_PAGEALIGNED_CEILING(init->scs);
 #ifdef ERTS_HAVE_OS_PHYSICAL_MEMORY_RESERVATION
 	if (!init->scrpm) {
-	    start = os_mmap_virtual(NULL, sz);
+            start = (char*)os_mmap_virtual(nullptr, sz);
 	    mmap_state.reserve_physical = os_reserve_physical;
 	    mmap_state.unreserve_physical = os_unreserve_physical;
 	    virtual_map = 1;
@@ -2189,7 +2189,7 @@ erts_mmap_init(ErtsMMapInit *init)
 	     * The whole supercarrier will by physically
 	     * reserved all the time.
 	     */
-	    start = os_mmap(NULL, sz, 1);
+            start = (char*)os_mmap(nullptr, sz, 1);
 	}
 	if (!start)
 	    erl_exit(-1,
@@ -2219,13 +2219,13 @@ erts_mmap_init(ErtsMMapInit *init)
     mmap_state.size.supercarrier.used.sua = 0;
     mmap_state.size.os.used = 0;
 
-    mmap_state.desc.new_area_hint = NULL;
+    mmap_state.desc.new_area_hint = nullptr;
 
     if (!start) {
-	mmap_state.sa.bot = NULL;
-	mmap_state.sua.top = NULL;
-	mmap_state.sa.bot = NULL;
-	mmap_state.sua.top = NULL;
+	mmap_state.sa.bot = nullptr;
+	mmap_state.sua.top = nullptr;
+	mmap_state.sa.bot = nullptr;
+	mmap_state.sua.top = nullptr;
 	mmap_state.no_os_mmap = 0;
         mmap_state.supercarrier = 0;
     }
@@ -2252,7 +2252,7 @@ erts_mmap_init(ErtsMMapInit *init)
 
 	mmap_state.size.supercarrier.used.total += (UWord) (mmap_state.sa.bot - start);
 
-	mmap_state.desc.free_list = NULL;
+	mmap_state.desc.free_list = nullptr;
         mmap_state.desc.reserved = 0;
 
 	if (end == (void *) 0) {
@@ -2467,7 +2467,7 @@ Eterm erts_mmap_debug_info(Process* p)
         hp = HAlloc(p, may_need);
         hp_end = hp + may_need;
 
-        list = erts_bld_atom_uword_2tup_list(&hp, NULL,
+        list = erts_bld_atom_uword_2tup_list(&hp, nullptr,
                                             sizeof(values)/sizeof(*values),
                                             tags, values);
 
@@ -2542,16 +2542,16 @@ check_tree(RBTree* tree, Uint size)
 {
     struct check_arg_t carg;
     carg.tree = tree;
-    carg.prev_seg = NULL;
+    carg.prev_seg = nullptr;
     carg.size = size;
-    carg.res = NULL;
+    carg.res = nullptr;
 
 #ifdef PRINT_TREE
     print_tree(tree->order, tree->root);
 #endif
 
     if (!tree->root)
-	return NULL;
+	return nullptr;
 
     RBT_ASSERT(IS_BLACK(tree->root));
     RBT_ASSERT(!parent(tree->root));
@@ -2731,12 +2731,12 @@ static void hard_dbg_mseg_init(void)
     ErtsFreeSegDesc_fake* p;
 
     erts_mtx_init(&hard_dbg_mseg_mtx, "hard_dbg_mseg");
-    hard_dbg_mseg_tree.root = NULL;
+    hard_dbg_mseg_tree.root = nullptr;
     hard_dbg_mseg_tree.order = ADDR_ORDER;
 
     p = &hard_dbg_mseg_desc_pool[(sizeof(hard_dbg_mseg_desc_pool) /
                                   sizeof(*hard_dbg_mseg_desc_pool)) - 1];
-    p->u.next_free = NULL;
+    p->u.next_free = nullptr;
     while (--p >= hard_dbg_mseg_desc_pool) {
         p->u.next_free = (p+1);
     }
@@ -2810,7 +2810,7 @@ static ErtsFreeSegDesc* hard_dbg_lookup_seg_at(RBTree* tree, char* start)
 	else
             return desc;
     }
-    return NULL;
+    return nullptr;
 }
 
 void hard_dbg_remove_mseg(void* seg, UWord sz)

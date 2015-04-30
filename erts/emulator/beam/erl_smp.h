@@ -1575,7 +1575,7 @@ erts_smp_tsd_get(erts_smp_tsd_key_t key)
 #ifdef ERTS_SMP
     return erts_tsd_get(key);
 #else
-    return NULL;
+    return nullptr;
 #endif
 }
 

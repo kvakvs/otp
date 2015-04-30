@@ -84,7 +84,7 @@ static void rehash(SafeHash* h, int grow_limit)
 
 	for (i = 0; i < old_size; i++) {
 	    SafeHashBucket* b = old_tab[i];
-	    while (b != NULL) {
+	    while (b != nullptr) {
 		SafeHashBucket* b_next = b->next;
 		int ix = b->hvalue & h->size_mask;
 		b->next = new_tab[ix];
@@ -119,7 +119,7 @@ void safe_hash_get_info(SafeHashInfo *hi, SafeHash *h)
 	for (i = lock_ix; i < size; i += SAFE_HASH_LOCK_CNT) {
 	    int depth = 0;
 	    SafeHashBucket* b = h->tab[i];
-	    while (b != NULL) {
+	    while (b != nullptr) {
 		objects++;
 		depth++;
 		b = b->next;
@@ -186,7 +186,7 @@ void* safe_hash_get(SafeHash* h, void* tmpl)
     erts_smp_mtx_lock(lock);
     b = h->tab[hval & h->size_mask];
 	
-    while(b != NULL) {
+    while(b != nullptr) {
 	if ((b->hvalue == hval) && (h->fun.cmp(tmpl, (void*)b) == 0))
 	    break;
 	b = b->next;
@@ -208,7 +208,7 @@ void* safe_hash_put(SafeHash* h, void* tmpl)
     erts_smp_mtx_lock(lock);
     head = &h->tab[hval & h->size_mask];
     b = *head;
-    while(b != NULL) {
+    while(b != nullptr) {
 	if ((b->hvalue == hval) && (h->fun.cmp(tmpl, (void*)b) == 0)) {
 	    erts_smp_mtx_unlock(lock);
 	    return b;
@@ -241,7 +241,7 @@ void* safe_hash_erase(SafeHash* h, void* tmpl)
     erts_smp_mtx_lock(lock);
     prevp = &h->tab[hval & h->size_mask];
     b = *prevp;
-    while(b != NULL) {
+    while(b != nullptr) {
 	if ((b->hvalue == hval) && (h->fun.cmp(tmpl, (void*)b) == 0)) {
 	    *prevp = b->next;
 	    erts_smp_mtx_unlock(lock);
@@ -253,7 +253,7 @@ void* safe_hash_erase(SafeHash* h, void* tmpl)
 	b = b->next;
     }
     erts_smp_mtx_unlock(lock);
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -265,7 +265,7 @@ void safe_hash_for_each(SafeHash* h, void (*func)(void *, void *), void *func_ar
 
     for (i = 0; i <= h->size_mask; i++) {
 	SafeHashBucket* b = h->tab[i];
-	while (b != NULL) {
+	while (b != nullptr) {
 	    (*func)((void *) b, func_arg2);
 	    b = b->next;
 	}

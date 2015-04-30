@@ -202,23 +202,23 @@ erts_bfalc_start(BFAllctr_t *bfallctr,
     }
     allctr->info_options		= info_options;
 
-    allctr->get_next_mbc_size		= NULL;
-    allctr->creating_mbc		= NULL;
-    allctr->destroying_mbc		= NULL;
-    allctr->add_mbc                     = NULL;
-    allctr->remove_mbc		        = NULL;
-    allctr->largest_fblk_in_mbc         = NULL;
+    allctr->get_next_mbc_size		= nullptr;
+    allctr->creating_mbc		= nullptr;
+    allctr->destroying_mbc		= nullptr;
+    allctr->add_mbc                     = nullptr;
+    allctr->remove_mbc		        = nullptr;
+    allctr->largest_fblk_in_mbc         = nullptr;
     allctr->init_atoms			= init_atoms;
 
 #ifdef ERTS_ALLOC_UTIL_HARD_DEBUG
-    allctr->check_block			= NULL;
-    allctr->check_mbc			= NULL;
+    allctr->check_block			= nullptr;
+    allctr->check_mbc			= nullptr;
 #endif
 
     allctr->atoms_initialized		= 0;
 
     if (!erts_alcu_start(allctr, init))
-	return NULL;
+	return nullptr;
 
     return allctr;
 }
@@ -417,7 +417,7 @@ tree_delete(Allctr_t *allctr, Block_t *del)
     RBTree_t null_x; /* null_x is used to get the fixup started when we
 			splice out a node without children. */
 
-    null_x.parent = NULL;
+    null_x.parent = nullptr;
 
 
 #ifdef HARD_DEBUG
@@ -442,7 +442,7 @@ tree_delete(Allctr_t *allctr, Block_t *del)
 	x = &null_x;
 	x->flags = 0;
 	SET_BLACK(x);
-	x->right = x->left = NULL;
+	x->right = x->left = nullptr;
 	x->parent = y->parent;
 	y->left = x;
     }
@@ -556,16 +556,16 @@ tree_delete(Allctr_t *allctr, Block_t *del)
 
 	if (null_x.parent) {
 	    if (null_x.parent->left == &null_x)
-		null_x.parent->left = NULL;
+		null_x.parent->left = nullptr;
 	    else {
 		RBT_ASSERT(null_x.parent->right == &null_x);
-		null_x.parent->right = NULL;
+		null_x.parent->right = nullptr;
 	    }
 	    RBT_ASSERT(!null_x.left);
 	    RBT_ASSERT(!null_x.right);
 	}
 	else if (*root == &null_x) {
-	    *root = NULL;
+	    *root = nullptr;
 	    RBT_ASSERT(!null_x.left);
 	    RBT_ASSERT(!null_x.right);
 	}
@@ -595,11 +595,11 @@ aobf_link_free_block(Allctr_t *allctr, Block_t *block)
     
 
     blk->flags	= 0;
-    blk->left	= NULL;
-    blk->right	= NULL;
+    blk->left	= nullptr;
+    blk->right	= nullptr;
 
     if (!*root) {
-	blk->parent = NULL;
+	blk->parent = nullptr;
 	SET_BLACK(blk);
 	*root = blk;
     }
@@ -657,7 +657,7 @@ aobf_get_free_block(Allctr_t *allctr, Uint size,
     BFAllctr_t *bfallctr = (BFAllctr_t *) allctr;
     RBTree_t **root = &bfallctr->mbc_root;
     RBTree_t *x = *root;
-    RBTree_t *blk = NULL;
+    RBTree_t *blk = nullptr;
     Uint blk_sz;
 
     ASSERT(!cand_blk || cand_size >= size);
@@ -674,7 +674,7 @@ aobf_get_free_block(Allctr_t *allctr, Uint size,
     }
     
     if (!blk)
-	return NULL;
+	return nullptr;
 
 #ifdef HARD_DEBUG
     ASSERT(blk == check_tree(root, 1, size));
@@ -683,9 +683,9 @@ aobf_get_free_block(Allctr_t *allctr, Uint size,
     if (cand_blk) {
 	blk_sz = BF_BLK_SZ(blk);
 	if (cand_size < blk_sz)
-	    return NULL; /* cand_blk was better */
+	    return nullptr; /* cand_blk was better */
 	if (cand_size == blk_sz && ((void *) cand_blk) < ((void *) blk))
-	    return NULL; /* cand_blk was better */
+	    return nullptr; /* cand_blk was better */
     }
 
     aobf_unlink_free_block(allctr, (Block_t *) blk);
@@ -710,11 +710,11 @@ bf_link_free_block(Allctr_t *allctr, Block_t *block)
 
 
     blk->flags	= 0;
-    blk->left	= NULL;
-    blk->right	= NULL;
+    blk->left	= nullptr;
+    blk->right	= nullptr;
 
     if (!*root) {
-	blk->parent = NULL;
+	blk->parent = nullptr;
 	SET_BLACK(blk);
 	*root = blk;
     }
@@ -763,7 +763,7 @@ bf_link_free_block(Allctr_t *allctr, Block_t *block)
     }
 
     SET_TREE_NODE(blk);
-    LIST_NEXT(blk) = NULL;
+    LIST_NEXT(blk) = nullptr;
 
 #ifdef HARD_DEBUG
     check_tree(root, 0, 0);
@@ -816,7 +816,7 @@ bf_get_free_block(Allctr_t *allctr, Uint size,
     BFAllctr_t *bfallctr = (BFAllctr_t *) allctr;
     RBTree_t **root = &bfallctr->mbc_root;
     RBTree_t *x = *root;
-    RBTree_t *blk = NULL;
+    RBTree_t *blk = nullptr;
     Uint blk_sz;
 
     ASSERT(!cand_blk || cand_size >= size);
@@ -835,7 +835,7 @@ bf_get_free_block(Allctr_t *allctr, Uint size,
     }
     
     if (!blk)
-	return NULL;
+	return nullptr;
 
     ASSERT(IS_TREE_NODE(blk));
 
@@ -848,7 +848,7 @@ bf_get_free_block(Allctr_t *allctr, Uint size,
 #endif
 
     if (cand_blk && cand_size <= BF_BLK_SZ(blk))
-	return NULL; /* cand_blk was better */
+	return nullptr; /* cand_blk was better */
 
     /* Use next block if it exist in order to avoid replacing
        the tree node */
@@ -1023,7 +1023,7 @@ static void print_tree(RBTree_t *, int);
 static RBTree_t *
 check_tree(RBTree_t *root, int ao, Uint size)
 {
-    RBTree_t *res = NULL;
+    RBTree_t *res = nullptr;
     Sint blacks;
     Sint curr_blacks;
     RBTree_t *x;

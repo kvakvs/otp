@@ -36,12 +36,12 @@
 erts_smp_atomic32_t the_active_code_index;
 erts_smp_atomic32_t the_staging_code_index;
 
-static Process* code_writing_process = NULL;
+static Process* code_writing_process = nullptr;
 struct code_write_queue_item {
     Process *p;
     struct code_write_queue_item* next;
 };
-static struct code_write_queue_item* code_write_queue = NULL;
+static struct code_write_queue_item* code_write_queue = nullptr;
 static erts_smp_mtx_t code_write_permission_mtx;
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
@@ -115,10 +115,10 @@ int erts_try_seize_code_write_permission(Process* c_p)
 #ifdef ERTS_SMP
     ASSERT(!erts_smp_thr_progress_is_blocking()); /* to avoid deadlock */
 #endif
-    ASSERT(c_p != NULL);
+    ASSERT(c_p != nullptr);
 
     erts_smp_mtx_lock(&code_write_permission_mtx);
-    success = (code_writing_process == NULL);
+    success = (code_writing_process == nullptr);
     if (success) {
 	code_writing_process = c_p;
 #ifdef ERTS_ENABLE_LOCK_CHECK
@@ -133,7 +133,7 @@ int erts_try_seize_code_write_permission(Process* c_p)
 	erts_smp_proc_inc_refc(c_p);
 	qitem->next = code_write_queue;
 	code_write_queue = qitem;
-	erts_suspend(c_p, ERTS_PROC_LOCK_MAIN, NULL);
+        erts_suspend(c_p, ERTS_PROC_LOCK_MAIN, nullptr);
     }
    erts_smp_mtx_unlock(&code_write_permission_mtx);
    return success;
@@ -143,7 +143,7 @@ void erts_release_code_write_permission(void)
 {
     erts_smp_mtx_lock(&code_write_permission_mtx);
     ERTS_SMP_LC_ASSERT(erts_has_code_write_permission());
-    while (code_write_queue != NULL) { /* unleash the entire herd */
+    while (code_write_queue != nullptr) { /* unleash the entire herd */
 	struct code_write_queue_item* qitem = code_write_queue;
 	erts_smp_proc_lock(qitem->p, ERTS_PROC_LOCK_STATUS);
 	if (!ERTS_PROC_IS_EXITING(qitem->p)) {
@@ -154,7 +154,7 @@ void erts_release_code_write_permission(void)
 	erts_smp_proc_dec_refc(qitem->p);
 	erts_free(ERTS_ALC_T_CODE_IX_LOCK_Q, qitem);
     }
-    code_writing_process = NULL;
+    code_writing_process = nullptr;
 #ifdef ERTS_ENABLE_LOCK_CHECK
     erts_tsd_set(has_code_write_permission, (void *) 0);
 #endif
@@ -164,6 +164,6 @@ void erts_release_code_write_permission(void)
 #ifdef ERTS_ENABLE_LOCK_CHECK
 int erts_has_code_write_permission(void)
 {
-    return (code_writing_process != NULL) && erts_tsd_get(has_code_write_permission);
+    return (code_writing_process != nullptr) && erts_tsd_get(has_code_write_permission);
 }
 #endif

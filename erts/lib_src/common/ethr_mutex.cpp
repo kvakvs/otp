@@ -62,7 +62,7 @@ static pthread_rwlockattr_t *write_pref_attr;
 #  define ETHR_MTX_Q_LOCK ethr_spin_lock
 #  define ETHR_MTX_Q_UNLOCK ethr_spin_unlock
 #elif defined(ETHR_MTX_Q_LOCK_PTHREAD_MUTEX__)
-#  define ETHR_MTX_QLOCK_INIT(QL) pthread_mutex_init((QL), NULL)
+#  define ETHR_MTX_QLOCK_INIT(QL) pthread_mutex_init((QL), nullptr)
 #  define ETHR_MTX_QLOCK_DESTROY pthread_mutex_destroy
 #  define ETHR_MTX_Q_LOCK(L)					\
 do {								\
@@ -114,7 +114,7 @@ ethr_mutex_lib_init(int cpu_conf)
 	PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
     write_pref_attr = &write_pref_attr_data;
 #else
-    write_pref_attr = NULL;
+    write_pref_attr = nullptr;
 #endif
 
 #endif
@@ -254,7 +254,7 @@ dequeue(ethr_ts_event **queue,
 {
     if (tse_start->prev == tse_end) {
 	ETHR_ASSERT(*queue == tse_start && tse_end->next == tse_start);
-	*queue = NULL;
+	*queue = nullptr;
     }
     else {
 	if (*queue == tse_start)
@@ -662,7 +662,7 @@ write_lock_wait(struct ethr_mutex_base_ *mtxb,
 {
     ethr_sint32_t act = initial;
     int scnt, start_scnt;
-    ethr_ts_event *tse = NULL;
+    ethr_ts_event *tse = nullptr;
     int until_yield = ETHR_YIELD_AFTER_BUSY_LOOPS;
     int res;
 
@@ -762,7 +762,7 @@ mtxb_init(struct ethr_mutex_base_ *mtxb,
 	    mtxb->main_scnt = mtxb->aux_scnt;
 
     }
-    mtxb->q = NULL;
+    mtxb->q = nullptr;
     ethr_atomic32_init(&mtxb->flgs, 0);
     return ETHR_MTX_QLOCK_INIT(&mtxb->qlck);
 }
@@ -817,7 +817,7 @@ ethr_mutex_init_opt(ethr_mutex *mtx, ethr_mutex_opt *opt)
 int
 ethr_mutex_init(ethr_mutex *mtx)
 {
-    return ethr_mutex_init_opt(mtx, NULL);
+    return ethr_mutex_init_opt(mtx, nullptr);
 }
 
 int
@@ -999,7 +999,7 @@ ethr_cond_init_opt(ethr_cond *cnd, ethr_cond_opt *opt)
     cnd->initialized = ETHR_COND_INITIALIZED;
 #endif
     ETHR_MTX_HARD_DEBUG_FENCE_INIT(cnd);
-    cnd->q = NULL;
+    cnd->q = nullptr;
     if (no_spin) {
 	cnd->main_scnt = 0;
 	cnd->aux_scnt = 0;
@@ -1027,7 +1027,7 @@ ethr_cond_init_opt(ethr_cond *cnd, ethr_cond_opt *opt)
 int
 ethr_cond_init(ethr_cond *cnd)
 {
-    return ethr_cond_init_opt(cnd, NULL);
+    return ethr_cond_init_opt(cnd, nullptr);
 }
 
 int
@@ -1078,7 +1078,7 @@ ethr_cond_signal(ethr_cond *cnd)
 
 	ETHR_MTX_Q_UNLOCK(&cnd->qlck);
 
-	tse->next = tse->prev = NULL;
+	tse->next = tse->prev = nullptr;
 
 	enqueue_mtx(mtx, tse, tse);
 
@@ -1158,7 +1158,7 @@ ethr_cond_wait(ethr_cond *cnd, ethr_mutex *mtx)
 {
     int woken;
     int scnt;
-    void *udata = NULL;
+    void *udata = nullptr;
     ethr_ts_event *tse;
 
     ETHR_ASSERT(!ethr_not_inited__);
@@ -1262,7 +1262,7 @@ ethr_mutex_init(ethr_mutex *mtx)
     }
     mtx->initialized = ETHR_MUTEX_INITIALIZED;
 #endif
-    return pthread_mutex_init(&mtx->pt_mtx, NULL);
+    return pthread_mutex_init(&mtx->pt_mtx, nullptr);
 }
 
 int
@@ -1300,7 +1300,7 @@ ethr_cond_init(ethr_cond *cnd)
     }
     cnd->initialized = ETHR_COND_INITIALIZED;
 #endif
-    return pthread_cond_init(&cnd->pt_cnd, NULL);
+    return pthread_cond_init(&cnd->pt_cnd, nullptr);
 }
 
 int
@@ -1395,7 +1395,7 @@ ethr_cond_wait(ethr_cond *cnd, ethr_mutex *mtx)
 static int
 InitializeCriticalSectionAndSpinCount(CRITICAL_SECTION *cs, int sc)
 {
-    return 0 == pthread_mutex_init((pthread_mutex_t *) cs, NULL);
+    return 0 == pthread_mutex_init((pthread_mutex_t *) cs, nullptr);
 }
 
 static void DeleteCriticalSection(CRITICAL_SECTION *cs)
@@ -1514,7 +1514,7 @@ ethr_mutex_init_opt(ethr_mutex *mtx, ethr_mutex_opt *opt)
     }
 
     mtx->posix_compliant = opt ? opt->posix_compliant : 0;
-    mtx->wakeups = NULL;
+    mtx->wakeups = nullptr;
     if (mtx->posix_compliant) {
 	ethr_atomic32_init(&mtx->locked, 0);
 	ethr_atomic32_init(&mtx->have_wakeups, 0);
@@ -1526,7 +1526,7 @@ ethr_mutex_init_opt(ethr_mutex *mtx, ethr_mutex_opt *opt)
 int
 ethr_mutex_init(ethr_mutex *mtx)
 {
-    return ethr_mutex_init_opt(mtx, NULL);
+    return ethr_mutex_init_opt(mtx, nullptr);
 }
 
 int
@@ -1579,7 +1579,7 @@ posix_compliant_mtx_enqueue(ethr_mutex *mtx,
 			    ethr_ts_event *tse_start,
 			    ethr_ts_event *tse_end)
 {
-    ethr_ts_event *tse_wakeup = NULL; /* Avoid erroneous compiler warning... */
+    ethr_ts_event *tse_wakeup = nullptr; /* Avoid erroneous compiler warning... */
     /*
      * The associated mutex might not be locked, so we need to
      * check if it is. If locked, enqueue for wakeup at unlock;
@@ -1672,7 +1672,7 @@ ethr_cond_broadcast(ethr_cond *cnd)
 
     EnterCriticalSection(&cnd->cs);
     waiters = cnd->waiters;
-    cnd->waiters = NULL;
+    cnd->waiters = nullptr;
     LeaveCriticalSection(&cnd->cs);
 
     if (cnd->posix_compliant)
@@ -1734,7 +1734,7 @@ ethr_cond_init_opt(ethr_cond *cnd, ethr_cond_opt *opt)
     }
 
     cnd->posix_compliant = opt ? opt->posix_compliant : 0;
-    cnd->waiters = NULL;
+    cnd->waiters = nullptr;
     cnd->spincount = spincount;
     return 0;
 }
@@ -1742,7 +1742,7 @@ ethr_cond_init_opt(ethr_cond *cnd, ethr_cond_opt *opt)
 int
 ethr_cond_init(ethr_cond *cnd)
 {
-    return ethr_cond_init_opt(cnd, NULL);
+    return ethr_cond_init_opt(cnd, nullptr);
 }
 
 int
@@ -1806,8 +1806,8 @@ wake_readers(ethr_rwmutex *rwmtx, int rs)
     ETHR_ASSERT(tse);
     ETHR_ASSERT(rwmtx->rq_end);
     dequeue(&rwmtx->mtxb.q, tse, rwmtx->rq_end);
-    rwmtx->rq_end->next = NULL;
-    rwmtx->rq_end = NULL;
+    rwmtx->rq_end->next = nullptr;
+    rwmtx->rq_end = nullptr;
 
     ETHR_ASSERT(!rwmtx->mtxb.q
 		|| (ethr_atomic32_read(&rwmtx->mtxb.q->uaflgs)
@@ -2134,7 +2134,7 @@ rwmutex_normal_rlock_wait(ethr_rwmutex *rwmtx, ethr_sint32_t initial)
 {
     ethr_sint32_t act = initial, exp;
     int scnt, start_scnt;
-    ethr_ts_event *tse = NULL;
+    ethr_ts_event *tse = nullptr;
     int until_yield = ETHR_YIELD_AFTER_BUSY_LOOPS;
 
     start_scnt = scnt = initial_spincount(&rwmtx->mtxb);
@@ -2591,7 +2591,7 @@ alloc_readers_array(int length, ethr_rwmutex_lived lived)
 	break;
     }
     if (!mem)
-	return NULL;
+	return nullptr;
 
     if ((((ethr_uint_t) mem) & ETHR_CACHE_LINE_MASK) == 0) {
 	ra = (ethr_rwmtx_readers_array__ *) mem;
@@ -2629,7 +2629,7 @@ int
 ethr_rwmutex_init_opt(ethr_rwmutex *rwmtx, ethr_rwmutex_opt *opt)
 {
     int res;
-    ethr_rwmtx_readers_array__ *ra = NULL;
+    ethr_rwmtx_readers_array__ *ra = nullptr;
 #if ETHR_XCHK
     if (ethr_not_completely_inited__) {
 	ETHR_ASSERT(0);
@@ -2642,7 +2642,7 @@ ethr_rwmutex_init_opt(ethr_rwmutex *rwmtx, ethr_rwmutex_opt *opt)
     rwmtx->initialized = ETHR_RWMUTEX_INITIALIZED;
 #endif
     ETHR_MTX_HARD_DEBUG_FENCE_INIT(rwmtx);
-    rwmtx->rq_end = NULL;
+    rwmtx->rq_end = nullptr;
     rwmtx->type = opt ? opt->type : ETHR_RWMUTEX_TYPE_NORMAL;
     switch (rwmtx->type) {
     case ETHR_RWMUTEX_TYPE_FREQUENT_READ:
@@ -2711,7 +2711,7 @@ ethr_rwmutex_init_opt(ethr_rwmutex *rwmtx, ethr_rwmutex_opt *opt)
 int
 ethr_rwmutex_init(ethr_rwmutex *rwmtx)
 {
-    return ethr_rwmutex_init_opt(rwmtx, NULL);
+    return ethr_rwmutex_init_opt(rwmtx, nullptr);
 }
 
 int
@@ -2732,7 +2732,7 @@ ethr_rwmutex_destroy(ethr_rwmutex *rwmtx)
     if (rwmtx->type != ETHR_RWMUTEX_TYPE_NORMAL) {
 	ethr_sint32_t act = ethr_atomic32_read(&rwmtx->mtxb.flgs);
 	if (act == ETHR_RWMTX_R_FLG__)
-	    rwmutex_try_complete_runlock(rwmtx, act, NULL, 0, 0, 0);
+	    rwmutex_try_complete_runlock(rwmtx, act, nullptr, 0, 0, 0);
     }
     res = mtxb_destroy(&rwmtx->mtxb);
     if (res != 0)
@@ -2957,7 +2957,7 @@ ethr_rwmutex_tryrwlock(ethr_rwmutex *rwmtx)
 		act = ethr_atomic32_cmpxchg_acqb(&rwmtx->mtxb.flgs,
 						 ETHR_RWMTX_W_FLG__, 0);
 	    else if (act == ETHR_RWMTX_R_FLG__) {
-		res = rwmutex_try_complete_runlock(rwmtx, act, NULL,
+		res = rwmutex_try_complete_runlock(rwmtx, act, nullptr,
 						   0, 1, 1);
 		break;
 	    }

@@ -73,7 +73,7 @@ new_binary(Process *p, byte *buf, Uint len)
 	ErlHeapBin* hb = (ErlHeapBin *) HAlloc(p, heap_bin_size(len));
 	hb->thing_word = header_heap_bin(len);
 	hb->size = len;
-	if (buf != NULL) {
+        if (buf != nullptr) {
 	    sys_memcpy(hb->data, buf, len);
 	}
 	return make_binary(hb);
@@ -86,7 +86,7 @@ new_binary(Process *p, byte *buf, Uint len)
     bptr->flags = 0;
     bptr->orig_size = len;
     erts_refc_init(&bptr->refc, 1);
-    if (buf != NULL) {
+    if (buf != nullptr) {
 	sys_memcpy(bptr->orig_bytes, buf, len);
     }
 
@@ -125,7 +125,7 @@ Eterm erts_new_mso_binary(Process *p, byte *buf, int len)
     bptr->flags = 0;
     bptr->orig_size = len;
     erts_refc_init(&bptr->refc, 1);
-    if (buf != NULL) {
+    if (buf != nullptr) {
 	sys_memcpy(bptr->orig_bytes, buf, len);
     }
 
@@ -159,7 +159,7 @@ erts_new_heap_binary(Process *p, byte *buf, int len, byte** datap)
 
     hb->thing_word = header_heap_bin(len);
     hb->size = len;
-    if (buf != NULL) {
+    if (buf != nullptr) {
 	sys_memcpy(hb->data, buf, len);
     }
     *datap = (byte*) hb->data;
@@ -197,14 +197,14 @@ erts_get_aligned_binary_bytes_extra(Eterm bin, byte** base_ptr, ErtsAlcType_t al
     Uint bit_offs = 0;
     
     if (is_not_binary(bin)) {
-	return NULL;
+        return nullptr;
     }
     byte_size = binary_size(bin);
     real_bin = binary_val(bin);
     if (*real_bin == HEADER_SUB_BIN) {
 	ErlSubBin* sb = (ErlSubBin *) real_bin;
 	if (sb->bitsize) {
-	    return NULL;
+            return nullptr;
 	}
 	offs = sb->offs;
 	bit_offs = sb->bitoffs;
@@ -250,13 +250,13 @@ erts_bin_bytes_to_list(Eterm previous, Eterm* hp, byte* bytes, Uint size, Uint b
 
 BIF_RETTYPE binary_to_integer_1(BIF_ALIST_1)
 {
-  byte *temp_alloc = NULL;
+  byte *temp_alloc = nullptr;
   char *bytes;
   Uint size;
   Eterm res;
 
   if ((bytes = (char*)erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc))
-      == NULL )
+      == nullptr )
     goto binary_to_integer_1_error;
   
   size = binary_size(BIF_ARG_1);
@@ -273,7 +273,7 @@ BIF_RETTYPE binary_to_integer_1(BIF_ALIST_1)
 
 BIF_RETTYPE binary_to_integer_2(BIF_ALIST_2)
 {
-  byte *temp_alloc = NULL;
+  byte *temp_alloc = nullptr;
   char *bytes;
   Uint size;
   int base;
@@ -288,7 +288,7 @@ BIF_RETTYPE binary_to_integer_2(BIF_ALIST_2)
     BIF_ERROR(BIF_P, BADARG);
 
   if ((bytes = (char*)erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc))
-      == NULL )
+      == nullptr )
     goto binary_to_integer_2_error;
   
   size = binary_size(BIF_ARG_1);
@@ -634,7 +634,7 @@ list_to_binary_engine(ErtsL2BState *sp)
 	 */
 
 	sp->bin = new_binary(c_p,
-			     (byte *) NULL,
+                             (byte *) nullptr,
 			     sp->buf.iolist.size);
 
 	if (sp->buf.iolist.size == 0)
@@ -834,11 +834,11 @@ BIF_RETTYPE erts_list_to_binary_bif(Process *c_p, Eterm arg, Export *bif)
 		char *buf;
 
 		if (size == 0) {
-		    ERTS_BIF_PREP_RET(ret, new_binary(c_p, (byte *) NULL, 0));
+                    ERTS_BIF_PREP_RET(ret, new_binary(c_p, (byte *) nullptr, 0));
 		    break; /* done */
 		}
 
-		bin = new_binary(c_p, (byte *) NULL, size);
+                bin = new_binary(c_p, (byte *) nullptr, size);
 		buf = (char *) binary_bytes(bin);
 
 		if (size < ERTS_IOLIST_TO_BUF_BYTES_PER_RED*CONTEXT_REDS) {
@@ -948,7 +948,7 @@ BIF_RETTYPE list_to_bitstring_1(BIF_ALIST_1)
 	    case ERTS_IOLIST_OK: {
 		ErlDrvSizeT size = state.buf.iolist.size;
 		
-		state.bin = new_binary(BIF_P, (byte *) NULL, size);
+                state.bin = new_binary(BIF_P, (byte *) nullptr, size);
 		state.buf.buf = (char *) binary_bytes(state.bin);
 		state.buf.len = size;
 		state.buf.iolist.obj = BIF_ARG_1;
@@ -1114,7 +1114,7 @@ list_to_bitstr_buf(int yield_support, ErtsIOList2BufState *state)
 #endif
     Eterm obj;
     char *buf;
-    Eterm *objp = NULL;
+    Eterm *objp = nullptr;
     int offset;
     int init_yield_count = 0, yield_count;
     DECLARE_ESTACK(s);
@@ -1166,7 +1166,7 @@ list_to_bitstr_buf(int yield_support, ErtsIOList2BufState *state)
 	    }
 
 	    objp = state->objp;
-	    state->objp = NULL;
+            state->objp = nullptr;
 
 	    if (objp)
 		goto L_tail;
@@ -1216,14 +1216,14 @@ list_to_bitstr_buf(int yield_support, ErtsIOList2BufState *state)
 		if (is_list(obj)) {
 		    continue; /* Tail loop */
 		} else if (is_binary(obj)) {
-		    LIST_TO_BITSTR_BUF_BCOPY(NULL);
+                    LIST_TO_BITSTR_BUF_BCOPY(nullptr);
 		} else {
 		    ASSERT(is_nil(obj));
 		}
 		break;
 	    }
 	} else if (is_binary(obj)) {
-	    LIST_TO_BITSTR_BUF_BCOPY(NULL);
+            LIST_TO_BITSTR_BUF_BCOPY(nullptr);
 	} else {
 	    if (yield_support && --yield_count <= 0)
 		goto L_yield;
@@ -1319,7 +1319,7 @@ list_to_bitstr_buf_bcopy(ErtsIOList2BufState *state, Eterm obj, int *yield_count
 	size = state->bcopy.size;
 	bitoffs = state->bcopy.bitoffs;
 	bitsize = state->bcopy.bitsize;
-	state->bcopy.bptr = NULL;
+        state->bcopy.bptr = nullptr;
     }
     else {
 

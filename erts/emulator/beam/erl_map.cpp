@@ -74,9 +74,9 @@ BIF_RETTYPE map_size_1(BIF_ALIST_1) {
 	map_t *mp = (map_t*)map_val(BIF_ARG_1);
 	Uint n    = map_get_size(mp);
 
-	erts_bld_uint(NULL, &hsz, n);
+	erts_bld_uint(nullptr, &hsz, n);
 	hp = HAlloc(BIF_P, hsz);
-	BIF_RET(erts_bld_uint(&hp, NULL, n));
+	BIF_RET(erts_bld_uint(&hp, nullptr, n));
     }
 
     BIF_ERROR(BIF_P, BADARG);

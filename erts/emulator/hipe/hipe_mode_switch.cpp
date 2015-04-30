@@ -124,7 +124,7 @@ void hipe_check_pcb(Process *p, const char *file, unsigned line)
         printf("%s, line %u: p %p = {htop %p, stop %p, nstack %p, nsp %p, nstend %p}\r\n", file, line, p, p->htop, p->stop, p->hipe.nstack, p->hipe.nsp, p->hipe.nstend);
     }
 #endif
-    HIPE_ASSERT3(p != NULL, file, line);
+    HIPE_ASSERT3(p != nullptr, file, line);
     HIPE_ASSERT3(p->htop <= p->stop, file, line);
     HIPE_ASSERT3(p->hipe.nstack <= p->hipe.nstend, file, line);
     HIPE_ASSERT3(p->hipe.nsp >= p->hipe.nstack, file, line);
@@ -253,9 +253,9 @@ Process *hipe_mode_switch(Process *p, unsigned cmd, Eterm reg[])
     Eterm o_reds = p->def_arg_reg[4];
 #endif
 
-    p->i = NULL;
+    p->i = nullptr;
     /* Set current_function to undefined. stdlib hibernate tests rely on it. */
-    p->current = NULL;
+    p->current = nullptr;
 
     DPRINTF("cmd == %#x (%s)", cmd, code_str(cmd));
     HIPE_CHECK_PCB(p);
@@ -372,12 +372,12 @@ Process *hipe_mode_switch(Process *p, unsigned cmd, Eterm reg[])
 	   * arity in p->hipe.narity.
 	   *
 	   * If the BIF emptied the stack (typically hibernate), p->hipe.nstack
-	   * is NULL and there is no need to get rid of stacked parameters.
+	   * is nullptr and there is no need to get rid of stacked parameters.
 	   */
 	  unsigned int i, is_recursive = 0;
 
-          if (p->hipe.nstack != NULL) {
-	      ASSERT(p->hipe.nsp != NULL);
+          if (p->hipe.nstack != nullptr) {
+	      ASSERT(p->hipe.nsp != nullptr);
 	      is_recursive = hipe_trap_from_native_is_recursive(p);
           }
 	  else {
@@ -385,7 +385,7 @@ Process *hipe_mode_switch(Process *p, unsigned cmd, Eterm reg[])
 	       * BIF wrapper do not detect stack change and causes an obsolete
 	       * stack pointer to be saved in p->hipe.nsp before return to us.
 	       */
-	      p->hipe.nsp = NULL;
+	      p->hipe.nsp = nullptr;
 	  }
 
 	  /* Schedule next process if current process was hibernated or is waiting
@@ -543,7 +543,7 @@ Process *hipe_mode_switch(Process *p, unsigned cmd, Eterm reg[])
 	      p->def_arg_reg[4] = o_reds;
 	      p->def_arg_reg[5] = reds_in;
 	      if (p->i == hipe_beam_pc_resume) {
-		  p->i = NULL;
+		  p->i = nullptr;
 		  p->arity = 0;
 		  goto do_resume;
 	      }
@@ -657,10 +657,10 @@ void hipe_empty_nstack(Process *p)
     if (p->hipe.nstack) {
 	erts_free(ERTS_ALC_T_HIPE, p->hipe.nstack);
     }
-    p->hipe.nstgraylim = NULL;
-    p->hipe.nsp = NULL;
-    p->hipe.nstack = NULL;
-    p->hipe.nstend = NULL;
+    p->hipe.nstgraylim = nullptr;
+    p->hipe.nsp = nullptr;
+    p->hipe.nstack = nullptr;
+    p->hipe.nstend = nullptr;
 }
 
 static void hipe_check_nstack(Process *p, unsigned nwords)

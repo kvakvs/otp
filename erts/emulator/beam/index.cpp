@@ -100,7 +100,7 @@ int index_get(IndexTable* t, void* tmpl)
 {
     IndexSlot* p = (IndexSlot*) hash_get(&t->htable, tmpl);
 
-    if (p != NULL) {
+    if (p != nullptr) {
 	return p->index;
     }
     return -1;

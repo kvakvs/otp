@@ -93,12 +93,12 @@ extern Uint erts_total_code_size;
 
 
 /*
- * Pointer to the on_load function (or NULL if none).
+ * Pointer to the on_load function (or nullptr if none).
  */
 #define MI_ON_LOAD_FUNCTION_PTR 10
 
 /*
- * Pointer to the line table (or NULL if none).
+ * Pointer to the line table (or nullptr if none).
  */
 #define MI_LINE_TABLE 11
 

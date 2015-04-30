@@ -94,7 +94,7 @@ erts_start_staging_ranges(void)
     if (r[dst].modules) {
 	erts_smp_atomic_add_nob(&mem_used, -r[dst].allocated);
 	erts_free(ERTS_ALC_T_MODULE_REFS, r[dst].modules);
-	r[dst].modules = NULL;
+        r[dst].modules = nullptr;
     }
 }
 
@@ -103,7 +103,7 @@ erts_end_staging_ranges(int commit)
 {
     ErtsCodeIndex dst = erts_staging_code_ix();
 
-    if (commit && r[dst].modules == NULL) {
+    if (commit && r[dst].modules == nullptr) {
 	Sint i;
 	Sint n;
 
@@ -156,7 +156,7 @@ erts_update_ranges(BeamInstr* code, Uint size)
 
     CHECK(&r[src]);
 
-    ASSERT(r[dst].modules == NULL);
+    ASSERT(r[dst].modules == nullptr);
     need = r[dst].allocated = r[src].n + 1;
     erts_smp_atomic_add_nob(&mem_used, need);
     r[dst].modules = (Range *) erts_alloc(ERTS_ALC_T_MODULE_REFS,
@@ -230,7 +230,7 @@ erts_ranges_sz(void)
  * the FunctionInfo struct. If the full_info is non-zero, fill
  * in all available information (including location in the
  * source code). If no function is found, the 'current' field
- * will be set to NULL.
+ * will be set to nullptr.
  */
 
 void
@@ -241,7 +241,7 @@ erts_lookup_function_info(FunctionInfo* fi, BeamInstr* pc, int full_info)
     BeamInstr** mid;
     Range* rp;
 
-    fi->current = NULL;
+    fi->current = nullptr;
     fi->needed = 5;
     fi->loc = LINE_INVALID_LOCATION;
     rp = find_range(pc);

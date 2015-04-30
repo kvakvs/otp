@@ -69,7 +69,7 @@
 **    SYS_CLK_TCK is used to determine the resolution of kernel ticks.
 **
 ** sys_gettimeofday() will take a SysTimeval (a struct timeval) as parameter
-**    and fill it in as gettimeofday(X,NULL).
+**    and fill it in as gettimeofday(X,nullptr).
 **
 */
 
@@ -472,9 +472,9 @@ elapsed_time_both(UWord *ms_user, UWord *ms_sys,
     total_user = (now.tms_utime * 1000) / SYS_CLK_TCK;
     total_sys = (now.tms_stime * 1000) / SYS_CLK_TCK;
 
-    if (ms_user != NULL)
+    if (ms_user != nullptr)
 	*ms_user = total_user;
-    if (ms_sys != NULL)
+    if (ms_sys != nullptr)
 	*ms_sys = total_sys;
 
     erts_smp_mtx_lock(&erts_timeofday_mtx);
@@ -485,10 +485,10 @@ elapsed_time_both(UWord *ms_user, UWord *ms_sys,
     
     erts_smp_mtx_unlock(&erts_timeofday_mtx);
 
-    if (ms_user_diff != NULL)
+    if (ms_user_diff != nullptr)
 	*ms_user_diff = total_user - prev_total_user;
 	  
-    if (ms_sys_diff != NULL)
+    if (ms_sys_diff != nullptr)
 	*ms_sys_diff = total_sys - prev_total_sys;
 }
 
@@ -941,7 +941,7 @@ get_sys_now(Uint* megasec, Uint* sec, Uint* microsec)
 
 /* deliver elapsed *ticks* to the machine - takes a pointer
    to a struct timeval representing current time (to save
-   a gettimeofday() where possible) or NULL */
+   a gettimeofday() where possible) or nullptr */
 
 void erts_deliver_time(void) {
     SysTimeval now;

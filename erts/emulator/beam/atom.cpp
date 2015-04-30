@@ -304,7 +304,7 @@ erts_atom_put(const byte *name, int len, ErtsAtomEncoding enc, int trunc)
 	switch (erts_analyze_utf8_x((byte *) text,
 				    (Uint) tlen,
 				    &err_pos,
-				    &no_chars, NULL,
+				    &no_chars, nullptr,
 				    &no_latin1_chars,
 				    MAX_ATOM_CHARACTERS)) {
 	case ERTS_UTF8_OK:
@@ -435,11 +435,11 @@ init_atom_table(void)
     f.alloc = (HALLOC_FUN) atom_alloc;
     f.free = (HFREE_FUN) atom_free;
 
-    atom_text_pos = NULL;
-    atom_text_end = NULL;
+    atom_text_pos = nullptr;
+    atom_text_end = nullptr;
     reserved_atom_space = 0;
     atom_space = 0;
-    text_list = NULL;
+    text_list = nullptr;
 
     erts_index_init(ERTS_ALC_T_ATOM_TABLE, &erts_atom_table,
 		    "atom_tab", ATOM_SIZE, erts_atom_table_size, f);

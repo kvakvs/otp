@@ -89,8 +89,8 @@ void
 erts_bif_trace_init(void)
 {
     erts_default_trace_pattern_is_on = 0;
-    erts_default_match_spec = NULL;
-    erts_default_meta_match_spec = NULL;
+    erts_default_match_spec = nullptr;
+    erts_default_meta_match_spec = nullptr;
     erts_default_trace_pattern_flags = erts_trace_pattern_flags_off;
     erts_default_meta_tracer_pid = NIL;
 }
@@ -137,18 +137,18 @@ trace_pattern(Process* p, Eterm MFA, Eterm Pattern, Eterm flaglist)
      */
     
     if (Pattern == am_false) {
-	match_prog_set = NULL;
+        match_prog_set = nullptr;
         on = (erts_break_op)0;
     } else if (is_nil(Pattern) || Pattern == am_true) {
-	match_prog_set = NULL;
+        match_prog_set = nullptr;
         on = (erts_break_op)1;
     } else if (Pattern == am_restart) {
-	match_prog_set = NULL;
+        match_prog_set = nullptr;
 	on = erts_break_reset;
     } else if (Pattern == am_pause) {
-	match_prog_set = NULL;
+        match_prog_set = nullptr;
 	on = erts_break_stop;
-    } else if ((match_prog_set = erts_match_set_compile(p, Pattern)) != NULL) {
+    } else if ((match_prog_set = erts_match_set_compile(p, Pattern)) != nullptr) {
 	MatchSetRef(match_prog_set);
         on = (erts_break_op)1;
     } else{
@@ -165,13 +165,13 @@ trace_pattern(Process* p, Eterm MFA, Eterm Pattern, Eterm flaglist)
 	    }
 	    meta_tracer_pid = tp[2];
 	    if (is_internal_pid(meta_tracer_pid)) {
-		meta_tracer_proc = erts_pid2proc(NULL, 0, meta_tracer_pid, 0);
+                meta_tracer_proc = erts_pid2proc(nullptr, 0, meta_tracer_pid, 0);
 		if (!meta_tracer_proc) {
 		    goto error;
 		}
 	    } else if (is_internal_port(meta_tracer_pid)) {
 		Port *meta_tracer_port;
-		meta_tracer_proc = NULL;
+                meta_tracer_proc = nullptr;
 		meta_tracer_port = (erts_port_lookup(
 					meta_tracer_pid,
 					ERTS_PORT_SFLGS_INVALID_TRACER_LOOKUP));
@@ -256,7 +256,7 @@ trace_pattern(Process* p, Eterm MFA, Eterm Pattern, Eterm flaglist)
 	    }
 	} else if (! flags.breakpoint) {
 	    MatchSetUnref(erts_default_meta_match_spec);
-	    erts_default_meta_match_spec = NULL;
+            erts_default_meta_match_spec = nullptr;
 	    erts_default_meta_tracer_pid = NIL;
 	}
 	if (erts_default_trace_pattern_flags.breakpoint &&
@@ -355,11 +355,11 @@ trace_pattern(Process* p, Eterm MFA, Eterm Pattern, Eterm flaglist)
 #ifdef ERTS_SMP
     if (finish_bp.current >= 0) {
 	ASSERT(matches >= 0);
-	ASSERT(finish_bp.stager == NULL);
+        ASSERT(finish_bp.stager == nullptr);
 	finish_bp.stager = p;
-	erts_schedule_thr_prgr_later_op(smp_bp_finisher, NULL, &finish_bp.lop);
+        erts_schedule_thr_prgr_later_op(smp_bp_finisher, nullptr, &finish_bp.lop);
 	erts_smp_proc_inc_refc(p);
-	erts_suspend(p, ERTS_PROC_LOCK_MAIN, NULL);
+        erts_suspend(p, ERTS_PROC_LOCK_MAIN, nullptr);
 	ERTS_BIF_YIELD_RETURN(p, make_small(matches));
     }
 #endif
@@ -379,12 +379,12 @@ static void smp_bp_finisher(void* null)
 {
     if (erts_finish_breakpointing()) { /* Not done */
 	/* Arrange for being called again */
-	erts_schedule_thr_prgr_later_op(smp_bp_finisher, NULL, &finish_bp.lop);
+        erts_schedule_thr_prgr_later_op(smp_bp_finisher, nullptr, &finish_bp.lop);
     }
     else {			/* Done */
 	Process* p = finish_bp.stager;
 #ifdef DEBUG
-	finish_bp.stager = NULL;
+        finish_bp.stager = nullptr;
 #endif
 	erts_release_code_write_permission();
 	erts_smp_proc_lock(p, ERTS_PROC_LOCK_STATUS);
@@ -718,7 +718,7 @@ Eterm trace_3(BIF_ALIST_3)
 		    if (tracer != NIL) {
 			if (tracee_p->common.id == tracer)
 			    continue;
-			if (already_traced(NULL, tracee_p, tracer))
+                        if (already_traced(nullptr, tracee_p, tracer))
 			    continue;
 		    }
 		    if (on) {
@@ -748,7 +748,7 @@ Eterm trace_3(BIF_ALIST_3)
 		    if (tracer != NIL) {
 			if (tracee_port->common.id == tracer)
 			    continue;
-			if (port_already_traced(NULL, tracee_port, tracer))
+                        if (port_already_traced(nullptr, tracee_port, tracer))
 			    continue;
 		    }
 
@@ -1062,7 +1062,7 @@ static int function_is_traced(Process *p,
     e.code[0] = mfa[0];
     e.code[1] = mfa[1];
     e.code[2] = mfa[2];
-    if ((ep = export_get(&e)) != NULL) {
+    if ((ep = export_get(&e)) != nullptr) {
 	pc = ep->code+3;
 	if (ep->addressv[erts_active_code_ix()] == pc &&
 	    *pc != (BeamInstr) em_call_error_handler) {
@@ -1090,7 +1090,7 @@ static int function_is_traced(Process *p,
     }
     
     /* OK, now look for breakpoint tracing */
-    if ((pc = erts_find_local_func(mfa)) != NULL) {
+    if ((pc = erts_find_local_func(mfa)) != nullptr) {
 	int r = 
 	    (erts_is_trace_break(pc, ms, 1)
 	     ? FUNC_TRACE_LOCAL_TRACE : 0) 
@@ -1112,7 +1112,7 @@ trace_info_func(Process* p, Eterm func_spec, Eterm key)
     Eterm* tp;
     Eterm* hp;
     DeclareTmpHeap(mfa,3,p); /* Not really heap here, but might be when setting pattern */
-    Binary *ms = NULL, *ms_meta = NULL;
+    Binary *ms = nullptr, *ms_meta = nullptr;
     Uint count = 0;
     Eterm traced = am_false;
     Eterm match_spec = am_false;
@@ -2042,27 +2042,27 @@ static Eterm system_monitor_get(Process *p)
 
 	if (erts_system_monitor_long_gc != 0) {
 	    hsz += 2+3;
-	    (void) erts_bld_uint(NULL, &hsz, erts_system_monitor_long_gc);
+            (void) erts_bld_uint(nullptr, &hsz, erts_system_monitor_long_gc);
 	}
 	if (erts_system_monitor_long_schedule != 0) {
 	    hsz += 2+3;
-	    (void) erts_bld_uint(NULL, &hsz, erts_system_monitor_long_schedule);
+            (void) erts_bld_uint(nullptr, &hsz, erts_system_monitor_long_schedule);
 	}
 	if (erts_system_monitor_large_heap != 0) {
 	    hsz += 2+3;
-	    (void) erts_bld_uint(NULL, &hsz, erts_system_monitor_large_heap);
+            (void) erts_bld_uint(nullptr, &hsz, erts_system_monitor_large_heap);
 	}
 
 	hp = HAlloc(p, hsz);
 	if (erts_system_monitor_long_gc != 0) {
-	    long_gc = erts_bld_uint(&hp, NULL, erts_system_monitor_long_gc);
+            long_gc = erts_bld_uint(&hp, nullptr, erts_system_monitor_long_gc);
 	}
 	if (erts_system_monitor_long_schedule != 0) {
-	    long_schedule = erts_bld_uint(&hp, NULL, 
+            long_schedule = erts_bld_uint(&hp, nullptr,
 					  erts_system_monitor_long_schedule);
 	}
 	if (erts_system_monitor_large_heap != 0) {
-	    large_heap = erts_bld_uint(&hp, NULL, erts_system_monitor_large_heap);
+            large_heap = erts_bld_uint(&hp, nullptr, erts_system_monitor_large_heap);
 	}
 	res = NIL;
 	if (long_gc != NIL) {
@@ -2251,8 +2251,8 @@ BIF_RETTYPE system_profile_2(BIF_ALIST_2)
     Eterm list = BIF_ARG_2;
     Eterm prev;
     int system_blocked = 0;
-    Process *profiler_p = NULL;
-    Port *profiler_port = NULL;
+    Process *profiler_p = nullptr;
+    Port *profiler_port = nullptr;
 
     if (profiler == am_undefined || list == NIL) {
 	prev = system_profile_get(p);
@@ -2340,7 +2340,7 @@ trace_delivered_1(BIF_ALIST_1)
     Eterm msg, ref, msg_ref;
     Process *p;
     if (BIF_ARG_1 == am_all) {
-	p = NULL;
+        p = nullptr;
     } else if (! (p = erts_pid2proc(BIF_P, ERTS_PROC_LOCK_MAIN,
 				    BIF_ARG_1, ERTS_PROC_LOCKS_ALL))) {
 	if (is_not_internal_pid(BIF_ARG_1)) {

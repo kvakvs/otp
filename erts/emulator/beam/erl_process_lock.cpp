@@ -211,7 +211,7 @@ dequeue_waiter(erts_proc_lock_t *lck, int ix)
     ERTS_LC_ASSERT(lck->queue[ix]);
     if (wtr->next == wtr) {
 	ERTS_LC_ASSERT(lck->queue[ix]->prev == wtr);
-	lck->queue[ix] = NULL;
+	lck->queue[ix] = nullptr;
     }
     else {
 	ERTS_LC_ASSERT(wtr->next != wtr);
@@ -287,7 +287,7 @@ transfer_locks(Process *p,
 	       int unlock)
 {
     int transferred = 0;
-    erts_tse_t *wake = NULL;
+    erts_tse_t *wake = nullptr;
     erts_tse_t *wtr;
     ErtsProcLocks unset_waiter = 0;
     ErtsProcLocks tlocks = trnsfr_lcks;
@@ -567,7 +567,7 @@ void
 erts_proc_lock_prepare_proc_lock_waiter(void)
 {
 #if ERTS_PROC_LOCK_OWN_IMPL
-    tse_return(tse_fetch(NULL));
+    tse_return(tse_fetch(nullptr));
 #endif
 }
 
@@ -639,7 +639,7 @@ proc_safelock(int is_managed,
 #endif
 	    need_locks1 = a_need_locks | b_need_locks;
 	    have_locks1 = a_have_locks | b_have_locks;
-	    p2 = NULL;
+	    p2 = nullptr;
 #ifdef ERTS_ENABLE_LOCK_CHECK
 	    pid2 = 0;
 #endif
@@ -654,7 +654,7 @@ proc_safelock(int is_managed,
 #endif
 	need_locks1 = b_need_locks;
 	have_locks1 = b_have_locks;
-	p2 = NULL;
+	p2 = nullptr;
 #ifdef ERTS_ENABLE_LOCK_CHECK
 	pid2 = 0;
 #endif
@@ -828,7 +828,7 @@ erts_pid2proc_opt(Process *c_p,
 		  ErtsProcLocks pid_need_locks,
 		  int flags)
 {
-    Process *dec_refc_proc = NULL;
+    Process *dec_refc_proc = nullptr;
     ErtsThrPrgrDelayHandle dhndl;
     ErtsProcLocks need_locks;
     Uint pix;
@@ -846,7 +846,7 @@ erts_pid2proc_opt(Process *c_p,
 #endif
 
     if (is_not_internal_pid(pid))
-	return NULL;
+	return nullptr;
     pix = internal_pid_index(pid);
 
     ERTS_LC_ASSERT((pid_need_locks & ERTS_PROC_LOCKS_ALL) == pid_need_locks);
@@ -858,7 +858,7 @@ erts_pid2proc_opt(Process *c_p,
 
 	if (!(flags & ERTS_P2P_FLG_ALLOW_OTHER_X)
 	    && ERTS_PROC_IS_EXITING(c_p))
-	    return NULL;
+	    return nullptr;
 	need_locks &= ~c_p_have_locks;
 	if (!need_locks) {
 	    if (flags & ERTS_P2P_FLG_SMP_INC_REFC)
@@ -873,7 +873,7 @@ erts_pid2proc_opt(Process *c_p,
 
     if (proc) {
 	if (proc->common.id != pid)
-	    proc = NULL;
+	    proc = nullptr;
 	else if (!need_locks) {
 	    if (flags & ERTS_P2P_FLG_SMP_INC_REFC)
 		erts_smp_proc_inc_refc(proc);
@@ -980,7 +980,7 @@ erts_pid2proc_opt(Process *c_p,
 
 	if (flags & ERTS_P2P_FLG_SMP_INC_REFC)
 	    dec_refc_proc = proc;
-	proc = NULL;
+	proc = nullptr;
 
     }
 
@@ -1011,7 +1011,7 @@ erts_proc_lock_init(Process *p)
     p->lock.flags = ERTS_PROC_LOCKS_ALL;
 #endif
     for (i = 0; i <= ERTS_PROC_LOCK_MAX_BIT; i++)
-	p->lock.queue[i] = NULL;
+	p->lock.queue[i] = nullptr;
 #ifdef ERTS_ENABLE_LOCK_CHECK
     erts_proc_lc_trylock(p, ERTS_PROC_LOCKS_ALL, 1,__FILE__,__LINE__);
 #endif
@@ -1479,7 +1479,7 @@ erts_proc_lc_chk_have_proc_locks(Process *p, ErtsProcLocks locks)
     if (locks & ERTS_PROC_LOCK_STATUS)
 	have_locks[have_locks_len++] = p->lock.status.lc;
 #endif
-    erts_lc_check(have_locks, have_locks_len, NULL, 0);
+    erts_lc_check(have_locks, have_locks_len, nullptr, 0);
 }
 
 void

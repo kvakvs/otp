@@ -218,12 +218,12 @@ erts_gfalc_start(GFAllctr_t *gfallctr,
     allctr->unlink_free_block		= unlink_free_block;
     allctr->info_options		= info_options;
 
-    allctr->get_next_mbc_size		= NULL;
+    allctr->get_next_mbc_size		= nullptr;
     allctr->creating_mbc		= update_last_aux_mbc;
     allctr->destroying_mbc		= update_last_aux_mbc;
-    allctr->add_mbc		        = NULL;
-    allctr->remove_mbc		        = NULL;
-    allctr->largest_fblk_in_mbc         = NULL;
+    allctr->add_mbc		        = nullptr;
+    allctr->remove_mbc		        = nullptr;
+    allctr->largest_fblk_in_mbc         = nullptr;
     allctr->init_atoms			= init_atoms;
 
 #ifdef ERTS_ALLOC_UTIL_HARD_DEBUG
@@ -247,10 +247,10 @@ erts_gfalc_start(GFAllctr_t *gfallctr,
     gfallctr->max_blk_search		= (Uint) MAX(1, gfinit->mbsd);
 
     if (!erts_alcu_start(allctr, init))
-	return NULL;
+	return nullptr;
 
     if (allctr->min_block_size != MIN_BLK_SZ)
-	return NULL;
+	return nullptr;
 
     return allctr;
 }
@@ -344,7 +344,7 @@ search_bucket(Allctr_t *allctr, int ix, Uint size)
     Uint cand_sz = 0;
     UWord max_blk_search;
     GFFreeBlock_t *blk;
-    GFFreeBlock_t *cand = NULL;
+    GFFreeBlock_t *cand = nullptr;
     int blk_on_lambc;
     int cand_on_lambc = 0;
     GFAllctr_t *gfallctr = (GFAllctr_t *) allctr;
@@ -352,7 +352,7 @@ search_bucket(Allctr_t *allctr, int ix, Uint size)
     ASSERT(0 <= ix && ix <= NO_OF_BKTS - 1);
 
     if (!gfallctr->buckets[ix])
-	return NULL;
+	return nullptr;
 
     min_sz = BKT_MIN_SZ(gfallctr, ix);
     if (min_sz < size)
@@ -397,23 +397,23 @@ get_free_block(Allctr_t *allctr, Uint size,
     
     min_bi = find_bucket(&gfallctr->bucket_mask, unsafe_bi);
     if (min_bi < 0)
-	return NULL;
+	return nullptr;
 
     if (min_bi == unsafe_bi) {
 	blk = search_bucket(allctr, min_bi, size);
 	if (blk) {
 	    if (cand_blk && cand_size <= MBC_FBLK_SZ(blk))
-		return NULL; /* cand_blk was better */
+		return nullptr; /* cand_blk was better */
 	    unlink_free_block(allctr, blk);
 	    return blk;
 	}
 	if (min_bi < NO_OF_BKTS - 1) {
 	    min_bi = find_bucket(&gfallctr->bucket_mask, min_bi + 1);
 	    if (min_bi < 0)
-		return NULL;
+		return nullptr;
 	}
 	else
-	    return NULL;
+	    return nullptr;
     }
     else {
 	ASSERT(min_bi > unsafe_bi);
@@ -423,7 +423,7 @@ get_free_block(Allctr_t *allctr, Uint size,
     blk = search_bucket(allctr, min_bi, size);
     ASSERT(blk);
     if (cand_blk && cand_size <= MBC_FBLK_SZ(blk))
-	return NULL; /* cand_blk was better */
+	return nullptr; /* cand_blk was better */
     unlink_free_block(allctr, blk);
     return blk;
 }
@@ -442,7 +442,7 @@ link_free_block(Allctr_t *allctr, Block_t *block)
 
     SET_BKT_MASK_IX(gfallctr->bucket_mask, i);
 
-    blk->prev = NULL;
+    blk->prev = nullptr;
     blk->next = gfallctr->buckets[i];
     if (blk->next) {
 	ASSERT(!blk->next->prev);
@@ -486,8 +486,8 @@ update_last_aux_mbc(Allctr_t *allctr, Carrier_t *mbc)
 					  + CARRIER_SZ(allctr->mbc_list.last));
 	}
 	else {
-	    gfallctr->last_aux_mbc_start = NULL;
-	    gfallctr->last_aux_mbc_end = NULL;
+	    gfallctr->last_aux_mbc_start = nullptr;
+	    gfallctr->last_aux_mbc_end = nullptr;
 	}
 
     }
@@ -657,10 +657,10 @@ check_mbc(Allctr_t *allctr, Carrier_t *mbc)
 	if ((gfallctr->bucket_mask.main & (((UWord) 1) << IX2SMIX(bi)))
 	    && (gfallctr->bucket_mask.sub[IX2SMIX(bi)]
 		& (((UWord) 1) << IX2SBIX(bi)))) {
-	    ASSERT(gfallctr->buckets[bi] != NULL);
+	    ASSERT(gfallctr->buckets[bi] != nullptr);
 	}
 	else {
-	    ASSERT(gfallctr->buckets[bi] == NULL);
+	    ASSERT(gfallctr->buckets[bi] == nullptr);
 	}
     }
 }

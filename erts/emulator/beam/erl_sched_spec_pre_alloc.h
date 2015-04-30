@@ -191,7 +191,7 @@ erts_sspa_alloc(erts_sspa_data_t *data, int cix)
 	chdr->local.first = res->next_ptr;
 	chdr->local.cnt--;
 	if (!chdr->local.first)
-	    chdr->local.last = NULL;
+	    chdr->local.last = nullptr;
 	ERTS_SSPA_DBG_CHK_LCL(chdr);
     }
     if (chdr->local.cnt <= chdr->local.lim)

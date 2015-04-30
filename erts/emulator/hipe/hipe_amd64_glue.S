@@ -344,7 +344,7 @@ nbif_3_gc_after_bif:
 	subq	$(16-8), %rsp
 	movq	P, %rdi
 	movq	%rax, %rsi
-	xorl	%edx, %edx		# Pass NULL in regs
+	xorl	%edx, %edx		# Pass nullptr in regs
 	xorl	%ecx, %ecx		# Pass 0 in arity
 	call	CSYM(erts_gc_after_bif_call)
 	addq	$(16-8), %rsp

@@ -69,17 +69,17 @@
 
 #define POP_NODE(Dtt)			\
      (((Dtt)->pos) ? 			\
-      (Dtt)->array[--((Dtt)->pos)] : NULL)
+      (Dtt)->array[--((Dtt)->pos)] : nullptr)
 
 #define TOP_NODE(Dtt)                   \
      ((Dtt->pos) ? 			\
-      (Dtt)->array[(Dtt)->pos - 1] : NULL)
+      (Dtt)->array[(Dtt)->pos - 1] : nullptr)
 
-#define EMPTY_NODE(Dtt) (TOP_NODE(Dtt) == NULL)
+#define EMPTY_NODE(Dtt) (TOP_NODE(Dtt) == nullptr)
 
 
 
-/* Obtain table static stack if available. NULL if not.
+/* Obtain table static stack if available. nullptr if not.
 ** Must be released with release_stack()
 */
 static DbTreeStack* get_static_stack(DbTableTree* tb)
@@ -87,7 +87,7 @@ static DbTreeStack* get_static_stack(DbTableTree* tb)
     if (!erts_smp_atomic_xchg_acqb(&tb->is_stack_busy, 1)) {
 	return &tb->static_stack;
     }
-    return NULL;
+    return nullptr;
 }
 
 /* Obtain static stack if available, otherwise empty dynamic stack.
@@ -134,10 +134,10 @@ static ERTS_INLINE TreeDbTerm* new_dbterm(DbTableTree *tb, Eterm obj)
 {
     TreeDbTerm* p;
     if (tb->common.compress) {
-        p = (TreeDbTerm*)db_store_term_comp(&tb->common, NULL, offsetof(TreeDbTerm,dbterm), obj);
+        p = (TreeDbTerm*)db_store_term_comp(&tb->common, nullptr, offsetof(TreeDbTerm,dbterm), obj);
     }
     else {
-        p = (TreeDbTerm*)db_store_term(&tb->common, NULL, offsetof(TreeDbTerm,dbterm), obj);
+        p = (TreeDbTerm*)db_store_term(&tb->common, nullptr, offsetof(TreeDbTerm,dbterm), obj);
     }
     return p;
 }
@@ -145,7 +145,7 @@ static ERTS_INLINE TreeDbTerm* replace_dbterm(DbTableTree *tb, TreeDbTerm* old,
 					      Eterm obj)
 {
     TreeDbTerm* p;
-    ASSERT(old != NULL);
+    ASSERT(old != nullptr);
     if (tb->common.compress) {
         p = (TreeDbTerm*)db_store_term_comp(&tb->common, &(old->dbterm), offsetof(TreeDbTerm,dbterm), obj);
     }
@@ -439,7 +439,7 @@ DbTableMethod db_tree =
 #ifdef HARDDEBUG
     db_check_table_tree,
 #else
-    NULL,
+    nullptr,
 #endif
     db_lookup_dbterm_tree,
     db_finalize_dbterm_tree
@@ -464,7 +464,7 @@ void db_initialize_tree(void)
 int db_create_tree(Process *p, DbTable *tbl)
 {
     DbTableTree *tb = &tbl->tree;
-    tb->root = NULL;
+    tb->root = nullptr;
     tb->static_stack.array = (TreeDbTerm**)erts_db_alloc(ERTS_ALC_T_DB_STK,
 					   (DbTable *) tb,
 					   sizeof(TreeDbTerm *) * STACK_NEED);
@@ -481,15 +481,15 @@ static int db_first_tree(Process *p, DbTable *tbl, Eterm *ret)
     DbTreeStack* stack;
     TreeDbTerm *this_;
 
-    if (( this_ = tb->root ) == NULL) {
+    if (( this_ = tb->root ) == nullptr) {
 	*ret = am_EOT;
 	return DB_ERROR_NONE;
     }
     /* Walk down the tree to the left */
-    if ((stack = get_static_stack(tb)) != NULL) {
+    if ((stack = get_static_stack(tb)) != nullptr) {
 	stack->pos = stack->slot = 0;
     }
-    while (this_->left != NULL) {
+    while (this_->left != nullptr) {
 	if (stack) PUSH_NODE(stack, this_);
 	this_ = this_->left;
     }
@@ -511,9 +511,9 @@ static int db_next_tree(Process *p, DbTable *tbl, Eterm key, Eterm *ret)
     if (is_atom(key) && key == am_EOT)
 	return DB_ERROR_BADKEY;
     stack = get_any_stack(tb);
-    this_ = find_next(tb, stack, key, NULL);
+    this_ = find_next(tb, stack, key, nullptr);
     release_stack(tb,stack);
-    if (this_ == NULL) {
+    if (this_ == nullptr) {
 	*ret = am_EOT;
 	return DB_ERROR_NONE;
     }
@@ -527,15 +527,15 @@ static int db_last_tree(Process *p, DbTable *tbl, Eterm *ret)
     TreeDbTerm *this_;
     DbTreeStack* stack;
 
-    if (( this_ = tb->root ) == NULL) {
+    if (( this_ = tb->root ) == nullptr) {
 	*ret = am_EOT;
 	return DB_ERROR_NONE;
     }
     /* Walk down the tree to the right */
-    if ((stack = get_static_stack(tb)) != NULL) {
+    if ((stack = get_static_stack(tb)) != nullptr) {
 	stack->pos = stack->slot = 0;
     }    
-    while (this_->right != NULL) {
+    while (this_->right != nullptr) {
 	if (stack) PUSH_NODE(stack, this_);
 	this_ = this_->right;
     }
@@ -557,9 +557,9 @@ static int db_prev_tree(Process *p, DbTable *tbl, Eterm key, Eterm *ret)
     if (is_atom(key) && key == am_EOT)
 	return DB_ERROR_BADKEY;
     stack = get_any_stack(tb);
-    this_ = find_prev(tb, stack, key, NULL);
+    this_ = find_prev(tb, stack, key, nullptr);
     release_stack(tb,stack);
-    if (this_ == NULL) {
+    if (this_ == nullptr) {
 	*ret = am_EOT;
 	return DB_ERROR_NONE;
     }
@@ -611,9 +611,9 @@ static int db_put_tree(DbTable *tbl, Eterm obj, int key_clash_fail)
 	    }
 	    *this_ = new_dbterm(tb, obj);
 	    (*this_)->balance = 0;
-	    (*this_)->left = (*this_)->right = NULL;
+	    (*this_)->left = (*this_)->right = nullptr;
 	    break;
-	} else if ((c = cmp_key(tb, key, NULL, *this_)) < 0) {
+	} else if ((c = cmp_key(tb, key, nullptr, *this_)) < 0) {
 	    /* go lefts */
 	    dstack[dpos++] = DIR_LEFT;
 	    tstack[tpos++] = this_;
@@ -711,7 +711,7 @@ static int db_get_tree(Process *p, DbTable *tbl, Eterm key, Eterm *ret)
      */
     
     this_ = find_node(tb,key);
-    if (this_ == NULL) {
+    if (this_ == nullptr) {
 	*ret = NIL;
     } else {
 	hp = HAlloc(p, this_->dbterm.size + 2);
@@ -728,7 +728,7 @@ static int db_member_tree(DbTable *tbl, Eterm key, Eterm *ret)
 {
     DbTableTree *tb = &tbl->tree;
 
-    *ret = (find_node(tb,key) == NULL) ? am_false : am_true;
+    *ret = (find_node(tb,key) == nullptr) ? am_false : am_true;
     return DB_ERROR_NONE;
 }
 
@@ -750,7 +750,7 @@ static int db_get_element_tree(Process *p, DbTable *tbl,
      */
     
     this_ = find_node(tb,key);
-    if (this_ == NULL) {
+    if (this_ == nullptr) {
 	return DB_ERROR_BADKEY;
     } else {
 	if (ndex > arityval(this_->dbterm.tpl[0])) {
@@ -768,7 +768,7 @@ static int db_erase_tree(DbTable *tbl, Eterm key, Eterm *ret)
 
     *ret = am_true;
 
-    if ((res = linkout_tree(tb, key, NULL)) != NULL) {
+    if ((res = linkout_tree(tb, key, nullptr)) != nullptr) {
 	free_term(tb, res);
     }
     return DB_ERROR_NONE;
@@ -781,7 +781,7 @@ static int db_erase_object_tree(DbTable *tbl, Eterm object, Eterm *ret)
 
     *ret = am_true;
 
-    if ((res = linkout_object_tree(tb, object)) != NULL) {
+    if ((res = linkout_object_tree(tb, object)) != nullptr) {
 	free_term(tb, res);
     }
     return DB_ERROR_NONE;
@@ -821,7 +821,7 @@ static int db_slot_tree(Process *p, DbTable *tbl,
      */
     ++slot;
     st = slot_search(p, tb, slot); 
-    if (st == NULL) {
+    if (st == nullptr) {
 	*ret = am_false;
 	return DB_ERROR_UNSPEC;
     }
@@ -859,7 +859,7 @@ static BIF_RETTYPE ets_select_reverse(BIF_ALIST_3)
     
     list = a1;
     result = a2;
-    hp = hend = NULL;
+    hp = hend = nullptr;
     while (is_list(list)) {
 	Eterm* pair = list_val(list);
 	if (--max_iter == 0) {
@@ -953,7 +953,7 @@ static int db_select_continue_tree(Process *p,
     sc.accum = tptr[6];
     sc.mp = mp;
     sc.end_condition = NIL;
-    sc.lastobj = NULL;
+    sc.lastobj = nullptr;
     sc.max = 1000;
     sc.keypos = tb->common.keypos;
     sc.all_objects = mp->flags & BIN_FLAG_ALL_OBJECTS;
@@ -964,15 +964,15 @@ static int db_select_continue_tree(Process *p,
     stack = get_any_stack(tb);
     if (chunk_size) {
 	if (reverse) {
-	    traverse_backwards(tb, stack, lastkey, NULL, &doit_select_chunk, &sc);
+	    traverse_backwards(tb, stack, lastkey, nullptr, &doit_select_chunk, &sc);
 	} else {
-	    traverse_forward(tb, stack, lastkey, NULL, &doit_select_chunk, &sc);
+	    traverse_forward(tb, stack, lastkey, nullptr, &doit_select_chunk, &sc);
 	}
     } else {
 	if (reverse) {
-	    traverse_forward(tb, stack, lastkey, NULL, &doit_select, &sc);
+	    traverse_forward(tb, stack, lastkey, nullptr, &doit_select, &sc);
 	} else {
-	    traverse_backwards(tb, stack, lastkey, NULL, &doit_select, &sc);
+	    traverse_backwards(tb, stack, lastkey, nullptr, &doit_select, &sc);
 	}
     }
     release_stack(tb,stack);
@@ -984,8 +984,8 @@ static int db_select_continue_tree(Process *p,
 	    Eterm *hp; 
 	    unsigned sz;
 
-	    if (sc.got < chunk_size || sc.lastobj == NULL) { 
-		/* end of table, sc.lastobj may be NULL as we may have been
+	    if (sc.got < chunk_size || sc.lastobj == nullptr) { 
+		/* end of table, sc.lastobj may be nullptr as we may have been
 		   at the very last object in the table when trapping. */
 		if (!sc.got) {
 		    RET_TO_BIF(am_EOT, DB_ERROR_NONE);
@@ -999,7 +999,7 @@ static int db_select_continue_tree(Process *p,
 	    key = GETKEY(tb, sc.lastobj);
 	    sz = size_object_rel(key,sc.lastobj);
 	    hp = HAlloc(p, 9 + sz);
-	    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, NULL);
+	    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
 	    continuation = TUPLE8
 		(hp,
 		 tptr[1],
@@ -1042,7 +1042,7 @@ static int db_select_continue_tree(Process *p,
     /* Not done yet, let's trap. */
     sz = size_object_rel(key,sc.lastobj);
     hp = HAlloc(p, 9 + sz);
-    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, NULL);
+    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
     continuation = TUPLE8
 	(hp,
 	 tptr[1],
@@ -1069,7 +1069,7 @@ static int db_select_tree(Process *p, DbTable *tbl,
     struct select_context sc;
     struct mp_info mpi;
     Eterm lastkey = THE_NON_VALUE;
-    Eterm* lk_base = NULL;
+    Eterm* lk_base = nullptr;
     Eterm key;
     Eterm continuation;
     unsigned sz;
@@ -1080,17 +1080,17 @@ static int db_select_tree(Process *p, DbTable *tbl,
 
 
 #define RET_TO_BIF(Term,RetVal) do { 	       	\
-	if (mpi.mp != NULL) {			\
+	if (mpi.mp != nullptr) {			\
 	    erts_bin_free(mpi.mp);       	\
 	}					\
 	*ret = (Term); 				\
 	return RetVal; 			        \
     } while(0)
 
-    mpi.mp = NULL;
+    mpi.mp = nullptr;
 
     sc.accum = NIL;
-    sc.lastobj = NULL;
+    sc.lastobj = nullptr;
     sc.p = p;
     sc.max = 1000; 
     sc.end_condition = NIL;
@@ -1119,7 +1119,7 @@ static int db_select_tree(Process *p, DbTable *tbl,
     stack = get_any_stack(tb);
     if (reverse) {
 	if (mpi.some_limitation) {
-	    if ((this_ = find_prev_from_pb_key(tb, stack, mpi.least)) != NULL) {
+	    if ((this_ = find_prev_from_pb_key(tb, stack, mpi.least)) != nullptr) {
 		lastkey = GETKEY(tb, this_->dbterm.tpl);
 		lk_base = this_->dbterm.tpl;
 	    }
@@ -1128,7 +1128,7 @@ static int db_select_tree(Process *p, DbTable *tbl,
 	traverse_forward(tb, stack, lastkey, lk_base, &doit_select, &sc);
     } else {
 	if (mpi.some_limitation) {
-	    if ((this_ = find_next_from_pb_key(tb, stack, mpi.most)) != NULL) {
+	    if ((this_ = find_next_from_pb_key(tb, stack, mpi.most)) != nullptr) {
 		lastkey = GETKEY(tb, this_->dbterm.tpl);
 		lk_base = this_->dbterm.tpl;
 	    }
@@ -1149,7 +1149,7 @@ static int db_select_tree(Process *p, DbTable *tbl,
     key = GETKEY(tb, sc.lastobj);
     sz = size_object_rel(key, sc.lastobj);
     hp = HAlloc(p, 9 + sz + PROC_BIN_SIZE);
-    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, NULL);
+    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
     if (mpi.all_objects)
 	(mpi.mp)->flags |= BIN_FLAG_ALL_OBJECTS;
     mpb=db_make_mp_binary(p,mpi.mp,&hp);
@@ -1220,7 +1220,7 @@ static int db_select_count_continue_tree(Process *p,
     sc.p = p;
     sc.mp = mp;
     sc.end_condition = NIL;
-    sc.lastobj = NULL;
+    sc.lastobj = nullptr;
     sc.max = 1000;
     sc.keypos = tb->common.keypos;
     if (is_big(tptr[5])) {
@@ -1230,7 +1230,7 @@ static int db_select_count_continue_tree(Process *p,
     }
 
     stack = get_any_stack(tb);
-    traverse_backwards(tb, stack, lastkey, NULL, &doit_select_count, &sc);
+    traverse_backwards(tb, stack, lastkey, nullptr, &doit_select_count, &sc);
     release_stack(tb,stack);
 
     BUMP_REDS(p, 1000 - sc.max);
@@ -1255,7 +1255,7 @@ static int db_select_count_continue_tree(Process *p,
 	egot = uint_to_big(sc.got, hp);
 	hp += BIG_UINT_HEAP_SIZE;
     }
-    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, NULL);
+    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
     continuation = TUPLE5
 	(hp,
 	 tptr[1],
@@ -1278,7 +1278,7 @@ static int db_select_count_tree(Process *p, DbTable *tbl,
     struct select_count_context sc;
     struct mp_info mpi;
     Eterm lastkey = THE_NON_VALUE;
-    Eterm* lk_base = NULL;
+    Eterm* lk_base = nullptr;
     Eterm key;
     Eterm continuation;
     unsigned sz;
@@ -1290,16 +1290,16 @@ static int db_select_count_tree(Process *p, DbTable *tbl,
 
 
 #define RET_TO_BIF(Term,RetVal) do { 	       	\
-	if (mpi.mp != NULL) {			\
+	if (mpi.mp != nullptr) {			\
 	    erts_bin_free(mpi.mp);       	\
 	}					\
 	*ret = (Term); 				\
 	return RetVal; 			        \
     } while(0)
 
-    mpi.mp = NULL;
+    mpi.mp = nullptr;
 
-    sc.lastobj = NULL;
+    sc.lastobj = nullptr;
     sc.p = p;
     sc.max = 1000; 
     sc.end_condition = NIL;
@@ -1326,7 +1326,7 @@ static int db_select_count_tree(Process *p, DbTable *tbl,
 
     stack = get_any_stack(tb);
     if (mpi.some_limitation) {
-	if ((this_ = find_next_from_pb_key(tb, stack, mpi.most)) != NULL) {
+	if ((this_ = find_next_from_pb_key(tb, stack, mpi.most)) != nullptr) {
 	    lastkey = GETKEY(tb, this_->dbterm.tpl);
 	    lk_base = this_->dbterm.tpl;
 	}
@@ -1351,7 +1351,7 @@ static int db_select_count_tree(Process *p, DbTable *tbl,
 	egot = uint_to_big(sc.got, hp);
 	hp += BIG_UINT_HEAP_SIZE;
     }
-    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, NULL);
+    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
     if (mpi.all_objects)
 	(mpi.mp)->flags |= BIN_FLAG_ALL_OBJECTS;
     mpb = db_make_mp_binary(p,mpi.mp,&hp);
@@ -1382,7 +1382,7 @@ static int db_select_chunk_tree(Process *p, DbTable *tbl,
     struct select_context sc;
     struct mp_info mpi;
     Eterm lastkey = THE_NON_VALUE;
-    Eterm* lk_base = NULL;
+    Eterm* lk_base = nullptr;
     Eterm key;
     Eterm continuation;
     unsigned sz;
@@ -1393,17 +1393,17 @@ static int db_select_chunk_tree(Process *p, DbTable *tbl,
 
 
 #define RET_TO_BIF(Term,RetVal) do { 		\
-	if (mpi.mp != NULL) {			\
+	if (mpi.mp != nullptr) {			\
 	    erts_bin_free(mpi.mp);		\
 	}					\
 	*ret = (Term); 				\
 	return RetVal; 			        \
     } while(0)
 
-    mpi.mp = NULL;
+    mpi.mp = nullptr;
 
     sc.accum = NIL;
-    sc.lastobj = NULL;
+    sc.lastobj = nullptr;
     sc.p = p;
     sc.max = 1000; 
     sc.end_condition = NIL;
@@ -1437,7 +1437,7 @@ static int db_select_chunk_tree(Process *p, DbTable *tbl,
     stack = get_any_stack(tb);
     if (reverse) {
 	if (mpi.some_limitation) {
-	    if ((this_ = find_next_from_pb_key(tb, stack, mpi.most)) != NULL) {
+	    if ((this_ = find_next_from_pb_key(tb, stack, mpi.most)) != nullptr) {
 		lastkey = GETKEY(tb, this_->dbterm.tpl);
 		lk_base = this_->dbterm.tpl;
 	    }
@@ -1446,7 +1446,7 @@ static int db_select_chunk_tree(Process *p, DbTable *tbl,
 	traverse_backwards(tb, stack, lastkey, lk_base, &doit_select_chunk, &sc);
     } else {
 	if (mpi.some_limitation) {
-	    if ((this_ = find_prev_from_pb_key(tb, stack, mpi.least)) != NULL) {
+	    if ((this_ = find_prev_from_pb_key(tb, stack, mpi.least)) != nullptr) {
 		lastkey = GETKEY(tb, this_->dbterm.tpl);
 		lk_base = this_->dbterm.tpl;
 	    }
@@ -1462,10 +1462,10 @@ static int db_select_chunk_tree(Process *p, DbTable *tbl,
 	unsigned sz;
 
 	if (sc.got < chunk_size ||
-	    sc.lastobj == NULL) { 
+	    sc.lastobj == nullptr) { 
 	    /* We haven't got all and we haven't trapped 
 	       which should mean we are at the end of the 
-	       table, sc.lastobj may be NULL if the table was empty */
+	       table, sc.lastobj may be nullptr if the table was empty */
 	    
 	    if (!sc.got) {
 		RET_TO_BIF(am_EOT, DB_ERROR_NONE);
@@ -1479,7 +1479,7 @@ static int db_select_chunk_tree(Process *p, DbTable *tbl,
 	key = GETKEY(tb, sc.lastobj);
 	sz = size_object_rel(key, sc.lastobj);
 	hp = HAlloc(p, 9 + sz + PROC_BIN_SIZE);
-	key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, NULL);
+	key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
 	if (mpi.all_objects)
 	    (mpi.mp)->flags |= BIN_FLAG_ALL_OBJECTS;
 	mpb = db_make_mp_binary(p,mpi.mp,&hp);
@@ -1504,7 +1504,7 @@ static int db_select_chunk_tree(Process *p, DbTable *tbl,
     key = GETKEY(tb, sc.lastobj);
     sz = size_object_rel(key, sc.lastobj);
     hp = HAlloc(p, 9 + sz + PROC_BIN_SIZE);
-    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, NULL);
+    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
 
     if (mpi.all_objects)
 	(mpi.mp)->flags |= BIN_FLAG_ALL_OBJECTS;
@@ -1564,7 +1564,7 @@ static int db_select_delete_continue_tree(Process *p,
     end_condition = tptr[3];
 
     sc.erase_lastterm = 0; /* Before first RET_TO_BIF */
-    sc.lastterm = NULL;
+    sc.lastterm = nullptr;
 
     mp = ((ProcBin *) binary_val(tptr[4]))->val;
     sc.p = p;
@@ -1580,7 +1580,7 @@ static int db_select_delete_continue_tree(Process *p,
     sc.keypos = tb->common.keypos;
 
     ASSERT(!erts_smp_atomic_read_nob(&tb->is_stack_busy));
-    traverse_backwards(tb, &tb->static_stack, lastkey, NULL, &doit_select_delete, &sc);
+    traverse_backwards(tb, &tb->static_stack, lastkey, nullptr, &doit_select_delete, &sc);
 
     BUMP_REDS(p, 1000 - sc.max);
 
@@ -1603,7 +1603,7 @@ static int db_select_delete_continue_tree(Process *p,
 	eaccsum = uint_to_big(sc.accum, hp);
 	hp += BIG_UINT_HEAP_SIZE;
     }
-    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastterm->dbterm.tpl, NULL);
+    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastterm->dbterm.tpl, nullptr);
     continuation = TUPLE5
 	(hp,
 	 tptr[1],
@@ -1624,7 +1624,7 @@ static int db_select_delete_tree(Process *p, DbTable *tbl,
     struct select_delete_context sc;
     struct mp_info mpi;
     Eterm lastkey = THE_NON_VALUE;
-    Eterm* lk_base = NULL;
+    Eterm* lk_base = nullptr;
     Eterm key;
     Eterm continuation;
     unsigned sz;
@@ -1635,7 +1635,7 @@ static int db_select_delete_tree(Process *p, DbTable *tbl,
     Eterm eaccsum;
 
 #define RET_TO_BIF(Term,RetVal) do { 	       	\
-	if (mpi.mp != NULL) {			\
+	if (mpi.mp != nullptr) {			\
 	    erts_bin_free(mpi.mp);       	\
 	}					\
 	if (sc.erase_lastterm) {                \
@@ -1645,11 +1645,11 @@ static int db_select_delete_tree(Process *p, DbTable *tbl,
 	return RetVal; 			        \
     } while(0)
 
-    mpi.mp = NULL;
+    mpi.mp = nullptr;
 
     sc.accum = 0;
     sc.erase_lastterm = 0;
-    sc.lastterm = NULL;
+    sc.lastterm = nullptr;
     sc.p = p;
     sc.max = 1000; 
     sc.end_condition = NIL;
@@ -1675,7 +1675,7 @@ static int db_select_delete_tree(Process *p, DbTable *tbl,
     }
 
     if (mpi.some_limitation) {
-	if ((this_ = find_next_from_pb_key(tb, &tb->static_stack, mpi.most)) != NULL) {
+	if ((this_ = find_next_from_pb_key(tb, &tb->static_stack, mpi.most)) != nullptr) {
 	    lastkey = GETKEY(tb, this_->dbterm.tpl);
 	    lk_base = this_->dbterm.tpl;
 	}
@@ -1700,7 +1700,7 @@ static int db_select_delete_tree(Process *p, DbTable *tbl,
 	eaccsum = uint_to_big(sc.accum, hp);
 	hp += BIG_UINT_HEAP_SIZE;
     }
-    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastterm->dbterm.tpl, NULL);
+    key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastterm->dbterm.tpl, nullptr);
     mpb = db_make_mp_binary(p,mpi.mp,&hp);
     
     continuation = TUPLE5
@@ -1828,7 +1828,7 @@ static TreeDbTerm *linkout_tree(DbTableTree *tb,
     TreeDbTerm **this_ = &tb->root;
     Sint c;
     int dir;
-    TreeDbTerm *q = NULL;
+    TreeDbTerm *q = nullptr;
 
     /*
      * Somewhat complicated, deletion in an AVL tree,
@@ -1840,7 +1840,7 @@ static TreeDbTerm *linkout_tree(DbTableTree *tb,
     dstack[dpos++] = DIR_END;
     for (;;) {
 	if (!*this_) { /* Failure */
-	    return NULL;
+	    return nullptr;
 	} else if ((c = cmp_key(tb, key, key_base, *this_)) < 0) {
 	    dstack[dpos++] = DIR_LEFT;
 	    tstack[tpos++] = this_;
@@ -1851,10 +1851,10 @@ static TreeDbTerm *linkout_tree(DbTableTree *tb,
 	    this_ = &((*this_)->right);
 	} else { /* Equal key, found the one to delete*/
 	    q = (*this_);
-	    if (q->right == NULL) {
+	    if (q->right == nullptr) {
 		(*this_) = q->left;
 		state = 1;
-	    } else if (q->left == NULL) {
+	    } else if (q->left == nullptr) {
 		(*this_) = q->right;
 		state = 1;
 	    } else {
@@ -1888,7 +1888,7 @@ static TreeDbTerm *linkout_object_tree(DbTableTree *tb,
     TreeDbTerm **this_ = &tb->root;
     Sint c;
     int dir;
-    TreeDbTerm *q = NULL;
+    TreeDbTerm *q = nullptr;
     Eterm key;
 
     /*
@@ -1904,8 +1904,8 @@ static TreeDbTerm *linkout_object_tree(DbTableTree *tb,
     dstack[dpos++] = DIR_END;
     for (;;) {
 	if (!*this_) { /* Failure */
-	    return NULL;
-	} else if ((c = cmp_key(tb,key,NULL,*this_)) < 0) {
+	    return nullptr;
+	} else if ((c = cmp_key(tb,key,nullptr,*this_)) < 0) {
 	    dstack[dpos++] = DIR_LEFT;
 	    tstack[tpos++] = this_;
 	    this_ = &((*this_)->left);
@@ -1915,13 +1915,13 @@ static TreeDbTerm *linkout_object_tree(DbTableTree *tb,
 	    this_ = &((*this_)->right);
 	} else { /* Equal key, found the only possible matching object*/
 	    if (!db_eq(&tb->common,object,&(*this_)->dbterm)) {
-		return NULL;
+		return nullptr;
 	    }
 	    q = (*this_);
-	    if (q->right == NULL) {
+	    if (q->right == nullptr) {
 		(*this_) = q->left;
 		state = 1;
-	    } else if (q->left == NULL) {
+	    } else if (q->left == nullptr) {
 		(*this_) = q->right;
 		state = 1;
 	    } else {
@@ -1967,9 +1967,9 @@ static int analyze_pattern(DbTableTree *tb, Eterm pattern,
     mpi->some_limitation = 1;
     mpi->got_partial = 0;
     mpi->something_can_match = 0;
-    mpi->mp = NULL;
+    mpi->mp = nullptr;
     mpi->all_objects = 1;
-    mpi->save_term = NULL;
+    mpi->save_term = nullptr;
 
     for (lst = pattern; is_list(lst); lst = CDR(list_val(lst)))
 	++num_heads;
@@ -2045,8 +2045,8 @@ static int analyze_pattern(DbTableTree *tb, Eterm pattern,
      * match specs that happen to specify non existent keys etc.
      */
     if ((mpi->mp = db_match_compile(matches, guards, bodies,
-				    num_heads, DCOMP_TABLE, NULL)) 
-	== NULL) {
+				    num_heads, DCOMP_TABLE, nullptr)) 
+	== nullptr) {
 	if (buff != sbuff) { 
 	    erts_free(ERTS_ALC_T_DB_TMP, buff);
 	}
@@ -2065,14 +2065,14 @@ static int do_free_tree_cont(DbTableTree *tb, int num_left)
 
     for (;;) {
 	root = POP_NODE(&tb->static_stack);
-	if (root == NULL) break;
+	if (root == nullptr) break;
 	for (;;) {
-	    if ((p = root->left) != NULL) {
-		root->left = NULL;
+	    if ((p = root->left) != nullptr) {
+		root->left = nullptr;
 		PUSH_NODE(&tb->static_stack, root);
 		root = p;
-	    } else if ((p = root->right) != NULL) {
-		root->right = NULL;
+	    } else if ((p = root->right) != nullptr) {
+		root->right = nullptr;
 		PUSH_NODE(&tb->static_stack, root);
 		root = p;
 	    } else {
@@ -2195,7 +2195,7 @@ static int delsub(TreeDbTerm **this_)
      * object's place.
      */
     
-    while ((*r)->right != NULL) {
+    while ((*r)->right != nullptr) {
 	tstack[tpos++] = r;
 	r = &((*r)->right);
     }
@@ -2222,7 +2222,7 @@ static TreeDbTerm *slot_search(Process *p, DbTableTree *tb, Sint slot)
     TreeDbTerm *this_;
     TreeDbTerm *tmp;
     DbTreeStack* stack = get_any_stack(tb);
-    ASSERT(stack != NULL);
+    ASSERT(stack != nullptr);
 
     if (slot == 1) { /* Don't search from where we are if we are 
 			looking for the first slot */
@@ -2235,9 +2235,9 @@ static TreeDbTerm *slot_search(Process *p, DbTableTree *tb, Sint slot)
     }
     if (EMPTY_NODE(stack)) {
 	this_ = tb->root;
-	if (this_ == NULL)
+	if (this_ == nullptr)
 	    goto done;
-	while (this_->left != NULL){
+	while (this_->left != nullptr){
 	    PUSH_NODE(stack, this_);
 	    this_ = this_->left;
 	}
@@ -2245,11 +2245,11 @@ static TreeDbTerm *slot_search(Process *p, DbTableTree *tb, Sint slot)
 	stack->slot = 1;
     }
     this_ = TOP_NODE(stack);
-    while (stack->slot != slot && this_ != NULL) {
+    while (stack->slot != slot && this_ != nullptr) {
 	if (slot > stack->slot) {
-	    if (this_->right != NULL) {
+	    if (this_->right != nullptr) {
 		this_ = this_->right;
-		while (this_->left != NULL) {
+		while (this_->left != nullptr) {
 		    PUSH_NODE(stack, this_);
 		    this_ = this_->left;
 		}
@@ -2258,15 +2258,15 @@ static TreeDbTerm *slot_search(Process *p, DbTableTree *tb, Sint slot)
 		for (;;) {
 		    tmp = POP_NODE(stack);
 		    this_ = TOP_NODE(stack);
-		    if (this_ == NULL || this_->left == tmp)
+		    if (this_ == nullptr || this_->left == tmp)
 			break;
 		}
 	    }		
 	    ++(stack->slot);
 	} else {
-	    if (this_->left != NULL) {
+	    if (this_->left != nullptr) {
 		this_ = this_->left;
-		while (this_->right != NULL) {
+		while (this_->right != nullptr) {
 		    PUSH_NODE(stack, this_);
 		    this_ = this_->right;
 		}
@@ -2275,7 +2275,7 @@ static TreeDbTerm *slot_search(Process *p, DbTableTree *tb, Sint slot)
 		for (;;) {
 		    tmp = POP_NODE(stack);
 		    this_ = TOP_NODE(stack);
-		    if (this_ == NULL || this_->right == tmp)
+		    if (this_ == nullptr || this_->right == tmp)
 			break;
 		}
 	    }		
@@ -2298,26 +2298,26 @@ static TreeDbTerm *find_next(DbTableTree *tb, DbTreeStack* stack,
     TreeDbTerm *tmp;
     Sint c;
 
-    if(( this_ = TOP_NODE(stack)) != NULL) {
+    if(( this_ = TOP_NODE(stack)) != nullptr) {
 	if (!cmp_key_eq(tb,key,key_base,this_)) {
 	    /* Start from the beginning */
 	    stack->pos = stack->slot = 0;
 	}
     }
     if (EMPTY_NODE(stack)) { /* Have to rebuild the stack */
-	if (( this_ = tb->root ) == NULL)
-	    return NULL;
+	if (( this_ = tb->root ) == nullptr)
+	    return nullptr;
 	for (;;) {
 	    PUSH_NODE(stack, this_);
 	    if (( c = cmp_key(tb,key,key_base,this_) ) > 0) {
-		if (this_->right == NULL) /* We are at the previos 
+		if (this_->right == nullptr) /* We are at the previos 
 					    and the element does
 					    not exist */
 		    break;
 		else
 		    this_ = this_->right;
 	    } else if (c < 0) {
-		if (this_->left == NULL) /* Done */
+		if (this_->left == nullptr) /* Done */
 		    return this_;
 		else
 		    this_ = this_->left;
@@ -2326,10 +2326,10 @@ static TreeDbTerm *find_next(DbTableTree *tb, DbTreeStack* stack,
 	}
     }
     /* The next element from this_... */
-    if (this_->right != NULL) {
+    if (this_->right != nullptr) {
 	this_ = this_->right;
 	PUSH_NODE(stack,this_);
-	while (this_->left != NULL) {
+	while (this_->left != nullptr) {
 	    this_ = this_->left;
 	    PUSH_NODE(stack, this_);
 	}
@@ -2338,9 +2338,9 @@ static TreeDbTerm *find_next(DbTableTree *tb, DbTreeStack* stack,
     } else {
 	do {
 	    tmp = POP_NODE(stack);
-	    if (( this_ = TOP_NODE(stack)) == NULL) {
+	    if (( this_ = TOP_NODE(stack)) == nullptr) {
 		stack->slot = 0;
-		return NULL;
+		return nullptr;
 	    }
 	} while (this_->right == tmp);
 	if (stack->slot > 0) 
@@ -2356,26 +2356,26 @@ static TreeDbTerm *find_prev(DbTableTree *tb, DbTreeStack* stack,
     TreeDbTerm *tmp;
     Sint c;
 
-    if(( this_ = TOP_NODE(stack)) != NULL) {
+    if(( this_ = TOP_NODE(stack)) != nullptr) {
 	if (!cmp_key_eq(tb,key,key_base,this_)) {
 	    /* Start from the beginning */
 	    stack->pos = stack->slot = 0;
 	}
     }
     if (EMPTY_NODE(stack)) { /* Have to rebuild the stack */
-	if (( this_ = tb->root ) == NULL)
-	    return NULL;
+	if (( this_ = tb->root ) == nullptr)
+	    return nullptr;
 	for (;;) {
 	    PUSH_NODE(stack, this_);
 	    if (( c = cmp_key(tb,key,key_base,this_) ) < 0) {
-		if (this_->left == NULL) /* We are at the next 
+		if (this_->left == nullptr) /* We are at the next 
 					   and the element does
 					   not exist */
 		    break;
 		else
 		    this_ = this_->left;
 	    } else if (c > 0) {
-		if (this_->right == NULL) /* Done */
+		if (this_->right == nullptr) /* Done */
 		    return this_;
 		else
 		    this_ = this_->right;
@@ -2384,10 +2384,10 @@ static TreeDbTerm *find_prev(DbTableTree *tb, DbTreeStack* stack,
 	}
     }
     /* The previous element from this_... */
-    if (this_->left != NULL) {
+    if (this_->left != nullptr) {
 	this_ = this_->left;
 	PUSH_NODE(stack,this_);
-	while (this_->right != NULL) {
+	while (this_->right != nullptr) {
 	    this_ = this_->right;
 	    PUSH_NODE(stack, this_);
 	}
@@ -2396,9 +2396,9 @@ static TreeDbTerm *find_prev(DbTableTree *tb, DbTreeStack* stack,
     } else {
 	do {
 	    tmp = POP_NODE(stack);
-	    if (( this_ = TOP_NODE(stack)) == NULL) {
+	    if (( this_ = TOP_NODE(stack)) == nullptr) {
 		stack->slot = 0;
-		return NULL;
+		return nullptr;
 	    }
 	} while (this_->left == tmp);
 	if (stack->slot > 0) 
@@ -2416,24 +2416,24 @@ static TreeDbTerm *find_next_from_pb_key(DbTableTree *tb, DbTreeStack* stack,
 
     /* spool the stack, we have to "re-search" */
     stack->pos = stack->slot = 0;
-    if (( this_ = tb->root ) == NULL)
-	return NULL;
+    if (( this_ = tb->root ) == nullptr)
+	return nullptr;
     for (;;) {
 	PUSH_NODE(stack, this_);
 	if (( c = cmp_partly_bound(key,GETKEY(tb, this_->dbterm.tpl),
 				   this_->dbterm.tpl) ) >= 0) {
-	    if (this_->right == NULL) {
+	    if (this_->right == nullptr) {
 		do {
 		    tmp = POP_NODE(stack);
-		    if (( this_ = TOP_NODE(stack)) == NULL) {
-			return NULL;
+		    if (( this_ = TOP_NODE(stack)) == nullptr) {
+			return nullptr;
 		    }
 		} while (this_->right == tmp);
 		return this_;
 	    } else
 		this_ = this_->right;
 	} else /*if (c < 0)*/ {
-	    if (this_->left == NULL) /* Done */
+	    if (this_->left == nullptr) /* Done */
 		return this_;
 	    else
 		this_ = this_->left;
@@ -2450,24 +2450,24 @@ static TreeDbTerm *find_prev_from_pb_key(DbTableTree *tb, DbTreeStack* stack,
 
     /* spool the stack, we have to "re-search" */
     stack->pos = stack->slot = 0;
-    if (( this_ = tb->root ) == NULL)
-	return NULL;
+    if (( this_ = tb->root ) == nullptr)
+	return nullptr;
     for (;;) {
 	PUSH_NODE(stack, this_);
 	if (( c = cmp_partly_bound(key,GETKEY(tb, this_->dbterm.tpl),
 				   this_->dbterm.tpl) ) <= 0) {
-	    if (this_->left == NULL) {
+	    if (this_->left == nullptr) {
 		do {
 		    tmp = POP_NODE(stack);
-		    if (( this_ = TOP_NODE(stack)) == NULL) {
-			return NULL;
+		    if (( this_ = TOP_NODE(stack)) == nullptr) {
+			return nullptr;
 		    }
 		} while (this_->left == tmp);
 		return this_;
 	    } else
 		this_ = this_->left;
 	} else /*if (c < 0)*/ {
-	    if (this_->right == NULL) /* Done */
+	    if (this_->right == nullptr) /* Done */
 		return this_;
 	    else
 		this_ = this_->right;
@@ -2486,10 +2486,10 @@ static TreeDbTerm *find_node(DbTableTree *tb, Eterm key)
     DbTreeStack* stack = get_static_stack(tb);
 
     if(!stack || EMPTY_NODE(stack)
-       || !cmp_key_eq(tb, key, NULL, (this_=TOP_NODE(stack)))) {
+       || !cmp_key_eq(tb, key, nullptr, (this_=TOP_NODE(stack)))) {
 
 	this_ = tb->root;
-	while (this_ != NULL && (res = cmp_key(tb,key,NULL,this_)) != 0) {
+	while (this_ != nullptr && (res = cmp_key(tb,key,nullptr,this_)) != 0) {
 	    if (res < 0)
 		this_ = this_->left;
 	    else
@@ -2511,14 +2511,14 @@ static TreeDbTerm **find_node2(DbTableTree *tb, Eterm key)
     Sint res;
 
     this_ = &tb->root;
-    while ((*this_) != NULL && (res = cmp_key(tb, key, NULL, *this_)) != 0) {
+    while ((*this_) != nullptr && (res = cmp_key(tb, key, nullptr, *this_)) != 0) {
 	if (res < 0)
 	    this_ = &((*this_)->left);
 	else
 	    this_ = &((*this_)->right);
     }
-    if (*this_ == NULL)
-	return NULL;
+    if (*this_ == nullptr)
+	return nullptr;
     return this_;
 }
 
@@ -2527,7 +2527,7 @@ static int db_lookup_dbterm_tree(DbTable *tbl, Eterm key, DbUpdateHandle* handle
     DbTableTree *tb = &tbl->tree;
     TreeDbTerm **pp = find_node2(tb, key);
 
-    if (pp == NULL) return 0;
+    if (pp == nullptr) return 0;
 
     handle->tb = tbl;
     handle->dbterm = &(*pp)->dbterm;
@@ -2535,7 +2535,7 @@ static int db_lookup_dbterm_tree(DbTable *tbl, Eterm key, DbUpdateHandle* handle
     handle->bp = (void**) pp;
     handle->new_size = (*pp)->dbterm.size;
 #if HALFWORD_HEAP
-    handle->abs_vec = NULL;
+    handle->abs_vec = nullptr;
 #endif
     return 1;
 }
@@ -2572,10 +2572,10 @@ static void traverse_backwards(DbTableTree *tb,
 
     if (lastkey == THE_NON_VALUE) {
 	stack->pos = stack->slot = 0;
-	if (( this_ = tb->root ) == NULL) {
+	if (( this_ = tb->root ) == nullptr) {
 	    return;
 	}
-	while (this_ != NULL) {
+	while (this_ != nullptr) {
 	    PUSH_NODE(stack, this_);
 	    this_ = this_->right;
 	}
@@ -2588,7 +2588,7 @@ static void traverse_backwards(DbTableTree *tb,
 	next = find_prev(tb, stack, lastkey, lk_base);
     }
 
-    while ((this_ = next) != NULL) {
+    while ((this_ = next) != nullptr) {
 	next = find_prev(tb, stack, GETKEY(tb, this_->dbterm.tpl), this_->dbterm.tpl);
 	if (!((*doit)(tb, this_, context, 0)))
 	    return;
@@ -2611,10 +2611,10 @@ static void traverse_forward(DbTableTree *tb,
 
     if (lastkey == THE_NON_VALUE) {
 	stack->pos = stack->slot = 0;
-	if (( this_ = tb->root ) == NULL) {
+	if (( this_ = tb->root ) == nullptr) {
 	    return;
 	}
-	while (this_ != NULL) {
+	while (this_ != nullptr) {
 	    PUSH_NODE(stack, this_);
 	    this_ = this_->left;
 	}
@@ -2626,7 +2626,7 @@ static void traverse_forward(DbTableTree *tb,
 	next = find_next(tb, stack, lastkey, lk_base);
     }
 
-    while ((this_ = next) != NULL) {
+    while ((this_ = next) != nullptr) {
 	next = find_next(tb, stack, GETKEY(tb, this_->dbterm.tpl), this_->dbterm.tpl);
 	if (!((*doit)(tb, this_, context, 1)))
 	    return;
@@ -2643,19 +2643,19 @@ static int key_given(DbTableTree *tb, Eterm pattern, TreeDbTerm **ret,
     TreeDbTerm *this_;
     Eterm key;
 
-    ASSERT(ret != NULL);
+    ASSERT(ret != nullptr);
     if (pattern == am_Underscore || db_is_variable(pattern) != -1)
 	return 0;
     key = db_getkey(tb->common.keypos, pattern);
     if (is_non_value(key))
 	return -1;  /* can't possibly match anything */
     if (!db_has_variable(key)) {   /* Bound key */
-	if (( this_ = find_node(tb, key) ) == NULL) {
+	if (( this_ = find_node(tb, key) ) == nullptr) {
 	    return -1;
 	}
 	*ret = this_;
 	return 1;
-    } else if (partly_bound != NULL && key != am_Underscore && 
+    } else if (partly_bound != nullptr && key != am_Underscore && 
 	       db_is_variable(key) < 0)
 	*partly_bound = key;
 	
@@ -2678,20 +2678,20 @@ static Sint do_cmp_partly_bound(Eterm a, Eterm b, Eterm* b_base, int *done)
 	*done = 1;
 	return 0;
     }
-    if (is_same(a,NULL,b,b_base))
+    if (is_same(a,nullptr,b,b_base))
 	return 0;
     
     switch (a & _TAG_PRIMARY_MASK) {
     case TAG_PRIMARY_LIST:
 	if (!is_list(b)) {
-	    return cmp_rel(a,NULL,b,b_base);
+	    return cmp_rel(a,nullptr,b,b_base);
 	}
 	aa = list_val(a);
 	bb = list_val_rel(b,b_base);
 	while (1) {
 	    if ((j = do_cmp_partly_bound(*aa++, *bb++, b_base, done)) != 0 || *done)
 		return j;
-	    if (is_same(*aa, NULL, *bb, b_base))
+	    if (is_same(*aa, nullptr, *bb, b_base))
 		return 0;
 	    if (is_not_list(*aa) || is_not_list(*bb))
 		return do_cmp_partly_bound(*aa, *bb, b_base, done);
@@ -2700,12 +2700,12 @@ static Sint do_cmp_partly_bound(Eterm a, Eterm b, Eterm* b_base, int *done)
 	}
     case TAG_PRIMARY_BOXED:
 	if ((b & _TAG_PRIMARY_MASK) != TAG_PRIMARY_BOXED) {
-	    return cmp_rel(a,NULL,b,b_base);
+	    return cmp_rel(a,nullptr,b,b_base);
 	}
 	a_hdr = ((*boxed_val(a)) & _TAG_HEADER_MASK) >> _TAG_PRIMARY_SIZE;
 	b_hdr = ((*boxed_val_rel(b,b_base)) & _TAG_HEADER_MASK) >> _TAG_PRIMARY_SIZE;
 	if (a_hdr != b_hdr) {
-	    return cmp_rel(a, NULL, b, b_base);
+	    return cmp_rel(a, nullptr, b, b_base);
 	}
 	if (a_hdr == (_TAG_HEADER_ARITYVAL >> _TAG_PRIMARY_SIZE)) {
 	    aa = tuple_val(a);
@@ -2723,7 +2723,7 @@ static Sint do_cmp_partly_bound(Eterm a, Eterm b, Eterm* b_base, int *done)
 	}
 	/* Drop through */
       default:
-	  return cmp_rel(a, NULL, b, b_base);
+	  return cmp_rel(a, nullptr, b, b_base);
     }
 }
 
@@ -2998,7 +2998,7 @@ static int doit_select_count(DbTableTree *tb, TreeDbTerm *this_, void *ptr,
 	return 0;
     }
     ret = db_match_dbterm(&tb->common, sc->p, sc->mp, 0,
-			  &this_->dbterm, NULL, 0);
+			  &this_->dbterm, nullptr, 0);
     if (ret == am_true) {
 	++(sc->got);
     }
@@ -3067,7 +3067,7 @@ static int doit_select_delete(DbTableTree *tb, TreeDbTerm *this_, void *ptr,
 			 this_->dbterm.tpl) > 0)
 	return 0;
     ret = db_match_dbterm(&tb->common, sc->p, sc->mp, 0,
-			  &this_->dbterm, NULL, 0);
+			  &this_->dbterm, nullptr, 0);
     if (ret == am_true) {
 	key = GETKEY(sc->tb, this_->dbterm.tpl);
 	linkout_tree(sc->tb, key, this_->dbterm.tpl);
@@ -3084,7 +3084,7 @@ static int doit_select_delete(DbTableTree *tb, TreeDbTerm *this_, void *ptr,
 static void do_dump_tree2(DbTableTree* tb, int to, void *to_arg, int show,
 			  TreeDbTerm *t, int offset)
 {
-    if (t == NULL)
+    if (t == nullptr)
 	return;
     do_dump_tree2(tb, to, to_arg, show, t->right, offset + 4);
     if (show) {
@@ -3120,10 +3120,10 @@ void db_check_table_tree(DbTable *tbl)
 static TreeDbTerm *traverse_until(TreeDbTerm *t, int *current, int to)
 {
     TreeDbTerm *tmp;
-    if (t == NULL) 
-	return NULL;
+    if (t == nullptr) 
+	return nullptr;
     tmp = traverse_until(t->left, current, to);
-    if (tmp != NULL)
+    if (tmp != nullptr)
 	return tmp;
     ++(*current);
     if (*current == to)
@@ -3143,7 +3143,7 @@ static void check_slot_pos(DbTableTree *tb)
 		   "element position %d is really 0x%08X, when stack says "
 		   "it's 0x%08X\n", tb->stack.slot, t, 
 		   tb->stack.array[tb->stack.pos - 1]);
-	do_dump_tree2(tb, ERTS_PRINT_STDERR, NULL, 1, tb->root, 0);
+	do_dump_tree2(tb, ERTS_PRINT_STDERR, nullptr, 1, tb->root, 0);
     }
 }
 	
@@ -3158,14 +3158,14 @@ static void check_saved_stack(DbTableTree *tb)
      if (t != stack->array[0]) {
 	 erts_fprintf(stderr,"tb->stack[0] is 0x%08X, should be 0x%08X\n",
 		      stack->array[0], t);
-	 do_dump_tree2(tb, ERTS_PRINT_STDERR, NULL, 1, tb->root, 0);
+	 do_dump_tree2(tb, ERTS_PRINT_STDERR, nullptr, 1, tb->root, 0);
 	 return;
      }
      while (n < stack->pos) {
-	 if (t == NULL) {
-	     erts_fprintf(stderr, "NULL pointer in tree when stack not empty,"
+	 if (t == nullptr) {
+	     erts_fprintf(stderr, "nullptr pointer in tree when stack not empty,"
 			" stack depth is %d\n", n);
-	     do_dump_tree2(tb, ERTS_PRINT_STDERR, NULL, 1, tb->root, 0);
+	     do_dump_tree2(tb, ERTS_PRINT_STDERR, nullptr, 1, tb->root, 0);
 	     return;
 	 }
 	 n++;
@@ -3179,7 +3179,7 @@ static void check_saved_stack(DbTableTree *tb)
 			    "represent child pointer in tree!"
 			    "(left == 0x%08X, right == 0x%08X\n", 
 			    n, tb->stack[n], t->left, t->right);
-		 do_dump_tree2(tb, ERTS_PRINT_STDERR, NULL, 1, tb->root, 0);
+		 do_dump_tree2(tb, ERTS_PRINT_STDERR, nullptr, 1, tb->root, 0);
 		 return;
 	     }
 	 }
@@ -3189,7 +3189,7 @@ static void check_saved_stack(DbTableTree *tb)
 static int check_table_tree(DbTableTree* tb, TreeDbTerm *t)
 {
     int lh, rh;
-    if (t == NULL)
+    if (t == nullptr)
 	return 0;
     lh = check_table_tree(tb, t->left);
     rh = check_table_tree(tb, t->right);
@@ -3198,7 +3198,7 @@ static int check_table_tree(DbTableTree* tb, TreeDbTerm *t)
 	erts_fprintf(stderr,"balance = %d, left = 0x%08X, right = 0x%08X\n",
 		     t->balance, t->left, t->right);
 	erts_fprintf(stderr,"\nDump:\n---------------------------------\n");
-	do_dump_tree2(tb, ERTS_PRINT_STDERR, NULL, 1, t, 0);
+	do_dump_tree2(tb, ERTS_PRINT_STDERR, nullptr, 1, t, 0);
 	erts_fprintf(stderr,"\n---------------------------------\n");
     }
     return ((rh > lh) ? rh : lh) + 1;

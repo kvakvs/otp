@@ -62,7 +62,7 @@ erts_deep_process_dump(int to, void *to_arg)
 {
     int i, max = erts_ptab_max(&erts_proc);
 
-    all_binaries = NULL;
+    all_binaries = nullptr;
     
     for (i = 0; i < max; i++) {
 	Process *p = erts_pix2proc(i);
@@ -124,7 +124,7 @@ dump_process_info(int to, void *to_arg, Process *p)
 
     if ((ERTS_TRACE_FLAGS(p) & F_SENSITIVE) == 0 && p->msg.first) {
 	erts_print(to, to_arg, "=proc_messages:%T\n", p->common.id);
-	for (mp = p->msg.first; mp != NULL; mp = mp->next) {
+	for (mp = p->msg.first; mp != nullptr; mp = mp->next) {
 	    Eterm mesg = ERL_MESSAGE_TERM(mp);
 	    if (is_value(mesg))
 		dump_element(to, to_arg, mesg);
@@ -159,7 +159,7 @@ dump_process_info(int to, void *to_arg, Process *p)
 		heap_dump(to, to_arg, term);
 	    }
 	}
-	for (mp = p->msg.first; mp != NULL; mp = mp->next) {
+	for (mp = p->msg.first; mp != nullptr; mp = mp->next) {
 	    Eterm mesg = ERL_MESSAGE_TERM(mp);
 	    if (is_value(mesg))
 		heap_dump(to, to_arg, mesg);
@@ -276,7 +276,7 @@ static void
 print_function_from_pc(int to, void *to_arg, BeamInstr* x)
 {
     BeamInstr* addr = find_function_from_pc(x);
-    if (addr == NULL) {
+    if (addr == nullptr) {
         if (x == beam_exit) {
             erts_print(to, to_arg, "<terminate process>");
         } else if (x == beam_continue_exit) {

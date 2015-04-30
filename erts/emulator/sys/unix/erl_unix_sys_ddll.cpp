@@ -45,7 +45,7 @@
 #define EXT_LEN      3
 #define FILE_EXT     ".so"    /* extension appended to the filename */
 
-static char **errcodes = NULL;
+static char **errcodes = nullptr;
 static int num_errcodes = 0;
 static int num_errcodes_allocated = 0;
 
@@ -53,7 +53,7 @@ static int num_errcodes_allocated = 0;
 
 static char *my_strdup_in(ErtsAlcType_t type, char *what)
 {
-    char *res = erts_alloc(type, strlen(what) + 1);
+    char *res = erts::alloc<char>(type, strlen(what) + 1);
     strcpy(res, what);
     return res;
 }
@@ -63,7 +63,7 @@ static int find_errcode(char *string, ErtsSysDdllError* err)
 {
     int i;
 
-    if (err != NULL) {
+    if (err != nullptr) {
 	erts_sys_ddll_free_error(err); /* in case we ignored an earlier error */
 	err->str = my_strdup_in(ERTS_ALC_T_DDLL_TMP_BUF, string);
 	return 0;
@@ -75,9 +75,9 @@ static int find_errcode(char *string, ErtsSysDdllError* err)
     }
     if (num_errcodes_allocated == num_errcodes) {
 	errcodes = (num_errcodes_allocated == 0) 
-	    ? erts_alloc(ERTS_ALC_T_DDLL_ERRCODES, 
+            ? erts::alloc<char*>(ERTS_ALC_T_DDLL_ERRCODES,
 			 (num_errcodes_allocated = 10) * sizeof(char *)) 
-	    : erts_realloc(ERTS_ALC_T_DDLL_ERRCODES, errcodes,
+            : erts::realloc<char*>(ERTS_ALC_T_DDLL_ERRCODES, errcodes,
 			   (num_errcodes_allocated += 10) * sizeof(char *));
     }
     errcodes[num_errcodes++] = my_strdup(string);
@@ -108,7 +108,7 @@ int erts_sys_ddll_open(const char *full_name, void **handle, ErtsSysDdllError* e
     int len = sys_strlen(full_name);
     int ret;
     
-    dlname = erts_alloc(ERTS_ALC_T_TMP, len + EXT_LEN + 1);
+    dlname = erts::alloc<char>(ERTS_ALC_T_TMP, len + EXT_LEN + 1);
     sys_strcpy(dlname, full_name);
     sys_strcpy(dlname+len, FILE_EXT);
     
@@ -127,10 +127,10 @@ int erts_sys_ddll_open_noext(char *dlname, void **handle, ErtsSysDdllError* err)
     int ret = ERL_DE_NO_ERROR;
     char *str;
     dlerror();
-    if ((*handle = dlopen(dlname, RTLD_NOW)) == NULL) {
+    if ((*handle = dlopen(dlname, RTLD_NOW)) == nullptr) {
 	str = dlerror();
 
-	if (err == NULL) {
+	if (err == nullptr) {
 	    /*
 	     * Remove prefix filename to avoid exploading number of
 	     * error codes on extreme usage.
@@ -166,7 +166,7 @@ int erts_sys_ddll_sym2(void *handle, const char *func_name, void **function,
     int ret;
     dlerror();
     sym = dlsym(handle, func_name);
-    if ((e = dlerror()) != NULL) {
+    if ((e = dlerror()) != nullptr) {
 	ret = ERL_DE_DYNAMIC_ERROR_OFFSET - find_errcode(e, err);
     } else {
 	*function = sym;
@@ -188,8 +188,8 @@ int erts_sys_ddll_load_driver_init(void *handle, void **function)
 {
     void *fn;
     int res;
-    if ((res = erts_sys_ddll_sym2(handle, "driver_init", &fn, NULL)) != ERL_DE_NO_ERROR) {
-	res = erts_sys_ddll_sym2(handle, "_driver_init", &fn, NULL);
+    if ((res = erts_sys_ddll_sym2(handle, "driver_init", &fn, nullptr)) != ERL_DE_NO_ERROR) {
+	res = erts_sys_ddll_sym2(handle, "_driver_init", &fn, nullptr);
     }
     if (res == ERL_DE_NO_ERROR) {
 	*function = fn;
@@ -214,8 +214,9 @@ int erts_sys_ddll_load_nif_init(void *handle, void **function, ErtsSysDdllError*
  * Call the driver_init function, whatever it's really called, simple on unix... 
 */
 void *erts_sys_ddll_call_init(void *function) {
-    void *(*initfn)(void) = function;
-    return (*initfn)();
+  typedef void *(*initfn_t)(void);
+  initfn_t initfn = (initfn_t)function;
+  return (*initfn)();
 }
 void *erts_sys_ddll_call_nif_init(void *function) {
     return erts_sys_ddll_call_init(function);
@@ -235,7 +236,7 @@ int erts_sys_ddll_close2(void *handle, ErtsSysDdllError* err)
     if (dlclose(handle) == 0) {
 	ret = ERL_DE_NO_ERROR;
     } else {
-	if ((s = dlerror()) == NULL) {
+	if ((s = dlerror()) == nullptr) {
 	    find_errcode("unspecified error", err);
 	    ret = ERL_DE_ERROR_UNSPECIFIED;
 	} else {
@@ -277,7 +278,7 @@ char *erts_sys_ddll_error(int code)
 
 void erts_sys_ddll_free_error(ErtsSysDdllError* err)
 {   
-    if (err->str != NULL) {
+    if (err->str != nullptr) {
 	erts_free(ERTS_ALC_T_DDLL_TMP_BUF, err->str);
     }
 }

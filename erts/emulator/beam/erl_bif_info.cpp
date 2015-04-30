@@ -57,8 +57,8 @@
 #include <valgrind/memcheck.h>
 #endif
 
-static Export* alloc_info_trap = NULL;
-static Export* alloc_sizes_trap = NULL;
+static Export* alloc_info_trap = nullptr;
+static Export* alloc_sizes_trap = nullptr;
 
 static Export *gather_sched_wall_time_res_trap;
 static Export *gather_gc_info_res_trap;
@@ -251,7 +251,7 @@ static void do_calc_lnk_size(ErtsLink *lnk, void *vpsz)
 {
     Uint *psz = (Uint*)vpsz;
     *psz += IS_CONST(lnk->pid) ? 0 : NC_HEAP_SIZE(lnk->pid);
-    if (lnk->type != LINK_NODE && ERTS_LINK_ROOT(lnk) != NULL) { 
+    if (lnk->type != LINK_NODE && ERTS_LINK_ROOT(lnk) != nullptr) {
 	/* Node links use this_ pointer as ref counter... */
 	erts_doforall_links(ERTS_LINK_ROOT(lnk),&do_calc_lnk_size,vpsz);
     }
@@ -275,7 +275,7 @@ static void do_make_one_lnk_element(ErtsLink *lnk, void * vpllc)
 	       : STORE_NC(&(pllc->hp), &MSO(pllc->p), lnk->pid));
     if (lnk->type == LINK_NODE) {
 	targets = make_small(ERTS_LINK_REFC(lnk));
-    } else if (ERTS_LINK_ROOT(lnk) != NULL) {
+    } else if (ERTS_LINK_ROOT(lnk) != nullptr) {
 	old_res = pllc->res;
 	pllc->res = NIL;
 	erts_doforall_links(ERTS_LINK_ROOT(lnk),&do_make_one_lnk_element, vpllc);
@@ -321,7 +321,7 @@ erts_print_system_version(int to, void *arg, Process *c_p)
 
     (void) erts_schedulers_state(&total, &online, &active, &dirty_cpu, &dirty_cpu_onln, &dirty_io, 0);
 #else
-    (void) erts_schedulers_state(&total, &online, &active, NULL, NULL, NULL, 0);
+    (void) erts_schedulers_state(&total, &online, &active, nullptr, nullptr, nullptr, 0);
 #endif
 #endif
     for (i = 0; i < sizeof(otp_version)-4; i++) {
@@ -366,7 +366,7 @@ typedef struct {
 } MonitorInfoCollection;
 
 #define INIT_MONITOR_INFOS(MIC) do {		\
-    (MIC).mi = NULL;				\
+    (MIC).mi = nullptr;				\
     (MIC).mi_i = (MIC).mi_max = 0;		\
     (MIC).sz = 0;                               \
 } while(0)
@@ -386,7 +386,7 @@ do {									\
  } while (0)
 #define DESTROY_MONITOR_INFOS(MIC)			\
 do {							\
-    if ((MIC).mi != NULL) {				\
+    if ((MIC).mi != nullptr) {				\
 	erts_free(ERTS_ALC_T_TMP, (void *) (MIC).mi);	\
     }							\
  } while (0)
@@ -460,7 +460,7 @@ typedef struct {
 #define ERTS_INIT_SUSPEND_MONITOR_INFOS(SMIC, CP, CPL) do {		\
     (SMIC).c_p = (CP);							\
     (SMIC).c_p_locks = (CPL);						\
-    (SMIC).smi = NULL;							\
+    (SMIC).smi = nullptr;							\
     (SMIC).smi_i = (SMIC).smi_max = 0;					\
     (SMIC).sz = 0;                               			\
 } while(0)
@@ -484,7 +484,7 @@ do {									\
 
 #define ERTS_DESTROY_SUSPEND_MONITOR_INFOS(SMIC)			\
 do {									\
-    if ((SMIC).smi != NULL) {						\
+    if ((SMIC).smi != nullptr) {						\
 	erts_free(ERTS_ALC_T_TMP, (void *) (SMIC).smi);			\
     }									\
  } while (0)
@@ -748,7 +748,7 @@ process_info_list(Process *c_p, Eterm pid, Eterm list, int always_wrap,
     Uint *hp, *hp_end;
     ErtsProcLocks locks = (ErtsProcLocks) 0;
     int res_len, ix;
-    Process *rp = NULL;
+    Process *rp = nullptr;
 
     *fail_type = ERTS_PI_FAIL_TYPE_BADARG;
 
@@ -806,7 +806,7 @@ process_info_list(Process *c_p, Eterm pid, Eterm list, int always_wrap,
 	goto done;
     }
     else if (rp == ERTS_PROC_LOCK_BUSY) {
-	rp = NULL;
+        rp = nullptr;
 	res = THE_NON_VALUE;
 	*fail_type = ERTS_PI_FAIL_TYPE_YIELD;
 	goto done;
@@ -1134,7 +1134,7 @@ process_info_aux(Process *BIF_P,
 			 * try to alter locks on that process.
 			 */
 			msg = erts_msg_distext2heap(
-			    NULL, NULL, &hfp, &ERL_MESSAGE_TOKEN(mq[i].msgp),
+                            nullptr, nullptr, &hfp, &ERL_MESSAGE_TOKEN(mq[i].msgp),
 			    mq[i].msgp->data.dist_ext);
 
 			ERL_MESSAGE_TERM(mq[i].msgp) = msg;
@@ -1374,33 +1374,33 @@ process_info_aux(Process *BIF_P,
 
     case am_heap_size: {
 	Uint hsz = 3;
-	(void) erts_bld_uint(NULL, &hsz, HEAP_SIZE(rp));
+        (void) erts_bld_uint(nullptr, &hsz, HEAP_SIZE(rp));
 	hp = HAlloc(BIF_P, hsz);
-	res = erts_bld_uint(&hp, NULL, HEAP_SIZE(rp));
+        res = erts_bld_uint(&hp, nullptr, HEAP_SIZE(rp));
 	break;
     }
 
     case am_fullsweep_after: {
 	Uint hsz = 3;
-	(void) erts_bld_uint(NULL, &hsz, MAX_GEN_GCS(rp));
+        (void) erts_bld_uint(nullptr, &hsz, MAX_GEN_GCS(rp));
 	hp = HAlloc(BIF_P, hsz);
-	res = erts_bld_uint(&hp, NULL, MAX_GEN_GCS(rp));
+        res = erts_bld_uint(&hp, nullptr, MAX_GEN_GCS(rp));
 	break;
     }
 
     case am_min_heap_size: {
 	Uint hsz = 3;
-	(void) erts_bld_uint(NULL, &hsz, MIN_HEAP_SIZE(rp));
+        (void) erts_bld_uint(nullptr, &hsz, MIN_HEAP_SIZE(rp));
 	hp = HAlloc(BIF_P, hsz);
-	res = erts_bld_uint(&hp, NULL, MIN_HEAP_SIZE(rp));
+        res = erts_bld_uint(&hp, nullptr, MIN_HEAP_SIZE(rp));
 	break;
     }
 
     case am_min_bin_vheap_size: {
 	Uint hsz = 3;
-	(void) erts_bld_uint(NULL, &hsz, MIN_VHEAP_SIZE(rp));
+        (void) erts_bld_uint(nullptr, &hsz, MIN_VHEAP_SIZE(rp));
 	hp = HAlloc(BIF_P, hsz);
-	res = erts_bld_uint(&hp, NULL, MIN_VHEAP_SIZE(rp));
+        res = erts_bld_uint(&hp, nullptr, MIN_VHEAP_SIZE(rp));
 	break;
     }
 
@@ -1421,27 +1421,27 @@ process_info_aux(Process *BIF_P,
 	    if (mp->data.attached)
 		total_heap_size += erts_msg_attached_data_size(mp);
 
-	(void) erts_bld_uint(NULL, &hsz, total_heap_size);
+        (void) erts_bld_uint(nullptr, &hsz, total_heap_size);
 	hp = HAlloc(BIF_P, hsz);
-	res = erts_bld_uint(&hp, NULL, total_heap_size);
+        res = erts_bld_uint(&hp, nullptr, total_heap_size);
 	break;
     }
 
     case am_stack_size: {
 	Uint stack_size = STACK_START(rp) - rp->stop;
 	Uint hsz = 3;
-	(void) erts_bld_uint(NULL, &hsz, stack_size);
+        (void) erts_bld_uint(nullptr, &hsz, stack_size);
 	hp = HAlloc(BIF_P, hsz);
-	res = erts_bld_uint(&hp, NULL, stack_size);
+        res = erts_bld_uint(&hp, nullptr, stack_size);
 	break;
     }
 
     case am_memory: { /* Memory consumed in bytes */
 	Uint hsz = 3;
 	Uint size = erts_process_memory(rp);
-	(void) erts_bld_uint(NULL, &hsz, size);
+        (void) erts_bld_uint(nullptr, &hsz, size);
 	hp = HAlloc(BIF_P, hsz);
-	res = erts_bld_uint(&hp, NULL, size);
+        res = erts_bld_uint(&hp, nullptr, size);
 	break;
     }
 
@@ -1473,9 +1473,9 @@ process_info_aux(Process *BIF_P,
     case am_reductions: {
 	Uint reds = rp->reds + erts_current_reductions(BIF_P, rp);
 	Uint hsz = 3;
-	(void) erts_bld_uint(NULL, &hsz, reds);
+        (void) erts_bld_uint(nullptr, &hsz, reds);
 	hp = HAlloc(BIF_P, hsz);
-	res = erts_bld_uint(&hp, NULL, reds);
+        res = erts_bld_uint(&hp, nullptr, reds);
 	break;
     }
 
@@ -1491,9 +1491,9 @@ process_info_aux(Process *BIF_P,
 
     case am_binary: {
 	Uint sz = 3;
-	(void) bld_bin_list(NULL, &sz, &MSO(rp));
+        (void) bld_bin_list(nullptr, &sz, &MSO(rp));
 	hp = HAlloc(BIF_P, sz);
-	res = bld_bin_list(&hp, NULL, &MSO(rp));
+        res = bld_bin_list(&hp, nullptr, &MSO(rp));
 	break;
     }
 
@@ -1580,12 +1580,12 @@ current_function(Process* BIF_P, Process* rp, Eterm** hpp, int full_info)
     Eterm res;
     FunctionInfo fi;
 
-    if (rp->current == NULL) {
+    if (rp->current == nullptr) {
 	erts_lookup_function_info(&fi, rp->i, full_info);
 	rp->current = fi.current;
     } else if (full_info) {
 	erts_lookup_function_info(&fi, rp->i, full_info);
-	if (fi.current == NULL) {
+        if (fi.current == nullptr) {
 	    /* Use the current function without location info */
 	    erts_set_current_function(&fi, rp->current);
 	}
@@ -1610,7 +1610,7 @@ current_function(Process* BIF_P, Process* rp, Eterm** hpp, int full_info)
     /*
      * Return the result.
      */
-    if (rp->current == NULL) {
+    if (rp->current == nullptr) {
 	hp = HAlloc(BIF_P, 3);
 	res = am_undefined;
     } else if (full_info) {
@@ -2101,7 +2101,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 #endif
 	BIF_RET(res);
     } else if (BIF_ARG_1 == am_allocated_areas) {
-	res = erts_allocated_areas(NULL, NULL, BIF_P);
+        res = erts_allocated_areas(nullptr, nullptr, BIF_P);
 	BIF_RET(res);
     } else if (BIF_ARG_1 == am_allocated) {
 	BIF_RET(erts_instr_get_memory_map(BIF_P));
@@ -2122,9 +2122,9 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 	Uint *szp;
 
 	szp = &size;
-	build_snifs_term(NULL, szp, NIL);
+        build_snifs_term(nullptr, szp, NIL);
 	hp = HAlloc(BIF_P, size);
-	res = build_snifs_term(&hp, NULL, NIL);
+        res = build_snifs_term(&hp, nullptr, NIL);
 	BIF_RET(res);
     } else if (BIF_ARG_1 == am_sequential_tracer) {
 	val = erts_get_system_seq_tracer();
@@ -2292,7 +2292,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 	Uint hsz, *hszp;
 	int i;
 
-	hpp = NULL;
+        hpp = nullptr;
 	hsz = 0;
 	hszp = &hsz;
 
@@ -2317,7 +2317,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 #ifdef DEBUG
 	    endp = hp + hsz;
 #endif
-	    hszp = NULL;
+            hszp = nullptr;
 	    goto bld_instruction_counts;
 	}
 
@@ -2423,7 +2423,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
     /* Arguments that are unusual follow ... */
     else if (ERTS_IS_ATOM_STR("logical_processors", BIF_ARG_1)) {
 	int no;
-	erts_get_logical_processors(&no, NULL, NULL);
+        erts_get_logical_processors(&no, nullptr, nullptr);
 	if (no > 0)
 	    BIF_RET(make_small((Uint) no));
 	else {
@@ -2433,7 +2433,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
     }
     else if (ERTS_IS_ATOM_STR("logical_processors_online", BIF_ARG_1)) {
 	int no;
-	erts_get_logical_processors(NULL, &no, NULL);
+        erts_get_logical_processors(nullptr, &no, nullptr);
 	if (no > 0)
 	    BIF_RET(make_small((Uint) no));
 	else {
@@ -2443,7 +2443,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
     }
     else if (ERTS_IS_ATOM_STR("logical_processors_available", BIF_ARG_1)) {
 	int no;
-	erts_get_logical_processors(NULL, NULL, &no);
+        erts_get_logical_processors(nullptr, nullptr, &no);
 	if (no > 0)
 	    BIF_RET(make_small((Uint) no));
 	else {
@@ -2494,9 +2494,9 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 	switch (erts_schedulers_state(&total,
 				      &online,
 				      &active,
-				      NULL,
-				      NULL,
-				      NULL,
+                                      nullptr,
+                                      nullptr,
+                                      nullptr,
 				      1)) {
 	case ERTS_SCHDLR_SSPND_DONE: {
 	    Eterm *hp = HAlloc(BIF_P, 4);
@@ -2520,7 +2520,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 	BIF_RET(make_small(1));
 #else
 	Uint total, online, active;
-	switch (erts_schedulers_state(&total, &online, &active, NULL, NULL, NULL, 1)) {
+        switch (erts_schedulers_state(&total, &online, &active, nullptr, nullptr, nullptr, 1)) {
 	case ERTS_SCHDLR_SSPND_DONE:
 	    BIF_RET(make_small(online));
 	case ERTS_SCHDLR_SSPND_YIELD_RESTART:
@@ -2537,7 +2537,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 	BIF_RET(make_small(1));
 #else
 	Uint total, online, active;
-	switch (erts_schedulers_state(&total, &online, &active, NULL, NULL, NULL, 1)) {
+        switch (erts_schedulers_state(&total, &online, &active, nullptr, nullptr, nullptr, 1)) {
 	case ERTS_SCHDLR_SSPND_DONE:
 	    BIF_RET(make_small(active));
 	case ERTS_SCHDLR_SSPND_YIELD_RESTART:
@@ -2552,15 +2552,15 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 #if defined(ERTS_SMP) && defined(ERTS_DIRTY_SCHEDULERS)
     } else if (ERTS_IS_ATOM_STR("dirty_cpu_schedulers", BIF_ARG_1)) {
 	Uint dirty_cpu;
-	erts_schedulers_state(NULL, NULL, NULL, &dirty_cpu, NULL, NULL, 1);
+        erts_schedulers_state(nullptr, nullptr, nullptr, &dirty_cpu, nullptr, nullptr, 1);
 	BIF_RET(make_small(dirty_cpu));
     } else if (ERTS_IS_ATOM_STR("dirty_cpu_schedulers_online", BIF_ARG_1)) {
 	Uint dirty_cpu_onln;
-	erts_schedulers_state(NULL, NULL, NULL, NULL, &dirty_cpu_onln, NULL, 1);
+        erts_schedulers_state(nullptr, nullptr, nullptr, nullptr, &dirty_cpu_onln, nullptr, 1);
 	BIF_RET(make_small(dirty_cpu_onln));
     } else if (ERTS_IS_ATOM_STR("dirty_io_schedulers", BIF_ARG_1)) {
 	Uint dirty_io;
-	erts_schedulers_state(NULL, NULL, NULL, NULL, NULL, &dirty_io, 1);
+        erts_schedulers_state(nullptr, nullptr, nullptr, nullptr, nullptr, &dirty_io, 1);
 	BIF_RET(make_small(dirty_io));
 #endif
     } else if (ERTS_IS_ATOM_STR("run_queues", BIF_ARG_1)) {
@@ -2570,12 +2570,12 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 	res = erts_port_parallelism ? am_true : am_false;
 	BIF_RET(res);
     } else if (ERTS_IS_ATOM_STR("c_compiler_used", BIF_ARG_1)) {
-	Eterm *hp = NULL;
+        Eterm *hp = nullptr;
 	Uint sz = 0;
-	(void) c_compiler_used(NULL, &sz);
+        (void) c_compiler_used(nullptr, &sz);
 	if (sz)
 	    hp = HAlloc(BIF_P, sz);
-	BIF_RET(c_compiler_used(&hp, NULL));
+        BIF_RET(c_compiler_used(&hp, nullptr));
     } else if (ERTS_IS_ATOM_STR("stop_memory_trace", BIF_ARG_1)) {
 	erts_mtrace_stop();
 	BIF_RET(am_true);
@@ -2635,9 +2635,9 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
     } else if (ERTS_IS_ATOM_STR("dist_buf_busy_limit", BIF_ARG_1)) {
 	Uint hsz = 0;
 
- 	(void) erts_bld_uint(NULL, &hsz, erts_dist_buf_busy_limit);
-	hp = hsz ? HAlloc(BIF_P, hsz) : NULL;
-	res = erts_bld_uint(&hp, NULL, erts_dist_buf_busy_limit);
+        (void) erts_bld_uint(nullptr, &hsz, erts_dist_buf_busy_limit);
+        hp = hsz ? HAlloc(BIF_P, hsz) : nullptr;
+        res = erts_bld_uint(&hp, nullptr, erts_dist_buf_busy_limit);
 	BIF_RET(res);
     } else if (ERTS_IS_ATOM_STR("ethread_info", BIF_ARG_1)) {
 	BIF_RET(erts_get_ethread_info(BIF_P));
@@ -3142,7 +3142,7 @@ BIF_RETTYPE process_display_2(BIF_ALIST_2)
 				   args,
 				   2);
    }
-   erts_stack_dump(ERTS_PRINT_STDERR, NULL, rp);
+   erts_stack_dump(ERTS_PRINT_STDERR, nullptr, rp);
 #ifdef ERTS_SMP
    erts_smp_proc_unlock(rp, (BIF_P == rp
 			     ? ERTS_PROC_LOCKS_ALL_MINOR
@@ -3181,11 +3181,11 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
 	Eterm b1, b2;
 
 	erts_get_total_reductions(&reds, &diff);
-	(void) erts_bld_uint(NULL, &hsz, reds);
-	(void) erts_bld_uint(NULL, &hsz, diff);
+        (void) erts_bld_uint(nullptr, &hsz, reds);
+        (void) erts_bld_uint(nullptr, &hsz, diff);
 	hp = HAlloc(BIF_P, hsz);
-	b1 = erts_bld_uint(&hp, NULL, reds);
-	b2 = erts_bld_uint(&hp, NULL, diff);
+        b1 = erts_bld_uint(&hp, nullptr, reds);
+        b2 = erts_bld_uint(&hp, nullptr, diff);
 	res = TUPLE2(hp, b1, b2); 
 	BIF_RET(res);
     } else if (BIF_ARG_1 == am_exact_reductions) {
@@ -3195,11 +3195,11 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
 	Eterm b1, b2;
 
 	erts_get_exact_total_reductions(BIF_P, &reds, &diff);
-	(void) erts_bld_uint(NULL, &hsz, reds);
-	(void) erts_bld_uint(NULL, &hsz, diff);
+        (void) erts_bld_uint(nullptr, &hsz, reds);
+        (void) erts_bld_uint(nullptr, &hsz, diff);
 	hp = HAlloc(BIF_P, hsz);
-	b1 = erts_bld_uint(&hp, NULL, reds);
-	b2 = erts_bld_uint(&hp, NULL, diff);
+        b1 = erts_bld_uint(&hp, nullptr, reds);
+        b2 = erts_bld_uint(&hp, nullptr, diff);
 	res = TUPLE2(hp, b1, b2); 
 	BIF_RET(res);
     } else if (BIF_ARG_1 == am_runtime) {
@@ -3212,7 +3212,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
 	res = TUPLE2(hp, b1, b2);
 	BIF_RET(res);
     } else if (BIF_ARG_1 ==  am_run_queue) {
-	res = erts_run_queues_len(NULL);
+        res = erts_run_queues_len(nullptr);
 	BIF_RET(make_small(res));
     } else if (BIF_ARG_1 == am_wall_clock) {
 	UWord w1, w2;
@@ -3230,11 +3230,11 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
 	Uint bytes_in = (Uint) erts_smp_atomic_read_nob(&erts_bytes_in);
 	Uint bytes_out = (Uint) erts_smp_atomic_read_nob(&erts_bytes_out);
 
-	(void) erts_bld_uint(NULL, &hsz, bytes_in);
-	(void) erts_bld_uint(NULL, &hsz, bytes_out);
+        (void) erts_bld_uint(nullptr, &hsz, bytes_in);
+        (void) erts_bld_uint(nullptr, &hsz, bytes_out);
 	hp = HAlloc(BIF_P, hsz);
-	in = erts_bld_uint(&hp, NULL, bytes_in);
-	out = erts_bld_uint(&hp, NULL, bytes_out);
+        in = erts_bld_uint(&hp, nullptr, bytes_in);
+        out = erts_bld_uint(&hp, nullptr, bytes_out);
 
 	r1 = TUPLE2(hp,  am_input, in);
 	hp += 3;
@@ -3250,7 +3250,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
 	(void) erts_run_queues_len(qszs);
 	sz = 0;
 	szp = &sz;
-	hpp = NULL;
+        hpp = nullptr;
 	while (1) {
 	    int i;
 	    for (i = 0; i < no_qs; i++)
@@ -3261,7 +3261,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
 		BIF_RET(res);
 	    }
 	    hp = HAlloc(BIF_P, sz);
-	    szp = NULL;
+            szp = nullptr;
 	    hpp = &hp;
 	}
     }
@@ -3330,7 +3330,7 @@ BIF_RETTYPE erts_debug_get_internal_state_1(BIF_ALIST_1)
 #endif
 	    sz = 0;
 	    szp = &sz;
-	    hpp = NULL;
+            hpp = nullptr;
 	    while (1) {
 		res = erts_bld_tuple(hpp, szp, 4,
 				     erts_bld_uint(hpp, szp,
@@ -3344,7 +3344,7 @@ BIF_RETTYPE erts_debug_get_internal_state_1(BIF_ALIST_1)
 		if (hpp)
 		    break;
 		hp = HAlloc(BIF_P, sz);
-		szp = NULL;
+                szp = nullptr;
 		hpp = &hp;
 	    }
 	    BIF_RET(res);
@@ -3394,7 +3394,7 @@ BIF_RETTYPE erts_debug_get_internal_state_1(BIF_ALIST_1)
 	    erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_MAIN);
 	    erts_smp_thr_progress_block();
 	    erts_smp_proc_lock(BIF_P, ERTS_PROC_LOCK_MAIN);
-	    res = erts_memory(NULL, NULL, BIF_P, THE_NON_VALUE);
+            res = erts_memory(nullptr, nullptr, BIF_P, THE_NON_VALUE);
 	    erts_smp_thr_progress_unblock();
 	    BIF_RET(res);
 	}
@@ -3412,7 +3412,7 @@ BIF_RETTYPE erts_debug_get_internal_state_1(BIF_ALIST_1)
 		if (is_internal_pid(tp[2])) {
 		    BIF_RET(erts_process_status(BIF_P,
 						ERTS_PROC_LOCK_MAIN,
-						NULL,
+                                                nullptr,
 						tp[2]));
 		}
 	    }
@@ -3536,17 +3536,17 @@ BIF_RETTYPE erts_debug_get_internal_state_1(BIF_ALIST_1)
 
 			pb = (ProcBin *) binary_val(real_bin);
 			val = pb->val;
-			(void) erts_bld_uint(NULL, &hsz, pb->size);
-			(void) erts_bld_uint(NULL, &hsz, val->orig_size);
+                        (void) erts_bld_uint(nullptr, &hsz, pb->size);
+                        (void) erts_bld_uint(nullptr, &hsz, val->orig_size);
 			hp = HAlloc(BIF_P, hsz);
 
 			/* Info about the Binary* object */
-			SzTerm = erts_bld_uint(&hp, NULL, val->orig_size);
+                        SzTerm = erts_bld_uint(&hp, nullptr, val->orig_size);
 			res = TUPLE2(hp, am_binary, SzTerm);
 			hp += 3;
 
 			/* Info about the ProcBin* object */
-			SzTerm = erts_bld_uint(&hp, NULL, pb->size);
+                        SzTerm = erts_bld_uint(&hp, nullptr, pb->size);
 			res = TUPLE4(hp, AM_refc_binary, SzTerm,
 				     res, make_small(pb->flags));
 		    } else {	/* heap binary */
@@ -3746,7 +3746,7 @@ BIF_RETTYPE erts_debug_set_internal_state_2(BIF_ALIST_2)
 		    if (BIF_P == rp)
 			rp_locks |= ERTS_PROC_LOCK_MAIN;
 #endif
-		    xres = erts_send_exit_signal(NULL, /* NULL in order to
+                    xres = erts_send_exit_signal(nullptr, /* nullptr in order to
 							  force a pending exit
 							  when we send to our
 							  selves. */
@@ -3755,7 +3755,7 @@ BIF_RETTYPE erts_debug_set_internal_state_2(BIF_ALIST_2)
 						 &rp_locks,
 						 tp[3],
 						 NIL,
-						 NULL,
+                                                 nullptr,
 						 0);
 #ifdef ERTS_SMP
 		    if (BIF_P == rp)
@@ -3826,7 +3826,7 @@ BIF_RETTYPE erts_debug_set_internal_state_2(BIF_ALIST_2)
 	    erts_aint_t flag = erts_smp_atomic_read_nob(&hipe_test_reschedule_flag);
 	    if (!flag && BIF_ARG_2 != am_false) {
 		erts_smp_atomic_set_nob(&hipe_test_reschedule_flag, 1);
-		erts_suspend(BIF_P, ERTS_PROC_LOCK_MAIN, NULL);
+                erts_suspend(BIF_P, ERTS_PROC_LOCK_MAIN, nullptr);
 		ERTS_BIF_YIELD2(bif_export[BIF_erts_debug_set_internal_state_2],
 				BIF_P, BIF_ARG_1, BIF_ARG_2);
 	    }
@@ -3956,7 +3956,7 @@ static Eterm lcnt_build_lock_stats_term(Eterm **hpp, Uint *szp, erts_lcnt_lock_s
 
 static Eterm lcnt_build_lock_term(Eterm **hpp, Uint *szp, erts_lcnt_lock_t *lock, Eterm res) {
     Eterm name, type, id, stats = NIL, t;
-    Process *proc = NULL;
+    Process *proc = nullptr;
     char *ltype;
     int i;
     
@@ -4002,7 +4002,7 @@ static Eterm lcnt_build_lock_term(Eterm **hpp, Uint *szp, erts_lcnt_lock_t *lock
 
 static Eterm lcnt_build_result_term(Eterm **hpp, Uint *szp, erts_lcnt_data_t *data, Eterm res) {
     Eterm dts, dtns, tdt, adur, tdur, aloc, lloc = NIL, tloc;
-    erts_lcnt_lock_t *lock = NULL;
+    erts_lcnt_lock_t *lock = nullptr;
     char *str_duration = "duration";
     char *str_locks    = "locks";
     
@@ -4022,11 +4022,11 @@ static Eterm lcnt_build_result_term(Eterm **hpp, Uint *szp, erts_lcnt_data_t *da
     
     aloc = erts_atom_put((byte *)str_locks, strlen(str_locks), ERTS_ATOM_ENC_LATIN1, 1);
     	
-    for (lock = data->current_locks->head; lock != NULL ; lock = lock->next ) {
+    for (lock = data->current_locks->head; lock != nullptr ; lock = lock->next ) {
 	lloc = lcnt_build_lock_term(hpp, szp, lock, lloc);
     }
     
-    for (lock = data->deleted_locks->head; lock != NULL ; lock = lock->next ) {
+    for (lock = data->deleted_locks->head; lock != nullptr ; lock = lock->next ) {
 	lloc = lcnt_build_lock_term(hpp, szp, lock, lloc);
     }
     
@@ -4070,13 +4070,13 @@ BIF_RETTYPE erts_debug_lock_counters_1(BIF_ALIST_1)
 	/* calculate size */
 
 	szp = &hsize;
-	lcnt_build_result_term(NULL, szp, data, NIL);
+        lcnt_build_result_term(nullptr, szp, data, NIL);
 
 	/* alloc and build */
 
 	hp = HAlloc(BIF_P, hsize);
 
-	res = lcnt_build_result_term(&hp, NULL, data, res);
+        res = lcnt_build_result_term(&hp, nullptr, data, res);
 	
 	erts_lcnt_clear_rt_opt(ERTS_LCNT_OPT_SUSPEND);
 

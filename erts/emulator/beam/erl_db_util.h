@@ -285,8 +285,8 @@ ERTS_GLB_INLINE Eterm db_copy_key(Process* p, DbTable* tb, DbTerm* obj)
     else {
 	Uint size = size_object_rel(key, obj->tpl);
 	Eterm* hp = HAlloc(p, size);
-	Eterm res = copy_struct_rel(key, size, &hp, &MSO(p), obj->tpl, NULL);
-	ASSERT(eq_rel(res,NULL,key,obj->tpl));
+	Eterm res = copy_struct_rel(key, size, &hp, &MSO(p), obj->tpl, nullptr);
+	ASSERT(eq_rel(res,nullptr,key,obj->tpl));
 	return res;
     }
 }
@@ -305,7 +305,7 @@ ERTS_GLB_INLINE Eterm db_copy_object_from_ets(DbTableCommon* tb, DbTerm* bp,
 ERTS_GLB_INLINE int db_eq(DbTableCommon* tb, Eterm a, DbTerm* b)
 {
     if (!tb->compress) {
-	return eq_rel(a, NULL, make_tuple_rel(b->tpl,b->tpl), b->tpl);
+	return eq_rel(a, nullptr, make_tuple_rel(b->tpl,b->tpl), b->tpl);
     }
     else {
 	return db_eq_comp(tb, a, b);
@@ -393,8 +393,8 @@ typedef struct dmc_error {
 
 typedef struct dmc_err_info {
     unsigned int *var_trans; /* Translations of variable names, 
-				initiated to NULL
-				and free'd with sys_free if != NULL 
+				initiated to nullptr
+				and free'd with sys_free if != nullptr 
 				after compilation */
     int num_trans;
     int error_added;         /* indicates if the error list contains

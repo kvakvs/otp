@@ -50,9 +50,9 @@ int ethr_not_inited__ = 1;
 
 ethr_memory_allocators ethr_mem__ = ETHR_MEM_ALLOCS_DEF_INITER__;
 
-void *(*ethr_thr_prepare_func__)(void) = NULL;
-void (*ethr_thr_parent_func__)(void *) = NULL;
-void (*ethr_thr_child_func__)(void *) = NULL;
+void *(*ethr_thr_prepare_func__)(void) = nullptr;
+void (*ethr_thr_parent_func__)(void *) = nullptr;
+void (*ethr_thr_child_func__)(void *) = nullptr;
 
 typedef struct ethr_xhndl_list_ ethr_xhndl_list;
 struct ethr_xhndl_list_ {
@@ -229,7 +229,7 @@ ethr_init_common__(ethr_init_data *id)
     if (res != 0)
 	return res;
 
-    xhndl_list = NULL;
+    xhndl_list = nullptr;
 
     return 0;
 }
@@ -237,7 +237,7 @@ ethr_init_common__(ethr_init_data *id)
 int
 ethr_late_init_common__(ethr_late_init_data *lid)
 {
-    ethr_ts_event *tsep = NULL;
+    ethr_ts_event *tsep = nullptr;
     int reader_groups;
     int res;
     int i;
@@ -359,10 +359,10 @@ static ethr_ts_event *ts_event_pool(int size, ethr_ts_event **endpp)
 {
     int i;
     ethr_aligned_ts_event *atsev;
-    atsev = ethr_mem__.std.alloc(sizeof(ethr_aligned_ts_event) * size
-				 + ETHR_CACHE_LINE_SIZE - 1);
+    atsev = (ethr_aligned_ts_event*)ethr_mem__.std.alloc(
+          sizeof(ethr_aligned_ts_event) * size + ETHR_CACHE_LINE_SIZE - 1);
     if (!atsev)
-	return NULL;
+	return nullptr;
     if ((((ethr_uint_t) atsev) & ETHR_CACHE_LINE_MASK) != 0)
 	atsev = ((ethr_aligned_ts_event *)
 		 ((((ethr_uint_t) atsev) & ~ETHR_CACHE_LINE_MASK)
@@ -374,7 +374,7 @@ static ethr_ts_event *ts_event_pool(int size, ethr_ts_event **endpp)
     }
     ethr_atomic32_init(&atsev[size-1].ts_ev.uaflgs, 0);
     atsev[size-1].ts_ev.iflgs = 0;
-    atsev[size-1].ts_ev.next = NULL;
+    atsev[size-1].ts_ev.next = nullptr;
     if (endpp)
 	*endpp = &atsev[size-1].ts_ev;
     return &atsev[0].ts_ev;
@@ -383,7 +383,7 @@ static ethr_ts_event *ts_event_pool(int size, ethr_ts_event **endpp)
 static int init_ts_event_alloc(void)
 {
     free_ts_ev = ts_event_pool(ERTS_TS_EV_ALLOC_DEFAULT_POOL_SIZE,
-			       NULL);
+			       nullptr);
     if (!free_ts_ev)
 	return ENOMEM;
     return ethr_spinlock_init(&ts_ev_alloc_lock);
@@ -404,7 +404,7 @@ static ethr_ts_event *ts_event_alloc(void)
 
 	ts_ev = ts_event_pool(ERTS_TS_EV_ALLOC_POOL_SIZE, &ts_ev_pool_end);
 	if (!ts_ev)
-	    return NULL;
+	    return nullptr;
 
 	ethr_spin_lock(&ts_ev_alloc_lock);
 	ts_ev_pool_end->next = free_ts_ev;
@@ -443,7 +443,7 @@ int ethr_make_ts_event__(ethr_ts_event **tsepp)
     }
 
     tsep->iflgs = ETHR_TS_EV_INITED;
-    tsep->udata = NULL;
+    tsep->udata = nullptr;
     tsep->rgix = 0;
     tsep->mtix = 0;
 
@@ -479,7 +479,7 @@ int ethr_get_tmp_ts_event__(ethr_ts_event **tsepp)
     }
 
     tsep->iflgs = ETHR_TS_EV_INITED|ETHR_TS_EV_TMP;
-    tsep->udata = NULL;
+    tsep->udata = nullptr;
 
     if (tsepp)
 	*tsepp = tsep;
@@ -498,7 +498,7 @@ void ethr_ts_event_destructor__(void *vtsep)
     if (vtsep) {
 	ethr_ts_event *tsep = (ethr_ts_event *) vtsep;
 	ts_event_free(tsep);
-	ethr_set_tse__(NULL);
+	ethr_set_tse__(nullptr);
     }
 }
 

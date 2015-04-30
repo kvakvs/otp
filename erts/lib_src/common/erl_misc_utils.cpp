@@ -165,7 +165,7 @@ erts_milli_sleep(long ms)
 	struct timeval tv;
 	tv.tv_sec = ms / 1000;
 	tv.tv_usec = (ms % 1000) * 1000;
-	if (select(0, NULL, NULL, NULL, &tv) < 0)
+	if (select(0, nullptr, nullptr, nullptr, &tv) < 0)
 	    return errno == EINTR ? 1 : -1;
 #endif
     }
@@ -223,19 +223,19 @@ set_thr_affinity(cpu_set_t *set)
 erts_cpu_info_t *
 erts_cpu_info_create(void)
 {
-    erts_cpu_info_t *cpuinfo = malloc(sizeof(erts_cpu_info_t));
+    erts_cpu_info_t *cpuinfo = (erts_cpu_info_t *)malloc(sizeof(erts_cpu_info_t));
     if (!cpuinfo)
-	return NULL;
+	return nullptr;
 #if defined(ERTS_HAVE_MISC_UTIL_AFFINITY_MASK__)
-    cpuinfo->affinity_str = NULL;
+    cpuinfo->affinity_str = nullptr;
 #if defined(HAVE_SCHED_xETAFFINITY)
     cpuinfo->pid = getpid();
 #endif
 #elif defined(HAVE_PSET_INFO)
-    cpuinfo->cpuids = NULL;
+    cpuinfo->cpuids = nullptr;
 #endif
     cpuinfo->topology_size = 0;
-    cpuinfo->topology = NULL;
+    cpuinfo->topology = nullptr;
     cpuinfo->configured = -1;
     cpuinfo->online = -1;
     cpuinfo->available = -1;
@@ -256,7 +256,7 @@ erts_cpu_info_destroy(erts_cpu_info_t *cpuinfo)
 #endif
 	cpuinfo->topology_size = 0;
 	if (cpuinfo->topology) {
-	    cpuinfo->topology = NULL;
+	    cpuinfo->topology = nullptr;
 	    free(cpuinfo->topology);
 	}
 	free(cpuinfo);
@@ -308,14 +308,14 @@ erts_cpu_info_update(erts_cpu_info_t *cpuinfo)
 	len = sizeof(int);
 	mib[0] = CTL_HW;
 	mib[1] = HW_NCPU;
-	if (sysctl(&mib[0], 2, &configured, &len, NULL, 0) < 0)
+	if (sysctl(&mib[0], 2, &configured, &len, nullptr, 0) < 0)
 	    configured = 0;
 #endif
 #ifdef HW_AVAILCPU
 	len = sizeof(int);
 	mib[0] = CTL_HW;
 	mib[1] = HW_AVAILCPU;
-	if (sysctl(&mib[0], 2, &online, &len, NULL, 0) < 0)
+	if (sysctl(&mib[0], 2, &online, &len, nullptr, 0) < 0)
 	    online = 0;
 #endif
     }
@@ -378,11 +378,11 @@ erts_cpu_info_update(erts_cpu_info_t *cpuinfo)
 	uint_t numcpus = configured;
 	cpuids = malloc(sizeof(processorid_t)*numcpus);
 	if (cpuids) {
-	    if (pset_info(PS_MYID, NULL, &numcpus, &cpuids) == 0)
+	    if (pset_info(PS_MYID, nullptr, &numcpus, &cpuids) == 0)
 		available = (int) numcpus;
 	    if (available < 0) {
 		free(cpuids);
-		cpuids = NULL;
+		cpuids = nullptr;
 		available = 0;
 	    }
 	}
@@ -423,7 +423,7 @@ erts_cpu_info_update(erts_cpu_info_t *cpuinfo)
 
     old_topology = cpuinfo->topology;
     old_topology_size = cpuinfo->topology_size;
-    cpuinfo->topology = NULL;
+    cpuinfo->topology = nullptr;
 
     read_topology(cpuinfo);
 
@@ -593,7 +593,7 @@ erts_bind_to_cpu(erts_cpu_info_t *cpuinfo, int cpu)
 #elif defined(HAVE_PROCESSOR_BIND)
     if (cpu < 0)
 	return -EINVAL;
-    if (processor_bind(P_LWPID, P_MYID, (processorid_t) cpu, NULL) != 0)
+    if (processor_bind(P_LWPID, P_MYID, (processorid_t) cpu, nullptr) != 0)
 	return -errno;
     return 0;
 #else
@@ -609,7 +609,7 @@ erts_unbind_from_cpu(erts_cpu_info_t *cpuinfo)
 #if defined(ERTS_HAVE_MISC_UTIL_AFFINITY_MASK__)
     return ERTS_MU_SET_THR_AFFINITY__(&cpuinfo->cpuset);
 #elif defined(HAVE_PROCESSOR_BIND)
-    if (processor_bind(P_LWPID, P_MYID, PBIND_NONE, NULL) != 0)
+    if (processor_bind(P_LWPID, P_MYID, PBIND_NONE, nullptr) != 0)
 	return -errno;
     return 0;
 #else
@@ -674,7 +674,7 @@ erts_unbind_from_cpu_str(char *str)
 
     return ERTS_MU_SET_THR_AFFINITY__(&cpuset);
 #elif defined(HAVE_PROCESSOR_BIND)
-    if (processor_bind(P_LWPID, P_MYID, PBIND_NONE, NULL) != 0)
+    if (processor_bind(P_LWPID, P_MYID, PBIND_NONE, nullptr) != 0)
 	return -errno;
     return 0;
 #else
@@ -740,7 +740,7 @@ adjust_processor_nodes(erts_cpu_info_t *cpuinfo, int no_nodes)
 	      sizeof(erts_cpu_topology_t),
 	      pn_cmp);
 
-	prev = NULL;
+	prev = nullptr;
 	this_ = &cpuinfo->topology[0];
 	last = &cpuinfo->topology[cpuinfo->topology_size-1];
 	while (1) {
@@ -820,8 +820,8 @@ read_topology(erts_cpu_info_t *cpuinfo)
     char cpath[MAXPATHLEN];
     char tpath[MAXPATHLEN];
     char fpath[MAXPATHLEN];
-    DIR *ndir = NULL;
-    DIR *cdir = NULL;
+    DIR *ndir = nullptr;
+    DIR *cdir = nullptr;
     struct dirent *nde;
     int ix;
     int res = 0;
@@ -833,7 +833,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
     if (cpuinfo->configured < 1)
 	goto error;
 
-    cpuinfo->topology = malloc(sizeof(erts_cpu_topology_t)
+    cpuinfo->topology = (erts_cpu_topology_t*)malloc(sizeof(erts_cpu_topology_t)
 			       * cpuinfo->configured);
     if (!cpuinfo->topology)
 	goto error;
@@ -851,7 +851,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
 
     if (realpath(ERTS_SYS_NODE_PATH, npath)) {
 	ndir = opendir(npath);
-	got_nodes = (ndir != NULL);
+	got_nodes = (ndir != nullptr);
     }
 
     do {
@@ -888,7 +888,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
 	    struct dirent *cde = readdir(cdir);
 	    if (!cde) {
 		closedir(cdir);
-		cdir = NULL;
+		cdir = nullptr;
 		break;
 	    }
 	    if (sscanf(cde->d_name, "cpu%d", &cpu_id) == 1) {
@@ -940,7 +940,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
 	    void *t = realloc(cpuinfo->topology, (sizeof(erts_cpu_topology_t)
 						  * cpuinfo->topology_size));
 	    if (t)
-		cpuinfo->topology = t;
+                cpuinfo->topology = (erts_cpu_topology_t*)t;
 	}
 
 	adjust_processor_nodes(cpuinfo, no_nodes);
@@ -977,7 +977,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
 	cpuinfo->topology_size = 0;
 	if (cpuinfo->topology) {
 	    free(cpuinfo->topology);
-	    cpuinfo->topology = NULL;
+	    cpuinfo->topology = nullptr;
 	}
 	if (errno)
 	    res = -errno;
@@ -1064,7 +1064,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
     ix = 0;
     for (ks = ks_ctl->kc_chain; ks; ks = ks->ks_next) {
 	if (strcmp("cpu_info", ks->ks_module) == 0) {
-	    kstat_read(ks_ctl, ks, NULL);
+	    kstat_read(ks_ctl, ks, nullptr);
 	    if (ks->ks_type == KSTAT_TYPE_NAMED) {
 		/*
 		 * Don't know how to figure numa nodes out;
@@ -1134,7 +1134,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
 	cpuinfo->topology_size = 0;
 	if (cpuinfo->topology) {
 	    free(cpuinfo->topology);
-	    cpuinfo->topology = NULL;
+	    cpuinfo->topology = nullptr;
 	}
 	if (errno)
 	    res = -errno;
@@ -1203,8 +1203,8 @@ read_topology(erts_cpu_info_t *cpuinfo)
 {
     int res = 0;
     glpi_t glpi;
-    int *core_id = NULL;
-    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION slpip = NULL;
+    int *core_id = nullptr;
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION slpip = nullptr;
     int wix, rix, max_l, l, packages, nodes, no_slpi;
     DWORD slpi_size = 0;
 
@@ -1214,7 +1214,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
     if (!glpi)
 	return -ENOTSUP;
 
-    cpuinfo->topology = NULL;
+    cpuinfo->topology = nullptr;
 
     if (cpuinfo->configured < 1 || sizeof(ULONG_PTR)*8 < cpuinfo->configured)
 	goto error;
@@ -1408,7 +1408,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
 	cpuinfo->topology_size = 0;
 	if (cpuinfo->topology) {
 	    free(cpuinfo->topology);
-	    cpuinfo->topology = NULL;
+	    cpuinfo->topology = nullptr;
 	}
     }
 
@@ -1450,20 +1450,20 @@ const char* parse_topology_spec_group(erts_cpu_info_t *cpuinfo, const char* xml,
 
     /* parse the cache level */
     next_cache_level = strstr(xml, "cache-level=\"");
-    if (next_cache_level && (next_group_start == NULL || next_cache_level < next_group_start)) {
+    if (next_cache_level && (next_group_start == nullptr || next_cache_level < next_group_start)) {
 	sscanf(next_cache_level, "cache-level=\"%i\"", &cacheLevel);
     }
 
     /* parse the threads flag */
     next_thread_flag = strstr(xml, "THREAD");
-    if (next_thread_flag && (next_group_start == NULL || next_thread_flag < next_group_start))
+    if (next_thread_flag && (next_group_start == nullptr || next_thread_flag < next_group_start))
 	is_thread_group = 1;
 
     /* Determine if it's a leaf with the position of the next children tag */
     next_group_end = strstr(xml, "</group>");
     next_children = strstr(xml, "<children>");
     next_children_end = strstr(xml, "</children>");
-    if (next_children == NULL || next_group_end < next_children) {
+    if (next_children == nullptr || next_group_end < next_children) {
 	do {
 	    const char* next_cpu_start;
 	    const char* next_cpu_cdata;
@@ -1494,7 +1494,7 @@ const char* parse_topology_spec_group(erts_cpu_info_t *cpuinfo, const char* xml,
 	    cpu_str = (char*) malloc(cpu_str_size + 1);
 	    memcpy(cpu_str, (const char*) next_cpu_cdata, cpu_str_size);
 	    cpu_str[cpu_str_size] = 0;
-	    for (cpu_crsr = strtok_r(cpu_str, " \t,", &brkb); cpu_crsr; cpu_crsr = strtok_r(NULL, " \t,", &brkb)) {
+	    for (cpu_crsr = strtok_r(cpu_str, " \t,", &brkb); cpu_crsr; cpu_crsr = strtok_r(nullptr, " \t,", &brkb)) {
 		int cpu_id;
 		if (index_procs >= cpuinfo->configured) {
 		    void* t = realloc(cpuinfo->topology, (sizeof(erts_cpu_topology_t) * (index_procs + 1)));
@@ -1524,7 +1524,7 @@ const char* parse_topology_spec_group(erts_cpu_info_t *cpuinfo, const char* xml,
 	} while (0);
 	xml = next_group_end;
     } else {
-	while (next_group_start != NULL && next_group_start < next_children_end) {
+	while (next_group_start != nullptr && next_group_start < next_children_end) {
 	    xml = parse_topology_spec_group(cpuinfo, next_group_start, cacheLevel, processor_p, core_p, index_procs_p);
 	    if (!xml)
 		break;
@@ -1541,7 +1541,7 @@ const char* parse_topology_spec_group(erts_cpu_info_t *cpuinfo, const char* xml,
     }
 
     if (error)
-	xml = NULL;
+	xml = nullptr;
 
     return xml;
 }
@@ -1582,7 +1582,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
     int ix;
     int res = 0;
     size_t topology_spec_size = 0;
-    void* topology_spec = NULL;
+    void* topology_spec = nullptr;
 
     errno = 0;
 
@@ -1606,14 +1606,14 @@ read_topology(erts_cpu_info_t *cpuinfo)
 	cpuinfo->topology[ix].logical = -1;
     }
 
-    if (!sysctlbyname("kern.sched.topology_spec", NULL, &topology_spec_size, NULL, 0)) {
+    if (!sysctlbyname("kern.sched.topology_spec", nullptr, &topology_spec_size, nullptr, 0)) {
 	topology_spec = malloc(topology_spec_size);
 	if (!topology_spec) {
 	    res = -ENOMEM;
 	    goto error;
 	}
 
-	if (sysctlbyname("kern.sched.topology_spec", topology_spec, &topology_spec_size, NULL, 0)) {
+	if (sysctlbyname("kern.sched.topology_spec", topology_spec, &topology_spec_size, nullptr, 0)) {
 	    goto error;
 	}
 
@@ -1645,7 +1645,7 @@ error:
 	cpuinfo->topology_size = 0;
 	if (cpuinfo->topology) {
 	    free(cpuinfo->topology);
-	    cpuinfo->topology = NULL;
+	    cpuinfo->topology = nullptr;
 	}
 	if (errno)
 	    res = -errno;

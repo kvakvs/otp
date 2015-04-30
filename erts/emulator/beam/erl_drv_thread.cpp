@@ -128,7 +128,7 @@ void erl_drv_thr_init(void)
 	fatal_error(res, "erl_drv_thr_init()");
 #else
     tsd_len = 0;
-    tsd = NULL;
+    tsd = nullptr;
 #endif
 
     no_name = "unknown";
@@ -138,7 +138,7 @@ void erl_drv_thr_init(void)
     used_tsd_keys = (char**)erts_alloc(ERTS_ALC_T_DRV_TSD,
 			       sizeof(char *)*ERL_DRV_TSD_KEYS_INC);
     for (i = 0; i < ERL_DRV_TSD_KEYS_INC; i++)
-	used_tsd_keys[i] = NULL;
+	used_tsd_keys[i] = nullptr;
     erts_mtx_init(&tsd_mtx, "drv_tsd");
 }
 
@@ -160,7 +160,7 @@ erl_drv_mutex_create(char *name)
 	opt.posix_compliant = 1;
 	if (ethr_mutex_init_opt(&dmtx->mtx, &opt) != 0) {
 	    erts_free(ERTS_ALC_T_DRV_MTX, (void *) dmtx);
-	    dmtx = NULL;
+	    dmtx = nullptr;
 	}
 	else if (!name)
 	    dmtx->name = no_name;
@@ -171,7 +171,7 @@ erl_drv_mutex_create(char *name)
     }
     return dmtx;
 #else
-    return (ErlDrvMutex *) NULL;
+    return (ErlDrvMutex *) nullptr;
 #endif
 }
 
@@ -191,9 +191,9 @@ char *
 erl_drv_mutex_name(ErlDrvMutex *dmtx)
 {
 #ifdef USE_THREADS
-    return dmtx ? dmtx->name : NULL;
+    return dmtx ? dmtx->name : nullptr;
 #else
-    return NULL;
+    return nullptr;
 #endif
 }
 
@@ -241,7 +241,7 @@ erl_drv_cond_create(char *name)
 	opt.posix_compliant = 1;
 	if (ethr_cond_init_opt(&dcnd->cnd, &opt) != 0) {
 	    erts_free(ERTS_ALC_T_DRV_CND, (void *) dcnd);
-	    dcnd = NULL;
+	    dcnd = nullptr;
 	}
 	else if (!name)
 	    dcnd->name = no_name;
@@ -252,7 +252,7 @@ erl_drv_cond_create(char *name)
     }
     return dcnd;
 #else
-    return (ErlDrvCond *) NULL;
+    return (ErlDrvCond *) nullptr;
 #endif
 }
 
@@ -271,9 +271,9 @@ char *
 erl_drv_cond_name(ErlDrvCond *dcnd)
 {
 #ifdef USE_THREADS
-    return dcnd ? dcnd->name : NULL;
+    return dcnd ? dcnd->name : nullptr;
 #else
-    return NULL;
+    return nullptr;
 #endif
 }
 
@@ -323,7 +323,7 @@ erl_drv_rwlock_create(char *name)
     if (drwlck) {
 	if (ethr_rwmutex_init(&drwlck->rwmtx) != 0) {
 	    erts_free(ERTS_ALC_T_DRV_RWLCK, (void *) drwlck);
-	    drwlck = NULL;
+	    drwlck = nullptr;
 	}
 	else if (!name)
 	    drwlck->name = no_name;
@@ -334,7 +334,7 @@ erl_drv_rwlock_create(char *name)
     }
     return drwlck;
 #else
-    return (ErlDrvRWLock *) NULL;
+    return (ErlDrvRWLock *) nullptr;
 #endif
 }
 
@@ -353,9 +353,9 @@ char *
 erl_drv_rwlock_name(ErlDrvRWLock *drwlck)
 {
 #ifdef USE_THREADS
-    return drwlck ? drwlck->name : NULL;
+    return drwlck ? drwlck->name : nullptr;
 #else
-    return NULL;
+    return nullptr;
 #endif
 }
 
@@ -477,7 +477,7 @@ erl_drv_tsd_key_create(char *name, ErlDrvTSDKey *key)
 		else {
 		    used_tsd_keys = new_used_tsd_keys;
 		    for (i = old_used_tsd_keys_len; i < used_tsd_keys_len; i++)
-			used_tsd_keys[i] = NULL;
+			used_tsd_keys[i] = nullptr;
 		}
 	    }
 	}
@@ -506,7 +506,7 @@ erl_drv_tsd_key_destroy(ErlDrvTSDKey key)
     if (used_tsd_keys[key] != no_name)
 	erts_free(ERTS_ALC_T_DRV_TSD, used_tsd_keys[key]);
 
-    used_tsd_keys[key] = NULL;
+    used_tsd_keys[key] = nullptr;
     if (next_tsd_key < 0 || key < next_tsd_key)
 	next_tsd_key = key;
 
@@ -538,7 +538,7 @@ erl_drv_tsd_set(ErlDrvTSDKey key, void *data)
         ERL_DRV_TSD__ = (void**)erts_alloc(ERTS_ALC_T_DRV_TSD,
 				   sizeof(void *)*ERL_DRV_TSD_LEN__);
 	for (i = 0; i < ERL_DRV_TSD_LEN__; i++)
-	    ERL_DRV_TSD__[i] = NULL;
+	    ERL_DRV_TSD__[i] = nullptr;
     }
     else if (ERL_DRV_TSD_LEN__ <= key) {
 	ErlDrvTSDKey i = ERL_DRV_TSD_LEN__;
@@ -547,7 +547,7 @@ erl_drv_tsd_set(ErlDrvTSDKey key, void *data)
 				     ERL_DRV_TSD__,
 				     sizeof(void *)*ERL_DRV_TSD_LEN__);
 	for (; i < ERL_DRV_TSD_LEN__; i++)
-	    ERL_DRV_TSD__[i] = NULL;
+	    ERL_DRV_TSD__[i] = nullptr;
     }
     ERL_DRV_TSD__[key] = data;
 }
@@ -562,10 +562,10 @@ erl_drv_tsd_get(ErlDrvTSDKey key)
 	fatal_error(EINVAL, "erl_drv_tsd_get()");
 #ifdef USE_THREADS
     if (!dtid)
-	return NULL;
+	return nullptr;
 #endif
     if (ERL_DRV_TSD_LEN__ <= key)
-	return NULL;
+	return nullptr;
     return ERL_DRV_TSD__[key];
 }
 
@@ -578,7 +578,7 @@ erl_drv_thread_opts_create(char *name)
     ErlDrvThreadOpts *opts = (ErlDrvThreadOpts *)erts_alloc_fnf(ERTS_ALC_T_DRV_THR_OPTS,
 					    sizeof(ErlDrvThreadOpts));
     if (!opts)
-	return NULL;
+	return nullptr;
     opts->suggested_stack_size = -1;
     return opts;
 }
@@ -606,7 +606,7 @@ erl_drv_thread_create(char *name,
     ethr_thr_opts def_ethr_opts = ETHR_THR_OPTS_DEFAULT_INITER;
 
     if (!opts)
-	use_opts = NULL;
+	use_opts = nullptr;
     else {
 	sys_memcpy((void *) &ethr_opts,
 		   (void *) &def_ethr_opts,
@@ -624,7 +624,7 @@ erl_drv_thread_create(char *name,
     dtid->drv_thr = 1;
     dtid->func = func;
     dtid->arg = arg;
-    dtid->tsd = NULL;
+    dtid->tsd = nullptr;
     dtid->tsd_len = 0;
     if (!name)
 	dtid->name = no_name;
@@ -651,9 +651,9 @@ erl_drv_thread_name(ErlDrvTid tid)
 {
 #ifdef USE_THREADS
     struct ErlDrvTid_ *dtid = (struct ErlDrvTid_ *) tid;
-    return dtid ? dtid->name : NULL;
+    return dtid ? dtid->name : nullptr;
 #else
-    return NULL;
+    return nullptr;
 #endif
 }
 
@@ -670,9 +670,9 @@ erl_drv_thread_self(void)
         dtid = (ErlDrvTid_*)erts_alloc(ERTS_ALC_T_DRV_TID, sizeof(struct ErlDrvTid_));
 	dtid->drv_thr = 0; /* Not a driver thread */
 	dtid->tid = ethr_self();
-	dtid->func = NULL;
-	dtid->arg = NULL;
-	dtid->tsd = NULL;
+	dtid->func = nullptr;
+	dtid->arg = nullptr;
+	dtid->tsd = nullptr;
 	dtid->tsd_len = 0;
 	dtid->name = no_name;
 	res = ethr_tsd_set(tid_key, (void *) dtid);
@@ -681,7 +681,7 @@ erl_drv_thread_self(void)
     }
     return (ErlDrvTid) dtid;
 #else
-    return (ErlDrvTid) NULL;
+    return (ErlDrvTid) nullptr;
 #endif
 }
 
@@ -758,7 +758,7 @@ erl_drv_stolen_main_thread_join(ErlDrvTid tid, void **respp)
 {
     void *dummy;
     void **x;
-    if (respp == NULL)
+    if (respp == nullptr)
 	x = &dummy;
     else
 	x = respp;
@@ -787,12 +787,12 @@ erl_drv_steal_main_thread(char *name,
     dtid->drv_thr = 1;
     dtid->func = func;
     dtid->arg = arg;
-    dtid->tsd = NULL;
+    dtid->tsd = nullptr;
     dtid->tsd_len = 0;
     dtid->name = no_name;
     *tid = (ErlDrvTid) dtid;
     */
-    *tid = NULL;
+    *tid = nullptr;
     /* Ignore options and name... */
     
     memcpy(buff,&func,sizeof(void* (*)(void*)));

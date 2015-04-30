@@ -170,7 +170,7 @@ async_ready_q(Uint sched_id)
 void
 erts_init_async(void)
 {
-    async = NULL;
+    async = nullptr;
     if (erts_async_max_threads > 0) {
 #if ERTS_USE_ASYNC_READY_Q
 	ErtsThrQInit_t qinit = ERTS_THR_Q_INIT_DEFAULT;
@@ -262,7 +262,7 @@ erts_init_async(void)
 void *
 erts_get_async_ready_queue(Uint sched_id)
 {
-    return (void *) async ? async_ready_q(sched_id) : NULL;
+    return (void *) async ? async_ready_q(sched_id) : nullptr;
 }
 
 #endif
@@ -362,7 +362,7 @@ static ERTS_INLINE ErtsAsync *async_get(ErtsThrQ_t *q,
 #ifdef ERTS_SMP
 	    {
 		ErtsThrPrgrVal prgr = erts_thr_q_need_thr_progress(q);
-		erts_thr_progress_wakeup(NULL, prgr);
+                erts_thr_progress_wakeup(nullptr, prgr);
 		/*
 		 * We do no dequeue finalizing in hope that a new_ async
 		 * job will arrive before we are woken due to thread
@@ -399,7 +399,7 @@ static ERTS_INLINE void call_async_ready(ErtsAsync *a)
 {
 #if ERTS_USE_ASYNC_READY_Q
     Port *p = erts_id2port_sflgs(a->port,
-				 NULL,
+                                 nullptr,
 				 0,
 				 ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP);
 #else
@@ -472,8 +472,8 @@ static erts_tse_t *async_thread_init(ErtsAsyncQ *aq)
 
     callbacks.arg = (void *) tse;
     callbacks.wakeup = async_wakeup;
-    callbacks.prepare_wait = NULL;
-    callbacks.wait = NULL;
+    callbacks.prepare_wait = nullptr;
+    callbacks.wait = nullptr;
 
     erts_thr_progress_register_unmanaged_thread(&callbacks);
 #endif
@@ -517,7 +517,7 @@ static void *async_main(void* arg)
 	async_reply(a, prep_enq);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 #endif /* USE_THREADS */
@@ -538,7 +538,7 @@ erts_exit_flush_async(void)
     for (i = 0; i < erts_async_max_threads; i++)
 	async_add(&a, async_q(i));
     for (i = 0; i < erts_async_max_threads; i++)
-	erts_thr_join(async->queue[i].aq.thr_id, NULL);
+        erts_thr_join(async->queue[i].aq.thr_id, nullptr);
 #endif
 }
 
@@ -620,7 +620,7 @@ unsigned int driver_async_port_key(ErlDrvPort port)
 **  N  handle value
 **  arguments:
 **      ix             driver index 
-**      key            pointer to secedule queue (NULL means round robin)
+**      key            pointer to secedule queue (nullptr means round robin)
 **      async_invoke   function to run in thread
 **      async_data     data to pass to invoke function
 **      async_free     function for relase async_data in case of failure
@@ -654,7 +654,7 @@ long driver_async(ErlDrvPort ix, unsigned int* key,
 #endif
     a->hndl = (DE_Handle*)prt->drv_ptr->handle;
     a->port = prt->common.id;
-    a->pdl = NULL;
+    a->pdl = nullptr;
     a->async_data = async_data;
     a->async_invoke = async_invoke;
     a->async_free = async_free;
@@ -672,7 +672,7 @@ long driver_async(ErlDrvPort ix, unsigned int* key,
 
     a->async_id = id;
 
-    if (key == NULL) {
+    if (key == nullptr) {
 	qix = (erts_async_max_threads > 0)
 	    ? (id % erts_async_max_threads) : 0;
     }
@@ -695,7 +695,7 @@ long driver_async(ErlDrvPort ix, unsigned int* key,
     (*a->async_invoke)(a->async_data);
 
     if (async_ready(prt, a->async_data)) {
-	if (a->async_free != NULL)
+        if (a->async_free != nullptr)
 	    (*a->async_free)(a->async_data);
     }
     erts_free(ERTS_ALC_T_ASYNC, (void *) a);

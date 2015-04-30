@@ -219,7 +219,7 @@ static void *alloc_code(unsigned int alloc_bytes)
 void *hipe_alloc_code(Uint nrbytes, Eterm callees, Eterm *trampolines, Process *p)
 {
     if (is_not_nil(callees))
-	return NULL;
+	return nullptr;
     *trampolines = NIL;
     return alloc_code(nrbytes);
 }

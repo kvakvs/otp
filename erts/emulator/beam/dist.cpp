@@ -57,7 +57,7 @@
 #if defined(ERTS_DIST_MSG_DBG) || defined(ERTS_RAW_DIST_MSG_DBG)
 static void bw(byte *buf, ErlDrvSizeT sz)
 {
-    bin_write(ERTS_PRINT_STDERR, NULL, buf, sz);
+    bin_write(ERTS_PRINT_STDERR, nullptr, buf, sz);
 }
 #endif
 
@@ -103,15 +103,15 @@ int erts_dist_buf_busy_limit;
 
 
 /* distribution trap functions */
-Export* dsend2_trap = NULL;
-Export* dsend3_trap = NULL;
-/*Export* dsend_nosuspend_trap = NULL;*/
-Export* dlink_trap = NULL;
-Export* dunlink_trap = NULL;
-Export* dmonitor_node_trap = NULL;
-Export* dgroup_leader_trap = NULL;
-Export* dexit_trap = NULL;
-Export* dmonitor_p_trap = NULL;
+Export* dsend2_trap = nullptr;
+Export* dsend3_trap = nullptr;
+/*Export* dsend_nosuspend_trap = nullptr;*/
+Export* dlink_trap = nullptr;
+Export* dunlink_trap = nullptr;
+Export* dmonitor_node_trap = nullptr;
+Export* dgroup_leader_trap = nullptr;
+Export* dexit_trap = nullptr;
+Export* dmonitor_p_trap = nullptr;
 
 /* local variables */
 
@@ -175,12 +175,12 @@ get_suspended_on_de(DistEntry *dep, Uint32 unset_qflgs)
     dep->qflgs &= ~unset_qflgs;
     if (dep->qflgs & ERTS_DE_QFLG_EXIT) {
 	/* No resume when exit has been scheduled */
-	return NULL;
+        return nullptr;
     }
     else {
 	ErtsProcList *suspended = dep->suspended;
-	dep->suspended = NULL;
-	erts_proclist_fetch(&suspended, NULL);
+        dep->suspended = nullptr;
+        erts_proclist_fetch(&suspended, nullptr);
 	return suspended;
     }
 }
@@ -232,7 +232,7 @@ int is_node_name_atom(Eterm a)
     if(is_not_atom(a))
 	return 0;
     i = atom_val(a);
-    ASSERT((i > 0) && (i < atom_table_size()) &&  (atom_tab(i) != NULL));
+    ASSERT((i > 0) && (i < atom_table_size()) &&  (atom_tab(i) != nullptr));
     return is_node_name((char*)atom_tab(i)->name, atom_tab(i)->len);
 }
 
@@ -252,15 +252,15 @@ static void doit_monitor_net_exits(ErtsMonitor *mon, void *vnecp)
     DistEntry *dep = ((NetExitsContext *) vnecp)->dep;
     ErtsProcLocks rp_locks = ERTS_PROC_LOCK_LINK;
 
-    rp = erts_pid2proc(NULL, 0, mon->pid, rp_locks);
+    rp = erts_pid2proc(nullptr, 0, mon->pid, rp_locks);
     if (!rp)
 	goto done;
 
     if (mon->type == MON_ORIGIN) {
 	/* local pid is beeing monitored */
 	rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), mon->ref);
-	/* ASSERT(rmon != NULL); nope, can happen during process exit */
-	if (rmon != NULL) {
+        /* ASSERT(rmon != nullptr); nope, can happen during process exit */
+        if (rmon != nullptr) {
 	    erts_destroy_monitor(rmon);
 	}
     } else {
@@ -269,8 +269,8 @@ static void doit_monitor_net_exits(ErtsMonitor *mon, void *vnecp)
 	UseTmpHeapNoproc(3);
 	ASSERT(mon->type == MON_TARGET);
 	rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), mon->ref);
-	/* ASSERT(rmon != NULL); can happen during process exit */
-	if (rmon != NULL) {
+        /* ASSERT(rmon != nullptr); can happen during process exit */
+        if (rmon != nullptr) {
 	    ASSERT(is_atom(rmon->name) || is_nil(rmon->name));
 	    watched = (is_atom(rmon->name)
 		       ? TUPLE2(lhp, rmon->name, dep->sysname)
@@ -312,26 +312,26 @@ static void doit_link_net_exits_sub(ErtsLink *sublnk, void *vlnecp)
 	int xres;
 	ErtsProcLocks rp_locks = ERTS_PROC_LOCK_LINK|ERTS_PROC_LOCKS_XSIG_SEND;
 
-	rp = erts_pid2proc(NULL, 0, lnk->pid, rp_locks);
+        rp = erts_pid2proc(nullptr, 0, lnk->pid, rp_locks);
 	if (!rp) {
 	    goto done;
 	}
 
 	rlnk = erts_remove_link(&ERTS_P_LINKS(rp), sublnk->pid);
-	xres = erts_send_exit_signal(NULL,
+        xres = erts_send_exit_signal(nullptr,
 				     sublnk->pid,
 				     rp,
 				     &rp_locks,
 				     am_noconnection,
 				     NIL,
-				     NULL,
+                                     nullptr,
 				     0);
 
 	if (rlnk) {
 	    erts_destroy_link(rlnk);
 	    if (xres >= 0 && IS_TRACED_FL(rp, F_TRACE_PROCS)) {
 		/* We didn't exit the process and it is traced */
-		trace_proc(NULL, rp, am_getting_unlinked, sublnk->pid);
+                trace_proc(nullptr, rp, am_getting_unlinked, sublnk->pid);
 	    }
 	}
 	erts_smp_proc_unlock(rp, rp_locks);
@@ -356,7 +356,7 @@ static void doit_link_net_exits(ErtsLink *lnk, void *vnecp)
     ASSERT(lnk->type == LINK_PID);
     erts_sweep_links(ERTS_LINK_ROOT(lnk), &doit_link_net_exits_sub, (void *) &lnec);
 #ifdef DEBUG
-    ERTS_LINK_ROOT(lnk) = NULL;
+    ERTS_LINK_ROOT(lnk) = nullptr;
 #endif
     erts_destroy_link(lnk);
 }
@@ -372,12 +372,12 @@ static void doit_node_link_net_exits(ErtsLink *lnk, void *vnecp)
     ASSERT(lnk->type == LINK_NODE);
     if (is_internal_pid(lnk->pid)) {
 	ErtsProcLocks rp_locks = ERTS_PROC_LOCK_LINK;
-	rp = erts_pid2proc(NULL, 0, lnk->pid, rp_locks);
+        rp = erts_pid2proc(nullptr, 0, lnk->pid, rp_locks);
 	if (!rp) {
 	    goto done;
 	}
 	rlnk = erts_remove_link(&ERTS_P_LINKS(rp), name);
-	if (rlnk != NULL) {
+        if (rlnk != nullptr) {
 	    ASSERT(is_atom(rlnk->pid) && (rlnk->type == LINK_NODE));
 	    erts_destroy_link(rlnk);
 	}
@@ -411,10 +411,10 @@ set_node_not_alive(void *unused)
     erts_smp_thr_progress_block();
     erts_set_this_node(am_Noname, 0);
     erts_is_alive = 0;
-    send_nodes_mon_msgs(NULL, am_nodedown, nodename, am_visible, nodedown.reason);
+    send_nodes_mon_msgs(nullptr, am_nodedown, nodename, am_visible, nodedown.reason);
     nodedown.reason = NIL;
     bp = nodedown.bp;
-    nodedown.bp = NULL;
+    nodedown.bp = nullptr;
     erts_smp_thr_progress_unblock();
     if (bp)
 	free_message_buffer(bp);
@@ -429,7 +429,7 @@ dec_no_nodes(void)
     if (no == 0)
 	erts_schedule_misc_aux_work(erts_get_scheduler_id(),
 				    set_node_not_alive,
-				    NULL);
+                                    nullptr);
 }
 
 static ERTS_INLINE void
@@ -493,8 +493,8 @@ int erts_do_net_exits(DistEntry *dep, Eterm reason)
 		ASSERT(erts_atomic32_read_nob(&prt->state)
 		       & ERTS_PORT_SFLG_DISTRIBUTION);
 
-		erts_port_exit(NULL, ERTS_PORT_SIG_FLG_FORCE_SCHED,
-			       prt, dist_port[i], nd_reason, NULL);
+                erts_port_exit(nullptr, ERTS_PORT_SIG_FLG_FORCE_SCHED,
+                               prt, dist_port[i], nd_reason, nullptr);
 	    }
 
 	    if (dist_port != &def_buf[0])
@@ -554,9 +554,9 @@ int erts_do_net_exits(DistEntry *dep, Eterm reason)
 	monitors	= dep->monitors;
         nlinks		= dep->nlinks;
 	node_links	= dep->node_links;
-	dep->monitors	= NULL;
-        dep->nlinks	= NULL;
-	dep->node_links	= NULL;
+        dep->monitors	= nullptr;
+        dep->nlinks	= nullptr;
+        dep->node_links	= nullptr;
 	erts_smp_de_links_unlock(dep);
 
 	nodename = dep->sysname;
@@ -570,7 +570,7 @@ int erts_do_net_exits(DistEntry *dep, Eterm reason)
 	erts_sweep_links(nlinks, &doit_link_net_exits, (void *) &nec);
 	erts_sweep_links(node_links, &doit_node_link_net_exits, (void *) &nec);
 
-	send_nodes_mon_msgs(NULL,
+        send_nodes_mon_msgs(nullptr,
 			    am_nodedown,
 			    nodename,
 			    flags & DFLAG_PUBLISHED ? am_visible : am_hidden,
@@ -596,7 +596,7 @@ void init_dist(void)
     init_nodes_monitors();
 
     nodedown.reason = NIL;
-    nodedown.bp = NULL;
+    nodedown.bp = nullptr;
 
     erts_smp_atomic_init_nob(&no_nodes, 0);
     erts_smp_atomic_init_nob(&no_caches, 0);
@@ -658,7 +658,7 @@ static void clear_dist_entry(DistEntry *dep)
 
     erts_smp_de_rwlock(dep);
     cache = dep->cache;
-    dep->cache = NULL;
+    dep->cache = nullptr;
 
 #ifdef DEBUG
     erts_smp_de_links_lock(dep);
@@ -677,16 +677,16 @@ static void clear_dist_entry(DistEntry *dep)
 	obuf = dep->out_queue.first;
     }
 
-    dep->out_queue.first = NULL;
-    dep->out_queue.last = NULL;
-    dep->finalized_out_queue.first = NULL;
-    dep->finalized_out_queue.last = NULL;
+    dep->out_queue.first = nullptr;
+    dep->out_queue.last = nullptr;
+    dep->finalized_out_queue.first = nullptr;
+    dep->finalized_out_queue.last = nullptr;
     dep->status = 0;
     suspendees = get_suspended_on_de(dep, ERTS_DE_QFLGS_ALL);
 
     erts_smp_mtx_unlock(&dep->qlock);
     erts_smp_atomic_set_nob(&dep->dist_cmd_scheduled, 0);
-    dep->send = NULL;
+    dep->send = nullptr;
     erts_smp_de_rwunlock(dep);
 
     erts_resume_processes(suspendees);
@@ -1119,7 +1119,7 @@ int erts_net_message(Port *prt,
 
     UseTmpHeapNoproc(DIST_CTL_DEFAULT_SIZE);
     /* Thanks to Luke Gorrie */
-    off_heap.first = NULL;
+    off_heap.first = nullptr;
     off_heap.overhead = 0;
 
     ERTS_SMP_CHK_NO_PROC_LOCKS;
@@ -1216,14 +1216,14 @@ int erts_net_message(Port *prt,
 	    goto invalid_message;
 	}
 
-	rp = erts_pid2proc_opt(NULL, 0,
+        rp = erts_pid2proc_opt(nullptr, 0,
 			       to, ERTS_PROC_LOCK_LINK,
 			       ERTS_P2P_FLG_ALLOW_OTHER_X);
 	if (!rp) {
 	    /* This is tricky (we MUST force a distributed send) */
 	    ErtsDSigData dsd;
 	    int code;
-	    code = erts_dsig_prepare(&dsd, dep, NULL, ERTS_DSP_NO_LOCK, 0);
+            code = erts_dsig_prepare(&dsd, dep, nullptr, ERTS_DSP_NO_LOCK, 0);
 	    if (code == ERTS_DSIG_PREP_CONNECTED) {
 		code = erts_dsig_send_exit(&dsd, to, from, am_noproc);
 		ASSERT(code == ERTS_DSIG_SEND_OK);
@@ -1245,7 +1245,7 @@ int erts_net_message(Port *prt,
 	erts_smp_de_links_unlock(dep);
 
 	if (IS_TRACED_FL(rp, F_TRACE_PROCS))
-	    trace_proc(NULL, rp, am_getting_linked, from);
+            trace_proc(nullptr, rp, am_getting_linked, from);
 
 	erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
 	break;
@@ -1261,7 +1261,7 @@ int erts_net_message(Port *prt,
 	    goto invalid_message;
 	}
 	
-	rp = erts_pid2proc_opt(NULL, 0,
+        rp = erts_pid2proc_opt(nullptr, 0,
 			       to, ERTS_PROC_LOCK_LINK,
 			       ERTS_P2P_FLG_ALLOW_OTHER_X);
 	if (!rp)
@@ -1269,8 +1269,8 @@ int erts_net_message(Port *prt,
 
 	lnk = erts_remove_link(&ERTS_P_LINKS(rp), from);
 
-	if (IS_TRACED_FL(rp, F_TRACE_PROCS) && lnk != NULL) {
-	    trace_proc(NULL, rp, am_getting_unlinked, from);
+        if (IS_TRACED_FL(rp, F_TRACE_PROCS) && lnk != nullptr) {
+            trace_proc(nullptr, rp, am_getting_unlinked, from);
 	}
 
 	erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
@@ -1301,13 +1301,13 @@ int erts_net_message(Port *prt,
 
 	if (is_atom(watched)) {
 	    name = watched;
-	    rp = erts_whereis_process(NULL, 0,
+            rp = erts_whereis_process(nullptr, 0,
 				      watched, ERTS_PROC_LOCK_LINK,
 				      ERTS_P2P_FLG_ALLOW_OTHER_X);
 	}
 	else {
 	    name = NIL;
-	    rp = erts_pid2proc_opt(NULL, 0,
+            rp = erts_pid2proc_opt(nullptr, 0,
 				   watched, ERTS_PROC_LOCK_LINK,
 				   ERTS_P2P_FLG_ALLOW_OTHER_X);
 	}
@@ -1315,7 +1315,7 @@ int erts_net_message(Port *prt,
 	if (!rp) {
 	    ErtsDSigData dsd;
 	    int code;
-	    code = erts_dsig_prepare(&dsd, dep, NULL, ERTS_DSP_NO_LOCK, 0);
+            code = erts_dsig_prepare(&dsd, dep, nullptr, ERTS_DSP_NO_LOCK, 0);
 	    if (code == ERTS_DSIG_PREP_CONNECTED) {
 		code = erts_dsig_send_m_exit(&dsd, watcher, watched, ref,
 					     am_noproc);
@@ -1354,13 +1354,13 @@ int erts_net_message(Port *prt,
 	erts_smp_de_links_lock(dep);
 	mon = erts_remove_monitor(&(dep->monitors),ref);
 	erts_smp_de_links_unlock(dep);
-	/* ASSERT(mon != NULL); can happen in case of broken dist message */
-	if (mon == NULL) {
+        /* ASSERT(mon != nullptr); can happen in case of broken dist message */
+        if (mon == nullptr) {
 	    break;
 	}
 	watched = mon->pid;
 	erts_destroy_monitor(mon);
-	rp = erts_pid2proc_opt(NULL, 0,
+        rp = erts_pid2proc_opt(nullptr, 0,
 			       watched, ERTS_PROC_LOCK_LINK,
 			       ERTS_P2P_FLG_ALLOW_OTHER_X);
 	if (!rp) {
@@ -1368,8 +1368,8 @@ int erts_net_message(Port *prt,
 	}
 	mon = erts_remove_monitor(&ERTS_P_MONITORS(rp), ref);
 	erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
-	ASSERT(mon != NULL);
-	if (mon == NULL) {
+        ASSERT(mon != nullptr);
+        if (mon == nullptr) {
 	    break;
 	}
 	erts_destroy_monitor(mon);
@@ -1403,7 +1403,7 @@ int erts_net_message(Port *prt,
 	if (is_not_pid(from) || is_not_atom(to)){
 	    goto invalid_message;
 	}
-	rp = erts_whereis_process(NULL, 0, to, 0, 0);
+        rp = erts_whereis_process(nullptr, 0, to, 0, 0);
 	if (rp) {
 	    Uint xsize = (type == DOP_REG_SEND
 			  ? 0
@@ -1513,19 +1513,19 @@ int erts_net_message(Port *prt,
 	 * and everything will be as it should.
 	 */
 	erts_smp_de_links_unlock(dep);
-	if (mon == NULL) {
+        if (mon == nullptr) {
 	    break;
 	}
-	rp = erts_pid2proc(NULL, 0, mon->pid, rp_locks);
+        rp = erts_pid2proc(nullptr, 0, mon->pid, rp_locks);
 
 	erts_destroy_monitor(mon);
-	if (rp == NULL) {
+        if (rp == nullptr) {
 	    break;
 	}
 
 	mon = erts_remove_monitor(&ERTS_P_MONITORS(rp), ref);
 
-	if (mon == NULL) {
+        if (mon == nullptr) {
 	    erts_smp_proc_unlock(rp, rp_locks);
 	    break;
 	}
@@ -1570,13 +1570,13 @@ int erts_net_message(Port *prt,
 	    goto invalid_message;
 	}
 
-	rp = erts_pid2proc(NULL, 0, to, rp_locks);
+        rp = erts_pid2proc(nullptr, 0, to, rp_locks);
 	if (!rp)
-	    lnk = NULL;
+            lnk = nullptr;
 	else {
 	    lnk = erts_remove_link(&ERTS_P_LINKS(rp), from);
 
-	    /* If lnk == NULL, we have unlinked on this_ side, i.e.
+            /* If lnk == nullptr, we have unlinked on this_ side, i.e.
 	     * ignore exit.
 	     */
 	    if (lnk) {
@@ -1588,17 +1588,17 @@ int erts_net_message(Port *prt,
 		   we leave the assertion out. */
 		ASSERT(reason != am_kill); /* should never be kill (killed) */
 #endif
-		xres = erts_send_exit_signal(NULL,
+                xres = erts_send_exit_signal(nullptr,
 					     from,
 					     rp,
 					     &rp_locks, 
 					     reason,
 					     token,
-					     NULL,
+                                             nullptr,
 					     ERTS_XSIG_FLG_IGN_KILL);
 		if (xres >= 0 && IS_TRACED_FL(rp, F_TRACE_PROCS)) {
 		    /* We didn't exit the process and it is traced */
-		    trace_proc(NULL, rp, am_getting_unlinked, from);
+                    trace_proc(nullptr, rp, am_getting_unlinked, from);
 		}
 	    }
 	    erts_smp_proc_unlock(rp, rp_locks);
@@ -1633,15 +1633,15 @@ int erts_net_message(Port *prt,
 	if (is_not_pid(from) || is_not_internal_pid(to)) {
 	    goto invalid_message;
 	}
-	rp = erts_pid2proc(NULL, 0, to, rp_locks);
+        rp = erts_pid2proc(nullptr, 0, to, rp_locks);
 	if (rp) {
-	    (void) erts_send_exit_signal(NULL,
+            (void) erts_send_exit_signal(nullptr,
 					 from,
 					 rp,
 					 &rp_locks,
 					 reason,
 					 token,
-					 NULL,
+                                         nullptr,
 					 0);
 	    erts_smp_proc_unlock(rp, rp_locks);
 	}
@@ -1657,7 +1657,7 @@ int erts_net_message(Port *prt,
 	    goto invalid_message;
 	}
 
-	rp = erts_pid2proc(NULL, 0, to, ERTS_PROC_LOCK_MAIN);
+        rp = erts_pid2proc(nullptr, 0, to, ERTS_PROC_LOCK_MAIN);
 	if (!rp)
 	    break;
 	rp->group_leader = STORE_NC_IN_PROC(rp, from);
@@ -1722,7 +1722,7 @@ dsig_send(ErtsDSigData *dsdp, Eterm ctl, Eterm msg, int force_busy)
 	pass_through_size = 0;
     }
     else {
-	acmp = NULL;
+        acmp = nullptr;
 	pass_through_size = 1;
     }
 
@@ -1764,7 +1764,7 @@ dsig_send(ErtsDSigData *dsdp, Eterm ctl, Eterm msg, int force_busy)
      * Signal encoded; now verify that the connection still exists,
      * and if so enqueue the signal and schedule it for send.
      */
-    obuf->next = NULL;
+    obuf->next = nullptr;
     erts_smp_de_rlock(dep);
     cid = dep->cid;
     if (cid != dsdp->cid
@@ -1775,7 +1775,7 @@ dsig_send(ErtsDSigData *dsdp, Eterm ctl, Eterm msg, int force_busy)
 	free_dist_obuf(obuf);
     }
     else {
-	ErtsProcList *plp = NULL;
+        ErtsProcList *plp = nullptr;
 	erts_smp_mtx_lock(&dep->qlock);
 	dep->qsize += size_obuf(obuf);
 	if (dep->qsize >= erts_dist_buf_busy_limit)
@@ -1784,7 +1784,7 @@ dsig_send(ErtsDSigData *dsdp, Eterm ctl, Eterm msg, int force_busy)
 	    erts_smp_mtx_unlock(&dep->qlock);
 
 	    plp = erts_proclist_create(c_p);
-	    erts_suspend(c_p, ERTS_PROC_LOCK_MAIN, NULL);
+            erts_suspend(c_p, ERTS_PROC_LOCK_MAIN, nullptr);
 	    suspended = 1;
 	    erts_smp_mtx_lock(&dep->qlock);
 	}
@@ -1822,7 +1822,7 @@ dsig_send(ErtsDSigData *dsdp, Eterm ctl, Eterm msg, int force_busy)
 	}
 
 	erts_smp_mtx_unlock(&dep->qlock);
-	erts_schedule_dist_command(NULL, dep);
+        erts_schedule_dist_command(nullptr, dep);
 	erts_smp_de_runlock(dep);
 	
 	if (resume) {
@@ -1936,9 +1936,9 @@ dist_port_commandv(Port *prt, ErtsDistOutputBuf *obuf)
 		 "(%beu bytes) passed.\n",
 		 size);
 
-    iov[0].iov_base = NULL;
+    iov[0].iov_base = nullptr;
     iov[0].iov_len = 0;
-    bv[0] = NULL;
+    bv[0] = nullptr;
 
     iov[1].iov_base = obuf->extp;
     iov[1].iov_len = size;
@@ -2034,14 +2034,14 @@ erts_dist_command(Port *prt, int reds_limit)
     erts_smp_mtx_lock(&dep->qlock);
     oq.first = dep->out_queue.first;
     oq.last = dep->out_queue.last;
-    dep->out_queue.first = NULL;
-    dep->out_queue.last = NULL;
+    dep->out_queue.first = nullptr;
+    dep->out_queue.last = nullptr;
     erts_smp_mtx_unlock(&dep->qlock);
 
     foq.first = dep->finalized_out_queue.first;
     foq.last = dep->finalized_out_queue.last;
-    dep->finalized_out_queue.first = NULL;
-    dep->finalized_out_queue.last = NULL;
+    dep->finalized_out_queue.first = nullptr;
+    dep->finalized_out_queue.last = nullptr;
 
     sched_flags = erts_smp_atomic32_read_nob(&prt->sched.flags);
 
@@ -2071,7 +2071,7 @@ erts_dist_command(Port *prt, int reds_limit)
 		break;
 	} while (foq.first && !preempt);
 	if (!foq.first)
-	    foq.last = NULL;
+            foq.last = nullptr;
 	if (preempt)
 	    goto preempted;
     }
@@ -2109,16 +2109,16 @@ erts_dist_command(Port *prt, int reds_limit)
 	    if (!preempt) {
 		/* All buffers finalized */
 		foq.last = oq.last;
-		oq.first = oq.last = NULL;
+                oq.first = oq.last = nullptr;
 	    }
 	    else {
 		/* Not all buffers finalized; split oq. */
 		foq.last = ob;
 		oq.first = ob->next;
 		if (oq.first)
-		    ob->next = NULL;
+                    ob->next = nullptr;
 		else
-		    oq.last = NULL;
+                    oq.last = nullptr;
 	    }
 	    if (preempt)
 		goto preempted;
@@ -2165,7 +2165,7 @@ erts_dist_command(Port *prt, int reds_limit)
 	    goto preempted;
 
 #ifdef DEBUG
-	oq.last = NULL;
+        oq.last = nullptr;
 #endif
 	ASSERT(!oq.first);
 	ASSERT(!foq.first && !foq.last);
@@ -2255,8 +2255,8 @@ erts_dist_command(Port *prt, int reds_limit)
 	    free_dist_obuf(fob);
 	}
 
-	foq.first = NULL;
-	foq.last = NULL;
+        foq.first = nullptr;
+        foq.last = nullptr;
 
 #ifdef DEBUG
 	erts_smp_mtx_lock(&dep->qlock);
@@ -2280,7 +2280,7 @@ erts_dist_command(Port *prt, int reds_limit)
 	    erts_smp_mtx_unlock(&dep->qlock);
 	}
 
-	erts_schedule_dist_command(prt, NULL);
+        erts_schedule_dist_command(prt, nullptr);
     }
     goto done;
 }
@@ -2301,7 +2301,7 @@ erts_dist_port_not_busy(Port *prt)
                 port_str, remote_str);
     }
 #endif
-    erts_schedule_dist_command(prt, NULL);
+    erts_schedule_dist_command(prt, nullptr);
 }
 
 void
@@ -2319,7 +2319,7 @@ erts_kill_dist_connection(DistEntry *dep, Uint32 connection_id)
 	dep->qflgs |= ERTS_DE_QFLG_EXIT;
 	erts_smp_mtx_unlock(&dep->qlock);
 
-	erts_schedule_dist_command(NULL, dep);
+        erts_schedule_dist_command(nullptr, dep);
     }
     erts_smp_de_rwunlock(dep);
 }
@@ -2336,7 +2336,7 @@ static void doit_print_monitor_info(ErtsMonitor *mon, void *vptdp)
     Process *rp;
     ErtsMonitor *rmon;
     rp = erts_proc_lookup(mon->pid);
-    if (!rp || (rmon = erts_lookup_monitor(ERTS_P_MONITORS(rp), mon->ref)) == NULL) {
+    if (!rp || (rmon = erts_lookup_monitor(ERTS_P_MONITORS(rp), mon->ref)) == nullptr) {
 	erts_print(to, arg, "Warning, stray monitor for: %T\n", mon->pid);
     } else if (mon->type == MON_ORIGIN) {
 	/* Local pid is being monitored */
@@ -2450,7 +2450,7 @@ info_dist_entry(int to, void *arg, DistEntry *dep, int visible, int connected)
 
   erts_print(to, arg, "Controller: %T\n", dep->cid, to);
 
-  erts_print_node_info(to, arg, dep->sysname, NULL, NULL);
+  erts_print_node_info(to, arg, dep->sysname, nullptr, nullptr);
   print_monitor_info(to, arg, dep->monitors);
   print_link_info(to, arg, dep->nlinks);
   print_nodelink_info(to, arg, dep->node_links, dep->sysname);
@@ -2544,15 +2544,15 @@ BIF_RETTYPE setnode_2(BIF_ALIST_2)
 	goto error;
 
     /* Check that all trap functions are defined !! */
-    if (dsend2_trap->addressv[0] == NULL ||
-	dsend3_trap->addressv[0] == NULL ||
-	/*	dsend_nosuspend_trap->address == NULL ||*/
-	dlink_trap->addressv[0] == NULL ||
-	dunlink_trap->addressv[0] == NULL ||
-	dmonitor_node_trap->addressv[0] == NULL ||
-	dgroup_leader_trap->addressv[0] == NULL ||
-	dmonitor_p_trap->addressv[0] == NULL ||
-	dexit_trap->addressv[0] == NULL) {
+    if (dsend2_trap->addressv[0] == nullptr ||
+        dsend3_trap->addressv[0] == nullptr ||
+        /*	dsend_nosuspend_trap->address == nullptr ||*/
+        dlink_trap->addressv[0] == nullptr ||
+        dunlink_trap->addressv[0] == nullptr ||
+        dmonitor_node_trap->addressv[0] == nullptr ||
+        dgroup_leader_trap->addressv[0] == nullptr ||
+        dmonitor_p_trap->addressv[0] == nullptr ||
+        dexit_trap->addressv[0] == nullptr) {
 	goto error;
     }
 
@@ -2584,7 +2584,7 @@ BIF_RETTYPE setnode_2(BIF_ALIST_2)
     inc_no_nodes();
     erts_set_this_node(BIF_ARG_1, (Uint32) creation);
     erts_is_alive = 1;
-    send_nodes_mon_msgs(NULL, am_nodeup, BIF_ARG_1, am_visible, NIL);
+    send_nodes_mon_msgs(nullptr, am_nodeup, BIF_ARG_1, am_visible, NIL);
     erts_smp_thr_progress_unblock();
     erts_smp_proc_lock(BIF_P, ERTS_PROC_LOCK_MAIN);
 
@@ -2616,8 +2616,8 @@ BIF_RETTYPE setnode_3(BIF_ALIST_3)
     unsigned long version;
     Eterm ic, oc;
     Eterm *tp;
-    DistEntry *dep = NULL;
-    Port *pp = NULL;
+    DistEntry *dep = nullptr;
+    Port *pp = nullptr;
 
     /* Prepare for success */
     ERTS_BIF_PREP_RET(ret, am_true);
@@ -2691,8 +2691,8 @@ BIF_RETTYPE setnode_3(BIF_ALIST_3)
     if (dep->status & ERTS_DE_SFLG_EXITING) {
 	/* Suspend on dist entry waiting for the exit to finish */
 	ErtsProcList *plp = erts_proclist_create(BIF_P);
-	plp->next = NULL;
-	erts_suspend(BIF_P, ERTS_PROC_LOCK_MAIN, NULL);
+        plp->next = nullptr;
+        erts_suspend(BIF_P, ERTS_PROC_LOCK_MAIN, nullptr);
 	erts_smp_mtx_lock(&dep->qlock);
 	erts_proclist_store_last(&dep->suspended, plp);
 	erts_smp_mtx_unlock(&dep->qlock);
@@ -2712,7 +2712,7 @@ BIF_RETTYPE setnode_3(BIF_ALIST_3)
      */
     {
 	ErlDrvSizeT disable = ERL_DRV_BUSY_MSGQ_DISABLED;
-	erl_drv_busy_msgq_limits(ERTS_Port2ErlDrvPort(pp), &disable, NULL);
+        erl_drv_busy_msgq_limits(ERTS_Port2ErlDrvPort(pp), &disable, nullptr);
     }
 
     pp->dist_entry = dep;
@@ -2743,7 +2743,7 @@ BIF_RETTYPE setnode_3(BIF_ALIST_3)
 	create_cache(dep);
 
     erts_smp_de_rwunlock(dep);
-    dep = NULL; /* inc of refc transferred to port (dist_entry field) */
+    dep = nullptr; /* inc of refc transferred to port (dist_entry field) */
 
     inc_no_nodes();
 
@@ -2824,7 +2824,7 @@ BIF_RETTYPE dist_exit_3(BIF_ALIST_3)
 				     &lp_locks,
 				     BIF_ARG_2,
 				     NIL,
-				     NULL,
+                                     nullptr,
 				     0);
 #ifdef ERTS_SMP
 	if (lp == BIF_P)
@@ -3047,14 +3047,14 @@ monitor_node(Process* p, Eterm Node, Eterm Bool, Eterm Options)
     }
     else  {
 	lnk = erts_lookup_link(dep->node_links, p->common.id);
-	if (lnk != NULL) {
+        if (lnk != nullptr) {
 	    if ((--ERTS_LINK_REFC(lnk)) == 0) {
 		erts_destroy_link(erts_remove_link(&(dep->node_links), 
 						   p->common.id));
 	    }
 	}
 	lnk = erts_lookup_link(ERTS_P_LINKS(p), Node);
-	if (lnk != NULL) {
+        if (lnk != nullptr) {
 	    if ((--ERTS_LINK_REFC(lnk)) == 0) {
 		erts_destroy_link(erts_remove_link(&ERTS_P_LINKS(p),
 						   Node));
@@ -3091,7 +3091,7 @@ BIF_RETTYPE net_kernel_dflag_unicode_io_1(BIF_ALIST_1)
 	BIF_ERROR(BIF_P,BADARG);
     }
     de = pid_dist_entry(BIF_ARG_1);
-    ASSERT(de != NULL);
+    ASSERT(de != nullptr);
     if (de == erts_this_dist_entry) {
 	BIF_RET(am_true);
     }
@@ -3146,8 +3146,8 @@ static void
 init_nodes_monitors(void)
 {
     erts_smp_mtx_init(&nodes_monitors_mtx, "nodes_monitors");
-    nodes_monitors = NULL;
-    nodes_monitors_end = NULL;
+    nodes_monitors = nullptr;
+    nodes_monitors_end = nullptr;
 }
 
 static ERTS_INLINE Uint
@@ -3248,7 +3248,7 @@ send_nodes_mon_msgs(Process *c_p, Eterm what, Eterm node, Eterm type, Eterm reas
 {
     ErtsNodesMonitor *nmp;
     ErtsProcLocks rp_locks = 0; /* Init to shut up false warning */
-    Process *rp = NULL;
+    Process *rp = nullptr;
 
     ASSERT(is_immed(what));
     ASSERT(is_immed(node));
@@ -3279,7 +3279,7 @@ send_nodes_mon_msgs(Process *c_p, Eterm what, Eterm node, Eterm type, Eterm reas
 	Uint16 no;
 	Uint sz;
 
-	ASSERT(nmp->proc != NULL);
+        ASSERT(nmp->proc != nullptr);
 
 	if (!nmp->opts) {
 	    if (type != am_visible)
@@ -3408,7 +3408,7 @@ insert_nodes_monitor(Process *c_p, Uint32 opts)
 	else {
 	    ASSERT(!c_p->nodes_monitors);
 	    c_p->nodes_monitors = nmp;
-	    nmp->next = NULL;
+            nmp->next = nullptr;
 	    nmp->prev = nodes_monitors_end;
 	    if (nodes_monitors_end) {
 		ASSERT(nodes_monitors);
@@ -3461,7 +3461,7 @@ remove_nodes_monitors(Process *c_p, Uint32 opts, int all)
 	    free_nmp = nmp;
 	    nmp = nmp->next;
 	    if (c_p->nodes_monitors == free_nmp)
-		c_p->nodes_monitors = nmp && nmp->proc == c_p ? nmp : NULL;
+                c_p->nodes_monitors = nmp && nmp->proc == c_p ? nmp : nullptr;
 	    erts_free(ERTS_ALC_T_NODES_MON, free_nmp);
 	}
     }
@@ -3591,7 +3591,7 @@ erts_processes_monitoring_nodes(Process *c_p)
 
     sz = 0;
     szp = &sz;
-    hpp = NULL;
+    hpp = nullptr;
 
  bld_result:
     res = NIL;
@@ -3630,7 +3630,7 @@ erts_processes_monitoring_nodes(Process *c_p)
 	hend = hp + sz;
 #endif
 	hpp = &hp;
-	szp = NULL;
+        szp = nullptr;
 	goto bld_result;
     }
 

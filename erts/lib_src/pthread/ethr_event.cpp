@@ -109,10 +109,10 @@ ethr_event_init(ethr_event *e)
 {
     int res;
     ethr_atomic32_init(&e->state, ETHR_EVENT_OFF__);
-    res = pthread_mutex_init(&e->mtx, NULL);
+    res = pthread_mutex_init(&e->mtx, nullptr);
     if (res != 0)
 	return res;
-    res = pthread_cond_init(&e->cnd, NULL);
+    res = pthread_cond_init(&e->cnd, nullptr);
     if (res != 0) {
 	pthread_mutex_destroy(&e->mtx);
 	return res;

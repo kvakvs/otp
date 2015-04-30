@@ -144,23 +144,23 @@ struct erts_driver_t_ {
     void (*finish)(void);
     void (*flush)(ErlDrvData drv_data);
     void (*output)(ErlDrvData drv_data, char *buf, ErlDrvSizeT len);
-    void (*outputv)(ErlDrvData drv_data, ErlIOVec *ev); /* Might be NULL */
+    void (*outputv)(ErlDrvData drv_data, ErlIOVec *ev); /* Might be nullptr */
     ErlDrvSSizeT (*control)(ErlDrvData drv_data, unsigned int command,
 			    char *buf, ErlDrvSizeT len,
-			    char **rbuf, ErlDrvSizeT rlen); /* Might be NULL */
+                            char **rbuf, ErlDrvSizeT rlen); /* Might be nullptr */
     ErlDrvSSizeT (*call)(ErlDrvData drv_data, unsigned int command,
 			 char *buf, ErlDrvSizeT len,
-			 char **rbuf, ErlDrvSizeT rlen, /* Might be NULL */
+                         char **rbuf, ErlDrvSizeT rlen, /* Might be nullptr */
 			 unsigned int *flags);
     void (*event)(ErlDrvData drv_data, ErlDrvEvent event,
 		  ErlDrvEventData event_data);
     void (*ready_input)(ErlDrvData drv_data, ErlDrvEvent event); 
     void (*ready_output)(ErlDrvData drv_data, ErlDrvEvent event);  
     void (*timeout)(ErlDrvData drv_data);
-    void (*ready_async)(ErlDrvData drv_data, ErlDrvThreadData thread_data); /* Might be NULL */ 
+    void (*ready_async)(ErlDrvData drv_data, ErlDrvThreadData thread_data); /* Might be nullptr */
     void (*process_exit)(ErlDrvData drv_data, ErlDrvMonitor *monitor);
-    void (*stop_select)(ErlDrvEvent event, void*); /* Might be NULL */
-    void (*emergency_close)(ErlDrvData drv_data);  /* Might be NULL */
+    void (*stop_select)(ErlDrvEvent event, void*); /* Might be nullptr */
+    void (*emergency_close)(ErlDrvData drv_data);  /* Might be nullptr */
 };
 
 extern erts_driver_t *driver_list;
@@ -442,21 +442,21 @@ do {\
 do {\
     if ((estack)->start) {\
 	erts_free((estack)->alloc_type, (estack)->start);\
-	(estack)->start = NULL;\
+        (estack)->start = nullptr;\
     }\
 } while(0)
 
-#define CLEAR_SAVED_ESTACK(estack) ((void) ((estack)->start = NULL))
+#define CLEAR_SAVED_ESTACK(estack) ((void) ((estack)->start = nullptr))
 
 /*
  * Use on empty stack, only the allocator can be changed before this_.
- * The src stack is reset to NULL.
+ * The src stack is reset to nullptr.
  */
 #define ESTACK_RESTORE(s, src)			\
 do {						\
     ASSERT(s.start == ESTK_DEF_STACK(s));	\
     s = *(src);  /* struct copy */		\
-    (src)->start = NULL;			\
+    (src)->start = nullptr;			\
     ASSERT(s.sp >= s.start);			\
     ASSERT(s.sp <= s.end);			\
 } while (0)
@@ -560,21 +560,21 @@ do {\
 do {\
     if ((wstack)->wstart) {\
 	erts_free((wstack)->alloc_type, (wstack)->wstart);\
-	(wstack)->wstart = NULL;\
+        (wstack)->wstart = nullptr;\
     }\
 } while(0)
 
-#define CLEAR_SAVED_WSTACK(wstack) ((void) ((wstack)->wstart = NULL))
+#define CLEAR_SAVED_WSTACK(wstack) ((void) ((wstack)->wstart = nullptr))
 
 /*
  * Use on empty stack, only the allocator can be changed before this_.
- * The src stack is reset to NULL.
+ * The src stack is reset to nullptr.
  */
 #define WSTACK_RESTORE(s, src)			\
 do {						\
     ASSERT(s.wstart == WSTK_DEF_STACK(s));	\
     s = *(src);  /* struct copy */		\
-    (src)->wstart = NULL;			\
+    (src)->wstart = nullptr;			\
     ASSERT(s.wsp >= s.wstart);			\
     ASSERT(s.wsp <= s.wend);			\
 } while (0)
@@ -726,13 +726,13 @@ Eterm copy_object(Eterm, Process*);
 
 #if HALFWORD_HEAP
 Uint size_object_rel(Eterm, Eterm*);
-#  define size_object(A) size_object_rel(A,NULL)
+#  define size_object(A) size_object_rel(A,nullptr)
 
 Eterm copy_struct_rel(Eterm, Uint, Eterm**, ErlOffHeap*, Eterm* src_base, Eterm* dst_base);
-#  define copy_struct(OBJ,SZ,HPP,OH) copy_struct_rel(OBJ,SZ,HPP,OH, NULL,NULL)
+#  define copy_struct(OBJ,SZ,HPP,OH) copy_struct_rel(OBJ,SZ,HPP,OH, nullptr,nullptr)
 
 Eterm copy_shallow_rel(Eterm*, Uint, Eterm**, ErlOffHeap*, Eterm* src_base);
-#  define copy_shallow(A,B,C,D) copy_shallow_rel(A,B,C,D,NULL)
+#  define copy_shallow(A,B,C,D) copy_shallow_rel(A,B,C,D,nullptr)
 
 #else /* !HALFWORD_HEAP */
 
@@ -968,7 +968,7 @@ struct Sint_buf {
 char* Sint_to_buf(Sint, struct Sint_buf*);
 
 #define ERTS_IOLIST_STATE_INITER(C_P, OBJ)	\
-    {(C_P), 0, 0, (OBJ), {NULL, NULL, NULL, ERTS_ALC_T_INVALID}, 0, 0}
+    {(C_P), 0, 0, (OBJ), {nullptr, nullptr, nullptr, ERTS_ALC_T_INVALID}, 0, 0}
 
 #define ERTS_IOLIST_STATE_MOVE(TO, FROM)	\
     sys_memcpy((void *) (TO), (void *) (FROM), sizeof(ErtsIOListState))
@@ -986,7 +986,7 @@ typedef struct {
 } ErtsIOListState;
 
 #define ERTS_IOLIST2BUF_STATE_INITER(C_P, OBJ)	\
-    {ERTS_IOLIST_STATE_INITER((C_P), (OBJ)), {NULL, 0, 0, 0}, NULL, 0, NULL, 0}
+    {ERTS_IOLIST_STATE_INITER((C_P), (OBJ)), {nullptr, 0, 0, 0}, nullptr, 0, nullptr, 0}
 
 #define ERTS_IOLIST2BUF_STATE_MOVE(TO, FROM)	\
     sys_memcpy((void *) (TO), (void *) (FROM), sizeof(ErtsIOList2BufState))
@@ -1081,14 +1081,14 @@ int erts_hibernate(Process* c_p, Eterm module, Eterm function, Eterm args, Eterm
 
 #define MatchSetRef(MPSP) 			\
 do {						\
-    if ((MPSP) != NULL) {			\
+    if ((MPSP) != nullptr) {			\
 	erts_refc_inc(&(MPSP)->refc, 1);	\
     }						\
 } while (0)
 
 #define MatchSetUnref(MPSP)					\
 do {								\
-    if (((MPSP) != NULL) && erts_refc_dectest(&(MPSP)->refc, 0) <= 0) { \
+    if (((MPSP) != nullptr) && erts_refc_dectest(&(MPSP)->refc, 0) <= 0) { \
 	erts_bin_free(MPSP);					\
     }								\
 } while(0)
@@ -1208,7 +1208,7 @@ erts_alloc_message_heap_state(Uint size,
 	}
 	hp = HEAP_TOP(receiver);
 	HEAP_TOP(receiver) = hp + size;
-	*bpp = NULL;
+        *bpp = nullptr;
 	*ohpp = &MSO(receiver);
     }
 #ifdef ERTS_SMP
@@ -1238,7 +1238,7 @@ erts_alloc_message_heap(Uint size,
 			ErtsProcLocks *receiver_locks)
 {
     return erts_alloc_message_heap_state(size, bpp, ohpp, receiver,
-					 receiver_locks, NULL);
+                                         receiver_locks, nullptr);
 }
 
 #endif /* #if ERTS_GLB_INLINE_INCL_FUNC_DEF */
@@ -1250,7 +1250,7 @@ erts_alloc_message_heap(Uint size,
 #    define DeclareTypedTmpHeap(Type,VariableName,Process)		\
       Type *VariableName = (Type *) erts_debug_allocate_tmp_heap(sizeof(Type)/sizeof(Eterm),Process)
 #    define DeclareTmpHeapNoproc(VariableName,Size) \
-       Eterm *VariableName = erts_debug_allocate_tmp_heap(Size,NULL)
+       Eterm *VariableName = erts_debug_allocate_tmp_heap(Size,nullptr)
 #    define UseTmpHeap(Size,Proc) \
        do { \
          erts_debug_use_tmp_heap((Size),(Proc)); \
@@ -1261,11 +1261,11 @@ erts_alloc_message_heap(Uint size,
        } while (0)
 #    define UseTmpHeapNoproc(Size) \
        do { \
-         erts_debug_use_tmp_heap(Size,NULL); \
+         erts_debug_use_tmp_heap(Size,nullptr); \
        } while (0)
 #    define UnUseTmpHeapNoproc(Size) \
        do { \
-         erts_debug_unuse_tmp_heap(Size,NULL); \
+         erts_debug_unuse_tmp_heap(Size,nullptr); \
        } while (0)
 #  else
 #    define DeclareTmpHeap(VariableName,Size,Process) \

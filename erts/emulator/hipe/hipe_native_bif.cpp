@@ -79,7 +79,7 @@ Eterm hipe_show_nstack_1(BIF_ALIST_1)
 void hipe_gc(Process *p, Eterm need)
 {
     hipe_set_narity(p, 1);
-    p->fcalls -= erts_garbage_collect(p, unsigned_val(need), NULL, 0);
+    p->fcalls -= erts_garbage_collect(p, unsigned_val(need), nullptr, 0);
     hipe_set_narity(p, 0);
 }
 
@@ -203,8 +203,8 @@ static void hipe_save_stacktrace(Process* c_p, Eterm args)
     s = (struct StackTrace *) (hp + 2);
     c_p->ftrace = CONS(hp, args, make_big((Eterm *) s));
     s->header = make_pos_bignum_header(sz);
-    s->current = NULL;
-    s->pc = NULL;
+    s->current = nullptr;
+    s->pc = nullptr;
 
     s->depth = hipe_fill_stacktrace(c_p, depth, s->trace);
 
@@ -227,7 +227,7 @@ void hipe_handle_exception(Process *c_p)
 
     if (c_p->mbuf) {
 	erts_printf("%s line %u: p==%p, p->mbuf==%p\n", __FUNCTION__, __LINE__, c_p, c_p->mbuf);
-	/* erts_garbage_collect(c_p, 0, NULL, 0); */
+	/* erts_garbage_collect(c_p, 0, nullptr, 0); */
     }
 
     /*
@@ -260,7 +260,7 @@ void hipe_handle_exception(Process *c_p)
 
     if (c_p->mbuf) {
 	/* erts_printf("%s line %u: p==%p, p->mbuf==%p, p->lastbif==%p\n", __FUNCTION__, __LINE__, c_p, c_p->mbuf, c_p->hipe.lastbif); */
-	erts_garbage_collect(c_p, 0, NULL, 0);
+	erts_garbage_collect(c_p, 0, nullptr, 0);
     }
 
     hipe_find_handler(c_p);
@@ -270,7 +270,7 @@ void hipe_handle_exception(Process *c_p)
 static struct StackTrace *get_trace_from_exc(Eterm exc)
 {
     if (exc == NIL)
-	return NULL;
+	return nullptr;
     else
 	return (struct StackTrace *) big_val(CDR(list_val(exc)));
 }
@@ -312,7 +312,7 @@ BIF_RETTYPE hipe_rethrow(BIF_ALIST_2)
 	    struct StackTrace *s;
 	    c_p->ftrace = exc;
 	    s = get_trace_from_exc(exc);
-	    if (s == NULL) {
+	    if (s == nullptr) {
 		BIF_ERROR(c_p, EXC_ERROR);
 	    } else {
 		BIF_ERROR(c_p, PRIMARY_EXCEPTION(s->freason));

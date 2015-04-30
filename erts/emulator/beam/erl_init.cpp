@@ -222,7 +222,7 @@ ErtsModifiedTimings erts_modified_timings[] = {
 #define ERTS_MODIFIED_TIMING_LEVELS \
   (sizeof(erts_modified_timings)/sizeof(ErtsModifiedTimings))
 
-Export *erts_delay_trap = NULL;
+Export *erts_delay_trap = nullptr;
 
 int ignore_break;
 int replace_intr;
@@ -286,7 +286,7 @@ static int early_init(int *argc, char **argv);
 void
 erts_short_init(void)
 {
-    int ncpu = early_init(NULL, NULL);
+    int ncpu = early_init(nullptr, nullptr);
     erl_init(ncpu,
 	     ERTS_DEFAULT_MAX_PROCESSES,
 	     0,
@@ -380,7 +380,7 @@ erl_first_process_otp(char* modname, void* code, unsigned size, int argc, char**
     
     start_mod = erts_atom_put((byte *) modname, sys_strlen(modname), ERTS_ATOM_ENC_LATIN1, 1);
     if (erts_find_function(start_mod, am_start, 2,
-			   erts_active_code_ix()) == NULL) {
+                           erts_active_code_ix()) == nullptr) {
 	erl_exit(5, "No function %s:start/2\n", modname);
     }
 
@@ -420,14 +420,14 @@ erts_preloaded(Process* p)
     const Preload *preload = sys_preloaded();
 
     j = 0;
-    while (preload[j].name != NULL) {
+    while (preload[j].name != nullptr) {
 	j++;
     }
     previous = NIL;
     need = 2*j;
     hp = HAlloc(p, need);
     j = 0;
-    while ((name = preload[j].name) != NULL)  {
+    while ((name = preload[j].name) != nullptr)  {
 	mod = am_atom_put(name, sys_strlen(name));
 	previous = CONS(hp, mod, previous);
 	hp += 2;
@@ -448,7 +448,7 @@ static char *
 get_arg(char* rest, char* next, int* ip)
 {
     if (*rest == '\0') {
-	if (next == NULL) {
+        if (next == nullptr) {
 	    erts_fprintf(stderr, "too few arguments\n");
 	    erts_usage();
 	}
@@ -469,17 +469,17 @@ load_preloaded(void)
     char* name;
     int length;
 
-    if ((preload_p = sys_preloaded()) == NULL) {
+    if ((preload_p = sys_preloaded()) == nullptr) {
 	return;
     }
     i = 0;
-    while ((name = preload_p[i].name) != NULL) {
+    while ((name = preload_p[i].name) != nullptr) {
 	length = preload_p[i].size;
 	module_name = erts_atom_put((byte *) name, sys_strlen(name), ERTS_ATOM_ENC_LATIN1, 1);
 	if ((code = sys_preload_begin(&preload_p[i])) == 0)
 	    erl_exit(1, "Failed to find preloaded code for module %s\n", 
 		     name);
-	res = erts_preload_module(NULL, 0, NIL, &module_name, code, length);
+        res = erts_preload_module(nullptr, 0, NIL, &module_name, code, length);
 	sys_preload_end(&preload_p[i]);
 	if (res != NIL)
 	    erl_exit(1,"Failed loading preloaded module %s (%T)\n",
@@ -1181,7 +1181,7 @@ void
 erl_start(int argc, char **argv)
 {
     int i = 1;
-    char* arg=NULL;
+    char* arg=nullptr;
     int have_break_handler = 1;
     char envbuf[21]; /* enough for any 64-bit integer */
     size_t envbufsz;
@@ -1550,7 +1550,7 @@ erl_start(int argc, char **argv)
 		legacy_proc_tab = 1;
 	    else {
 		errno = 0;
-		proc_tab_sz = strtol(arg, NULL, 10);
+                proc_tab_sz = strtol(arg, nullptr, 10);
 		if (errno != 0
 		    || proc_tab_sz < ERTS_MIN_PROCESSES
 		    || ERTS_MAX_PROCESSES < proc_tab_sz) {
@@ -1566,7 +1566,7 @@ erl_start(int argc, char **argv)
 		legacy_port_tab = 1;
 	    else {
 		errno = 0;
-		port_tab_sz = strtol(arg, NULL, 10);
+                port_tab_sz = strtol(arg, nullptr, 10);
 		if (errno != 0
 		    || port_tab_sz < ERTS_MIN_PROCESSES
 		    || ERTS_MAX_PROCESSES < port_tab_sz) {
@@ -1801,7 +1801,7 @@ erl_start(int argc, char **argv)
 		long val;
 		arg = get_arg(sub_param+3, argv[i+1], &i);
 		errno = 0;
-		val = strtol(arg, NULL, 10);
+                val = strtol(arg, nullptr, 10);
 		if (errno != 0 || val < 0) {
 		    erts_fprintf(stderr,
 				 "bad scheduler forced wakeup "
@@ -1823,7 +1823,7 @@ erl_start(int argc, char **argv)
 	    /* set atom table size */
 	    arg = get_arg(argv[i]+2, argv[i+1], &i);
 	    errno = 0;
-	    erts_atom_table_size = strtol(arg, NULL, 10);
+            erts_atom_table_size = strtol(arg, nullptr, 10);
 	    if (errno != 0 ||
 		erts_atom_table_size < MIN_ATOM_TABLE_SIZE ||
 		erts_atom_table_size > MAX_ATOM_TABLE_SIZE) {
@@ -2004,7 +2004,7 @@ erl_start(int argc, char **argv)
 
     erts_initialized = 1;
 
-    erl_first_process_otp("otp_ring0", NULL, 0, boot_argc, boot_argv);
+    erl_first_process_otp("otp_ring0", nullptr, 0, boot_argc, boot_argv);
 
 #ifdef ERTS_SMP
     erts_start_schedulers();
@@ -2027,7 +2027,7 @@ erl_start(int argc, char **argv)
 
 __decl_noreturn void erts_thr_fatal_error(int err, const char *what)
 {
-    char *errstr = err ? strerror(err) : NULL;
+    char *errstr = err ? strerror(err) : nullptr;
     erts_fprintf(stderr,
 		 "Failed to %s: %s%s(%d)\n",
 		 what,
@@ -2056,8 +2056,8 @@ system_cleanup(int flush_async)
 	     * The exiting thread might be waiting for
 	     * us to block; need to update status...
 	     */
-	    erts_thr_progress_active(NULL, 0);
-	    erts_thr_progress_prepare_wait(NULL);
+            erts_thr_progress_active(nullptr, 0);
+            erts_thr_progress_prepare_wait(nullptr);
 	}
 #endif
 	/* Wait forever... */
@@ -2082,7 +2082,7 @@ system_cleanup(int flush_async)
 
 #ifdef ERTS_SMP
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_lc_check_exact(NULL, 0);
+    erts_lc_check_exact(nullptr, 0);
 #endif
 #endif
 
@@ -2108,10 +2108,10 @@ erl_exit_vv(int n, int flush_async, const char *fmt, va_list args1, va_list args
     /* Produce an Erlang core dump if error */
     if (((n > 0 && erts_no_crash_dump == 0) || n == ERTS_DUMP_EXIT)
 	&& erts_initialized) {
-	erl_crash_dump_v((char*) NULL, 0, fmt, args1);
+        erl_crash_dump_v((char*) nullptr, 0, fmt, args1);
     }
 
-    if (fmt != NULL && *fmt != '\0')
+    if (fmt != nullptr && *fmt != '\0')
 	  erl_error(fmt, args2);	/* Print error message. */
     sys_tty_reset(n);
 

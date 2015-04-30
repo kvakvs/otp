@@ -1532,7 +1532,7 @@ erts_bs_init_writable(Process* p, Eterm sz)
      */
     heap_need = PROC_BIN_SIZE + ERL_SUB_BIN_SIZE;
     if (p->stop - p->htop < heap_need) {
-	(void) erts_garbage_collect(p, heap_need, NULL, 0);
+	(void) erts_garbage_collect(p, heap_need, nullptr, 0);
     }
     hp = p->htop;
     

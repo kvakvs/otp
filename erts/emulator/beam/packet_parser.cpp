@@ -124,7 +124,7 @@ static const char* http_hdr_strings[] = {
     "Cookie",
     "Keep-Alive",
     "Proxy-Connection",
-    NULL
+    nullptr
 };
 
 
@@ -136,7 +136,7 @@ static const char* http_meth_strings[] = {
     "PUT",
     "DELETE",
     "TRACE",
-    NULL
+    nullptr
 };
 
 static http_atom_t http_hdr_table[sizeof(http_hdr_strings)/sizeof(char*)];
@@ -197,8 +197,8 @@ static int http_init(void)
         tspecial[*ptr] = 1;
 
     for (i = 0; i < HTTP_HDR_HASH_SIZE; i++)
-        http_hdr_hash[i] = NULL;
-    for (i = 0; http_hdr_strings[i] != NULL; i++) {
+        http_hdr_hash[i] = nullptr;
+    for (i = 0; http_hdr_strings[i] != nullptr; i++) {
         ASSERT(strlen(http_hdr_strings[i]) <= HTTP_MAX_NAME_LEN);
         http_hdr_table[i].index = i;
         http_hash_insert(http_hdr_strings[i], 
@@ -207,8 +207,8 @@ static int http_init(void)
     }
 
     for (i = 0; i < HTTP_METH_HASH_SIZE; i++)
-        http_meth_hash[i] = NULL;
-    for (i = 0; http_meth_strings[i] != NULL; i++) {
+        http_meth_hash[i] = nullptr;
+    for (i = 0; http_meth_strings[i] != nullptr; i++) {
         http_meth_table[i].index = i;
         http_hash_insert(http_meth_strings[i],
                          &http_meth_table[i], 
@@ -300,7 +300,7 @@ int packet_get_length(enum PacketParseType htype,
     case TCP_PB_LINE_LF: {
         /* TCP_PB_LINE_LF:  [Data ... \n]  */
         const char* ptr2;
-        if ((ptr2 = (const char*)memchr(ptr, '\n', n)) == NULL) {
+        if ((ptr2 = (const char*)memchr(ptr, '\n', n)) == nullptr) {
             if (n > max_plen && max_plen != 0) { /* packet full */
                 DEBUGF((" => packet full (no NL)=%d\r\n", n));
                 goto error;
@@ -416,7 +416,7 @@ int packet_get_length(enum PacketParseType htype,
             while (1) {
                 const char* ptr2 = (const char*)memchr(ptr1, '\n', len);
                 
-                if (ptr2 == NULL) {
+                if (ptr2 == nullptr) {
                     if (max_plen != 0) {
                         if (n >= max_plen) /* packet full */
                             goto error;
@@ -512,13 +512,13 @@ static http_atom_t* http_hash_lookup(const char* name, int len,
     int ix = h % hsize;
     http_atom_t* ap = hash[ix];
 
-    while (ap != NULL) {
+    while (ap != nullptr) {
         if ((ap->h == h) && (ap->len == len) && 
             (strncmp(ap->name, name, len) == 0))
             return ap;
         ap = ap->next;
     }
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -526,7 +526,7 @@ http_parse_absoluteURI(PacketHttpURI* uri, const char* uri_ptr, int uri_len)
 {
     const char* p;
     
-    if ((p = (const char*)memchr(uri_ptr, '/', uri_len)) == NULL) {
+    if ((p = (const char*)memchr(uri_ptr, '/', uri_len)) == nullptr) {
         /* host [":" port] */
         uri->s2_ptr = "/";
         uri->s2_len = 1;
@@ -541,7 +541,7 @@ http_parse_absoluteURI(PacketHttpURI* uri, const char* uri_ptr, int uri_len)
     uri->s1_ptr = uri_ptr;
     uri->port = 0; /* undefined */
     /* host[:port]  */
-    if ((p = (const char*)memchr(uri_ptr, ':', uri_len)) == NULL) {
+    if ((p = (const char*)memchr(uri_ptr, ':', uri_len)) == nullptr) {
         uri->s1_len = uri_len;
     }
     else {
@@ -614,7 +614,7 @@ static void http_parse_uri(PacketHttpURI* uri, const char* uri_ptr, int uri_len)
     }
     else {
         char* ptr;
-        if ((ptr = (char*)memchr(uri_ptr, ':', uri_len)) == NULL) {
+        if ((ptr = (char*)memchr(uri_ptr, ':', uri_len)) == nullptr) {
             uri->type = PacketHttpURI::URI_STRING;
             uri->s1_ptr = uri_ptr;
             uri->s1_len = uri_len;
@@ -827,7 +827,7 @@ int packet_parse_http(const char* buf, int len, int* statep,
         else {
             /* Is it ok to return original name without case adjustments? */
             name_ptr = buf;
-            name = NULL;
+            name = nullptr;
         }
         ptr++;
         n--;
@@ -859,7 +859,7 @@ int packet_parse_ssl(const char* buf, int len,
         unsigned type  = (unsigned char) buf[0];
         unsigned major = (unsigned char) buf[1];
         unsigned minor = (unsigned char) buf[2];
-        return pcb->ssl_tls(arg, type, major, minor, buf+5, len-5, NULL, 0);
+        return pcb->ssl_tls(arg, type, major, minor, buf+5, len-5, nullptr, 0);
     }
 }
 

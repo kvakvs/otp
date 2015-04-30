@@ -219,7 +219,7 @@ tab_find(Eterm ref)
 	if (eq_ref_numbers(ref_numbers, ref_numbers_len,
 			   btm->ref_numbers, ERTS_REF_NUMBERS))
 	    return btm;
-    return NULL;
+    return nullptr;
 }
 
 static ERTS_INLINE void
@@ -264,7 +264,7 @@ static ERTS_INLINE void
 link_proc(Process *p, ErtsBifTimer* btm)
 {
     btm->receiver.proc.ess = p;
-    btm->receiver.proc.prev = NULL;
+    btm->receiver.proc.prev = nullptr;
     btm->receiver.proc.next = p->u.bif_timers;
     if (p->u.bif_timers)	
 	p->u.bif_timers->receiver.proc.prev = btm;
@@ -324,7 +324,7 @@ bif_timer_timeout(ErtsBifTimer* btm)
 	ASSERT(!erts_get_current_process());
 
 	if (btm->flags & BTM_FLG_BYNAME)
-	    rp = erts_whereis_process(NULL, 0, btm->receiver.name, 0, 0);
+            rp = erts_whereis_process(nullptr, 0, btm->receiver.name, 0, 0);
 	else {
 	    rp = btm->receiver.proc.ess;
 	    unlink_proc(btm);
@@ -335,7 +335,7 @@ bif_timer_timeout(ErtsBifTimer* btm)
 	    ErlHeapFragment *bp;
 
 	    bp = btm->bp;
-	    btm->bp = NULL; /* Prevent cleanup of message buffer... */
+            btm->bp = nullptr; /* Prevent cleanup of message buffer... */
 
 	    if (!(btm->flags & BTM_FLG_WRAP))
 		message = btm->message;
@@ -411,7 +411,7 @@ setup_bif_timer(Uint32 xflags,
     ref = erts_make_ref(c_p);
 
     if (is_atom(receiver))
-	rp = NULL;
+        rp = nullptr;
     else {
 	rp = erts_pid2proc(c_p, ERTS_PROC_LOCK_MAIN,
 			   receiver, ERTS_PROC_LOCK_MSGQ);
@@ -464,7 +464,7 @@ setup_bif_timer(Uint32 xflags,
 			  ref_numbers, ERTS_REF_NUMBERS));
 
     if (is_immed(message)) {
-	btm->bp = NULL;
+        btm->bp = nullptr;
 	btm->message = message;
     }
     else {
@@ -647,7 +647,7 @@ erts_cancel_bif_timers(Process *p, ErtsProcLocks plocks)
 	erts_cancel_timer(&tmp_btm->tm);
     }
 
-    p->u.bif_timers = NULL;
+    p->u.bif_timers = nullptr;
 
     erts_smp_btm_rwunlock();
 }
@@ -661,7 +661,7 @@ void erts_bif_timer_init(void)
     bif_timer_tab = (ErtsBifTimer **)erts_alloc(ERTS_ALC_T_BIF_TIMER_TABLE,
 			       sizeof(ErtsBifTimer *)*TIMER_HASH_VEC_SZ);
     for (i = 0; i < TIMER_HASH_VEC_SZ; ++i)
-	bif_timer_tab[i] = NULL;
+        bif_timer_tab[i] = nullptr;
 }
 
 Uint

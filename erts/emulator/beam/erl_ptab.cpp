@@ -96,12 +96,12 @@ do {									\
     ERTS_PTAB_LIST_ASSERT(((PTLBDP)->debug.heap				\
 			   + (PTLBDP)->debug.heap_size)			\
 			  == (HP));					\
-    (PTLBDP)->debug.heap = NULL;					\
+    (PTLBDP)->debug.heap = nullptr;					\
     (PTLBDP)->debug.heap_size = 0;					\
 } while (0)
 #  define ERTS_PTAB_LIST_DBG_HEAP_ALLOC_INIT(PTLBDP)			\
 do {									\
-    (PTLBDP)->debug.heap = NULL;					\
+    (PTLBDP)->debug.heap = nullptr;					\
     (PTLBDP)->debug.heap_size = 0;					\
 } while (0)
 #else
@@ -130,13 +130,13 @@ do {									\
     if ((PTLBDP)->debug.correct_pids) {					\
 	erts_free(ERTS_ALC_T_PTAB_LIST_PIDS,				\
 		  (PTLBDP)->debug.correct_pids);			\
-	(PTLBDP)->debug.correct_pids = NULL;				\
+	(PTLBDP)->debug.correct_pids = nullptr;				\
     }									\
 } while(0)
 #  define ERTS_PTAB_LIST_DBG_CHK_PIDS_INIT(PTLBDP)			\
 do {									\
     (PTLBDP)->debug.correct_pids_verified = 0;				\
-    (PTLBDP)->debug.correct_pids = NULL;				\
+    (PTLBDP)->debug.correct_pids = nullptr;				\
 } while (0)
 #else
 #  define ERTS_PTAB_LIST_DBG_SAVE_PIDS(PTLBDP)
@@ -416,7 +416,7 @@ erts_ptab_init_table(ErtsPTab *ptab,
     ptab->r.o.release_element = release_element;
 
     if (legacy) {
-	ptab->r.o.free_id_data = NULL;
+	ptab->r.o.free_id_data = nullptr;
 	ptab->r.o.dix_cl_mask = 0;
 	ptab->r.o.dix_cl_shift = 0;
 	ptab->r.o.dix_cli_shift = 0;
@@ -456,8 +456,8 @@ erts_ptab_init_table(ErtsPTab *ptab,
     }
 
     erts_smp_interval_init(&ptab->list.data.interval);
-    ptab->list.data.deleted.start = NULL;
-    ptab->list.data.deleted.end = NULL;
+    ptab->list.data.deleted.start = nullptr;
+    ptab->list.data.deleted.end = nullptr;
     ptab->list.data.chunks = (((ptab->r.o.max - 1)
 			       / ERTS_PTAB_LIST_BIF_TAB_CHUNK_SIZE)
 			      + 1);
@@ -486,7 +486,7 @@ erts_ptab_init_table(ErtsPTab *ptab,
 int
 erts_ptab_initialized(ErtsPTab *ptab)
 {
-    return ptab->r.o.tab != NULL;
+    return ptab->r.o.tab != nullptr;
 }
 
 int
@@ -642,7 +642,7 @@ save_deleted_element(ErtsPTab *ptab, ErtsPTabElementCommon *ptab_el)
     ERTS_PTAB_LIST_DBG_CHK_DEL_LIST(ptab);
 
     ptdep->prev = ptab->list.data.deleted.end;
-    ptdep->next = NULL;
+    ptdep->next = nullptr;
     ptdep->ix = erts_ptab_id2pix(ptab, ptab_el->id);
     ptdep->u.element.id = ptab_el->id;
     ptdep->u.element.inserted = ptab_el->u.alive.started_interval;
@@ -674,7 +674,7 @@ erts_ptab_delete_element(ErtsPTab *ptab,
     ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
 
     erts_ptab_rlock(ptab);
-    maybe_save = ptab->list.data.deleted.end != NULL;
+    maybe_save = ptab->list.data.deleted.end != nullptr;
     if (maybe_save) {
 	erts_ptab_runlock(ptab);
 	erts_ptab_rwlock(ptab);
@@ -793,17 +793,17 @@ cleanup_ptab_list_bif_data(Binary *bp)
 
 	if (ptlbdp->chunk) {
 	    erts_free(ERTS_ALC_T_PTAB_LIST_CNKI, ptlbdp->chunk);
-	    ptlbdp->chunk = NULL;
+	    ptlbdp->chunk = nullptr;
 	}
 	if (ptlbdp->pid) {
 	    erts_free(ERTS_ALC_T_PTAB_LIST_PIDS, ptlbdp->pid);
-	    ptlbdp->pid = NULL;
+	    ptlbdp->pid = nullptr;
 	}
 
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_FOUND_PIDS
 	if (ptlbdp->debug.pid_started) {
 	    erts_free(ERTS_ALC_T_PTAB_LIST_PIDS, ptlbdp->debug.pid_started);
-	    ptlbdp->debug.pid_started = NULL;
+	    ptlbdp->debug.pid_started = nullptr;
 	}
 #endif
 
@@ -815,7 +815,7 @@ cleanup_ptab_list_bif_data(Binary *bp)
 	    ERTS_PTAB_LIST_DBG_TRACE(ptlbdp->debug.caller, deleted_cleanup);
 
 	    ptdep = ptlbdp->bif_invocation;
-	    ptlbdp->bif_invocation = NULL;
+	    ptlbdp->bif_invocation = nullptr;
 
 	    ERTS_PTAB_LIST_DBG_CHK_DEL_LIST(ptab);
 
@@ -855,9 +855,9 @@ cleanup_ptab_list_bif_data(Binary *bp)
 		} while (ptdep && ptdep->ix >= 0);
 		ptab->list.data.deleted.start = ptdep;
 		if (ptdep)
-		    ptdep->prev = NULL;
+		    ptdep->prev = nullptr;
 		else
-		    ptab->list.data.deleted.end = NULL;
+		    ptab->list.data.deleted.end = nullptr;
 	    }
 
 	    ERTS_PTAB_LIST_DBG_CHK_DEL_LIST(ptab);
@@ -907,7 +907,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 	    ERTS_PTAB_LIST_DBG_SAVE_PIDS(ptlbdp);
 
 	    if (ptab->list.data.chunks == 1)
-		ptlbdp->bif_invocation = NULL;
+		ptlbdp->bif_invocation = nullptr;
 	    else {
 		/*
 		 * We will have to access the table multiple times
@@ -921,14 +921,14 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 		    = erts_smp_step_interval_nob(erts_ptab_interval(ptab));
 		ERTS_PTAB_LIST_DBG_CHK_DEL_LIST(ptab);
 
-		ptlbdp->bif_invocation->next = NULL;
+		ptlbdp->bif_invocation->next = nullptr;
 		if (ptab->list.data.deleted.end) {
 		    ptlbdp->bif_invocation->prev = ptab->list.data.deleted.end;
 		    ptab->list.data.deleted.end->next = ptlbdp->bif_invocation;
 		    ERTS_PTAB_LIST_ASSERT(ptab->list.data.deleted.start);
 		}
 		else {
-		    ptlbdp->bif_invocation->prev = NULL;
+		    ptlbdp->bif_invocation->prev = nullptr;
 		    ptab->list.data.deleted.start = ptlbdp->bif_invocation;
 		}
 		ptab->list.data.deleted.end = ptlbdp->bif_invocation;
@@ -951,7 +951,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 	    invocation_interval_p
 		= (ptlbdp->bif_invocation
 		   ? &ptlbdp->bif_invocation->u.bif_invocation.interval
-		   : NULL);
+		   : nullptr);
 
 	    ERTS_PTAB_LIST_ASSERT(is_nil(*res_accp));
 	    if (!locked) {
@@ -1037,7 +1037,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 	    int free_deleted = 0;
 	    Uint64 invocation_interval;
 	    ErtsPTabDeletedElement *ptdep;
-	    ErtsPTabDeletedElement *free_list = NULL;
+	    ErtsPTabDeletedElement *free_list = nullptr;
 
 	    ptdep = ptlbdp->bif_invocation;
 	    ERTS_PTAB_LIST_ASSERT(ptdep);
@@ -1080,9 +1080,9 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 			ERTS_PTAB_LIST_ASSERT(free_list);
 			ERTS_PTAB_LIST_ASSERT(ptdep->prev);
 
-			ptdep->prev->next = NULL; /* end of free_list */
+			ptdep->prev->next = nullptr; /* end of free_list */
 			ptab->list.data.deleted.start = ptdep;
-			ptdep->prev = NULL;
+			ptdep->prev = nullptr;
 			free_deleted = 0;
 		    }
 		}
@@ -1136,11 +1136,11 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
  		ERTS_PTAB_LIST_ASSERT(free_list);
 		ptab->list.data.deleted.start = ptdep;
 		if (!ptdep)
-		    ptab->list.data.deleted.end = NULL;
+		    ptab->list.data.deleted.end = nullptr;
 		else {
 		    ERTS_PTAB_LIST_ASSERT(ptdep->prev);
-		    ptdep->prev->next = NULL; /* end of free_list */
-		    ptdep->prev = NULL;
+		    ptdep->prev->next = nullptr; /* end of free_list */
+		    ptdep->prev = nullptr;
 		}
 	    }
 
@@ -1150,7 +1150,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 		ptlbdp->state = BUILDING_RESULT;
 		ptlbdp->bif_invocation->next = free_list;
 		free_list = ptlbdp->bif_invocation;
-		ptlbdp->bif_invocation = NULL;
+		ptlbdp->bif_invocation = nullptr;
 	    }
 	    else {
 		/* Link in bif_invocation again where we left off */
@@ -1449,7 +1449,7 @@ ptab_pix2el(ErtsPTab *ptab, int ix)
     ASSERT(0 <= ix && ix < ptab->r.o.max);
     ptab_el = (ErtsPTabElementCommon *) erts_ptab_pix2intptr_nob(ptab, ix);
     if (ptab_el == ptab->r.o.invalid_element)
-	return NULL;
+	return nullptr;
     else
 	return ptab_el;
 }
@@ -1506,9 +1506,9 @@ erts_debug_ptab_list_bif_info(Process *c_p, ErtsPTab *ptab)
     };
     Uint sz = 0;
     Eterm *hp;
-    (void) erts_bld_tuplev(NULL, &sz, sizeof(elements)/sizeof(Eterm), elements);
+    (void) erts_bld_tuplev(nullptr, &sz, sizeof(elements)/sizeof(Eterm), elements);
     hp = HAlloc(c_p, sz);
-    return erts_bld_tuplev(&hp, NULL, sizeof(elements)/sizeof(Eterm), elements);
+    return erts_bld_tuplev(&hp, nullptr, sizeof(elements)/sizeof(Eterm), elements);
 }
 
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_FOUND_PIDS
@@ -1601,7 +1601,7 @@ debug_ptab_list_verify_all_pids(ErtsPTabListBifData *ptlbdp)
     ptlbdp->debug.correct_pids_verified = 1;
 
     erts_free(ERTS_ALC_T_PTAB_LIST_PIDS, ptlbdp->debug.correct_pids);
-    ptlbdp->debug.correct_pids = NULL;
+    ptlbdp->debug.correct_pids = nullptr;
 }
 #endif /* ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_PIDS */
 
@@ -1614,7 +1614,7 @@ debug_ptab_list_check_del_list(ErtsPTab *ptab)
 	ERTS_PTAB_LIST_ASSERT(!ptab->list.data.deleted.end);
     else {
 	Uint64 curr_interval = erts_smp_current_interval_nob(erts_ptab_interval(ptab));
-	Uint64 *prev_x_interval_p = NULL;
+	Uint64 *prev_x_interval_p = nullptr;
 	ErtsPTabDeletedElement *ptdep;
 
 	for (ptdep = ptab->list.data.deleted.start;

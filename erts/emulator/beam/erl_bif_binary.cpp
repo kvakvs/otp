@@ -272,7 +272,7 @@ static ACTrie *create_acdata(MyAllocator *my, Uint len,
     act->root = acn = (ACNode *)my_alloc(my, sizeof(ACNode));
     acn->d = 0;
     acn->final = 0;
-    acn->h = NULL;
+    acn->h = nullptr;
     memset(acn->g, 0, sizeof(ACNode *) * ALPHABET_SIZE);
 #ifdef HARDDEBUG
     act->idc = 0;
@@ -328,7 +328,7 @@ static void ac_add_one_pattern(MyAllocator *my, ACTrie *act, byte *x, Uint len)
     Uint i = 0;
 
     while(i < len) {
-	if (acn->g[x[i]] != NULL) {
+        if (acn->g[x[i]] != nullptr) {
 	    /* node exists, continue */
 	    acn = acn->g[x[i]];
 	    ++i;
@@ -365,7 +365,7 @@ static void ac_compute_failure_functions(ACTrie *act, ACNode **qbuff)
 
     /* Set all children of the root to have the root as failure function */
     for (i = 0; i < ALPHABET_SIZE; ++i) {
-	if (root->g[i] != NULL) {
+        if (root->g[i] != nullptr) {
 	    root->g[i]->h = root;
 	    /* Add to que for later traversal */
 	    qbuff[qt++] = root->g[i];
@@ -377,19 +377,19 @@ static void ac_compute_failure_functions(ACTrie *act, ACNode **qbuff)
     while (qh < qt) {
 	parent = qbuff[qh++];
 	for (i = 0; i < ALPHABET_SIZE; ++ i) {
-	    if ((child = parent->g[i]) != NULL) {
+            if ((child = parent->g[i]) != nullptr) {
 		/* Visit this node to */
 		qbuff[qt++] = child;
 		/* Search for correct failure function, follow the parent's
 		   failure function until you find a similar transition
 		   funtion to this child's */
 		r =  parent->h;
-		while (r != NULL && r->g[i] == NULL) {
+                while (r != nullptr && r->g[i] == nullptr) {
 		    r = r->h;
 		}
-		if (r == NULL) {
-		    /* Replace NULL failures with the root as we go */
-		    child->h = (root->g[i] == NULL) ? root : root->g[i];
+                if (r == nullptr) {
+                    /* Replace nullptr failures with the root as we go */
+                    child->h = (root->g[i] == nullptr) ? root : root->g[i];
 		} else {
 		    child->h = r->g[i];
 		    /*
@@ -437,7 +437,7 @@ static void ac_init_find_first_match(ACFindFirstState *state, ACTrie *act, Sint 
     state->q = act->root;
     state->pos = startpos;
     state->len = len;
-    state->candidate = NULL;
+    state->candidate = nullptr;
     state->candidate_start = 0;
 }
 #define AC_OK 0
@@ -467,17 +467,17 @@ static int ac_find_first_match(ACFindFirstState *state, byte *haystack,
 	    return AC_RESTART;
 	}
 
-	while (q->g[haystack[i]] == NULL && q->h != q) {
+        while (q->g[haystack[i]] == nullptr && q->h != q) {
 	    q = q->h;
 	}
-	if (q->g[haystack[i]] != NULL) {
+        if (q->g[haystack[i]] != nullptr) {
 	    q = q->g[haystack[i]];
 	}
 #ifdef HARDDEBUG
 	erts_printf("ch = %c, Current: %u\n", (int) haystack[i], (unsigned) q->id);
 #endif
 	++i;
-	if (candidate != NULL && (i - q->d) > candidate_start) {
+        if (candidate != nullptr && (i - q->d) > candidate_start) {
 	    break;
 	}
 	if (q->final) {
@@ -485,7 +485,7 @@ static int ac_find_first_match(ACFindFirstState *state, byte *haystack,
 	    while (r->final < 0)
 		r = r->h;
 	    rstart = i - r->d;
-	    if (candidate == NULL || rstart < candidate_start ||
+            if (candidate == nullptr || rstart < candidate_start ||
 		(rstart == candidate_start && candidate->d < q->d)) {
 		candidate_start = rstart;
 		candidate = r;
@@ -530,7 +530,7 @@ static void ac_init_find_all(ACFindAllState *state, ACTrie *act, Sint startpos, 
     state->len = len;
     state->m = 0;
     state->allocated = 0;
-    state->out = NULL;
+    state->out = nullptr;
 }
 
 static void ac_restore_find_all(ACFindAllState *state, char *buff)
@@ -541,7 +541,7 @@ static void ac_restore_find_all(ACFindAllState *state, char *buff)
                                                sizeof(FindallData) * (state->allocated));
 	memcpy(state->out,buff+sizeof(ACFindAllState),sizeof(FindallData)*state->m);
     } else {
-	state->out = NULL;
+        state->out = nullptr;
     }
 }
 
@@ -553,11 +553,11 @@ static void ac_serialize_find_all(ACFindAllState *state, char *buff)
 
 static void ac_clean_find_all(ACFindAllState *state)
 {
-    if (state->out != NULL) {
+    if (state->out != nullptr) {
 	erts_free(ERTS_ALC_T_TMP, state->out);
     }
 #ifdef HARDDEBUG
-    state->out = NULL;
+    state->out = nullptr;
     state->allocated = 0;
 #endif
 }
@@ -593,10 +593,10 @@ static int ac_find_all_non_overlapping(ACFindAllState *state, byte *haystack,
 	    state->out = out;
 	    return AC_RESTART;
 	}
-	while (q->g[haystack[i]] == NULL && q->h != q) {
+        while (q->g[haystack[i]] == nullptr && q->h != q) {
 	    q = q->h;
 	}
-	if (q->g[haystack[i]] != NULL) {
+        if (q->g[haystack[i]] != nullptr) {
 	    q = q->g[haystack[i]];
 	}
 	++i;
@@ -808,7 +808,7 @@ static void bm_init_find_all(BMFindAllState *state, Sint startpos, Uint len)
     state->len = (Sint) len;
     state->m = 0;
     state->allocated = 0;
-    state->out = NULL;
+    state->out = nullptr;
 }
 
 static void bm_restore_find_all(BMFindAllState *state, char *buff)
@@ -820,7 +820,7 @@ static void bm_restore_find_all(BMFindAllState *state, char *buff)
 	memcpy(state->out,buff+sizeof(BMFindAllState),
 	       sizeof(FindallData)*state->m);
     } else {
-	state->out = NULL;
+        state->out = nullptr;
     }
 }
 
@@ -833,11 +833,11 @@ static void bm_serialize_find_all(BMFindAllState *state, char *buff)
 
 static void bm_clean_find_all(BMFindAllState *state)
 {
-    if (state->out != NULL) {
+    if (state->out != nullptr) {
 	erts_free(ERTS_ALC_T_TMP, state->out);
     }
 #ifdef HARDDEBUG
-    state->out = NULL;
+    state->out = nullptr;
     state->allocated = 0;
 #endif
 }
@@ -959,7 +959,7 @@ static int do_binary_match_compile(Eterm argument, Eterm *tag, Binary **binp)
     if (words == 1) {
 	byte *bytes;
 	Uint bitoffs, bitsize;
-	byte *temp_alloc = NULL;
+        byte *temp_alloc = nullptr;
 	MyAllocator my;
 	BMData *bmd;
 	Binary *bin;
@@ -987,7 +987,7 @@ static int do_binary_match_compile(Eterm argument, Eterm *tag, Binary **binp)
 	while (is_list(t)) {
 	    byte *bytes;
 	    Uint bitoffs, bitsize;
-	    byte *temp_alloc = NULL;
+            byte *temp_alloc = nullptr;
 	    b = CAR(list_val(t));
 	    t = CDR(list_val(t));
 	    ERTS_GET_BINARY_BYTES(b, bytes, bitoffs, bitsize);
@@ -1033,7 +1033,7 @@ static int do_binary_match(Process *p, Eterm subject, Uint hsstart, Uint hsend,
 {
     byte *bytes;
     Uint bitoffs, bitsize;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
 
     ERTS_GET_BINARY_BYTES(subject, bytes, bitoffs, bitsize);
     if (bitsize != 0) {
@@ -1153,7 +1153,7 @@ static int do_binary_matches(Process *p, Eterm subject, Uint hsstart,
 {
     byte *bytes;
     Uint bitoffs, bitsize;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
 
     ERTS_GET_BINARY_BYTES(subject, bytes, bitoffs, bitsize);
     if (bitsize != 0) {
@@ -1892,7 +1892,7 @@ static BIF_RETTYPE do_longest_common(Process *p, Eterm list, int direction)
 	    goto badarg;
 	}
 	cd[i].bufflen = binary_size(b);
-	cd[i].temp_alloc = NULL;
+        cd[i].temp_alloc = nullptr;
 	if (*(binary_val(real_bin)) == HEADER_PROC_BIN) {
 	    pb = (ProcBin *) binary_val(real_bin);
 	    if (pb->flags) {
@@ -1900,20 +1900,20 @@ static BIF_RETTYPE do_longest_common(Process *p, Eterm list, int direction)
 	    }
 	    cd[i].buff = erts_get_aligned_binary_bytes_extra(b, &(cd[i].temp_alloc),
 							     ERTS_ALC_T_BINARY_BUFFER,0);
-	    cd[i].type = (cd[i].temp_alloc != NULL) ? CL_TYPE_ALIGNED : CL_TYPE_COMMON;
+            cd[i].type = (cd[i].temp_alloc != nullptr) ? CL_TYPE_ALIGNED : CL_TYPE_COMMON;
 	} else { /* Heap binary */
 	    cd[i].buff = erts_get_aligned_binary_bytes_extra(b, &(cd[i].temp_alloc),
 							     ERTS_ALC_T_BINARY_BUFFER,0);
 	    /* CL_TYPE_HEAP_NOALLOC means you have to copy if trapping */
-	    cd[i].type = (cd[i].temp_alloc != NULL) ? CL_TYPE_ALIGNED : CL_TYPE_HEAP_NOALLOC;
+            cd[i].type = (cd[i].temp_alloc != nullptr) ? CL_TYPE_ALIGNED : CL_TYPE_HEAP_NOALLOC;
 	}
 	++i;
 	l = CDR(list_val(l));
     }
     cd[i].type = CL_TYPE_EMPTY;
 #if defined(DEBUG) || defined(VALGRIND)
-    cd[i].temp_alloc = NULL;
-    cd[i].buff = NULL;
+    cd[i].temp_alloc = nullptr;
+    cd[i].buff = nullptr;
     cd[i].bufflen = 0;
 #endif
 
@@ -2322,9 +2322,9 @@ typedef struct {
 static void cleanup_copy_bin_state(Binary *bp)
 {
     auto cbs = ERTS_MAGIC_BIN_DATA<CopyBinState *>(bp);
-    if (cbs->result != NULL) {
+    if (cbs->result != nullptr) {
 	erts_bin_free(cbs->result);
-	cbs->result = NULL;
+        cbs->result = nullptr;
     }
     switch (cbs->source_type) {
     case BC_TYPE_HEAP:
@@ -2366,7 +2366,7 @@ static BIF_RETTYPE do_binary_copy(Process *p, Eterm bin, Eterm en)
 	goto badarg;
     }
     if (!n) {
-	Eterm res_term = erts_new_heap_binary(p,NULL,0,&bytes);
+        Eterm res_term = erts_new_heap_binary(p,nullptr,0,&bytes);
 	BIF_RET(res_term);
     }
     ERTS_GET_BINARY_BYTES(bin,bytes,bit_offs,bit_size);
@@ -2392,8 +2392,8 @@ static BIF_RETTYPE do_binary_copy(Process *p, Eterm bin, Eterm en)
 					      cleanup_copy_bin_state);
         cbs = ERTS_MAGIC_BIN_DATA<CopyBinState *>(mb);
 
-	cbs->temp_alloc = NULL;
-	cbs->source = NULL;
+        cbs->temp_alloc = nullptr;
+        cbs->source = nullptr;
 
 	ERTS_GET_REAL_BIN(bin, orig, offset, bit_offset, bit_size);
 	if (*(binary_val(orig)) == HEADER_PROC_BIN) {
@@ -2444,14 +2444,14 @@ static BIF_RETTYPE do_binary_copy(Process *p, Eterm bin, Eterm en)
 	BIF_TRAP2(&binary_copy_trap_export, p, bin, trap_term);
     } else {
 	Eterm res_term;
-	byte *temp_alloc = NULL;
+        byte *temp_alloc = nullptr;
 	byte *source =
 	    erts_get_aligned_binary_bytes(bin,
 					  &temp_alloc);
 	if (target_size <= ERL_ONHEAP_BIN_LIMIT) {
-	    res_term = erts_new_heap_binary(p,NULL,target_size,&t);
+            res_term = erts_new_heap_binary(p,nullptr,target_size,&t);
 	} else {
-	    res_term = erts_new_mso_binary(p,NULL,target_size);
+            res_term = erts_new_mso_binary(p,nullptr,target_size);
 	    t = ((ProcBin *) binary_val(res_term))->bytes;
 	}
 	pos = 0;
@@ -2503,7 +2503,7 @@ BIF_RETTYPE binary_copy_trap(BIF_ALIST_2)
 	    pos += size;
 	}
 	save =  cbs->result;
-	cbs->result = NULL;
+        cbs->result = nullptr;
 	cleanup_copy_bin_state(mb); /* now cbs is dead */
 	pb = (ProcBin *) HAlloc(BIF_P, PROC_BIN_SIZE);
 	pb->thing_word = HEADER_PROC_BIN;
@@ -2612,7 +2612,7 @@ static BIF_RETTYPE do_encode_unsigned(Process *p, Eterm uns, Eterm endianess)
 	u = (Uint) x;
 	n = get_need(u);
 	ASSERT(n <= ERL_ONHEAP_BIN_LIMIT);
-	res = erts_new_heap_binary(p, NULL, n, &b);
+        res = erts_new_heap_binary(p, nullptr, n, &b);
 	if (endianess == am_big) {
 	    for(i=n-1;i>=0;--i) {
 		b[i] = u & 0xFF;
@@ -2639,9 +2639,9 @@ static BIF_RETTYPE do_encode_unsigned(Process *p, Eterm uns, Eterm endianess)
 	}
 	n = (num_parts-1)*sizeof(ErtsDigit)+get_need(BIG_DIGIT(bigp,(num_parts-1)));
 	if (n <= ERL_ONHEAP_BIN_LIMIT) {
-	    res = erts_new_heap_binary(p,NULL,n,&b);
+            res = erts_new_heap_binary(p,nullptr,n,&b);
 	} else {
-	    res = erts_new_mso_binary(p,NULL,n);
+            res = erts_new_mso_binary(p,nullptr,n);
 	    b = ((ProcBin *) binary_val(res))->bytes;
 	}
 
@@ -2908,7 +2908,7 @@ static void dump_ac_node(ACNode *node, int indent, int ch) {
     erts_printf("%sFail: %u\n",spaces,(unsigned)node->h->id);
     erts_free(ERTS_ALC_T_TMP,spaces);
     for(i=0;i<ALPHABET_SIZE;++i) {
-	if (node->g[i] != NULL && node->g[i] != node) {
+        if (node->g[i] != nullptr && node->g[i] != node) {
 	    dump_ac_node(node->g[i],indent+1,i);
 	}
     }

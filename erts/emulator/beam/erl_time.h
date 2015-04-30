@@ -38,7 +38,7 @@ typedef struct erl_timer {
     int    active;		/* 1=activated, 0=deactivated */
     /* called when timeout */
     void (*timeout)(void*);
-    /* called when cancel (may be NULL) */
+    /* called when cancel (may be nullptr) */
     void (*cancel)(void*);
     void* arg;        /* argument to timeout/cancel procs */
 } ErlTimer;

@@ -54,14 +54,14 @@ extern void hipe_arch_print_pcb(struct hipe_process_state *p);
 
 static __inline__ void hipe_init_process(struct hipe_process_state *p)
 {
-    p->nsp = NULL;
-    p->nstack = NULL;
-    p->nstend = NULL;
-    p->nstgraylim = NULL;
-    p->nstblacklim = NULL;
-    p->ngra = NULL;
+    p->nsp = nullptr;
+    p->nstack = nullptr;
+    p->nstend = nullptr;
+    p->nstgraylim = nullptr;
+    p->nstblacklim = nullptr;
+    p->ngra = nullptr;
 #if defined(__sparc__) || defined(__powerpc__) || defined(__ppc__) || defined(__powerpc64__) || defined(__arm__)
-    p->nra = NULL;
+    p->nra = nullptr;
 #endif
     p->narity = 0;
 }

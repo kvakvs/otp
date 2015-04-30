@@ -33,7 +33,7 @@
  *   Permits replacing an expensive integer division operation
  *   with a cheap bitwise 'and' in the hash index calculation
  * - Lookups assume the key is in the table.
- *   Permits removing NULL checks.
+ *   Permits removing nullptr checks.
  * - Switched order of the hash bucket next and hvalue fields.
  *   The hvalue field, which must always be checked, gets a zero
  *   structure offset, which is faster on some architectures;
@@ -42,10 +42,10 @@
  */
 struct hipe_sdesc_table hipe_sdesc_table;
 
-static struct sdesc **alloc_bucket(unsigned int size)
+static sdesc_t **alloc_bucket(unsigned int size)
 {
-    unsigned long nbytes = size * sizeof(struct sdesc*);
-    struct sdesc **bucket = (sdesc **)erts_alloc(ERTS_ALC_T_HIPE, nbytes);
+    unsigned long nbytes = size * sizeof(sdesc_t*);
+    sdesc_t **bucket = (sdesc_t **)erts_alloc(ERTS_ALC_T_HIPE, nbytes);
     sys_memzero(bucket, nbytes);
     return bucket;
 }
@@ -66,7 +66,7 @@ static void hipe_grow_sdesc_table(void)
     hipe_sdesc_table.bucket = new_bucket;
     for (i = 0; i < old_size; ++i) {
         struct sdesc_t *b = old_bucket[i];
-	while (b != NULL) {
+	while (b != nullptr) {
             struct sdesc_t *next = b->bucket.next;
 	    unsigned int j = (b->bucket.hvalue >> HIPE_RA_LSR_COUNT) & new_mask;
 	    b->bucket.next = new_bucket[j];
@@ -77,7 +77,7 @@ static void hipe_grow_sdesc_table(void)
     erts_free(ERTS_ALC_T_HIPE, old_bucket);
 }
 
-struct sdesc_t *hipe_put_sdesc(struct sdesc_t *sdesc)
+sdesc_t *hipe_put_sdesc(sdesc_t *sdesc)
 {
     unsigned long ra;
     unsigned int i;
@@ -88,7 +88,7 @@ struct sdesc_t *hipe_put_sdesc(struct sdesc_t *sdesc)
     i = (ra >> HIPE_RA_LSR_COUNT) & hipe_sdesc_table.mask;
     chain = hipe_sdesc_table.bucket[i];
 
-    for (; chain != NULL; chain = chain->bucket.next)
+    for (; chain != nullptr; chain = chain->bucket.next)
 	if (chain->bucket.hvalue == ra)
 	    return chain;	/* collision! (shouldn't happen) */
 
@@ -101,7 +101,7 @@ struct sdesc_t *hipe_put_sdesc(struct sdesc_t *sdesc)
     return sdesc;
 }
 
-void hipe_init_sdesc_table(struct sdesc *sdesc)
+void hipe_init_sdesc_table(struct sdesc_t *sdesc)
 {
     unsigned int log2size, size;
 
@@ -120,7 +120,7 @@ void hipe_init_sdesc_table(struct sdesc *sdesc)
  * representation. If different representations are needed in
  * the future, this_ code has to be made target dependent.
  */
-struct sdesc *hipe_decode_sdesc(Eterm arg)
+struct sdesc_t *hipe_decode_sdesc(Eterm arg)
 {
     Uint ra, exnra;
     Eterm *live;
@@ -191,5 +191,5 @@ struct sdesc *hipe_decode_sdesc(Eterm arg)
 	sdesc->dbg_A = tuple_val(mfa_tpl)[3];
     }
 #endif
-    return sdesc_t;
+    return sdesc;
 }

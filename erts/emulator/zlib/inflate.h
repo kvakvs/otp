@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* WARNING: this_ file should *not* be used by applications. It is
+/* WARNING: this file should *not* be used by applications. It is
    part of the implementation of the compression library and is
    subject to change. Applications should only use zlib.h.
  */
@@ -30,7 +30,7 @@ typedef enum {
     DICTID,     /* i: waiting for dictionary check value */
     DICT,       /* waiting for inflateSetDictionary() call */
         TYPE,       /* i: waiting for type bits, including last-flag bit */
-        TYPEDO,     /* i: same, but skip check to exit inflate on new_ block */
+        TYPEDO,     /* i: same, but skip check to exit inflate on new block */
         STORED,     /* i: waiting for stored size (length and complement) */
         COPY_,      /* i/o: same as COPY below, but only first time in */
         COPY,       /* i/o: waiting for input or output to copy stored block */

@@ -128,7 +128,7 @@ erts_db_alloc_fnf(ErtsAlcType_t type, DbTable *tab, Uint size)
 {
     void *res = erts_alloc_fnf(type, size);
     if (!res)
-	return NULL;
+	return nullptr;
     ERTS_DB_ALC_MEM_UPDATE_(tab, 0, size);
     return res;
 }
@@ -145,7 +145,7 @@ erts_db_alloc_fnf_nt(ErtsAlcType_t type, Uint size)
 {
     void *res = erts_alloc_fnf(type, size);
     if (!res)
-	return NULL;
+	return nullptr;
     return res;
 }
 
@@ -191,7 +191,7 @@ erts_db_realloc_fnf(ErtsAlcType_t type, DbTable *tab, void *ptr,
     ASSERT(!ptr || old_size == ERTS_ALC_DBG_BLK_SZ(ptr));
     res = erts_realloc_fnf(type, ptr, size);
     if (!res)
-	return NULL;
+	return nullptr;
     ERTS_DB_ALC_MEM_UPDATE_(tab, old_size, size);
     return res;
 }
@@ -214,7 +214,7 @@ erts_db_realloc_fnf_nt(ErtsAlcType_t type, void *ptr,
     ASSERT(!ptr || old_size == ERTS_ALC_DBG_BLK_SZ(ptr));
     res = erts_realloc_fnf(type, ptr, size);
     if (!res)
-	return NULL;
+	return nullptr;
     return res;
 }
 

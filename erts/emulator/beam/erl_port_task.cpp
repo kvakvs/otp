@@ -222,7 +222,7 @@ caller2bix(Eterm caller)
 static void
 popped_from_busy_queue(Port *pp, ErtsPortTask *ptp, int last)
 {
-    ErtsPortTaskBusyCaller **prev_bcpp = NULL, *bcp;
+    ErtsPortTaskBusyCaller **prev_bcpp = nullptr, *bcp;
     ErtsPortTaskBusyCallerTable *tabp = pp->sched.taskq.local.busy.table;
     Eterm caller = task_caller(ptp);
     int bix = caller2bix(caller);
@@ -262,9 +262,9 @@ popped_from_busy_queue(Port *pp, ErtsPortTask *ptp, int last)
 	    }
 #endif
 	    busy_caller_table_free(tabp);
-	    pp->sched.taskq.local.busy.first = NULL;
-	    pp->sched.taskq.local.busy.last = NULL;
-	    pp->sched.taskq.local.busy.table = NULL;
+	    pp->sched.taskq.local.busy.first = nullptr;
+	    pp->sched.taskq.local.busy.last = nullptr;
+	    pp->sched.taskq.local.busy.table = nullptr;
 	}
     }
 }
@@ -284,7 +284,7 @@ busy_wait_move_to_busy_queue(Port *pp, ErtsPortTask *ptp)
 
     ASSERT(ptp->u.alive.flags & ERTS_PT_FLG_WAIT_BUSY);
 
-    ptp->u.alive.next = NULL;
+    ptp->u.alive.next = nullptr;
     if (pp->sched.taskq.local.busy.last) {
 	ASSERT(pp->sched.taskq.local.busy.first);
 	pp->sched.taskq.local.busy.last->u.alive.next = ptp;
@@ -308,7 +308,7 @@ busy_wait_move_to_busy_queue(Port *pp, ErtsPortTask *ptp)
 	tabp = busy_caller_table_alloc();
 	pp->sched.taskq.local.busy.table = tabp;
 	for (i = 0; i < ERTS_PORT_TASK_BUSY_CALLER_TABLE_BUCKETS; i++)
-	    tabp->bucket[i] = NULL;
+	    tabp->bucket[i] = nullptr;
 	tabp->pre_alloc_busy_caller.caller = am_undefined;
     }
     pp->sched.taskq.local.busy.last = ptp;
@@ -389,7 +389,7 @@ no_sig_dep_move_from_busyq(Port *pp)
 {
     ErtsPortTaskBusyCallerTable *tabp = pp->sched.taskq.local.busy.table;
     ErtsPortTask *first_ptp, *last_ptp, *ptp;
-    ErtsPortTaskBusyCaller **prev_bcpp = NULL, *bcp = NULL;
+    ErtsPortTaskBusyCaller **prev_bcpp = nullptr, *bcp = nullptr;
 
     /*
      * Move tasks at the head of the busy queue that no longer
@@ -449,8 +449,8 @@ no_sig_dep_move_from_busyq(Port *pp)
 	}
 #endif
 	busy_caller_table_free(tabp);
-	pp->sched.taskq.local.busy.last = NULL;
-	pp->sched.taskq.local.busy.table = NULL;
+	pp->sched.taskq.local.busy.last = nullptr;
+	pp->sched.taskq.local.busy.table = nullptr;
     }
     last_ptp->u.alive.next = pp->sched.taskq.local.first;
     pp->sched.taskq.local.first = first_ptp;
@@ -532,7 +532,7 @@ chk_task_queues(Port *pp, ErtsPortTask *execq, int processing_busy_queue)
 static ERTS_INLINE void
 reset_port_task_handle(ErtsPortTaskHandle *pthp)
 {
-    erts_smp_atomic_set_relb(pthp, (erts_aint_t) NULL);
+    erts_smp_atomic_set_relb(pthp, (erts_aint_t) nullptr);
 }
 
 static ERTS_INLINE ErtsPortTask *
@@ -573,7 +573,7 @@ set_handle(ErtsPortTask *ptp, ErtsPortTaskHandle *pthp)
 static ERTS_INLINE void
 set_tmp_handle(ErtsPortTask *ptp, ErtsPortTaskHandle *pthp)
 {
-    ptp->u.alive.handle = NULL;
+    ptp->u.alive.handle = nullptr;
     if (pthp) {
 	/*
 	 * IMPORTANT! Task either need to be aborted, or task handle
@@ -739,7 +739,7 @@ erl_drv_busy_msgq_limits(ErlDrvPort dport, ErlDrvSizeT *lowp, ErlDrvSizeT *highp
 	|| high == ERL_DRV_BUSY_MSGQ_DISABLED) {
 	/* Disable busy msgq feature */
 	erts_aint32_t flags;
-	pp->sched.taskq.bpq = NULL;
+	pp->sched.taskq.bpq = nullptr;
 	flags = ~(ERTS_PTS_FLG_BUSY_PORT_Q|ERTS_PTS_FLG_CHK_UNSET_BUSY_PORT_Q);
 	flags = erts_smp_atomic32_read_band_acqb(&pp->sched.flags, flags);
 	if ((flags & ERTS_PTS_FLGS_BUSY) == ERTS_PTS_FLG_BUSY_PORT_Q)
@@ -823,13 +823,13 @@ abort_nosuspend_task(Port *pp,
     ASSERT(type == ERTS_PORT_TASK_PROC_SIG);
 
     if (!bpq_data)
-	tdp->psig.callback(NULL,
+	tdp->psig.callback(nullptr,
 			   ERTS_PORT_SFLG_INVALID,
 			   ERTS_PROC2PORT_SIG_ABORT_NOSUSPEND,
 			   &tdp->psig.data);
     else {
 	ErlDrvSizeT size = erts_proc2port_sig_command_data_size(&tdp->psig.data);
-	tdp->psig.callback(NULL,
+	tdp->psig.callback(nullptr,
 			   ERTS_PORT_SFLG_INVALID,
 			   ERTS_PROC2PORT_SIG_ABORT_NOSUSPEND,
 			   &tdp->psig.data);
@@ -840,7 +840,7 @@ abort_nosuspend_task(Port *pp,
 static ErtsPortTaskHandleList *
 get_free_nosuspend_handles(Port *pp)
 {
-    ErtsPortTaskHandleList *nshp, *last_nshp = NULL;
+    ErtsPortTaskHandleList *nshp, *last_nshp = nullptr;
 
     ERTS_SMP_LC_ASSERT(erts_port_task_sched_lock_is_locked(&pp->sched));
 
@@ -852,11 +852,11 @@ get_free_nosuspend_handles(Port *pp)
     }
 
     if (!last_nshp)
-	nshp = NULL;
+	nshp = nullptr;
     else {
 	nshp = pp->sched.taskq.local.busy.nosuspend;
 	pp->sched.taskq.local.busy.nosuspend = last_nshp->u.next;
-	last_nshp->u.next = NULL;
+	last_nshp->u.next = nullptr;
 	if (!pp->sched.taskq.local.busy.nosuspend)
 	    erts_smp_atomic32_read_band_nob(&pp->sched.flags,
 					    ~ERTS_PTS_FLG_HAVE_NS_TASKS);
@@ -882,7 +882,7 @@ static ERTS_INLINE void
 enqueue_port(ErtsRunQueue *runq, Port *pp)
 {
     ERTS_SMP_LC_ASSERT(erts_smp_lc_runq_is_locked(runq));
-    pp->sched.next = NULL;
+    pp->sched.next = nullptr;
     if (runq->ports.end) {
 	ASSERT(runq->ports.start);
 	runq->ports.end->sched.next = pp;
@@ -915,7 +915,7 @@ pop_port(ErtsRunQueue *runq)
 	runq->ports.start = runq->ports.start->sched.next;
 	if (!runq->ports.start) {
 	    ASSERT(runq->ports.end == pp);
-	    runq->ports.end = NULL;
+	    runq->ports.end = nullptr;
 	}
 	erts_smp_dec_runq_len(runq, &runq->ports.info, ERTS_PORT_PRIO_LEVEL);
     }
@@ -940,7 +940,7 @@ enqueue_task(Port *pp,
     int res;
     erts_aint32_t fail_flags = ERTS_PTS_FLG_EXIT;
     erts_aint32_t flags;
-    ptp->u.alive.next = NULL;
+    ptp->u.alive.next = nullptr;
     if (ns_pthlp)
 	fail_flags |= ERTS_PTS_FLG_BUSY_PORT;
     erts_port_task_sched_lock(&pp->sched);
@@ -1021,7 +1021,7 @@ finalize_exec(Port *pp, ErtsPortTask **execq, int processing_busy_q)
 
     ERTS_PT_DBG_CHK_TASK_QS(pp, *execq, processing_busy_q);
 
-    *execq = NULL;
+    *execq = nullptr;
 
     act = erts_smp_atomic32_read_nob(&pp->sched.flags);
     if (act & ERTS_PTS_FLG_CHK_UNSET_BUSY_PORT_Q)
@@ -1079,7 +1079,7 @@ select_queue_for_exec(Port *pp, ErtsPortTask **execqp, int *processing_busy_q_p)
 
 	    ptp = pp->sched.taskq.local.busy.first = *execqp;
 	    if (!ptp)
-		pp->sched.taskq.local.busy.last = NULL;
+		pp->sched.taskq.local.busy.last = nullptr;
 	    else if (!(ptp->u.alive.flags & ERTS_PT_FLG_WAIT_BUSY))
 		no_sig_dep_move_from_busyq(pp);
 
@@ -1166,13 +1166,13 @@ static ErtsPortTask *
 fetch_in_queue(Port *pp, ErtsPortTask **execqp)
 {
     ErtsPortTask *ptp;
-    ErtsPortTaskHandleList *free_nshp = NULL;
+    ErtsPortTaskHandleList *free_nshp = nullptr;
 
     erts_port_task_sched_lock(&pp->sched);
 
     ptp = pp->sched.taskq.in.first;
-    pp->sched.taskq.in.first = NULL;
-    pp->sched.taskq.in.last = NULL;
+    pp->sched.taskq.in.first = nullptr;
+    pp->sched.taskq.in.last = nullptr;
     if (ptp)
 	*execqp = ptp->u.alive.next;
     else
@@ -1208,7 +1208,7 @@ select_task_for_exec(Port *pp,
 	else {
 	    ptp = fetch_in_queue(pp, execqp);
 	    if (!ptp)
-		return NULL;
+		return nullptr;
 	}
 	if (check_task_for_exec(pp, flags, execqp, processing_busy_q_p, ptp))
 	    return ptp;
@@ -1315,7 +1315,7 @@ erts_port_task_abort_nosuspend_tasks(Port *pp)
     erts_smp_atomic32_read_band_nob(&pp->sched.flags,
 				    ~ERTS_PTS_FLG_HAVE_NS_TASKS);
     abort_list = pp->sched.taskq.local.busy.nosuspend;
-    pp->sched.taskq.local.busy.nosuspend = NULL;
+    pp->sched.taskq.local.busy.nosuspend = nullptr;
     erts_port_task_sched_unlock(&pp->sched);
 
     while (abort_list) {
@@ -1381,7 +1381,7 @@ erts_port_task_abort_nosuspend_tasks(Port *pp)
 #endif
 	schedule_port_task_handle_list_free(pthlp);
 
-	abort_nosuspend_task(pp, type, &td, pp->sched.taskq.bpq != NULL);
+	abort_nosuspend_task(pp, type, &td, pp->sched.taskq.bpq != nullptr);
     }
 }
 
@@ -1395,15 +1395,15 @@ erts_port_task_schedule(Eterm id,
 			ErtsPortTaskType type,
 			...)
 {
-    ErtsProc2PortSigData *sigdp = NULL;
-    ErtsPortTaskHandleList *ns_pthlp = NULL;
+    ErtsProc2PortSigData *sigdp = nullptr;
+    ErtsPortTaskHandleList *ns_pthlp = nullptr;
 #ifdef ERTS_SMP
     ErtsRunQueue *xrunq;
     ErtsThrPrgrDelayHandle dhndl;
 #endif
     ErtsRunQueue *runq;
     Port *pp;
-    ErtsPortTask *ptp = NULL;
+    ErtsPortTask *ptp = nullptr;
     erts_aint32_t act, add_flags;
     unsigned int prof_runnable_ports;
 
@@ -1622,7 +1622,7 @@ erts_port_task_free_port(Port *pp)
     erts_smp_runq_unlock(runq);
 
     if (!(flags & (ERTS_PTS_FLG_IN_RUNQ|ERTS_PTS_FLG_EXEC)))
-	begin_port_cleanup(pp, NULL, NULL);
+	begin_port_cleanup(pp, nullptr, nullptr);
 }
 
 /*
@@ -1835,7 +1835,7 @@ erts_port_task_execute(ErtsRunQueue *runq, Port **curr_port_pp)
 
     erts_port_release(pp);
 
-    *curr_port_pp = NULL;
+    *curr_port_pp = nullptr;
 
     erts_smp_runq_lock(runq);
  
@@ -1908,7 +1908,7 @@ begin_port_cleanup(Port *pp, ErtsPortTask **execqp, int *processing_busy_q_p)
     int i, max;
     ErtsPortTaskBusyCallerTable *tabp;
     ErtsPortTask *qs[3];
-    ErtsPortTaskHandleList *free_nshp = NULL;
+    ErtsPortTaskHandleList *free_nshp = nullptr;
     ErtsProcList *plp;
 
     ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(pp));
@@ -1943,12 +1943,12 @@ begin_port_cleanup(Port *pp, ErtsPortTask **execqp, int *processing_busy_q_p)
 	    if (*execqp)
 		qs[max++] = *execqp;
 	}
-	*execqp = NULL;
+	*execqp = nullptr;
 	*processing_busy_q_p = 0;
     }
-    pp->sched.taskq.local.busy.first = NULL;
-    pp->sched.taskq.local.busy.last = NULL;
-    pp->sched.taskq.local.first = NULL;
+    pp->sched.taskq.local.busy.first = nullptr;
+    pp->sched.taskq.local.busy.last = nullptr;
+    pp->sched.taskq.local.first = nullptr;
     tabp = pp->sched.taskq.local.busy.table;
     if (tabp) {
 	int bix;
@@ -1963,13 +1963,13 @@ begin_port_cleanup(Port *pp, ErtsPortTask **execqp, int *processing_busy_q_p)
 	}
 
 	busy_caller_table_free(tabp);
-	pp->sched.taskq.local.busy.table = NULL;
+	pp->sched.taskq.local.busy.table = nullptr;
     }
 
     erts_port_task_sched_lock(&pp->sched);
     qs[max] = pp->sched.taskq.in.first;
-    pp->sched.taskq.in.first = NULL;
-    pp->sched.taskq.in.last = NULL;
+    pp->sched.taskq.in.first = nullptr;
+    pp->sched.taskq.in.last = nullptr;
     erts_port_task_sched_unlock(&pp->sched);
     if (qs[max])
 	max++;
@@ -2027,13 +2027,13 @@ begin_port_cleanup(Port *pp, ErtsPortTask **execqp, int *processing_busy_q_p)
 	    case ERTS_PORT_TASK_PROC_SIG: {
 		ErtsProc2PortSigData *sigdp = &ptp->u.alive.td.psig.data;
 		if (!pp->sched.taskq.bpq)
-		    ptp->u.alive.td.psig.callback(NULL,
+		    ptp->u.alive.td.psig.callback(nullptr,
 						  ERTS_PORT_SFLG_INVALID,
 						  ERTS_PROC2PORT_SIG_ABORT_CLOSED,
 						  sigdp);
 		else {
 		    ErlDrvSizeT size = erts_proc2port_sig_command_data_size(sigdp);
-		    ptp->u.alive.td.psig.callback(NULL,
+		    ptp->u.alive.td.psig.callback(nullptr,
 						  ERTS_PORT_SFLG_INVALID,
 						  ERTS_PROC2PORT_SIG_ABORT_CLOSED,
 						  sigdp);
@@ -2062,19 +2062,19 @@ begin_port_cleanup(Port *pp, ErtsPortTask **execqp, int *processing_busy_q_p)
     /* Cleanup nosuspend handles... */
     free_nshp = (pp->sched.taskq.local.busy.nosuspend
 		 ? get_free_nosuspend_handles(pp)
-		 : NULL);
+		 : nullptr);
     ASSERT(!pp->sched.taskq.local.busy.nosuspend);
 
     /* Make sure not to leave any processes suspended on the port... */
     plp = pp->suspended;
-    pp->suspended = NULL;
+    pp->suspended = nullptr;
 
     erts_port_task_sched_unlock(&pp->sched);
 
     if (free_nshp)
 	free_nosuspend_handles(free_nshp);
 
-    if (erts_proclist_fetch(&plp, NULL)) {
+    if (erts_proclist_fetch(&plp, nullptr)) {
 #ifdef USE_VM_PROBES
 	if (DTRACE_ENABLED(process_port_unblocked)) {
 	    DTRACE_CHARBUF(port_str, 16);
@@ -2082,7 +2082,7 @@ begin_port_cleanup(Port *pp, ErtsPortTask **execqp, int *processing_busy_q_p)
 	    ErtsProcList* plp2 = plp;
 
 	    erts_snprintf(port_str, sizeof(DTRACE_CHARBUF_NAME(port_str)), "%T", pp->common.id);
-	    while (plp2 != NULL) {
+	    while (plp2 != nullptr) {
 		erts_snprintf(pid_str, sizeof(DTRACE_CHARBUF_NAME(pid_str)), "%T", plp2->pid);
 		DTRACE2(process_port_unblocked, pid_str, port_str);
 	    }

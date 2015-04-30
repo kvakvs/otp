@@ -107,7 +107,7 @@
 
 #define ERTS_EMPTY_RUNQ(RQ)					\
     ((ERTS_RUNQ_FLGS_GET_NOB((RQ)) & ERTS_RUNQ_FLGS_QMASK) == 0	\
-     && (RQ)->misc.start == NULL)
+     && (RQ)->misc.start == nullptr)
 
 #undef RUNQ_READ_RQ
 #undef RUNQ_SET_RQ
@@ -120,7 +120,7 @@
     (RUNQ_SET_RQ((RQP), (0xdeadbeefdead0003LL | ((N) << 4)))
 #  define ERTS_DBG_VERIFY_VALID_RUNQP(RQP) \
 do { \
-    ASSERT((RQP) != NULL); \
+    ASSERT((RQP) != nullptr); \
     ASSERT(((((Uint) (RQP)) & ((Uint) 0x3))) == ((Uint) 0)); \
     ASSERT((((Uint) (RQP)) & ~((Uint) 0xffff)) != ((Uint) 0xdeadbeefdead0000LL));\
 } while (0)
@@ -129,7 +129,7 @@ do { \
     (RUNQ_SET_RQ((RQP), (0xdead0003 | ((N) << 4))))
 #  define ERTS_DBG_VERIFY_VALID_RUNQP(RQP) \
 do { \
-    ASSERT((RQP) != NULL); \
+    ASSERT((RQP) != nullptr); \
     ASSERT(((((UWord) (RQP)) & ((UWord) 1))) == ((UWord) 0)); \
     ASSERT((((UWord) (RQP)) & ~((UWord) 0xffff)) != ((UWord) 0xdead0000)); \
 } while (0)
@@ -140,7 +140,7 @@ do { \
 #endif
 
 #define ERTS_EMPTY_RUNQ_PORTS(RQ) \
-    (RUNQ_READ_LEN(&(RQ)->ports.info.len) == 0 && (RQ)->misc.start == NULL)
+    (RUNQ_READ_LEN(&(RQ)->ports.info.len) == 0 && (RQ)->misc.start == nullptr)
 
 const Process erts_invalid_process = {{ERTS_INVALID_PID}};
 
@@ -635,7 +635,7 @@ erts_init_process(int ncpu, int proc_tab_size, int legacy_proc_tab)
 #ifdef ERTS_SMP
 			 release_process,
 #else
-			 NULL,
+                         nullptr,
 #endif
 			 (ErtsPTabElementCommon *) &erts_invalid_process.common,
 			 proc_tab_size,
@@ -961,11 +961,11 @@ reply_sched_wall_time(void *vswtrp)
 			      : 0);
     Process *rp = swtrp->proc;
     Eterm ref_copy = NIL, msg;
-    Eterm *hp = NULL;
+    Eterm *hp = nullptr;
     Eterm **hpp;
     Uint sz, *szp;
-    ErlOffHeap *ohp = NULL;
-    ErlHeapFragment *bp = NULL;
+    ErlOffHeap *ohp = nullptr;
+    ErlHeapFragment *bp = nullptr;
 
     ASSERT(esdp);
 #ifdef ERTS_DIRTY_SCHEDULERS
@@ -997,7 +997,7 @@ reply_sched_wall_time(void *vswtrp)
     }
 
     sz = 0;
-    hpp = NULL;
+    hpp = nullptr;
     szp = &sz;
 
     while (1) {
@@ -1022,7 +1022,7 @@ reply_sched_wall_time(void *vswtrp)
 	    break;
 
 	hp = erts_alloc_message_heap(sz, &bp, &ohp, rp, &rp_locks);
-	szp = NULL;
+        szp = nullptr;
 	hpp = &hp;
     }
 
@@ -1065,7 +1065,7 @@ erts_sched_wall_time_request(Process *c_p, int set, int enable)
     swtrp->set = set;
     swtrp->enable = enable;
     swtrp->proc = c_p;
-    swtrp->ref = STORE_NC(&hp, NULL, ref);
+    swtrp->ref = STORE_NC(&hp, nullptr, ref);
     swtrp->req_sched = esdp->no;
     erts_smp_atomic32_init_nob(&swtrp->refc,
 			       (erts_aint32_t) erts_no_schedulers);
@@ -1122,7 +1122,7 @@ erts_psd_set_init(Process *p, ErtsProcLocks plocks, int ix, void *data)
     ErtsPSD *psd = (ErtsPSD *)erts_alloc(ERTS_ALC_T_PSD, sizeof(ErtsPSD));
     int i;
     for (i = 0; i < ERTS_PSD_SIZE; i++)
-	psd->data[i] = NULL;
+        psd->data[i] = nullptr;
 
     ERTS_SMP_LC_ASSERT(plocks);
     ERTS_SMP_LC_ASSERT(plocks == erts_proc_lc_my_proc_locks(p));
@@ -1616,7 +1616,7 @@ handle_async_ready_clean(ErtsAuxWorkData *awdp,
     awdp->async_ready.need_thr_prgr = 0;
     thr_prgr_p = (void *) &awdp->async_ready.thr_prgr;
 #else
-    thr_prgr_p = NULL;
+    thr_prgr_p = nullptr;
 #endif
 
     switch (erts_async_ready_clean(awdp->async_ready.queue, thr_prgr_p)) {
@@ -1720,8 +1720,8 @@ handle_delayed_dealloc(ErtsAuxWorkData *awdp, erts_aint32_t aux_work, int waitin
     }
     else if (awdp->dd.completed_callback) {
         awdp->dd.completed_callback((void*)awdp->dd.completed_arg);
-	awdp->dd.completed_callback = NULL;
-	awdp->dd.completed_arg = NULL;
+        awdp->dd.completed_callback = nullptr;
+        awdp->dd.completed_arg = nullptr;
     }
     return aux_work & ~ERTS_SSI_AUX_WORK_DD;
 }
@@ -1766,8 +1766,8 @@ handle_delayed_dealloc_thr_prgr(ErtsAuxWorkData *awdp, erts_aint32_t aux_work, i
 	unset_aux_work_flags(ssi, ERTS_SSI_AUX_WORK_DD_THR_PRGR);
 	if (awdp->dd.completed_callback) {
             awdp->dd.completed_callback((void*)awdp->dd.completed_arg);
-	    awdp->dd.completed_callback = NULL;
-	    awdp->dd.completed_arg = NULL;
+            awdp->dd.completed_callback = nullptr;
+            awdp->dd.completed_arg = nullptr;
 	}
     }
 
@@ -1794,12 +1794,12 @@ handle_thr_prgr_later_op(ErtsAuxWorkData *awdp, erts_aint32_t aux_work, int wait
 	    return aux_work & ~ERTS_SSI_AUX_WORK_THR_PRGR_LATER_OP;
 	awdp->later_op.first = lop->next;
 	if (!awdp->later_op.first) {
-	    awdp->later_op.last = NULL;
+            awdp->later_op.last = nullptr;
 	}
 	lop->func(lop->data);
 	if (!awdp->later_op.first) {
 	    awdp->later_op.size = thr_prgr_later_cleanup_op_threshold;
-	    awdp->later_op.last = NULL;
+            awdp->later_op.last = nullptr;
 	    unset_aux_work_flags(awdp->ssi,
 				 ERTS_SSI_AUX_WORK_THR_PRGR_LATER_OP);
 	    return aux_work & ~ERTS_SSI_AUX_WORK_THR_PRGR_LATER_OP;
@@ -1821,7 +1821,7 @@ enqueue_later_op(ErtsSchedulerData *esdp,
     lop->func = later_func;
     lop->data = later_data;
     lop->later = later;
-    lop->next = NULL;
+    lop->next = nullptr;
     if (!esdp->aux_work_data.later_op.last)
 	esdp->aux_work_data.later_op.first = lop;
     else
@@ -1920,7 +1920,7 @@ erts_debug_wait_deallocations(Process *c_p)
     if (0 == erts_atomic32_cmpxchg_mb(&completed_dealloc_count,
 				      count,
 				      0)) {
-	erts_suspend(c_p, ERTS_PROC_LOCK_MAIN, NULL);
+        erts_suspend(c_p, ERTS_PROC_LOCK_MAIN, nullptr);
 	erts_smp_proc_inc_refc(c_p);
 	/* scheduler threads */
 	erts_schedule_multi_misc_aux_work(0,
@@ -2192,8 +2192,8 @@ aux_work_timeout_late_init(void)
 	aux_work_tmo->timer.data.active = 0;
 	erts_set_timer(&aux_work_tmo->timer.data,
 		       aux_work_timeout,
-		       NULL,
-		       NULL,
+                       nullptr,
+                       nullptr,
 		       1000);
     }
 }
@@ -2225,8 +2225,8 @@ aux_work_timeout(void *unused)
 	aux_work_tmo->timer.data.active = 0;
 	erts_set_timer(&aux_work_tmo->timer.data,
 		       aux_work_timeout,
-		       NULL,
-		       NULL,
+                       nullptr,
+                       nullptr,
 		       1000);
     }
 }
@@ -2244,8 +2244,8 @@ setup_aux_work_timer(void)
 	aux_work_tmo->timer.data.active = 0;
 	erts_set_timer(&aux_work_tmo->timer.data,
 		       aux_work_timeout,
-		       NULL,
-		       NULL,
+                       nullptr,
+                       nullptr,
 		       1000);
     }
 }
@@ -2667,8 +2667,8 @@ aux_thread(void *unused)
     callbacks.wait = thr_prgr_wait;
     callbacks.finalize_wait = thr_prgr_fin_wait;
 
-    erts_thr_progress_register_managed_thread(NULL, &callbacks, 1);
-    init_aux_work_data(awdp, NULL, NULL);
+    erts_thr_progress_register_managed_thread(nullptr, &callbacks, 1);
+    init_aux_work_data(awdp, nullptr, nullptr);
     awdp->ssi = ssi;
 
     sched_prep_spin_wait(ssi);
@@ -2679,16 +2679,16 @@ aux_thread(void *unused)
 	aux_work = erts_atomic32_read_acqb(&ssi->aux_work);
 	if (aux_work) {
 	    if (!thr_prgr_active)
-		erts_thr_progress_active(NULL, thr_prgr_active = 1);
+                erts_thr_progress_active(nullptr, thr_prgr_active = 1);
 	    aux_work = handle_aux_work(awdp, aux_work, 1);
-	    if (aux_work && erts_thr_progress_update(NULL))
-		erts_thr_progress_leader_update(NULL);
+            if (aux_work && erts_thr_progress_update(nullptr))
+                erts_thr_progress_leader_update(nullptr);
 	}
 
 	if (!aux_work) {
 	    if (thr_prgr_active)
-		erts_thr_progress_active(NULL, thr_prgr_active = 0);
-	    erts_thr_progress_prepare_wait(NULL);
+                erts_thr_progress_active(nullptr, thr_prgr_active = 0);
+            erts_thr_progress_prepare_wait(nullptr);
 
 	    ERTS_SCHED_FAIR_YIELD();
 
@@ -2706,12 +2706,12 @@ aux_thread(void *unused)
 		    } while (res == EINTR);
 		}
 	    }
-	    erts_thr_progress_finalize_wait(NULL);
+            erts_thr_progress_finalize_wait(nullptr);
 	}
 
 	flgs = sched_prep_spin_wait(ssi);
     }
-    return NULL;
+    return nullptr;
 }
 
 #endif /* ERTS_SMP */
@@ -2745,7 +2745,7 @@ scheduler_wait(int *fcalls, ErtsSchedulerData *esdp, ErtsRunQueue *rq)
 
 #ifdef ERTS_DIRTY_SCHEDULERS
     if (ERTS_RUNQ_IX_IS_DIRTY(rq->ix)) {
-	ssi->prev = NULL;
+        ssi->prev = nullptr;
 	ssi->next = rq->sleepers.list;
 	if (rq->sleepers.list)
 	    rq->sleepers.list->prev = ssi;
@@ -3103,7 +3103,7 @@ wake_dirty_schedulers(ErtsRunQueue *rq, int one)
 	flgs = ssi_flags_set_wake(ssi);
 	erts_sched_finish_poke(ssi, flgs);
     } else {
-	sl->list = NULL;
+        sl->list = nullptr;
 	erts_smp_spin_unlock(&sl->lock);
 
 	ERTS_THR_MEMORY_BARRIER;
@@ -3302,7 +3302,7 @@ enqueue_process(ErtsRunQueue *runq, int prio, Process *p)
 	rpq = &runq->procs.prio[prio];
     }
 
-    p->next = NULL;
+    p->next = nullptr;
     if (rpq->last)
 	rpq->last->next = p;
     else
@@ -3329,7 +3329,7 @@ unqueue_process(ErtsRunQueue *runq,
 	rpq->last = prev_proc;
 
     if (!rpq->first)
-	rpq->last = NULL;
+        rpq->last = nullptr;
 
     erts_smp_dec_runq_len(runq, rqi, prio);
 }
@@ -3353,7 +3353,7 @@ dequeue_process(ErtsRunQueue *runq, int prio_q, erts_aint32_t *statep)
     rpq = &runq->procs.prio[prio_q];
     p = rpq->first;
     if (!p)
-	return NULL;
+        return nullptr;
 
     ERTS_SMP_DATA_DEPENDENCY_READ_MEMORY_BARRIER;
 
@@ -3366,7 +3366,7 @@ dequeue_process(ErtsRunQueue *runq, int prio_q, erts_aint32_t *statep)
     rqi = &runq->procs.prio_info[prio];
 
     if (p)
-	unqueue_process(runq, rpq, rqi, prio, NULL, p);
+        unqueue_process(runq, rpq, rqi, prio, nullptr, p);
 
     return p;
 }
@@ -3381,7 +3381,7 @@ check_requeue_process(ErtsRunQueue *rq, int prio_q)
 	rpq->first = p->next;
 	rpq->last->next = p;
 	rpq->last = p;
-	p->next = NULL;
+        p->next = nullptr;
 	return 1;
     }
     return 0;
@@ -3402,16 +3402,16 @@ check_immigration_need(ErtsRunQueue *c_rq, ErtsMigrationPath *mp, int prio)
 
     f_rq = mp->prio[prio].runq;
     if (!f_rq)
-	return NULL;
+        return nullptr;
 
 #if ERTS_HAVE_SCHED_UTIL_BALANCING_SUPPORT
     if (mp->sched_util)
-	return NULL;
+        return nullptr;
 #endif
 
     f_rq_flags = ERTS_RUNQ_FLGS_GET(f_rq);
     if (f_rq_flags & ERTS_RUNQ_FLG_PROTECTED)
-	return NULL;
+        return nullptr;
 
     if (ERTS_CHK_RUNQ_FLG_EVACUATE(f_flags, prio))
 	return f_rq;
@@ -3433,7 +3433,7 @@ check_immigration_need(ErtsRunQueue *c_rq, ErtsMigrationPath *mp, int prio)
 	if (len > mp->prio[prio].limit.other)
 	    return f_rq;
     }
-    return NULL;
+    return nullptr;
 }
 
 static void
@@ -3507,7 +3507,7 @@ immigrate(ErtsRunQueue *c_rq, ErtsMigrationPath *mp)
 		ErtsRunPrioQueue *rpq = &rq->procs.prio[prio == PRIORITY_LOW
 							? PRIORITY_NORMAL
 							: prio];
-		Process *prev_proc = NULL;
+                Process *prev_proc = nullptr;
 		Process *proc = rpq->first;
 		int rq_locked = 1;
 
@@ -3613,7 +3613,7 @@ evacuate_run_queue(ErtsRunQueue *rq,
     int prio_q;
     ErtsRunQueue *to_rq;
     ErtsMigrationPaths *mps;
-    ErtsMigrationPath *mp = NULL;
+    ErtsMigrationPath *mp = nullptr;
 
     ERTS_SMP_LC_ASSERT(erts_smp_lc_runq_is_locked(rq));
 
@@ -3641,8 +3641,8 @@ evacuate_run_queue(ErtsRunQueue *rq,
 
 	start = rq->misc.start;
 	end = rq->misc.end;
-	rq->misc.start = NULL;
-	rq->misc.end = NULL;
+        rq->misc.start = nullptr;
+        rq->misc.end = nullptr;
 	erts_smp_runq_unlock(rq);
 
 	erts_smp_runq_lock(to_rq);
@@ -3704,7 +3704,7 @@ evacuate_run_queue(ErtsRunQueue *rq,
 #ifdef ERTS_DIRTY_SCHEDULERS
 	int requeue;
 #endif
-	to_rq = NULL;
+        to_rq = nullptr;
 
 #ifdef ERTS_DIRTY_SCHEDULERS
 	if (!ERTS_RUNQ_IX_IS_DIRTY(rq->ix))
@@ -3723,7 +3723,7 @@ evacuate_run_queue(ErtsRunQueue *rq,
 #endif
 	    if (ERTS_PSFLG_BOUND & state) {
 		/* Bound processes get stuck here... */
-		proc->next = NULL;
+                proc->next = nullptr;
 		if (sbpp->last)
 		    sbpp->last->next = proc;
 		else
@@ -3836,7 +3836,7 @@ try_steal_task_from_victim(ErtsRunQueue *rq, int *rq_lockedp, ErtsRunQueue *vrq,
 	    goto no_procs;
 	}
 
-	prev_proc = NULL;
+        prev_proc = nullptr;
 	proc = rpq->first;
 
 	while (proc) {
@@ -4071,7 +4071,7 @@ init_migration_paths(void)
     p = (char*)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_LL_MPATHS,
 					   (mpaths.size
 					    * ERTS_PRE_ALLOCED_MPATHS));
-    mpaths.freelist = NULL;
+    mpaths.freelist = nullptr;
     for (i = 0; i < ERTS_PRE_ALLOCED_MPATHS-1; i++) {
 	mps = (ErtsMigrationPaths *) p;
 	mps->next = mpaths.freelist;
@@ -4080,15 +4080,15 @@ init_migration_paths(void)
     }
 
     mps = (ErtsMigrationPaths *) p;
-    mps->block = NULL;
+    mps->block = nullptr;
     for (qix = 0; qix < erts_no_run_queues; qix++) {
 	int pix;
 	mps->mpath[qix].flags = 0;
-	mps->mpath[qix].misc_evac_runq = NULL;
+        mps->mpath[qix].misc_evac_runq = nullptr;
 	for (pix = 0; pix < ERTS_NO_PRIO_LEVELS; pix++) {
 	    mps->mpath[qix].prio[pix].limit.this_ = -1;
 	    mps->mpath[qix].prio[pix].limit.other = -1;
-	    mps->mpath[qix].prio[pix].runq = NULL;
+            mps->mpath[qix].prio[pix].runq = nullptr;
 	    mps->mpath[qix].prio[pix].flags = 0;
 	}
     }
@@ -4105,7 +4105,7 @@ alloc_mpaths(void)
     res = mpaths.freelist;
     if (res) {
 	mpaths.freelist = res->next;
-	res->block = NULL;
+        res->block = nullptr;
 	return res;
     }
     res = (ErtsMigrationPaths*)erts_alloc(ERTS_ALC_T_SL_MPATHS,
@@ -4142,10 +4142,10 @@ retire_mpaths(ErtsMigrationPaths *mps)
     }
 
     if (!mpaths.retired.first)
-	mpaths.retired.last = NULL;
+        mpaths.retired.last = nullptr;
 
-    mps->thr_prgr = erts_thr_progress_later(NULL);
-    mps->next = NULL;
+    mps->thr_prgr = erts_thr_progress_later(nullptr);
+    mps->next = nullptr;
 
     if (mpaths.retired.last)
 	mpaths.retired.last->next = mps;
@@ -4174,7 +4174,7 @@ check_balance(ErtsRunQueue *c_rq)
 	return;
     }
 
-    get_no_runqs(NULL, &blnc_no_rqs);
+    get_no_runqs(nullptr, &blnc_no_rqs);
     if (blnc_no_rqs == 1) {
 	c_rq->check_balance_reds = INT_MAX;
 	erts_smp_atomic32_set_nob(&balance_info.checking_balance, 0);
@@ -4634,7 +4634,7 @@ erts_fprintf(stderr, "--------------------------------\n");
 	mp->sched_util = sched_util_balancing;
 #endif
 	mp->flags = flags;
-	mp->misc_evac_runq = NULL;
+        mp->misc_evac_runq = nullptr;
 
 	for (pix = 0; pix < ERTS_NO_PRIO_LEVELS; pix++) {
 	    if (!(ERTS_CHK_RUNQ_FLG_EMIGRATE(flags, pix)
@@ -4643,7 +4643,7 @@ erts_fprintf(stderr, "--------------------------------\n");
 		ASSERT(run_queue_info[qix].prio[pix].emigrate_to < 0);
 		mp->prio[pix].limit.this_ = -1;
 		mp->prio[pix].limit.other = -1;
-		mp->prio[pix].runq = NULL;
+                mp->prio[pix].runq = nullptr;
 		mp->prio[pix].flags = 0;
 	    }
 	    else if (ERTS_CHK_RUNQ_FLG_EMIGRATE(flags, pix)) {
@@ -4759,12 +4759,12 @@ change_no_used_runqs(int used)
 	ErtsMigrationPath *nmp = &new_mpaths->mpath[qix];
 
 	nmp->flags = omp->flags & ~ERTS_RUNQ_FLGS_MIGRATION_QMASKS;
-	nmp->misc_evac_runq = NULL;
+        nmp->misc_evac_runq = nullptr;
 
 	for (pix = 0; pix < ERTS_NO_PRIO_LEVELS; pix++) {
 	    nmp->prio[pix].limit.this_ = -1;
 	    nmp->prio[pix].limit.other = -1;
-	    nmp->prio[pix].runq = NULL;
+            nmp->prio[pix].runq = nullptr;
 	    nmp->prio[pix].flags = 0;
 	}
     }
@@ -5011,7 +5011,7 @@ no_runqs_to_supervise(void)
     erts_aint32_t nerq = erts_smp_atomic32_read_acqb(&no_empty_run_queues);
     if (nerq <= 0)
 	return 0;
-    get_no_runqs(NULL, &used);
+    get_no_runqs(nullptr, &used);
     if (nerq >= used)
 	return 0;
     return used;
@@ -5048,7 +5048,7 @@ runq_supervisor(void *unused)
 	    }
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 #endif
@@ -5196,30 +5196,30 @@ init_aux_work_data(ErtsAuxWorkData *awdp, ErtsSchedulerData *esdp, char *dawwp)
     else
 	awdp->sched_id = (int) esdp->no;
     awdp->esdp = esdp;
-    awdp->ssi = esdp ? esdp->ssi : NULL;
+    awdp->ssi = esdp ? esdp->ssi : nullptr;
 #ifdef ERTS_SMP
     awdp->latest_wakeup = ERTS_THR_PRGR_VAL_FIRST;
     awdp->misc.thr_prgr = ERTS_THR_PRGR_VAL_WAITING;
     awdp->dd.thr_prgr = ERTS_THR_PRGR_VAL_WAITING;
-    awdp->dd.completed_callback = NULL;
-    awdp->dd.completed_arg = NULL;
+    awdp->dd.completed_callback = nullptr;
+    awdp->dd.completed_arg = nullptr;
     awdp->later_op.thr_prgr = ERTS_THR_PRGR_VAL_FIRST;
     awdp->later_op.size = 0;
-    awdp->later_op.first = NULL;
-    awdp->later_op.last = NULL;
+    awdp->later_op.first = nullptr;
+    awdp->later_op.last = nullptr;
 #endif
 #ifdef ERTS_USE_ASYNC_READY_Q
 #ifdef ERTS_SMP
     awdp->async_ready.need_thr_prgr = 0;
     awdp->async_ready.thr_prgr = ERTS_THR_PRGR_VAL_WAITING;
 #endif
-    awdp->async_ready.queue = NULL;
+    awdp->async_ready.queue = nullptr;
 #endif
 #ifdef ERTS_SMP
     awdp->delayed_wakeup.next = ERTS_DELAYED_WAKEUP_INFINITY;
     if (!dawwp) {
-	awdp->delayed_wakeup.job = NULL;
-	awdp->delayed_wakeup.sched2jix = NULL;
+        awdp->delayed_wakeup.job = nullptr;
+        awdp->delayed_wakeup.sched2jix = nullptr;
 	awdp->delayed_wakeup.jix = -1;
     }
     else {
@@ -5242,8 +5242,8 @@ init_scheduler_data(ErtsSchedulerData* esdp, int num,
 {
 #ifdef ERTS_SMP
     erts_bits_init_state(&esdp->erl_bits_state);
-    esdp->match_pseudo_process = NULL;
-    esdp->free_process = NULL;
+    esdp->match_pseudo_process = nullptr;
+    esdp->free_process = nullptr;
 #endif
     esdp->x_reg_array = (Eterm*)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_BEAM_REGISTER,
                                            ERTS_X_REGS_ALLOCATED * sizeof(Eterm));
@@ -5265,8 +5265,8 @@ init_scheduler_data(ErtsSchedulerData* esdp, int num,
     esdp->no = (Uint) num;
 #endif
     esdp->ssi = ssi;
-    esdp->current_process = NULL;
-    esdp->current_port = NULL;
+    esdp->current_process = nullptr;
+    esdp->current_port = nullptr;
 
     esdp->virtual_reds = 0;
     esdp->cpu_id = -1;
@@ -5361,7 +5361,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
 #ifdef ERTS_SMP
 	if (ERTS_RUNQ_IX_IS_DIRTY(ix))
 	    erts_smp_spinlock_init(&rq->sleepers.lock, "dirty_run_queue_sleep_list");
-	rq->sleepers.list = NULL;
+        rq->sleepers.list = nullptr;
 #endif
 #endif
 
@@ -5381,7 +5381,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
 	rq->wakeup_other_reds = 0;
 	rq->halt_in_progress = 0;
 
-	rq->procs.pending_exiters = NULL;
+        rq->procs.pending_exiters = nullptr;
 	rq->procs.context_switches = 0;
 	rq->procs.reductions = 0;
 
@@ -5390,19 +5390,19 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
 	    rq->procs.prio_info[pix].max_len = 0;
 	    rq->procs.prio_info[pix].reds = 0;
 	    if (pix < ERTS_NO_PROC_PRIO_LEVELS - 1) {
-		rq->procs.prio[pix].first = NULL;
-		rq->procs.prio[pix].last = NULL;
+                rq->procs.prio[pix].first = nullptr;
+                rq->procs.prio[pix].last = nullptr;
 	    }
 	}
 
-	rq->misc.start = NULL;
-	rq->misc.end = NULL;
+        rq->misc.start = nullptr;
+        rq->misc.end = nullptr;
 
 	erts_smp_atomic32_init_nob(&rq->ports.info.len, 0);
 	rq->ports.info.max_len = 0;
 	rq->ports.info.reds = 0;
-	rq->ports.start = NULL;
-	rq->ports.end = NULL;
+        rq->ports.start = nullptr;
+        rq->ports.end = nullptr;
 
 #if ERTS_HAVE_SCHED_UTIL_BALANCING_SUPPORT
 	init_runq_sched_util(&rq->sched_util, erts_sched_balance_util);
@@ -5444,11 +5444,11 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
 	ErtsSchedulerSleepInfo *ssi = &aligned_sched_sleep_info[ix].ssi;
 #ifdef ERTS_SMP
 #if 0 /* no need to initialize these... */
-	ssi->next = NULL;
-	ssi->prev = NULL;
+        ssi->next = nullptr;
+        ssi->prev = nullptr;
 #endif
 	erts_smp_atomic32_init_nob(&ssi->flags, 0);
-	ssi->event = NULL; /* initialized in sched_thread_func */
+        ssi->event = nullptr; /* initialized in sched_thread_func */
 #endif
 	erts_atomic32_init_nob(&ssi->aux_work, 0);
     }
@@ -5464,7 +5464,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
     for (ix = 0; ix < no_dirty_cpu_schedulers; ix++) {
 	ErtsSchedulerSleepInfo *ssi = &aligned_dirty_cpu_sched_sleep_info[ix].ssi;
 	erts_smp_atomic32_init_nob(&ssi->flags, 0);
-	ssi->event = NULL; /* initialized in sched_dirty_cpu_thread_func */
+        ssi->event = nullptr; /* initialized in sched_dirty_cpu_thread_func */
 	erts_atomic32_init_nob(&ssi->aux_work, 0);
     }
     aligned_dirty_io_sched_sleep_info =
@@ -5474,7 +5474,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
     for (ix = 0; ix < no_dirty_io_schedulers; ix++) {
 	ErtsSchedulerSleepInfo *ssi = &aligned_dirty_io_sched_sleep_info[ix].ssi;
 	erts_smp_atomic32_init_nob(&ssi->flags, 0);
-	ssi->event = NULL; /* initialized in sched_dirty_io_thread_func */
+        ssi->event = nullptr; /* initialized in sched_dirty_io_thread_func */
 	erts_atomic32_init_nob(&ssi->aux_work, 0);
     }
 #endif
@@ -5489,7 +5489,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
 						  daww_sz*n);
 #else
     daww_sz = 0;
-    daww_ptr = NULL;
+    daww_ptr = nullptr;
 #endif
 
     erts_aligned_scheduler_data = 
@@ -5511,7 +5511,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
     for (ix = 0; ix < no_dirty_cpu_schedulers; ix++) {
 	ErtsSchedulerData *esdp = ERTS_DIRTY_CPU_SCHEDULER_IX(ix);
 	init_scheduler_data(esdp, ix+1, ERTS_DIRTY_CPU_SCHED_SLEEP_INFO_IX(ix),
-			    ERTS_DIRTY_CPU_RUNQ, NULL, 0);
+                            ERTS_DIRTY_CPU_RUNQ, nullptr, 0);
     }
     erts_aligned_dirty_io_scheduler_data =
 	erts_alloc_permanent_cache_aligned(
@@ -5520,7 +5520,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
     for (ix = 0; ix < no_dirty_io_schedulers; ix++) {
 	ErtsSchedulerData *esdp = ERTS_DIRTY_IO_SCHEDULER_IX(ix);
 	init_scheduler_data(esdp, ix+1, ERTS_DIRTY_IO_SCHED_SLEEP_INFO_IX(ix),
-			    ERTS_DIRTY_IO_RUNQ, NULL, 0);
+                            ERTS_DIRTY_IO_RUNQ, nullptr, 0);
     }
 #endif
 #endif
@@ -5557,7 +5557,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
     schdlr_sspnd.dirty_io_curr_online = no_dirty_io_schedulers;
     erts_smp_atomic32_init_nob(&schdlr_sspnd.dirty_io_active, no_dirty_io_schedulers);
 #endif
-    schdlr_sspnd.msb.procs = NULL;
+    schdlr_sspnd.msb.procs = nullptr;
     init_no_runqs(no_schedulers_online, no_schedulers_online);
     balance_info.last_active_runqs = no_schedulers;
     erts_smp_mtx_init(&balance_info.update_mtx, "migration_info_update");
@@ -5630,7 +5630,7 @@ erts_init_scheduling(int no_schedulers, int no_schedulers_online
     erts_scheduler_data->verify_unused_temp_alloc
 	= erts_alloc_get_verify_unused_temp_alloc(
 	    &erts_scheduler_data->verify_unused_temp_alloc_data);
-    ERTS_VERIFY_UNUSED_TEMP_ALLOC(NULL);
+    ERTS_VERIFY_UNUSED_TEMP_ALLOC(nullptr);
 #endif
 #endif
 
@@ -6074,7 +6074,7 @@ schedule_process(Process *p, erts_aint32_t in_state, ErtsProcLocks locks)
 					     &enq_prio,
 					     locks);
     if (enqueue != ERTS_ENQUEUE_NOT)
-	add2runq(enqueue > 0 ? p : make_proxy_proc(NULL, p, enq_prio),
+        add2runq(enqueue > 0 ? p : make_proxy_proc(nullptr, p, enq_prio),
 		 state,
 		 enq_prio);
 }
@@ -6142,7 +6142,7 @@ schedule_process_sys_task(Process *p, erts_aint32_t state, Process *proxy)
 	    sched_p = p;
 	else {
 	    sched_p = make_proxy_proc(proxy, p, enq_prio);
-	    proxy = NULL;
+            proxy = nullptr;
 	}
 	add2runq(sched_p, n, enq_prio);
     }
@@ -6242,7 +6242,7 @@ resume_process(Process *p, ErtsProcLocks locks)
 					 &enq_prio,
 					 locks);
     if (enqueue)
-	add2runq(enqueue > 0 ? p : make_proxy_proc(NULL, p, enq_prio),
+        add2runq(enqueue > 0 ? p : make_proxy_proc(nullptr, p, enq_prio),
 		 state,
 		 enq_prio);
 }
@@ -6382,7 +6382,7 @@ suspend_scheduler(ErtsSchedulerData *esdp)
     int wake = 0;
     erts_aint32_t aux_work;
     int thr_prgr_active = 1;
-    ErtsStuckBoundProcesses sbp = {NULL, NULL};
+    ErtsStuckBoundProcesses sbp = {nullptr, nullptr};
     int* ss_onlinep;
     int* ss_curr_onlinep;
     int* ss_wait_curr_onlinep;
@@ -6669,7 +6669,7 @@ suspend_scheduler(ErtsSchedulerData *esdp)
     int wake = 0;
     erts_aint32_t aux_work;
     int thr_prgr_active = 1;
-    ErtsStuckBoundProcesses sbp = {NULL, NULL};
+    ErtsStuckBoundProcesses sbp = {nullptr, nullptr};
 
     /*
      * Schedulers may be suspended in two different ways:
@@ -7567,7 +7567,7 @@ erts_is_multi_scheduling_blocked(void)
 {
     int res;
     erts_smp_mtx_lock(&schdlr_sspnd.mtx);
-    res = schdlr_sspnd.msb.procs != NULL;
+    res = schdlr_sspnd.msb.procs != nullptr;
     erts_smp_mtx_unlock(&schdlr_sspnd.mtx);
     return res;
 }
@@ -7689,7 +7689,7 @@ sched_thread_func(void *vesdp)
     esdp->verify_unused_temp_alloc
 	= erts_alloc_get_verify_unused_temp_alloc(
 	    &esdp->verify_unused_temp_alloc_data);
-    ERTS_VERIFY_UNUSED_TEMP_ALLOC(NULL);
+    ERTS_VERIFY_UNUSED_TEMP_ALLOC(nullptr);
 #endif
 
     process_main();
@@ -7697,7 +7697,7 @@ sched_thread_func(void *vesdp)
     erl_exit(ERTS_ABORT_EXIT,
 	     "Scheduler thread number %beu terminated\n",
 	     no);
-    return NULL;
+    return nullptr;
 }
 
 #ifdef ERTS_DIRTY_SCHEDULERS
@@ -7713,9 +7713,9 @@ sched_dirty_cpu_thread_func(void *vesdp)
     ERTS_DIRTY_CPU_SCHED_SLEEP_INFO_IX(no-1)->event = erts_tse_fetch();
     callbacks.arg = (void *) esdp->ssi;
     callbacks.wakeup = thr_prgr_wakeup;
-    callbacks.prepare_wait = NULL;
-    callbacks.wait = NULL;
-    callbacks.finalize_wait = NULL;
+    callbacks.prepare_wait = nullptr;
+    callbacks.wait = nullptr;
+    callbacks.finalize_wait = nullptr;
 
     erts_thr_progress_register_unmanaged_thread(&callbacks);
 #ifdef ERTS_ENABLE_LOCK_CHECK
@@ -7727,7 +7727,7 @@ sched_dirty_cpu_thread_func(void *vesdp)
 #endif
     erts_tsd_set(sched_data_key, vesdp);
 #if ERTS_USE_ASYNC_READY_Q
-    esdp->aux_work_data.async_ready.queue = NULL;
+    esdp->aux_work_data.async_ready.queue = nullptr;
 #endif
 
     erts_proc_lock_prepare_proc_lock_waiter();
@@ -7760,7 +7760,7 @@ sched_dirty_cpu_thread_func(void *vesdp)
     erl_exit(ERTS_ABORT_EXIT,
 	     "Dirty CPU scheduler thread number %beu terminated\n",
 	     no);
-    return NULL;
+    return nullptr;
 }
 
 static void*
@@ -7774,9 +7774,9 @@ sched_dirty_io_thread_func(void *vesdp)
     ERTS_DIRTY_IO_SCHED_SLEEP_INFO_IX(no-1)->event = erts_tse_fetch();
     callbacks.arg = (void *) esdp->ssi;
     callbacks.wakeup = thr_prgr_wakeup;
-    callbacks.prepare_wait = NULL;
-    callbacks.wait = NULL;
-    callbacks.finalize_wait = NULL;
+    callbacks.prepare_wait = nullptr;
+    callbacks.wait = nullptr;
+    callbacks.finalize_wait = nullptr;
 
     erts_thr_progress_register_unmanaged_thread(&callbacks);
 #ifdef ERTS_ENABLE_LOCK_CHECK
@@ -7788,7 +7788,7 @@ sched_dirty_io_thread_func(void *vesdp)
 #endif
     erts_tsd_set(sched_data_key, vesdp);
 #if ERTS_USE_ASYNC_READY_Q
-    esdp->aux_work_data.async_ready.queue = NULL;
+    esdp->aux_work_data.async_ready.queue = nullptr;
 #endif
 
     erts_proc_lock_prepare_proc_lock_waiter();
@@ -7821,7 +7821,7 @@ sched_dirty_io_thread_func(void *vesdp)
     erl_exit(ERTS_ABORT_EXIT,
 	     "Dirty I/O scheduler thread number %beu terminated\n",
 	     no);
-    return NULL;
+    return nullptr;
 }
 #endif
 #endif
@@ -7857,7 +7857,7 @@ erts_start_schedulers(void)
 	    erl_exit(1, "Failed to create run-queue supervision event\n");
 	if (0 != ethr_thr_create(&runq_supervisor_tid,
 				 runq_supervisor,
-				 NULL,
+                                 nullptr,
 				 &opts))
 	    erl_exit(1, "Failed to create run-queue supervision thread\n");
 
@@ -7932,7 +7932,7 @@ erts_start_schedulers(void)
     opts.coreNo = 0;
 #endif /* __OSE__ */
 
-    res = ethr_thr_create(&aux_tid, aux_thread, NULL, &opts);
+    res = ethr_thr_create(&aux_tid, aux_thread, nullptr, &opts);
     if (res != 0)
 	erl_exit(1, "Failed to create aux thread\n");
 
@@ -7971,7 +7971,7 @@ add_pend_suspend(Process *suspendee,
 {
     ErtsPendingSuspend *psp = (ErtsPendingSuspend *)erts_alloc(ERTS_ALC_T_PEND_SUSPEND,
 					 sizeof(ErtsPendingSuspend));
-    psp->next = NULL;
+    psp->next = nullptr;
 #ifdef DEBUG
 #if defined(ARCH_64) && !HALFWORD_HEAP
     psp->end = (ErtsPendingSuspend *) 0xdeaddeaddeaddead;
@@ -8003,7 +8003,7 @@ handle_pending_suspend(Process *p, ErtsProcLocks p_locks)
      */
     while (p->pending_suspenders) {
 	psp = p->pending_suspenders;
-	p->pending_suspenders = NULL;
+        p->pending_suspenders = nullptr;
 	while (psp) {
 	    ErtsPendingSuspend *free_psp;
 	    (*psp->handle_func)(p, p_locks, is_alive, psp->pid);
@@ -8051,7 +8051,7 @@ handle_pend_sync_suspend(Process *suspendee,
     if (suspender) {
 	ASSERT(is_nil(suspender->suspendee));
 	if (suspendee_alive) {
-	    erts_suspend(suspendee, suspendee_locks, NULL);
+            erts_suspend(suspendee, suspendee_locks, nullptr);
 	    suspender->suspendee = suspendee->common.id;
 	}
 	/* suspender is suspended waiting for suspendee to suspend;
@@ -8305,7 +8305,7 @@ erts_pid2proc_suspend(Process *c_p, ErtsProcLocks c_p_locks,
 {
     Process *rp = erts_pid2proc(c_p, c_p_locks, pid, pid_locks);
     if (rp)
-	erts_suspend(rp, pid_locks, NULL);
+        erts_suspend(rp, pid_locks, nullptr);
     return rp;
 }
 
@@ -8319,7 +8319,7 @@ BIF_RETTYPE
 suspend_process_2(BIF_ALIST_2)
 {
     Eterm res;
-    Process* suspendee = NULL;
+    Process* suspendee = nullptr;
     ErtsSuspendMonitor *smon;
     ErtsProcLocks xlocks = (ErtsProcLocks) 0;
 
@@ -8758,7 +8758,7 @@ erts_resume_processes(ErtsProcList *list)
 	Process *proc;
 	ErtsProcList *fplp;
 	ASSERT(is_internal_pid(plp->pid));
-	proc = erts_pid2proc(NULL, 0, plp->pid, ERTS_PROC_LOCK_STATUS);
+        proc = erts_pid2proc(nullptr, 0, plp->pid, ERTS_PROC_LOCK_STATUS);
 	if (proc) {
 	    if (erts_proclist_same(plp, proc)) {
 		resume_process(proc, ERTS_PROC_LOCK_STATUS);
@@ -8895,7 +8895,7 @@ erts_set_process_priority(Process *p, Eterm value)
 
 Process *schedule(Process *p, int calls)
 {
-    Process *proxy_p = NULL;
+    Process *proxy_p = nullptr;
     ErtsRunQueue *rq;
     erts_aint_t dt;
     ErtsSchedulerData *esdp;
@@ -8908,7 +8908,7 @@ Process *schedule(Process *p, int calls)
     erts_aint32_t state = 0; /* Supress warning... */
 
 #ifdef USE_VM_PROBES
-    if (p != NULL && DTRACE_ENABLED(process_unscheduled)) {
+    if (p != nullptr && DTRACE_ENABLED(process_unscheduled)) {
         DTRACE_CHARBUF(process_buf, DTRACE_TERM_BUF_SIZE);
 
         dtrace_proc_str(p, process_buf);
@@ -8931,7 +8931,7 @@ Process *schedule(Process *p, int calls)
     /*
      * Clean up after the process being scheduled out.
      */
-    if (!p) {	/* NULL in the very first schedule() call */
+    if (!p) {	/* nullptr in the very first schedule() call */
 	esdp = erts_get_scheduler_data();
 	rq = erts_get_runq_current(esdp);
 	ASSERT(esdp);
@@ -8995,16 +8995,16 @@ Process *schedule(Process *p, int calls)
 	esdp->reductions += reds;
 
 	schedule_out_process(rq, state, p, proxy_p); /* Returns with rq locked! */
-	proxy_p = NULL;
+        proxy_p = nullptr;
 
 	ERTS_PROC_REDUCTIONS_EXECUTED(rq,
 				      (int) ERTS_PSFLGS_GET_USR_PRIO(state),
 				      reds,
 				      actual_reds);
 
-	esdp->current_process = NULL;
+        esdp->current_process = nullptr;
 #ifdef ERTS_SMP
-	p->scheduler_data = NULL;
+        p->scheduler_data = nullptr;
 #endif
 
 	erts_smp_proc_unlock(p, ERTS_PROC_LOCK_MAIN|ERTS_PROC_LOCK_STATUS);
@@ -9012,7 +9012,7 @@ Process *schedule(Process *p, int calls)
 	if (state & ERTS_PSFLG_FREE) {
 #ifdef ERTS_SMP
 	    ASSERT(esdp->free_process == p);
-	    esdp->free_process = NULL;
+            esdp->free_process = nullptr;
 #else
 	    state = erts_smp_atomic32_read_nob(&p->state);
 	    if (!(state & ERTS_PSFLG_IN_RUNQ))
@@ -9045,8 +9045,8 @@ Process *schedule(Process *p, int calls)
 	ErtsMigrationPaths *mps;
 	ErtsMigrationPath *mp;
 	ErtsProcList *pnd_xtrs = rq->procs.pending_exiters;
-	if (erts_proclist_fetch(&pnd_xtrs, NULL)) {
-	    rq->procs.pending_exiters = NULL;
+        if (erts_proclist_fetch(&pnd_xtrs, nullptr)) {
+            rq->procs.pending_exiters = nullptr;
 	    erts_smp_runq_unlock(rq);
 	    handle_pending_exiters(pnd_xtrs);
 	    erts_smp_runq_lock(rq);
@@ -9298,7 +9298,7 @@ Process *schedule(Process *p, int calls)
 		p = erts_proc_lookup_raw(proxy_p->common.id);
 		if (!p) {
 		    free_proxy_proc(proxy_p);
-		    proxy_p = NULL;
+                    proxy_p = nullptr;
 		    goto pick_next_process;
 		}
 		state = erts_smp_atomic32_read_nob(&p->state);
@@ -9338,7 +9338,7 @@ Process *schedule(Process *p, int calls)
 			}
 			if (proxy_p) {
 			    free_proxy_proc(proxy_p);
-			    proxy_p = NULL;
+                            proxy_p = nullptr;
 			}
 			goto pick_next_process;
 		    }
@@ -9469,7 +9469,7 @@ Process *schedule(Process *p, int calls)
 
 	if (proxy_p) {
 	    free_proxy_proc(proxy_p);
-	    proxy_p = NULL;
+            proxy_p = nullptr;
 	}
 	    
 	p->fcalls = reds;
@@ -9557,7 +9557,7 @@ notify_sys_task_executed(Process *c_p, ErtsProcSysTask *st, Eterm st_result)
 static ERTS_INLINE ErtsProcSysTask *
 fetch_sys_task(Process *c_p, erts_aint32_t state, int *qmaskp, int *priop)
 {
-    ErtsProcSysTaskQs *unused_qs = NULL;
+    ErtsProcSysTaskQs *unused_qs = nullptr;
     int qbit, qmask;
     ErtsProcSysTask *st, **qp;
 
@@ -9567,7 +9567,7 @@ fetch_sys_task(Process *c_p, erts_aint32_t state, int *qmaskp, int *priop)
 
     if (!c_p->sys_task_qs) {
 	qmask = 0;
-	st = NULL;
+        st = nullptr;
 	goto update_state;
     }
 
@@ -9577,7 +9577,7 @@ fetch_sys_task(Process *c_p, erts_aint32_t state, int *qmaskp, int *priop)
 		  | ERTS_PSFLG_EXITING
 		  | ERTS_PSFLG_SUSPENDED)) == ERTS_PSFLG_ACTIVE) {
 	/* No sys tasks if we got exclusively higher prio user work to do */
-	st = NULL;
+        st = nullptr;
 	switch (ERTS_PSFLGS_GET_USR_PRIO(state)) {
 	case PRIORITY_MAX:
 	    if (!(qmask & MAX_BIT))
@@ -9629,7 +9629,7 @@ fetch_sys_task(Process *c_p, erts_aint32_t state, int *qmaskp, int *priop)
     else {
 	erts_aint32_t a, e, n, st_prio, qmask2;
 
-	*qp = NULL;
+        *qp = nullptr;
 	qmask &= ~qbit;
 	c_p->sys_task_qs->qmask = qmask;
 
@@ -9663,7 +9663,7 @@ fetch_sys_task(Process *c_p, erts_aint32_t state, int *qmaskp, int *priop)
 
 	if (!qmask) {
 	    unused_qs = c_p->sys_task_qs;
-	    c_p->sys_task_qs = NULL;
+            c_p->sys_task_qs = nullptr;
 	}
 
 	a = state;
@@ -9734,7 +9734,7 @@ execute_sys_tasks(Process *c_p, erts_aint32_t *statep, int in_reds)
 	case ERTS_PSTT_GC:
 	    if (c_p->flags & F_DISABLE_GC) {
 		save_gc_task(c_p, st, st_prio);
-		st = NULL;
+                st = nullptr;
 		reds++;
 	    }
 	    else {
@@ -9757,7 +9757,7 @@ execute_sys_tasks(Process *c_p, erts_aint32_t *statep, int in_reds)
 	    if (is_non_value(st_res)) {
 		/* Needed gc, but gc was disabled */
 		save_gc_task(c_p, st, st_prio);
-		st = NULL;
+                st = nullptr;
 	    }
 	    break;
 	default:
@@ -9820,8 +9820,8 @@ BIF_RETTYPE
 erts_internal_request_system_task_3(BIF_ALIST_3)
 {
     Process *rp = erts_proc_lookup(BIF_ARG_1);
-    ErtsProcSysTaskQs *stqs, *free_stqs = NULL;
-    ErtsProcSysTask *st = NULL;
+    ErtsProcSysTaskQs *stqs, *free_stqs = nullptr;
+    ErtsProcSysTask *st = nullptr;
     erts_aint32_t prio, rp_state;
     int rp_locked;
     Eterm noproc_res, req_type;
@@ -9928,18 +9928,18 @@ erts_internal_request_system_task_3(BIF_ALIST_3)
 
     rp_locked = 0;
 
-    free_stqs = NULL;
+    free_stqs = nullptr;
     if (rp_state & ERTS_PSFLG_ACTIVE_SYS)
-	stqs = NULL;
+        stqs = nullptr;
     else {
     alloc_qs:
 	stqs = proc_sys_task_queues_alloc();
 	stqs->qmask = 1 << prio;
 	stqs->ncount = 0;
-	stqs->q[PRIORITY_MAX] = NULL;
-	stqs->q[PRIORITY_HIGH] = NULL;
-	stqs->q[PRIORITY_NORMAL] = NULL;
-	stqs->q[PRIORITY_LOW] = NULL;
+        stqs->q[PRIORITY_MAX] = nullptr;
+        stqs->q[PRIORITY_HIGH] = nullptr;
+        stqs->q[PRIORITY_NORMAL] = nullptr;
+        stqs->q[PRIORITY_LOW] = nullptr;
 	stqs->q[prio] = st;
     }
 
@@ -9950,7 +9950,7 @@ erts_internal_request_system_task_3(BIF_ALIST_3)
 	rp_state = erts_smp_atomic32_read_nob(&rp->state);
 	if (rp_state & ERTS_PSFLG_EXITING) {
 	    erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_STATUS);
-	    rp = NULL;
+            rp = nullptr;
 	    free_stqs = stqs;
 	    goto noproc;
 	}
@@ -10001,7 +10001,7 @@ erts_internal_request_system_task_3(BIF_ALIST_3)
      * schedule_process_sys_task() unlocks status
      * lock on process.
      */
-    schedule_process_sys_task(rp, rp_state, NULL);
+    schedule_process_sys_task(rp, rp_state, nullptr);
 
     if (free_stqs)
 	proc_sys_task_queues_free(free_stqs);
@@ -10040,10 +10040,10 @@ save_gc_task(Process *c_p, ErtsProcSysTask *st, int prio)
 	qs = proc_sys_task_queues_alloc();
 	qs->qmask = 1 << prio;
 	qs->ncount = 0;
-	qs->q[PRIORITY_MAX] = NULL;
-	qs->q[PRIORITY_HIGH] = NULL;
-	qs->q[PRIORITY_NORMAL] = NULL;
-	qs->q[PRIORITY_LOW] = NULL;
+        qs->q[PRIORITY_MAX] = nullptr;
+        qs->q[PRIORITY_HIGH] = nullptr;
+        qs->q[PRIORITY_NORMAL] = nullptr;
+        qs->q[PRIORITY_LOW] = nullptr;
 	qs->q[prio] = st;
 	(void) ERTS_PROC_SET_DELAYED_GC_TASK_QS(c_p, ERTS_PROC_LOCK_MAIN, qs);
     }
@@ -10107,7 +10107,7 @@ erts_set_gc_state(Process *c_p, int enable)
 
     if (!c_p->sys_task_qs) {
 	c_p->sys_task_qs = dgc_tsk_qs;
-	dgc_tsk_qs = NULL;
+        dgc_tsk_qs = nullptr;
     }
     else {
 	ErtsProcSysTaskQs *stsk_qs;
@@ -10192,7 +10192,7 @@ erts_set_gc_state(Process *c_p, int enable)
 
     erts_smp_proc_unlock(c_p, ERTS_PROC_LOCK_STATUS);
 
-    (void) ERTS_PROC_SET_DELAYED_GC_TASK_QS(c_p, ERTS_PROC_LOCK_MAIN, NULL);
+    (void) ERTS_PROC_SET_DELAYED_GC_TASK_QS(c_p, ERTS_PROC_LOCK_MAIN, nullptr);
 
     if (dgc_tsk_qs)
 	proc_sys_task_queues_free(dgc_tsk_qs);
@@ -10259,10 +10259,10 @@ erts_sched_stat_term(Process *p, int total)
     erts_smp_spin_unlock(&erts_sched_stat.lock);
 
     sz = 0;
-    (void) erts_bld_atom_2uint_3tup_list(NULL, &sz, ERTS_NO_PRIO_LEVELS,
+    (void) erts_bld_atom_2uint_3tup_list(nullptr, &sz, ERTS_NO_PRIO_LEVELS,
 					 prio, executed, migrated);
     hp = HAlloc(p, sz);
-    return erts_bld_atom_2uint_3tup_list(&hp, NULL, ERTS_NO_PRIO_LEVELS,
+    return erts_bld_atom_2uint_3tup_list(&hp, nullptr, ERTS_NO_PRIO_LEVELS,
 					 prio, executed, migrated);
 }
 
@@ -10290,7 +10290,7 @@ erts_schedule_misc_op(void (*func)(void *), void *arg)
 
     erts_smp_runq_lock(rq);
 
-    molp->next = NULL;
+    molp->next = nullptr;
     molp->func = func;
     molp->arg = arg;
     if (rq->misc.end)
@@ -10323,14 +10323,14 @@ exec_misc_ops(ErtsRunQueue *rq)
     
     if (!tmp_molp) {
     mtq:
-	rq->misc.start = NULL;
-	rq->misc.end = NULL;
+        rq->misc.start = nullptr;
+        rq->misc.end = nullptr;
     }
     else {
 	rq->misc.start = tmp_molp->next;
-	tmp_molp->next = NULL;
+        tmp_molp->next = nullptr;
 	if (!rq->misc.start)
-	    rq->misc.end = NULL;
+            rq->misc.end = nullptr;
     }
 
     erts_smp_runq_unlock(rq);
@@ -10430,7 +10430,7 @@ alloc_process(ErtsRunQueue *rq, erts_aint32_t state)
 
     p = (Process*)erts_alloc_fnf(ERTS_ALC_T_PROC, sizeof(Process));
     if (!p)
-	return NULL;
+        return nullptr;
 
     init_arg.proc = (Process *) p;
     init_arg.run_queue = rq;
@@ -10443,14 +10443,14 @@ alloc_process(ErtsRunQueue *rq, erts_aint32_t state)
 			       (void *) &init_arg,
 			       early_init_process_struct)) {
 	erts_free(ERTS_ALC_T_PROC, p);
-	return NULL;
+        return nullptr;
     }
 
     ASSERT(internal_pid_serial(p->common.id) <= ERTS_MAX_PID_SERIAL);
     
     p->approx_started = erts_get_approx_time();
     p->rcount = 0;
-    p->heap = NULL;
+    p->heap = nullptr;
 
 
     ASSERT(p == (Process *) (erts_ptab_pix2intptr_nob(
@@ -10467,7 +10467,7 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
 		   Eterm args,	/* Arguments for function (must be well-formed list). */
 		   ErlSpawnOpts* so) /* Options for spawn. */
 {
-    ErtsRunQueue *rq = NULL;
+    ErtsRunQueue *rq = nullptr;
     Process *p;
     Sint arity;			/* Number of arguments. */
     Uint arg_size;		/* Size of arguments. */
@@ -10546,7 +10546,7 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
     /*
      * Must initialize binary lists here before copying binaries to process.
      */
-    p->off_heap.first = NULL;
+    p->off_heap.first = nullptr;
     p->off_heap.overhead = 0;
 
     heap_need +=
@@ -10565,7 +10565,7 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
 #endif
 #endif
     p->heap = (Eterm *) ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP, sizeof(Eterm)*sz);
-    p->old_hend = p->old_htop = p->old_heap = NULL;
+    p->old_hend = p->old_htop = p->old_heap = nullptr;
     p->high_water = p->heap;
     p->gen_gcs = 0;
     p->stop = p->hend = p->heap + sz;
@@ -10578,7 +10578,7 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
     p->bin_old_vheap    = 0;
     p->bin_vheap_mature = 0;
 
-    p->sys_task_qs = NULL;
+    p->sys_task_qs = nullptr;
 
     /* No need to initialize p->fcalls. */
 
@@ -10606,16 +10606,16 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
     p->reds = 0;
 
 #ifdef ERTS_SMP
-    p->common.u.alive.ptimer = NULL;
+    p->common.u.alive.ptimer = nullptr;
 #else
     sys_memset(&p->common.u.alive.tm, 0, sizeof(ErlTimer));
 #endif
 
-    p->common.u.alive.reg = NULL;
-    ERTS_P_LINKS(p) = NULL;
-    ERTS_P_MONITORS(p) = NULL;
-    p->nodes_monitors = NULL;
-    p->suspend_monitors = NULL;
+    p->common.u.alive.reg = nullptr;
+    ERTS_P_LINKS(p) = nullptr;
+    ERTS_P_MONITORS(p) = nullptr;
+    p->nodes_monitors = nullptr;
+    p->suspend_monitors = nullptr;
 
     ASSERT(is_pid(parent->group_leader));
 
@@ -10631,20 +10631,20 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
 
     erts_get_default_tracing(&ERTS_TRACE_FLAGS(p), &ERTS_TRACER_PROC(p));
 
-    p->msg.first = NULL;
+    p->msg.first = nullptr;
     p->msg.last = &p->msg.first;
     p->msg.save = &p->msg.first;
     p->msg.len = 0;
 #ifdef ERTS_SMP
-    p->msg_inq.first = NULL;
+    p->msg_inq.first = nullptr;
     p->msg_inq.last = &p->msg_inq.first;
     p->msg_inq.len = 0;
 #endif
-    p->u.bif_timers = NULL;
-    p->mbuf = NULL;
+    p->u.bif_timers = nullptr;
+    p->mbuf = nullptr;
     p->mbuf_sz = 0;
-    p->psd = NULL;
-    p->dictionary = NULL;
+    p->psd = nullptr;
+    p->dictionary = nullptr;
     p->seq_trace_lastcnt = 0;
     p->seq_trace_clock = 0;
     SEQ_TRACE_TOKEN(p) = NIL;
@@ -10658,7 +10658,7 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
 
     INIT_HOLE_CHECK(p);
 #ifdef DEBUG
-    p->last_old_htop = NULL;
+    p->last_old_htop = nullptr;
 #endif
 
     if (IS_TRACED(parent)) {
@@ -10726,11 +10726,11 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
     }
 
 #ifdef ERTS_SMP
-    p->scheduler_data = NULL;
+    p->scheduler_data = nullptr;
     p->suspendee = NIL;
-    p->pending_suspenders = NULL;
+    p->pending_suspenders = nullptr;
     p->pending_exit.reason = THE_NON_VALUE;
-    p->pending_exit.bp = NULL;
+    p->pending_exit.bp = nullptr;
 #endif
 
 #if !defined(NO_FPE_SIGNALS) || defined(HIPE)
@@ -10773,10 +10773,10 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
 
 void erts_init_empty_process(Process *p)
 {
-    p->htop = NULL;
-    p->stop = NULL;
-    p->hend = NULL;
-    p->heap = NULL;
+    p->htop = nullptr;
+    p->stop = nullptr;
+    p->hend = nullptr;
+    p->heap = nullptr;
     p->gen_gcs = 0;
     p->max_gen_gcs = 0;
     p->min_heap_size = 0;
@@ -10796,35 +10796,35 @@ void erts_init_empty_process(Process *p)
     p->bin_vheap_sz = BIN_VH_MIN_SIZE;
     p->bin_old_vheap_sz = BIN_VH_MIN_SIZE;
     p->bin_old_vheap = 0;
-    p->sys_task_qs = NULL;
+    p->sys_task_qs = nullptr;
     p->bin_vheap_mature = 0;
 #ifdef ERTS_SMP
-    p->common.u.alive.ptimer = NULL;
+    p->common.u.alive.ptimer = nullptr;
 #else
     memset(&(p->common.u.alive.tm), 0, sizeof(ErlTimer));
 #endif
-    p->next = NULL;
-    p->off_heap.first = NULL;
+    p->next = nullptr;
+    p->off_heap.first = nullptr;
     p->off_heap.overhead = 0;
-    p->common.u.alive.reg = NULL;
+    p->common.u.alive.reg = nullptr;
     p->heap_sz = 0;
-    p->high_water = NULL;
-    p->old_hend = NULL;
-    p->old_htop = NULL;
-    p->old_heap = NULL;
-    p->mbuf = NULL;
+    p->high_water = nullptr;
+    p->old_hend = nullptr;
+    p->old_htop = nullptr;
+    p->old_heap = nullptr;
+    p->mbuf = nullptr;
     p->mbuf_sz = 0;
-    p->psd = NULL;
-    ERTS_P_MONITORS(p) = NULL;
-    ERTS_P_LINKS(p) = NULL;         /* List of links */
-    p->nodes_monitors = NULL;
-    p->suspend_monitors = NULL;
-    p->msg.first = NULL;
+    p->psd = nullptr;
+    ERTS_P_MONITORS(p) = nullptr;
+    ERTS_P_LINKS(p) = nullptr;         /* List of links */
+    p->nodes_monitors = nullptr;
+    p->suspend_monitors = nullptr;
+    p->msg.first = nullptr;
     p->msg.last = &p->msg.first;
     p->msg.save = &p->msg.first;
     p->msg.len = 0;
-    p->u.bif_timers = NULL;
-    p->dictionary = NULL;
+    p->u.bif_timers = nullptr;
+    p->dictionary = nullptr;
     p->seq_trace_clock = 0;
     p->seq_trace_lastcnt = 0;
     p->seq_trace_token = NIL;
@@ -10832,15 +10832,15 @@ void erts_init_empty_process(Process *p)
     p->initial[1] = 0;
     p->initial[2] = 0;
     p->catches = 0;
-    p->cp = NULL;
-    p->i = NULL;
-    p->current = NULL;
+    p->cp = nullptr;
+    p->i = nullptr;
+    p->current = nullptr;
 
     /*
      * Saved x registers.
      */
     p->arity = 0;
-    p->arg_reg = NULL;
+    p->arg_reg = nullptr;
     p->max_arg_reg = 0;
     p->def_arg_reg[0] = 0;
     p->def_arg_reg[1] = 0;
@@ -10862,20 +10862,20 @@ void erts_init_empty_process(Process *p)
 
     INIT_HOLE_CHECK(p);
 #ifdef DEBUG
-    p->last_old_htop = NULL;
+    p->last_old_htop = nullptr;
 #endif
 
     erts_smp_atomic32_init_nob(&p->state, (erts_aint32_t) PRIORITY_NORMAL);
 
 #ifdef ERTS_SMP
-    p->scheduler_data = NULL;
-    p->msg_inq.first = NULL;
+    p->scheduler_data = nullptr;
+    p->msg_inq.first = nullptr;
     p->msg_inq.last = &p->msg_inq.first;
     p->msg_inq.len = 0;
     p->suspendee = NIL;
-    p->pending_suspenders = NULL;
+    p->pending_suspenders = nullptr;
     p->pending_exit.reason = THE_NON_VALUE;
-    p->pending_exit.bp = NULL;
+    p->pending_exit.bp = nullptr;
     erts_proc_lock_init(p);
     erts_smp_proc_unlock(p, ERTS_PROC_LOCKS_ALL);
     RUNQ_SET_RQ(&p->run_queue, ERTS_RUNQ_IX(0));
@@ -10893,52 +10893,52 @@ void
 erts_debug_verify_clean_empty_process(Process* p)
 {
     /* Things that erts_cleanup_empty_process() will *not* cleanup... */
-    ASSERT(p->htop == NULL);
-    ASSERT(p->stop == NULL);
-    ASSERT(p->hend == NULL);
-    ASSERT(p->heap == NULL);
+    ASSERT(p->htop == nullptr);
+    ASSERT(p->stop == nullptr);
+    ASSERT(p->hend == nullptr);
+    ASSERT(p->heap == nullptr);
     ASSERT(p->common.id == ERTS_INVALID_PID);
     ASSERT(ERTS_TRACER_PROC(p) == NIL);
     ASSERT(ERTS_TRACE_FLAGS(p) == F_INITIAL_TRACE_FLAGS);
     ASSERT(p->group_leader == ERTS_INVALID_PID);
-    ASSERT(p->next == NULL);
-    ASSERT(p->common.u.alive.reg == NULL);
+    ASSERT(p->next == nullptr);
+    ASSERT(p->common.u.alive.reg == nullptr);
     ASSERT(p->heap_sz == 0);
-    ASSERT(p->high_water == NULL);
-    ASSERT(p->old_hend == NULL);
-    ASSERT(p->old_htop == NULL);
-    ASSERT(p->old_heap == NULL);
+    ASSERT(p->high_water == nullptr);
+    ASSERT(p->old_hend == nullptr);
+    ASSERT(p->old_htop == nullptr);
+    ASSERT(p->old_heap == nullptr);
 
-    ASSERT(ERTS_P_MONITORS(p) == NULL);
-    ASSERT(ERTS_P_LINKS(p) == NULL);
-    ASSERT(p->nodes_monitors == NULL);
-    ASSERT(p->suspend_monitors == NULL);
-    ASSERT(p->msg.first == NULL);
+    ASSERT(ERTS_P_MONITORS(p) == nullptr);
+    ASSERT(ERTS_P_LINKS(p) == nullptr);
+    ASSERT(p->nodes_monitors == nullptr);
+    ASSERT(p->suspend_monitors == nullptr);
+    ASSERT(p->msg.first == nullptr);
     ASSERT(p->msg.len == 0);
-    ASSERT(p->u.bif_timers == NULL);
-    ASSERT(p->dictionary == NULL);
+    ASSERT(p->u.bif_timers == nullptr);
+    ASSERT(p->dictionary == nullptr);
     ASSERT(p->catches == 0);
-    ASSERT(p->cp == NULL);
-    ASSERT(p->i == NULL);
-    ASSERT(p->current == NULL);
+    ASSERT(p->cp == nullptr);
+    ASSERT(p->i == nullptr);
+    ASSERT(p->current == nullptr);
 
     ASSERT(p->parent == NIL);
 
 #ifdef ERTS_SMP
-    ASSERT(p->msg_inq.first == NULL);
+    ASSERT(p->msg_inq.first == nullptr);
     ASSERT(p->msg_inq.len == 0);
     ASSERT(p->suspendee == NIL);
-    ASSERT(p->pending_suspenders == NULL);
+    ASSERT(p->pending_suspenders == nullptr);
     ASSERT(p->pending_exit.reason == THE_NON_VALUE);
-    ASSERT(p->pending_exit.bp == NULL);
+    ASSERT(p->pending_exit.bp == nullptr);
 #endif
 
     /* Thing that erts_cleanup_empty_process() cleans up */
 
-    ASSERT(p->off_heap.first == NULL);
+    ASSERT(p->off_heap.first == nullptr);
     ASSERT(p->off_heap.overhead == 0);
 
-    ASSERT(p->mbuf == NULL);
+    ASSERT(p->mbuf == nullptr);
 }
 
 #endif
@@ -10949,12 +10949,12 @@ erts_cleanup_empty_process(Process* p)
     /* We only check fields that are known to be used... */
 
     erts_cleanup_offheap(&p->off_heap);
-    p->off_heap.first = NULL;
+    p->off_heap.first = nullptr;
     p->off_heap.overhead = 0;
 
-    if (p->mbuf != NULL) {
+    if (p->mbuf != nullptr) {
 	free_message_buffer(p->mbuf);
-	p->mbuf = NULL;
+        p->mbuf = nullptr;
     }
 #ifdef ERTS_SMP
     erts_proc_lock_fin(p);
@@ -11006,7 +11006,7 @@ delete_process(Process* p)
 #endif
 
     ERTS_HEAP_FREE(ERTS_ALC_T_HEAP, (void*) p->heap, p->heap_sz*sizeof(Eterm));
-    if (p->old_heap != NULL) {
+    if (p->old_heap != nullptr) {
 
 #ifdef DEBUG
 	sys_memset(p->old_heap, DEBUG_BAD_BYTE,
@@ -11020,7 +11020,7 @@ delete_process(Process* p)
     /*
      * Free all pending message buffers.
      */
-    if (p->mbuf != NULL) {	
+    if (p->mbuf != nullptr) {
 	free_message_buffer(p->mbuf);
     }
 
@@ -11028,7 +11028,7 @@ delete_process(Process* p)
 
     /* free all pending messages */
     mp = p->msg.first;
-    while(mp != NULL) {
+    while(mp != nullptr) {
 	ErlMessage* next_mp = mp->next;
 	if (mp->data.attached) {
 	    if (is_value(mp->m[0]))
@@ -11083,7 +11083,7 @@ set_proc_exiting(Process *p,
     p->i = (BeamInstr *) beam_exit;
 
     if (enqueue)
-	add2runq(enqueue > 0 ? p : make_proxy_proc(NULL, p, enq_prio),
+        add2runq(enqueue > 0 ? p : make_proxy_proc(nullptr, p, enq_prio),
 		 state,
 		 enq_prio);
 }
@@ -11143,7 +11143,7 @@ erts_handle_pending_exit(Process *c_p, ErtsProcLocks locks)
 		     c_p->pending_exit.reason,
 		     c_p->pending_exit.bp);
     c_p->pending_exit.reason = THE_NON_VALUE;
-    c_p->pending_exit.bp = NULL;
+    c_p->pending_exit.bp = nullptr;
 
     if (xlocks)
 	erts_smp_proc_unlock(c_p, xlocks);
@@ -11157,7 +11157,7 @@ handle_pending_exiters(ErtsProcList *pnd_xtrs)
 
     while (plp) {
 	ErtsProcList *free_plp;
-	Process *p = erts_pid2proc(NULL, 0, plp->pid, ERTS_PROC_LOCKS_ALL);
+        Process *p = erts_pid2proc(nullptr, 0, plp->pid, ERTS_PROC_LOCKS_ALL);
 	if (p) {
 	    if (erts_proclist_same(plp, p)) {
 		erts_aint32_t state = erts_smp_atomic32_read_acqb(&p->state);
@@ -11182,7 +11182,7 @@ save_pending_exiter(Process *p)
 
     ERTS_SMP_LC_ASSERT(ERTS_PROC_LOCK_STATUS & erts_proc_lc_my_proc_locks(p));
 
-    rq = erts_get_runq_current(NULL);
+    rq = erts_get_runq_current(nullptr);
 
     plp = proclist_create(p);
 
@@ -11242,7 +11242,7 @@ send_exit_message(Process *to, ErtsProcLocks *to_locksp,
 	hp = bp->mem;
 	mess = copy_struct(exit_term, term_size, &hp, &bp->off_heap);
 	/* the trace token must in this_ case be updated by the caller */
-	seq_trace_output(token, mess, SEQ_TRACE_SEND, to->common.id, NULL);
+        seq_trace_output(token, mess, SEQ_TRACE_SEND, to->common.id, nullptr);
 	temp_token = copy_struct(token, sz_token, &hp, &bp->off_heap);
 	erts_queue_message(to, to_locksp, bp, mess, temp_token
 #ifdef USE_VM_PROBES
@@ -11387,7 +11387,7 @@ send_exit_signal(Process *c_p,		/* current process if and only
 		    }
 		    *rp_locks = ERTS_PROC_LOCKS_ALL;
 		}
-		set_proc_exiting(c_p, state, rsn, NULL);
+                set_proc_exiting(c_p, state, rsn, nullptr);
 	    }
 	    else if (!(state & (ERTS_PSFLG_RUNNING|ERTS_PSFLG_RUNNING_SYS))) {
 		/* Process not running ... */
@@ -11410,7 +11410,7 @@ send_exit_signal(Process *c_p,		/* current process if and only
 				     (is_immed(rsn)
 				      ? rsn
 				      : copy_object(rsn, rp)),
-				     NULL);
+                                     nullptr);
 		}
 	    }
 	    else { /* Process running... */
@@ -11457,7 +11457,7 @@ send_exit_signal(Process *c_p,		/* current process if and only
 			     (is_immed(rsn) || c_p == rp
 			      ? rsn
 			      : copy_object(rsn, rp)),
-			     NULL);
+                             nullptr);
 	}
 #endif
 	return -1; /* Receiver will exit */
@@ -11496,7 +11496,7 @@ typedef struct {
 
 static void doit_exit_monitor(ErtsMonitor *mon, void *vpcontext)
 {
-    ExitMonitorContext *pcontext = vpcontext;
+    ExitMonitorContext *pcontext = (ExitMonitorContext *)vpcontext;
     DistEntry *dep;
     ErtsMonitor *rmon;
     Process *rp;
@@ -11512,7 +11512,7 @@ static void doit_exit_monitor(ErtsMonitor *mon, void *vpcontext)
 		erts_smp_de_links_unlock(dep);
 		if (rmon) {
 		    ErtsDSigData dsd;
-		    int code = erts_dsig_prepare(&dsd, dep, NULL,
+                    int code = erts_dsig_prepare(&dsd, dep, nullptr,
 						 ERTS_DSP_NO_LOCK, 0);
 		    if (code == ERTS_DSIG_PREP_CONNECTED) {
 			code = erts_dsig_send_demonitor(&dsd,
@@ -11529,27 +11529,27 @@ static void doit_exit_monitor(ErtsMonitor *mon, void *vpcontext)
 	} else {
 	    ASSERT(is_pid(mon->pid));
 	    if (is_internal_pid(mon->pid)) { /* local by pid or name */
-		rp = erts_pid2proc(NULL, 0, mon->pid, ERTS_PROC_LOCK_LINK);
+                rp = erts_pid2proc(nullptr, 0, mon->pid, ERTS_PROC_LOCK_LINK);
 		if (!rp) {
 		    goto done;
 		}
 		rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), mon->ref);
 		erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
-		if (rmon == NULL) {
+                if (rmon == nullptr) {
 		    goto done;
 		}
 		erts_destroy_monitor(rmon);
 	    } else { /* remote by pid */
 		ASSERT(is_external_pid(mon->pid));
 		dep = external_pid_dist_entry(mon->pid);
-		ASSERT(dep != NULL);
+                ASSERT(dep != nullptr);
 		if (dep) {
 		    erts_smp_de_links_lock(dep);
 		    rmon = erts_remove_monitor(&(dep->monitors), mon->ref);
 		    erts_smp_de_links_unlock(dep);
 		    if (rmon) {
 			ErtsDSigData dsd;
-			int code = erts_dsig_prepare(&dsd, dep, NULL,
+                        int code = erts_dsig_prepare(&dsd, dep, nullptr,
 						     ERTS_DSP_NO_LOCK, 0);
 			if (code == ERTS_DSIG_PREP_CONNECTED) {
 			    code = erts_dsig_send_demonitor(&dsd,
@@ -11569,7 +11569,7 @@ static void doit_exit_monitor(ErtsMonitor *mon, void *vpcontext)
 	ASSERT(is_pid(mon->pid) || is_internal_port(mon->pid));
 	if (is_internal_port(mon->pid)) {
 	    Port *prt = erts_id2port(mon->pid);
-	    if (prt == NULL) {
+            if (prt == nullptr) {
 		goto done;
 	    }
 	    erts_fire_port_monitor(prt, mon->ref);
@@ -11579,8 +11579,8 @@ static void doit_exit_monitor(ErtsMonitor *mon, void *vpcontext)
 	    DeclareTmpHeapNoproc(lhp,3);
 	    ErtsProcLocks rp_locks = (ERTS_PROC_LOCK_LINK
 				      | ERTS_PROC_LOCKS_MSG_SEND);
-	    rp = erts_pid2proc(NULL, 0, mon->pid, rp_locks);
-	    if (rp == NULL) {
+            rp = erts_pid2proc(nullptr, 0, mon->pid, rp_locks);
+            if (rp == nullptr) {
 		goto done;
 	    }
 	    UseTmpHeapNoproc(3);
@@ -11600,14 +11600,14 @@ static void doit_exit_monitor(ErtsMonitor *mon, void *vpcontext)
 	} else { /* external by pid or name */
 	    ASSERT(is_external_pid(mon->pid));    
 	    dep = external_pid_dist_entry(mon->pid);
-	    ASSERT(dep != NULL);
+            ASSERT(dep != nullptr);
 	    if (dep) {
 		erts_smp_de_links_lock(dep);
 		rmon = erts_remove_monitor(&(dep->monitors), mon->ref);
 		erts_smp_de_links_unlock(dep);
 		if (rmon) {
 		    ErtsDSigData dsd;
-		    int code = erts_dsig_prepare(&dsd, dep, NULL,
+                    int code = erts_dsig_prepare(&dsd, dep, nullptr,
 						 ERTS_DSP_NO_LOCK, 0);
 		    if (code == ERTS_DSIG_PREP_CONNECTED) {
 			code = erts_dsig_send_m_exit(&dsd,
@@ -11641,7 +11641,7 @@ typedef struct {
 
 static void doit_exit_link(ErtsLink *lnk, void *vpcontext)
 {
-    ExitLinkContext *pcontext = vpcontext;
+    ExitLinkContext *pcontext = (ExitLinkContext *)vpcontext;
     /* Unpack context, it's readonly */
     Process *p = pcontext->p;
     Eterm reason = pcontext->reason;
@@ -11657,13 +11657,13 @@ static void doit_exit_link(ErtsLink *lnk, void *vpcontext)
 	if(is_internal_port(item)) {
 	    Port *prt = erts_port_lookup(item, ERTS_PORT_SFLGS_INVALID_LOOKUP);
 	    if (prt)
-		erts_port_exit(NULL,
+                erts_port_exit(nullptr,
 			       (ERTS_PORT_SIG_FLG_FORCE_SCHED
 				| ERTS_PORT_SIG_FLG_BROKEN_LINK),
 			       prt,
 			       p->common.id,
 			       reason,
-			       NULL);
+                               nullptr);
 	}
 	else if(is_external_port(item)) {
 	    erts_dsprintf_buf_t *dsbufp = erts_create_logger_dsbuf();
@@ -11678,15 +11678,15 @@ static void doit_exit_link(ErtsLink *lnk, void *vpcontext)
 	else if (is_internal_pid(item)) {
 	    ErtsProcLocks rp_locks = (ERTS_PROC_LOCK_LINK
 				      | ERTS_PROC_LOCKS_XSIG_SEND);
-	    rp = erts_pid2proc(NULL, 0, item, rp_locks);
+            rp = erts_pid2proc(nullptr, 0, item, rp_locks);
 	    if (rp) {
 		rlnk = erts_remove_link(&ERTS_P_LINKS(rp), p->common.id);
-		/* If rlnk == NULL, we got unlinked while exiting,
+                /* If rlnk == nullptr, we got unlinked while exiting,
 		   i.e., do nothing... */
 		if (rlnk) {
 		    int xres;
 		    erts_destroy_link(rlnk);
-		    xres = send_exit_signal(NULL,
+                    xres = send_exit_signal(nullptr,
 					    p->common.id,
 					    rp,
 					    &rp_locks, 
@@ -11798,7 +11798,7 @@ erts_do_exit_process(Process* p, Eterm reason)
 	p->pending_exit.reason = THE_NON_VALUE;
 	if (p->pending_exit.bp) {
 	    free_message_buffer(p->pending_exit.bp);
-	    p->pending_exit.bp = NULL;
+            p->pending_exit.bp = nullptr;
 	}
     }
 
@@ -11831,7 +11831,7 @@ erts_do_exit_process(Process* p, Eterm reason)
      * The p->u.bif_timers of this_ process can *not* be used anymore;
      * will be overwritten by misc termination data.
      */
-    p->u.terminate = NULL;
+    p->u.terminate = nullptr;
 
 
     erts_continue_exit_process(p);
@@ -11899,7 +11899,7 @@ erts_continue_exit_process(Process *p)
 
     if (p->nodes_monitors) {
 	erts_delete_nodes_monitors(p, ERTS_PROC_LOCK_MAIN);
-	p->nodes_monitors = NULL;
+        p->nodes_monitors = nullptr;
     }
 	
 
@@ -11907,7 +11907,7 @@ erts_continue_exit_process(Process *p)
 	erts_sweep_suspend_monitors(p->suspend_monitors,
 				    resume_suspend_monitor,
 				    p);
-	p->suspend_monitors = NULL;
+        p->suspend_monitors = nullptr;
     }
 
     /*
@@ -11915,7 +11915,7 @@ erts_continue_exit_process(Process *p)
      * cleanup.
      */
     if (p->common.u.alive.reg) {
-	(void) erts_unregister_name(p, ERTS_PROC_LOCK_MAIN, NULL, THE_NON_VALUE);
+        (void) erts_unregister_name(p, ERTS_PROC_LOCK_MAIN, nullptr, THE_NON_VALUE);
 	ASSERT(!p->common.u.alive.reg);
     }
 
@@ -11947,9 +11947,9 @@ erts_continue_exit_process(Process *p)
 #ifdef ERTS_SMP
 	ASSERT(p->scheduler_data);
 	ASSERT(p->scheduler_data->current_process == p);
-	ASSERT(p->scheduler_data->free_process == NULL);
+        ASSERT(p->scheduler_data->free_process == nullptr);
 
-	p->scheduler_data->current_process = NULL;
+        p->scheduler_data->current_process = nullptr;
 	p->scheduler_data->free_process = p;
 #endif
 
@@ -11995,11 +11995,11 @@ erts_continue_exit_process(Process *p)
     }
     
     dep = ((p->flags & F_DISTRIBUTION)
-	   ? ERTS_PROC_SET_DIST_ENTRY(p, ERTS_PROC_LOCKS_ALL, NULL)
-	   : NULL);
-    scb = ERTS_PROC_SET_SAVED_CALLS_BUF(p, ERTS_PROC_LOCKS_ALL, NULL);
-    pbt = ERTS_PROC_SET_CALL_TIME(p, ERTS_PROC_LOCKS_ALL, NULL);
-    nif_export = ERTS_PROC_SET_NIF_TRAP_EXPORT(p, ERTS_PROC_LOCKS_ALL, NULL);
+           ? ERTS_PROC_SET_DIST_ENTRY(p, ERTS_PROC_LOCKS_ALL, nullptr)
+           : nullptr);
+    scb = ERTS_PROC_SET_SAVED_CALLS_BUF(p, ERTS_PROC_LOCKS_ALL, nullptr);
+    pbt = ERTS_PROC_SET_CALL_TIME(p, ERTS_PROC_LOCKS_ALL, nullptr);
+    nif_export = ERTS_PROC_SET_NIF_TRAP_EXPORT(p, ERTS_PROC_LOCKS_ALL, nullptr);
 
     erts_smp_proc_unlock(p, ERTS_PROC_LOCKS_ALL);
 #ifdef BM_COUNTERS
@@ -12134,7 +12134,7 @@ set_timer(Process* p, Uint timeout)
 #else
     erts_set_timer(&p->common.u.alive.tm,
 		  (ErlTimeoutProc) timeout_proc,
-		  NULL,
+                  nullptr,
 		  (void*) p,
 		  timeout);
 #endif
@@ -12193,7 +12193,7 @@ static void
 print_function_from_pc(int to, void *to_arg, BeamInstr* x)
 {
     BeamInstr* addr = find_function_from_pc(x);
-    if (addr == NULL) {
+    if (addr == nullptr) {
         if (x == beam_exit) {
             erts_print(to, to_arg, "<terminate process>");
         } else if (x == beam_continue_exit) {

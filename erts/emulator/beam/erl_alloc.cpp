@@ -722,14 +722,14 @@ erts_alloc_init(int *argc, char **argv, ErtsAllocInitOpts *eaiop)
     erts_aoffalc_init();
 
     for (i = ERTS_ALC_A_MIN; i <= ERTS_ALC_A_MAX; i++) {
-	erts_allctrs[i].alloc		= NULL;
-	erts_allctrs[i].realloc		= NULL;
-	erts_allctrs[i].free		= NULL;
-	erts_allctrs[i].extra		= NULL;
+        erts_allctrs[i].alloc		= nullptr;
+        erts_allctrs[i].realloc		= nullptr;
+        erts_allctrs[i].free		= nullptr;
+        erts_allctrs[i].extra		= nullptr;
 	erts_allctrs_info[i].alloc_util	= 0;
 	erts_allctrs_info[i].enabled	= 0;
 	erts_allctrs_info[i].thr_spec	= 0;
-	erts_allctrs_info[i].extra	= NULL;
+        erts_allctrs_info[i].extra	= nullptr;
     }
 
     erts_allctrs[ERTS_ALC_A_SYSTEM].alloc		= erts_sys_alloc;
@@ -876,10 +876,10 @@ set_au_allocator(ErtsAlcType_t alctr_n, struct au_init *init, int ncpu)
 	af->alloc = erts_sys_alloc;
 	af->realloc = erts_sys_realloc;
 	af->free = erts_sys_free;
-	af->extra = NULL;
+        af->extra = nullptr;
 	ai->alloc_util = 0;
 	ai->enabled = 0;
-	ai->extra = NULL;
+        ai->extra = nullptr;
 	return;
     }
 
@@ -937,7 +937,7 @@ set_au_allocator(ErtsAlcType_t alctr_n, struct au_init *init, int ncpu)
 	    af->realloc = erts_alcu_realloc;
 	af->free = erts_alcu_free;
     }
-    af->extra	= NULL;
+    af->extra	= nullptr;
     ai->alloc_util	= 1;
     ai->enabled		= 1;
 }
@@ -954,7 +954,7 @@ start_au_allocator(ErtsAlcType_t alctr_n,
     ErtsAllocatorFunctions_t *af = &erts_allctrs[alctr_n];
     ErtsAllocatorInfo_t *ai = &erts_allctrs_info[alctr_n];
     ErtsAllocatorThrSpec_t *tspec = &erts_allctr_thr_spec[alctr_n];
-    ErtsAlcFixList_t *fix_lists = NULL;
+    ErtsAlcFixList_t *fix_lists = nullptr;
     size_t fix_list_size = 0;
 
     if (!init->enable)
@@ -962,7 +962,7 @@ start_au_allocator(ErtsAlcType_t alctr_n,
 
     if (init->thr_spec) {
         char *states = (char *)erts_sys_alloc(0,
-				      NULL,
+                                      nullptr,
 				      ((sizeof(Allctr_t *)
 					* (tspec->size + 1))
 				       + (sizeof(ErtsAllocatorState_t)
@@ -993,7 +993,7 @@ start_au_allocator(ErtsAlcType_t alctr_n,
 	if (init->thr_spec)
 	    tot_fix_list_size *= tspec->size;
         fix_lists = (ErtsAlcFixList_t *)erts_sys_alloc(0,
-				   NULL,
+                                   nullptr,
 				   (tot_fix_list_size
 				    + ERTS_CACHE_LINE_SIZE - 1));
 	if (!fix_lists)
@@ -1066,7 +1066,7 @@ start_au_allocator(ErtsAlcType_t alctr_n,
 	    break;
 
 	default:
-	    as = NULL;
+            as = nullptr;
 	    ASSERT(0);
 	}
 
@@ -1109,12 +1109,12 @@ static void bad_value(char *param_start, char *param_end, char *value)
 }
 
 /* Get arg marks argument as handled by
-   putting NULL in argv */
+   putting nullptr in argv */
 static char *
 get_value(char* rest, char** argv, int* ip)
 {
     char *param = argv[*ip]+1;
-    argv[*ip] = NULL;
+    argv[*ip] = nullptr;
     if (*rest == '\0') {
 	char *next = argv[*ip + 1];
 	if (next[0] == '-'
@@ -1123,7 +1123,7 @@ get_value(char* rest, char** argv, int* ip)
 	    bad_value(param, rest, "");
 	}
 	(*ip)++;
-	argv[*ip] = NULL;
+        argv[*ip] = nullptr;
 	return next;
     }
     return rest;
@@ -1655,7 +1655,7 @@ handle_args(int *argc, char **argv, erts_alc_hndl_args_init_t *init)
 			int a;
 			int start = i;
 			char *param = argv[i];
-			char *val = i+1 < *argc ? argv[i+1] : NULL;
+                        char *val = i+1 < *argc ? argv[i+1] : nullptr;
 
 			for (a = 0; a < aui_sz; a++) {
 			    if (a > 0) {
@@ -1701,7 +1701,7 @@ handle_args(int *argc, char **argv, erts_alc_hndl_args_init_t *init)
     }
 
  args_parsed:
-    /* Handled arguments have been marked with NULL. Slide arguments
+    /* Handled arguments have been marked with nullptr. Slide arguments
        not handled towards the beginning of argv. */
     for (i = 0, j = 0; i < *argc; i++) {
 	if (argv[i])
@@ -1715,10 +1715,10 @@ static char *type_no_str(ErtsAlcType_t n)
 
 #if ERTS_ALC_N_MIN != 0
     if (n < ERTS_ALC_N_MIN)
-	return NULL;
+        return nullptr;
 #endif
     if (n > ERTS_ALC_N_MAX)
-	return NULL;
+        return nullptr;
     return (char *) ERTS_ALC_N2TD(n);
 }
 
@@ -1736,7 +1736,7 @@ erts_alloc_register_scheduler(void *vesdp)
 #endif
     for (aix = ERTS_ALC_A_MIN; aix <= ERTS_ALC_A_MAX; aix++) {
 	ErtsAllocatorThrSpec_t *tspec = &erts_allctr_thr_spec[aix];
-	esdp->alloc_data.deallctr[aix] = NULL;
+        esdp->alloc_data.deallctr[aix] = nullptr;
 	esdp->alloc_data.pref_ix[aix] = -1;
 	if (tspec->enabled) {
 	    if (!tspec->dd)
@@ -1769,7 +1769,7 @@ erts_alloc_scheduler_handle_delayed_dealloc(void *vesdp,
 	    if (tspec->enabled && tspec->dd)
 		allctr = tspec->allctr[0];
 	    else
-		allctr = NULL;
+                allctr = nullptr;
 	}
 	if (allctr) {
 	    erts_alcu_check_delayed_dealloc(allctr,
@@ -1822,7 +1822,7 @@ erts_alloc_get_verify_unused_temp_alloc(Allctr_t **allctr)
 	}
     }
 
-    *allctr = NULL;
+    *allctr = nullptr;
     return no_verify;
 }
 
@@ -2273,10 +2273,10 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 		    size.total += asz;
 		    continue;
 		default:
-		    save = NULL;
+                    save = nullptr;
 		    break;
 		}
-		asz = alcu_size(ai, NULL, 0);
+                asz = alcu_size(ai, nullptr, 0);
 		if (save)
 		    *save = asz;
 		size.total += asz;
@@ -2299,7 +2299,7 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 	else {
 	    alcu_size(ERTS_ALC_A_FIXED_SIZE,
 		      fi, ERTS_ALC_NO_FIXED_SIZES);
-	    tmp = alcu_size(ERTS_ALC_A_EHEAP, NULL, 0);
+            tmp = alcu_size(ERTS_ALC_A_EHEAP, nullptr, 0);
 	}
 	tmp += erts_ptab_mem_size(&erts_proc);
 	tmp += erts_bif_timer_memory_size();
@@ -2341,7 +2341,7 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
     }
 
     if (!ERTS_MEM_NEED_ALL_ALCU && want.binary)
-	size.binary = alcu_size(ERTS_ALC_A_BINARY, NULL, 0);
+        size.binary = alcu_size(ERTS_ALC_A_BINARY, nullptr, 0);
 
     if (want.code) {
 	size.code = module_table_sz();
@@ -2354,7 +2354,7 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 
     if (want.ets) {
 	if (!ERTS_MEM_NEED_ALL_ALCU)
-	    size.ets = alcu_size(ERTS_ALC_A_ETS, NULL, 0);
+            size.ets = alcu_size(ERTS_ALC_A_ETS, nullptr, 0);
 	size.ets += erts_get_ets_misc_mem_size();
     }
 
@@ -2390,12 +2390,12 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 	if (only_one_value) {
 	    ASSERT(length == 1);
 	    hsz = 0;
-	    erts_bld_uword(NULL, &hsz, *uintps[0]);
-	    hp = hsz ? HAlloc((Process *) proc, hsz) : NULL;
-	    res = erts_bld_uword(&hp, NULL, *uintps[0]);
+            erts_bld_uword(nullptr, &hsz, *uintps[0]);
+            hp = hsz ? HAlloc((Process *) proc, hsz) : nullptr;
+            res = erts_bld_uword(&hp, nullptr, *uintps[0]);
 	}
 	else {
-	    Uint **hpp = NULL;
+            Uint **hpp = nullptr;
 	    Uint *hszp = &hsz;
 	    hsz = 0;
 
@@ -2408,7 +2408,7 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 		    break;
 		hp = HAlloc((Process *) proc, hsz);
 		hpp = &hp;
-		hszp = NULL;
+                hszp = nullptr;
 	    }
 	}
     }
@@ -2592,7 +2592,7 @@ erts_allocated_areas(int *print_to_p, void *print_to_arg, void *proc)
 
         erts_smp_proc_lock((Process*)proc, ERTS_PROC_LOCK_MAIN);
 
-	hpp = NULL;
+        hpp = nullptr;
 	hsz = 0;
 	hszp = &hsz;
 
@@ -2631,7 +2631,7 @@ erts_allocated_areas(int *print_to_p, void *print_to_arg, void *proc)
 		break;
 	    hp = HAlloc((Process *) proc, hsz);
 	    hpp = &hp;
-	    hszp = NULL;
+            hszp = nullptr;
 	}
     }
 
@@ -2701,7 +2701,7 @@ erts_allocator_info(int to, void *arg)
 			as = erts_allctr_thr_spec[a].allctr[ai];
 		    }
 		    /* Binary alloc has its own thread safety... */
-                    erts_alcu_info((Allctr_t*)as, 0, 0, &to, arg, NULL, NULL);
+                    erts_alcu_info((Allctr_t*)as, 0, 0, &to, arg, nullptr, nullptr);
 		}
 		else {
 		    switch (a) {
@@ -2736,15 +2736,15 @@ erts_allocator_info(int to, void *arg)
 	int i;
 	for (i = 0; i <= max; i++) {
 	    erts_print(to, arg, "=allocator:mseg_alloc[%d]\n", i);
-	    erts_mseg_info(i, &to, arg, 0, NULL, NULL);
+            erts_mseg_info(i, &to, arg, 0, nullptr, nullptr);
 	}
 	erts_print(to, arg, "=allocator:mseg_alloc.erts_mmap\n");
-	erts_mmap_info(&to, arg, NULL, NULL, &emis);
+        erts_mmap_info(&to, arg, nullptr, nullptr, &emis);
     }
 #endif
 
     erts_print(to, arg, "=allocator:alloc_util\n");
-    erts_alcu_au_info_options(&to, arg, NULL, NULL);
+    erts_alcu_au_info_options(&to, arg, nullptr, nullptr);
 
     erts_print(to, arg, "=allocator:instr\n");
     erts_print(to, arg, "option m: %s\n",
@@ -2768,12 +2768,12 @@ erts_allocator_options(void *proc)
     Uint terms[ERTS_ALC_A_MAX-ERTS_ALC_A_MIN+7];
     int a, length;
     SysAllocStat sas;
-    Uint *endp = NULL;
+    Uint *endp = nullptr;
 
     sys_alloc_stat(&sas);
 
     /* First find out the heap size needed ... */
-    hpp = NULL;
+    hpp = nullptr;
     szp = &sz;
     sz = 0;
 
@@ -2797,7 +2797,7 @@ erts_allocator_options(void *proc)
 		    allctr = erts_allctr_thr_spec[a].allctr[0];
 		else
                     allctr = (Allctr_t*)erts_allctrs_info[a].extra;
-		tmp = erts_alcu_info_options(allctr, NULL, NULL, hpp, szp);
+                tmp = erts_alcu_info_options(allctr, nullptr, nullptr, hpp, szp);
 	    }
 	    else {
 		int l = 0;
@@ -2843,12 +2843,12 @@ erts_allocator_options(void *proc)
 #if HAVE_ERTS_MSEG
     if (use_mseg) {
 	atoms[length] = am_atom_put("mseg_alloc", 10);
-	terms[length++] = erts_mseg_info_options(0, NULL, NULL, hpp, szp);
+        terms[length++] = erts_mseg_info_options(0, nullptr, nullptr, hpp, szp);
     }
 #endif
 
     atoms[length] = am_atom_put("alloc_util", 10); 
-    terms[length++] = erts_alcu_au_info_options(NULL, NULL, hpp, szp);
+    terms[length++] = erts_alcu_au_info_options(nullptr, nullptr, hpp, szp);
 
     {
 	Eterm o[3], v[3];
@@ -2923,7 +2923,7 @@ erts_allocator_options(void *proc)
 	hp = HAlloc((Process *) proc, sz);
 	endp = hp + sz;
 	hpp = &hp;
-	szp = NULL;
+        szp = nullptr;
 	goto bld_term;
     }
 
@@ -2943,7 +2943,7 @@ void *erts_alloc_permanent_cache_aligned(ErtsAlcType_t type, Uint size)
 
 #ifdef VALGRIND
     {   /* Link them to avoid Leak_PossiblyLost */
-	static UWord* first_in_list = NULL;
+        static UWord* first_in_list = nullptr;
         *(UWord**)v = first_in_list;
 	first_in_list = (UWord*) v;
 	v += sizeof(UWord);
@@ -2966,11 +2966,11 @@ reply_alloc_info(void *vair)
     ErtsProcLocks rp_locks;
     Process *rp = air->proc;
     Eterm ref_copy = NIL, ai_list, msg;
-    Eterm *hp = NULL, *hp_end = NULL, *hp_start = NULL;
+    Eterm *hp = nullptr, *hp_end = nullptr, *hp_start = nullptr;
     Eterm **hpp;
     Uint sz, *szp;
-    ErlOffHeap *ohp = NULL;
-    ErlHeapFragment *bp = NULL;
+    ErlOffHeap *ohp = nullptr;
+    ErlHeapFragment *bp = nullptr;
     struct erts_mmap_info_struct emis;
     int i;
     Eterm (*info_func)(Allctr_t *,
@@ -2986,7 +2986,7 @@ reply_alloc_info(void *vair)
     rp_locks = air->req_sched == sched_id ? ERTS_PROC_LOCK_MAIN : 0;
 
     sz = 0;
-    hpp = NULL;
+    hpp = nullptr;
     szp = &sz;
 
     while (1) {
@@ -3070,7 +3070,7 @@ reply_alloc_info(void *vair)
 		    alloc_atom = erts_bld_atom(hpp, szp, "alloc_util");
 		    ainfo = (air->only_sz
 			     ? NIL
-			     : erts_alcu_au_info_options(NULL, NULL,
+                             : erts_alcu_au_info_options(nullptr, nullptr,
 							 hpp, szp));
 		    ainfo = erts_bld_tuple(hpp, szp, 3,
 					   alloc_atom,
@@ -3082,7 +3082,7 @@ reply_alloc_info(void *vair)
 #if HAVE_ERTS_MSEG
 		    ainfo = (air->only_sz
 			     ? NIL
-			     : erts_mseg_info(0, NULL, NULL, hpp != NULL,
+                             : erts_mseg_info(0, nullptr, nullptr, hpp != nullptr,
 					      hpp, szp));
 		    ainfo = erts_bld_tuple3(hpp, szp,
                                             alloc_atom,
@@ -3091,7 +3091,7 @@ reply_alloc_info(void *vair)
 
 		    ai_list = erts_bld_cons(hpp, szp,
 					    ainfo, ai_list);
-		    ainfo = (air->only_sz ? NIL : erts_mmap_info(NULL, NULL, hpp, szp, &emis));
+                    ainfo = (air->only_sz ? NIL : erts_mmap_info(nullptr, nullptr, hpp, szp, &emis));
 		    ainfo = erts_bld_tuple3(hpp, szp,
                                             alloc_atom,
                                             erts_bld_atom(hpp,szp,"erts_mmap"),
@@ -3112,8 +3112,8 @@ reply_alloc_info(void *vair)
 			    allctr = erts_allctr_thr_spec[ai].allctr[0];
 			else
                             allctr = (Allctr_t*)erts_allctrs_info[ai].extra;
-			ainfo = info_func(allctr, air->internal, hpp != NULL,
-					  NULL, NULL, hpp, szp);
+                        ainfo = info_func(allctr, air->internal, hpp != nullptr,
+                                          nullptr, nullptr, hpp, szp);
 			ainfo = erts_bld_tuple(hpp, szp, 3, alloc_atom,
 					       make_small(0), ainfo);
 		    }
@@ -3134,8 +3134,8 @@ reply_alloc_info(void *vair)
 		alloc_atom = erts_bld_atom(hpp, szp, "mseg_alloc");
 		ainfo = (air->only_sz
 			 ? NIL
-			 : erts_mseg_info(sched_id, NULL, NULL,
-					  hpp != NULL, hpp, szp));
+                         : erts_mseg_info(sched_id, nullptr, nullptr,
+                                          hpp != nullptr, hpp, szp));
 		ainfo = erts_bld_tuple(hpp, szp, 3,
 				       alloc_atom,
 				       make_small(sched_id),
@@ -3148,8 +3148,8 @@ reply_alloc_info(void *vair)
 		    alloc_atom = erts_bld_atom(hpp, szp,
 					       (char *) ERTS_ALC_A2AD(ai));
 		    allctr = erts_allctr_thr_spec[ai].allctr[sched_id];
-		    ainfo = info_func(allctr, air->internal, hpp != NULL, NULL,
-				      NULL, hpp, szp);
+                    ainfo = info_func(allctr, air->internal, hpp != nullptr, nullptr,
+                                      nullptr, hpp, szp);
 		    ai_list = erts_bld_cons(hpp, szp,
 					    erts_bld_tuple(
 						hpp, szp,
@@ -3174,7 +3174,7 @@ reply_alloc_info(void *vair)
 	hp = erts_alloc_message_heap(sz, &bp, &ohp, rp, &rp_locks);
 	hp_start = hp;
 	hp_end = hp + sz;
-	szp = NULL;
+        szp = nullptr;
 	hpp = &hp;
     }
     if (bp)
@@ -3225,7 +3225,7 @@ erts_request_alloc_info(struct process *c_p,
 	return 0;
 
     hp = &air->ref_heap[0];
-    air->ref = STORE_NC(&hp, NULL, ref);
+    air->ref = STORE_NC(&hp, nullptr, ref);
 
     if (is_not_list(allocs))
 	return 0;
@@ -3421,7 +3421,7 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
 		    if (argv[i][0] == '-' && argv[i][1] == 't')
 			handle_au_arg(&init, &argv[i][2], argv, &i, 0);
 		    else
-			return (UWord) NULL;
+                        return (UWord) nullptr;
 		    i++;
 		}
 	    }
@@ -3458,7 +3458,7 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
 
 	    default:
 		ASSERT(0);
-		allctr = NULL;
+                allctr = nullptr;
 		break;
 	    }
 
@@ -3523,13 +3523,13 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
 	    if (ethr_thr_create(tid,
 				(void * (*)(void *)) a1,
 				(void *) a2,
-				NULL) != 0)
+                                nullptr) != 0)
 		ERTS_ALC_TEST_ABORT;
 	    return (UWord) tid;
 	}
 	case 0xf11: {
 	    ethr_tid *tid = (ethr_tid *) a1;
-	    if (ethr_thr_join(*tid, NULL) != 0)
+            if (ethr_thr_join(*tid, nullptr) != 0)
 		ERTS_ALC_TEST_ABORT;
 	    erts_free(ERTS_ALC_T_UNDEF, (void *) tid);
 	    break;
@@ -3619,9 +3619,9 @@ hdbg_init(void)
     int i;
     for (i = 0; i < ERL_ALC_HDBG_MAX_MBLK-1; i++)
 	hdbg_mblks[i].next = &hdbg_mblks[i+1];
-    hdbg_mblks[ERL_ALC_HDBG_MAX_MBLK-1].next = NULL;
+    hdbg_mblks[ERL_ALC_HDBG_MAX_MBLK-1].next = nullptr;
     free_hdbg_mblks = &hdbg_mblks[0];
-    used_hdbg_mblks = NULL;
+    used_hdbg_mblks = nullptr;
     erts_mtx_init(&hdbg_mblk_mtx, "erts_alloc_hard_debug");
 }
 
@@ -3666,7 +3666,7 @@ hdbg_alloc(void *p, Uint s, ErtsAlcType_t n)
     mblk->n = n;
 
     mblk->next = used_hdbg_mblks;
-    mblk->prev = NULL;
+    mblk->prev = nullptr;
     if (used_hdbg_mblks)
 	used_hdbg_mblks->prev = mblk;
     used_hdbg_mblks = mblk;
@@ -3741,7 +3741,7 @@ set_memory_fence(void *ptr, Uint sz, ErtsAlcType_t n)
 #endif
 
     if (!ptr)
-	return NULL;
+        return nullptr;
 
     ui_ptr = (UWord *) ptr;
     pattern = MK_PATTERN(n);
@@ -3774,7 +3774,7 @@ check_memory_fence(void *ptr, Uint *size, ErtsAlcType_t n, int func)
 #endif
 
     if (!ptr)
-	return NULL;
+        return nullptr;
 
     ui_ptr = (UWord *) ptr;
     pre_pattern = *(--ui_ptr);

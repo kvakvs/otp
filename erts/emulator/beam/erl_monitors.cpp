@@ -102,7 +102,7 @@ do {								\
 	for(i__ = 0; i__ < len__; i__++)			\
 	    (*((Hp)++)) = boxed_val((From))[i__];		\
 	if (is_external((To))) {				\
-	    external_thing_ptr((To))->next = NULL;		\
+	    external_thing_ptr((To))->next = nullptr;		\
 	    erts_refc_inc(&(external_thing_ptr((To))->node->refc), 2);\
 	}							\
     }								\
@@ -130,7 +130,7 @@ static ErtsMonitor *create_monitor(Uint type, Eterm ref, Eterm pid, Eterm name)
      hp = n->heap;
 
 
-     n->left = n->right = NULL; /* Always the same initial value*/
+     n->left = n->right = nullptr; /* Always the same initial value*/
      n->type = (Uint16) type;
      n->balance = 0;            /* Always the same initial value */
      n->name = name; /* atom() or [] */
@@ -161,13 +161,13 @@ static ErtsLink *create_link(Uint type, Eterm pid)
      hp = n->heap;
 
 
-     n->left = n->right = NULL; /* Always the same initial value*/
+     n->left = n->right = nullptr; /* Always the same initial value*/
      n->type = (Uint16) type;
      n->balance = 0;            /* Always the same initial value */
      if (n->type == LINK_NODE) {
 	 ERTS_LINK_REFC(n) = 0;
      } else {
-	 ERTS_LINK_ROOT(n) = NULL; 
+	 ERTS_LINK_ROOT(n) = nullptr; 
      }
      CP_LINK_VAL(n->pid, hp, pid);
 
@@ -180,7 +180,7 @@ static ErtsSuspendMonitor *create_suspend_monitor(Eterm pid)
 {
     auto smon = (ErtsSuspendMonitor *)erts_alloc(ERTS_ALC_T_SUSPEND_MON,
 					  sizeof(ErtsSuspendMonitor));
-    smon->left = smon->right = NULL; /* Always the same initial value */
+    smon->left = smon->right = nullptr; /* Always the same initial value */
     smon->balance = 0;               /* Always the same initial value */
     smon->pending = 0;
     smon->active = 0;
@@ -231,7 +231,7 @@ void erts_destroy_link(ErtsLink *lnk)
     Uint lnk_size = ERTS_LINK_SIZE;
     ErlNode *node;
 
-    ASSERT(lnk->type == LINK_NODE || ERTS_LINK_ROOT(lnk) == NULL);
+    ASSERT(lnk->type == LINK_NODE || ERTS_LINK_ROOT(lnk) == nullptr);
 
     if (!IS_CONST(lnk->pid)) {
 	lnk_size += NC_HEAP_SIZE(lnk->pid);
@@ -444,7 +444,7 @@ ErtsLink *erts_add_or_lookup_link(ErtsLink **root, Uint type, Eterm pid)
     int state = 0;
     ErtsLink **this_ = root;
     Sint c;
-    ErtsLink *ret = NULL;
+    ErtsLink *ret = nullptr;
 
     dstack[0] = DIR_END;
     for (;;) {
@@ -578,7 +578,7 @@ static int delsub(ErtsMonitorOrLink **this_)
      * object's place.
      */
     
-    while ((*r)->right != NULL) {
+    while ((*r)->right != nullptr) {
 	tstack[tpos++] = r;
 	r = &((*r)->right);
     }
@@ -606,12 +606,12 @@ ErtsMonitor *erts_remove_monitor(ErtsMonitor **root, Eterm ref)
     ErtsMonitor **this_ = root;
     Sint c;
     int dir;
-    ErtsMonitor *q = NULL;
+    ErtsMonitor *q = nullptr;
 
     dstack[0] = DIR_END;
     for (;;) {
 	if (!*this_) { /* Failure */
-	    return NULL;
+	    return nullptr;
 	} else if ((c = CMP_MON_REF(ref,(*this_)->ref)) < 0) { 
 	    dstack[dpos++] = DIR_LEFT;
 	    tstack[tpos++] = this_;
@@ -622,10 +622,10 @@ ErtsMonitor *erts_remove_monitor(ErtsMonitor **root, Eterm ref)
 	    this_ = &((*this_)->right);
 	} else { /* Equal key, found the one to delete */
 	    q = (*this_);
-	    if (q->right == NULL) {
+	    if (q->right == nullptr) {
 		(*this_) = q->left;
 		state = 1;
-	    } else if (q->left == NULL) {
+	    } else if (q->left == nullptr) {
 		(*this_) = q->right;
 		state = 1;
 	    } else {
@@ -657,12 +657,12 @@ ErtsLink *erts_remove_link(ErtsLink **root, Eterm pid)
     ErtsLink **this_ = root;
     Sint c;
     int dir;
-    ErtsLink *q = NULL;
+    ErtsLink *q = nullptr;
 
     dstack[0] = DIR_END;
     for (;;) {
 	if (!*this_) { /* Failure */
-	    return NULL;
+	    return nullptr;
 	} else if ((c = CMP(pid,(*this_)->pid)) < 0) {
 	    dstack[dpos++] = DIR_LEFT;
 	    tstack[tpos++] = this_;
@@ -673,10 +673,10 @@ ErtsLink *erts_remove_link(ErtsLink **root, Eterm pid)
 	    this_ = &((*this_)->right);
 	} else { /* Equal key, found the one to delete */
 	    q = (*this_);
-	    if (q->right == NULL) {
+	    if (q->right == nullptr) {
 		(*this_) = q->left;
 		state = 1;
-	    } else if (q->left == NULL) {
+	    } else if (q->left == nullptr) {
 		(*this_) = q->right;
 		state = 1;
 	    } else {
@@ -709,7 +709,7 @@ erts_delete_suspend_monitor(ErtsSuspendMonitor **root, Eterm pid)
     ErtsSuspendMonitor **this_ = root;
     Sint c;
     int dir;
-    ErtsSuspendMonitor *q = NULL;
+    ErtsSuspendMonitor *q = nullptr;
 
     dstack[0] = DIR_END;
     for (;;) {
@@ -726,10 +726,10 @@ erts_delete_suspend_monitor(ErtsSuspendMonitor **root, Eterm pid)
 	} else { /* Equal key, found the one to delete */
 	    q = (*this_);
 	    ASSERT(q->pid == pid);
-	    if (q->right == NULL) {
+	    if (q->right == nullptr) {
 		(*this_) = q->left;
 		state = 1;
-	    } else if (q->left == NULL) {
+	    } else if (q->left == nullptr) {
 		(*this_) = q->right;
 		state = 1;
 	    } else {
@@ -756,7 +756,7 @@ ErtsMonitor *erts_lookup_monitor(ErtsMonitor *root, Eterm ref)
     Sint c;
 
     for (;;) {
-	if (root == NULL || (c = CMP_MON_REF(ref,root->ref)) == 0) {
+	if (root == nullptr || (c = CMP_MON_REF(ref,root->ref)) == 0) {
 	    return root;
 	} else if (c < 0) { 
 	    root = root->left;
@@ -771,7 +771,7 @@ ErtsLink *erts_lookup_link(ErtsLink *root, Eterm pid)
     Sint c;
 
     for (;;) {
-	if (root == NULL || (c = CMP(pid,root->pid)) == 0) {
+	if (root == nullptr || (c = CMP(pid,root->pid)) == 0) {
 	    return root;
 	} else if (c < 0) { 
 	    root = root->left;
@@ -787,7 +787,7 @@ erts_lookup_suspend_monitor(ErtsSuspendMonitor *root, Eterm pid)
     Sint c;
 
     for (;;) {
-	if (root == NULL || (c = CMP(pid,root->pid)) == 0) {
+	if (root == nullptr || (c = CMP(pid,root->pid)) == 0) {
 	    return root;
 	} else if (c < 0) { 
 	    root = root->left;
@@ -810,7 +810,7 @@ void erts_sweep_monitors(ErtsMonitor *root,
     dstack[0] = DIR_END;
 
     for (;;) {
-	if (root == NULL) {
+	if (root == nullptr) {
 	    if ((dir = dstack[dpos-1]) == DIR_END) {
 		return;
 	    }
@@ -823,7 +823,7 @@ void erts_sweep_monitors(ErtsMonitor *root,
 		(*doit)(tstack[--tpos],context); /* expeted to do the 
 						    deletion */
 		--dpos;
-		root = NULL;
+		root = nullptr;
 	    }
 	} else {
 	    dstack[dpos++] = DIR_LEFT;
@@ -846,7 +846,7 @@ void erts_sweep_links(ErtsLink *root,
     dstack[0] = DIR_END;
 
     for (;;) {
-	if (root == NULL) {
+	if (root == nullptr) {
 	    if ((dir = dstack[dpos-1]) == DIR_END) {
 		return;
 	    }
@@ -859,7 +859,7 @@ void erts_sweep_links(ErtsLink *root,
 		(*doit)(tstack[--tpos],context); /* expeted to do the 
 						    deletion */
 		--dpos;
-		root = NULL;
+		root = nullptr;
 	    }
 	} else {
 	    dstack[dpos++] = DIR_LEFT;
@@ -882,7 +882,7 @@ void erts_sweep_suspend_monitors(ErtsSuspendMonitor *root,
     dstack[0] = DIR_END;
 
     for (;;) {
-	if (root == NULL) {
+	if (root == nullptr) {
 	    if ((dir = dstack[dpos-1]) == DIR_END) {
 		return;
 	    }
@@ -895,7 +895,7 @@ void erts_sweep_suspend_monitors(ErtsSuspendMonitor *root,
 		(*doit)(tstack[--tpos],context); /* expeted to do the 
 						    deletion */
 		--dpos;
-		root = NULL;
+		root = nullptr;
 	    }
 	} else {
 	    dstack[dpos++] = DIR_LEFT;
@@ -910,7 +910,7 @@ void erts_sweep_suspend_monitors(ErtsSuspendMonitor *root,
 	    
 static void erts_dump_monitors(ErtsMonitor *root, int indent)
 {
-    if (root == NULL)
+    if (root == nullptr)
 	return;
     erts_dump_monitors(root->right,indent+2);
     erts_printf("%*s[%b16d:%b16u:%T:%T:%T]\n", indent, "", root->balance,
@@ -921,13 +921,13 @@ static void erts_dump_monitors(ErtsMonitor *root, int indent)
 static void erts_dump_links_aux(ErtsLink *root, int indent,
 				erts_dsprintf_buf_t *dsbufp)
 {
-    if (root == NULL)
+    if (root == nullptr)
 	return;
     erts_dump_links_aux(root->right, indent+2, dsbufp);
     dsbufp->str_len = 0;
     erts_dsprintf(dsbufp, "%*s[%b16d:%b16u:%T:%p]", indent, "",
 		  root->balance, root->type, root->pid, ERTS_LINK_ROOT(root));
-    if (ERTS_LINK_ROOT(root) != NULL) {
+    if (ERTS_LINK_ROOT(root) != nullptr) {
 	ErtsLink *sub = ERTS_LINK_ROOT(root);
 	int len = dsbufp->str_len;
 	erts_dump_links_aux(sub->right, indent+len+5, dsbufp);
@@ -958,7 +958,7 @@ Eterm erts_debug_dump_monitors_1(BIF_ALIST_1)
     if (!rp) {
 	ERTS_SMP_ASSERT_IS_NOT_EXITING(p);
 	if (is_atom(pid) && is_node_name_atom(pid) &&
-	    (dep = erts_find_dist_entry(pid)) != NULL) {
+	    (dep = erts_find_dist_entry(pid)) != nullptr) {
 	    erts_printf("Dumping dist monitors-------------------\n");
 	    erts_smp_de_links_lock(dep);
 	    erts_dump_monitors(dep->monitors,0);
@@ -1003,7 +1003,7 @@ Eterm erts_debug_dump_links_1(BIF_ALIST_1)
 	if (!rp) {
 	    ERTS_SMP_ASSERT_IS_NOT_EXITING(p);
 	    if (is_atom(pid) && is_node_name_atom(pid) &&
-		(dep = erts_find_dist_entry(pid)) != NULL) {
+		(dep = erts_find_dist_entry(pid)) != nullptr) {
 		erts_printf("Dumping dist links----------------------\n");
 		erts_smp_de_links_lock(dep);
 		erts_dump_links(dep->nlinks,0);
@@ -1031,7 +1031,7 @@ void erts_one_link_size(ErtsLink *lnk, void *vpu)
     *pu += ERTS_LINK_SIZE*sizeof(Uint);
     if(!IS_CONST(lnk->pid))
 	*pu += NC_HEAP_SIZE(lnk->pid)*sizeof(Uint);
-    if (lnk->type != LINK_NODE && ERTS_LINK_ROOT(lnk) != NULL) {
+    if (lnk->type != LINK_NODE && ERTS_LINK_ROOT(lnk) != nullptr) {
 	erts_doforall_links(ERTS_LINK_ROOT(lnk),&erts_one_link_size,vpu);
     }
 }

@@ -78,8 +78,8 @@ static Module* module_alloc(Module* tmpl)
     obj->curr.code_length = 0;
     obj->old.code_length = 0;
     obj->slot.index = -1;
-    obj->curr.nif = NULL;
-    obj->old.nif = NULL;
+    obj->curr.nif = nullptr;
+    obj->old.nif = nullptr;
     obj->curr.num_breakpoints = 0;
     obj->old.num_breakpoints  = 0;
     obj->curr.num_traced_exports = 0;
@@ -128,7 +128,7 @@ erts_get_module(Eterm mod, ErtsCodeIndex code_ix)
     e.module = atom_val(mod);
     index = index_get(mod_tab, (void*) &e);
     if (index == -1) {
-	return NULL;
+	return nullptr;
     } else {
 	return (Module*) erts_index_lookup(mod_tab, index);
     }

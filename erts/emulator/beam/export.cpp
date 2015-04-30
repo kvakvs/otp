@@ -192,7 +192,7 @@ init_export_table(void)
 
 /*
  * Return a pointer to the export_ entry for the given function,
- * or NULL otherwise.  Notes:
+ * or nullptr otherwise.  Notes:
  *
  * 1) BIFs have export_ entries and can be called through
  *    a wrapper in the export_ entry.
@@ -226,7 +226,7 @@ erts_find_export_entry(Eterm m, Eterm f, unsigned int a, ErtsCodeIndex code_ix)
 	}
 	b = b->next;
     }
-    return NULL;
+    return nullptr;
 }
 
 static struct export_entry* init_template(struct export_templ* templ,
@@ -243,7 +243,7 @@ static struct export_entry* init_template(struct export_templ* templ,
 
 /*
  * Find the export_ entry for a loaded function.
- * Returns a NULL pointer if the given function is not loaded, or
+ * Returns a nullptr pointer if the given function is not loaded, or
  * a pointer to the export_ entry.
  *
  * Note: This function never returns export_ entries for BIFs
@@ -259,10 +259,10 @@ erts_find_function(Eterm m, Eterm f, unsigned int a, ErtsCodeIndex code_ix)
     struct export_entry* ee;
 
     ee = (export_entry*)hash_get(&export_tables[code_ix].htable, init_template(&templ, m, f, a));
-    if (ee == NULL ||
+    if (ee == nullptr ||
 	(ee->ep->addressv[code_ix] == ee->ep->code+3 &&
 	 ee->ep->code[3] != (BeamInstr) BeamOp(op_i_generic_breakpoint))) {
-	return NULL;
+	return nullptr;
     }
     return ee->ep;
 }
@@ -370,7 +370,7 @@ Export *export_get(Export *e)
 
     ee.ep = e;
     entry = (struct export_entry*)hash_get(&export_tables[erts_active_code_ix()].htable, &ee);
-    return entry ? entry->ep : NULL;
+    return entry ? entry->ep : nullptr;
 }
 
 IF_DEBUG(static ErtsCodeIndex debug_start_load_ix = 0;)

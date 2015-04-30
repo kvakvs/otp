@@ -4032,7 +4032,7 @@ ethr_sint32_t ethr_atomic32_read_bor_mb(ethr_atomic32_t *var, ethr_sint32_t val)
 /* --------- Info functions --------- */
 
 #if defined(ETHR_RTCHK_USE_NATIVE_DW_ATOMIC_IMPL__)
-char *zero_ops[] = {NULL};
+char *zero_ops[] = {nullptr};
 #endif
 
 
@@ -4109,7 +4109,7 @@ static char *native_su_dw_atomic_ops[] = {
 #ifdef ETHR_HAVE_ETHR_NATIVE_SU_DW_ATOMIC_INIT_MB
     "init_mb",
 #endif
-    NULL
+    nullptr
 };
 
 char **
@@ -4197,7 +4197,7 @@ static char *native_dw_atomic_ops[] = {
 #ifdef ETHR_HAVE_ETHR_NATIVE_DW_ATOMIC_INIT_MB
     "init_mb",
 #endif
-    NULL
+    nullptr
 };
 
 char **
@@ -4447,7 +4447,7 @@ static char *native_atomic64_ops[] = {
 #ifdef ETHR_HAVE_ETHR_NATIVE_ATOMIC64_OR_RETOLD_MB
     "or_retold_mb",
 #endif
-    NULL
+    nullptr
 };
 
 char **
@@ -4693,7 +4693,7 @@ static char *native_atomic32_ops[] = {
 #ifdef ETHR_HAVE_ETHR_NATIVE_ATOMIC32_OR_RETOLD_MB
     "or_retold_mb",
 #endif
-    NULL
+    nullptr
 };
 
 char **

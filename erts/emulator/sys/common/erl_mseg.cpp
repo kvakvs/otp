@@ -402,7 +402,7 @@ do {									\
 
 
 static ERTS_INLINE void mseg_cache_clear_node(cache_t *c) {
-    c->seg = NULL;
+    c->seg = nullptr;
     c->size = 0;
     c->next = c;
     c->prev = c;
@@ -541,7 +541,7 @@ static ERTS_INLINE void *cache_get_segment(MemKind *mk, UWord *size_p, Uint flag
     else if (!erts_circleq_is_empty(&(mk->cache_unpowered_node))) {
 	void *seg;
 	cache_t *c;
-	cache_t *best = NULL;
+	cache_t *best = nullptr;
 	UWord bdiff = 0;
 	UWord csize;
 	UWord bad_max_abs = mk->ma->abs_max_cache_bad_fit;
@@ -599,7 +599,7 @@ static ERTS_INLINE void *cache_get_segment(MemKind *mk, UWord *size_p, Uint flag
 
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 /* *_mseg_check_*_cache
@@ -608,7 +608,7 @@ static ERTS_INLINE void *cache_get_segment(MemKind *mk, UWord *size_p, Uint flag
  */
 
 static ERTS_INLINE Uint mseg_drop_one_memkind_cache_size(MemKind *mk, Uint flags, cache_t *head) {
-    cache_t *c = NULL;
+    cache_t *c = nullptr;
 
     c = erts_circleq_tail(head);
     erts_circleq_remove(c);
@@ -629,7 +629,7 @@ static ERTS_INLINE Uint mseg_drop_one_memkind_cache_size(MemKind *mk, Uint flags
 }
 
 static ERTS_INLINE Uint mseg_drop_memkind_cache_size(MemKind *mk, Uint flags, cache_t *head) {
-    cache_t *c = NULL;
+    cache_t *c = nullptr;
 
     while (!erts_circleq_is_empty(head)) {
 
@@ -794,7 +794,7 @@ mseg_alloc(ErtsMsegAllctr_t *ma, ErtsAlcType_t atype, UWord *size_p,
 	}
     }
 
-    if (opt->cache && mk->cache_size > 0 && (seg = cache_get_segment(mk, &size, flags)) != NULL)
+    if (opt->cache && mk->cache_size > 0 && (seg = cache_get_segment(mk, &size, flags)) != nullptr)
 	goto done;
 
     seg = mseg_create(ma, flags, mk, &size);
@@ -857,7 +857,7 @@ mseg_realloc(ErtsMsegAllctr_t *ma, ErtsAlcType_t atype, void *seg,
     if (!(*new_size_p)) {
 	mseg_dealloc(ma, atype, seg, old_size, flags, opt);
 	DEC_CC(ma, dealloc);
-	return NULL;
+	return nullptr;
     }
 
     mk = memkind(ma, opt);
@@ -1528,7 +1528,7 @@ erts_mseg_init(ErtsMsegInit_t *init)
 	if (ma->max_cache_size > MAX_CACHE_SIZE)
 	    ma->max_cache_size = MAX_CACHE_SIZE;
 
-	ma->mk_list = NULL;
+	ma->mk_list = nullptr;
 
 #if HALFWORD_HEAP
 	mem_kind_init(ma, &ma->low_mem, "low memory");

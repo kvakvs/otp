@@ -289,10 +289,10 @@ static void hipe_sigaltstack(void *ss_sp)
     ss.ss_sp = ss_sp;
     ss.ss_flags = SS_ONSTACK;
     ss.ss_size = SIGSTKSZ;
-    if (sigaltstack(&ss, NULL) < 0) {
+    if (sigaltstack(&ss, nullptr) < 0) {
 	/* might be a broken pre-2.4 Linux kernel, try harder */
 	ss.ss_flags = 0;
-	if (sigaltstack(&ss, NULL) < 0) {
+	if (sigaltstack(&ss, nullptr) < 0) {
 	    perror("sigaltstack");
 	    abort();
 	}
@@ -339,7 +339,7 @@ void hipe_signal_init(void)
     hipe_sigaltstack_init();
 
     for (i = 1; i < _NSIG; ++i) {
-	if (sigaction(i, NULL, &sa)) {
+	if (sigaction(i, nullptr, &sa)) {
 	    /* This will fail with EINVAL on Solaris if 'i' is one of the
 	       thread library's private signals. We DO catch the initial
 	       setup of these signals, so things MAY be OK anyway. */
@@ -350,7 +350,7 @@ void hipe_signal_init(void)
 	    (sa.sa_flags & SA_ONSTACK))
 	    continue;
 	sa.sa_flags |= SA_ONSTACK;
-	if (sigaction(i, &sa, NULL)) {
+	if (sigaction(i, &sa, nullptr)) {
 #ifdef SIGCANCEL
 	    /* Solaris 9 x86 refuses to let us modify SIGCANCEL. */
 	    if (i == SIGCANCEL)

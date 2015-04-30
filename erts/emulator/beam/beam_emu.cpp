@@ -67,7 +67,7 @@ do {									\
 	erts_proc_lc_chk_only_proc_main((P));				\
     }									\
     else								\
-	erts_lc_check_exact(NULL, 0);					\
+        erts_lc_check_exact(nullptr, 0);					\
     	ERTS_SMP_LC_ASSERT(!erts_thr_progress_is_blocking());		\
 } while (0)
 #    define ERTS_SMP_REQ_PROC_MAIN_LOCK(P) \
@@ -78,7 +78,7 @@ do {									\
 #  else
 #    define ERTS_SMP_REQ_PROC_MAIN_LOCK(P)
 #    define ERTS_SMP_UNREQ_PROC_MAIN_LOCK(P)
-#    define PROCESS_MAIN_CHK_LOCKS(P) erts_lc_check_exact(NULL, 0)
+#    define PROCESS_MAIN_CHK_LOCKS(P) erts_lc_check_exact(nullptr, 0)
 #  endif
 #else
 #  define PROCESS_MAIN_CHK_LOCKS(P)
@@ -569,7 +569,7 @@ extern int count_instructions;
 #define Move2(src1, dst1, src2, dst2) dst1 = (src1); dst2 = (src2)
 
 #define MoveGenDest(src, dstp) \
-   if ((dstp) == NULL) { r(0) = (src); } else { *(dstp) = src; }
+   if ((dstp) == nullptr) { r(0) = (src); } else { *(dstp) = src; }
 
 #define MoveReturn(Src, Dest)       \
     (Dest) = (Src);                 \
@@ -1102,7 +1102,7 @@ init_emulator(void)
 void process_main(void)
 {
     static int init_done = 0;
-    Process* c_p = NULL;
+    Process* c_p = nullptr;
     int reds_used;
 #ifdef DEBUG
     ERTS_DECLARE_DUMMY(Eterm pid);
@@ -1116,23 +1116,23 @@ void process_main(void)
     /* Pointer to X registers: x(1)..x(N); reg[0] is used when doing GC,
      * in all other cases x0 is used.
      */
-    register Eterm* reg REG_xregs = NULL;
+    register Eterm* reg REG_xregs = nullptr;
 
     /*
      * Top of heap (next free location); grows upwards.
      */
-    register Eterm* HTOP REG_htop = NULL;
+    register Eterm* HTOP REG_htop = nullptr;
 
     /* Stack pointer.  Grows downwards; points
      * to last item pushed (normally a saved
      * continuation pointer).
      */
-    register Eterm* E REG_stop = NULL;
+    register Eterm* E REG_stop = nullptr;
 
     /*
      * Pointer to next threaded instruction.
      */
-    register BeamInstr *I REG_I = NULL;
+    register BeamInstr *I REG_I = nullptr;
 
     /* Number of reductions left.  This function
      * returns to the scheduler when FCALLS reaches zero.
@@ -1177,7 +1177,7 @@ void process_main(void)
     Eterm pt_arity;		/* Used by do_put_tuple */
 
     Uint64 start_time = 0;          /* Monitor long schedule */
-    BeamInstr* start_time_i = NULL;
+    BeamInstr* start_time_i = nullptr;
 
     ERL_BITS_DECLARE_STATEP; /* Has to be last declaration */
 
@@ -1198,7 +1198,7 @@ void process_main(void)
 	goto init_emulator;
     }
 
-    c_p = NULL;
+    c_p = nullptr;
     reds_used = 0;
 
     goto do_schedule1;
@@ -1299,7 +1299,7 @@ void process_main(void)
                 if (fptr) {
                     dtrace_fun_decode(c_p, (Eterm)fptr[0],
                                       (Eterm)fptr[1], (Uint)fptr[2],
-                                      NULL, fun_buf);
+                                      nullptr, fun_buf);
                 } else {
                     erts_snprintf(fun_buf, sizeof(DTRACE_CHARBUF_NAME(fun_buf)),
                                   "<unknown/%p>", next);
@@ -1524,7 +1524,7 @@ void process_main(void)
     E = ADD_BYTE_OFFSET(E, Arg(1));
 
     /*
-     * Note: The pointer to the export_ entry is never NULL; if the module
+     * Note: The pointer to the export_ entry is never nullptr; if the module
      * is not loaded, it points to code which will invoke the error handler
      * (see lb_call_error_handler below).
      */
@@ -2090,7 +2090,7 @@ void process_main(void)
 	     erts_smp_atomic32_read_band_relb(&c_p->state, ~ERTS_PSFLG_ACTIVE);
 	     ASSERT(!ERTS_PROC_IS_EXITING(c_p));
 	     erts_smp_proc_unlock(c_p, ERTS_PROC_LOCKS_MSG_RECEIVE);
-	     c_p->current = NULL;
+             c_p->current = nullptr;
 	     goto do_schedule;
 	 }
 	 OpCase(wait_unlocked_f): {
@@ -3106,7 +3106,7 @@ get_map_elements_fail:
      SWAPOUT;
      next = apply(c_p, r(0), x(1), x(2), reg);
      SWAPIN;
-     if (next != NULL) {
+     if (next != nullptr) {
 	 r(0) = reg[0];
 	 SET_CP(c_p, I+1);
 	 SET_I(next);
@@ -3121,7 +3121,7 @@ get_map_elements_fail:
      SWAPOUT;
      next = apply(c_p, r(0), x(1), x(2), reg);
      SWAPIN;
-     if (next != NULL) {
+     if (next != nullptr) {
 	 r(0) = reg[0];
 	 SET_CP(c_p, (BeamInstr *) EXPAND_POINTER(E[0]));
 	 E = ADD_BYTE_OFFSET(E, Arg(0));
@@ -3137,7 +3137,7 @@ get_map_elements_fail:
      SWAPOUT;
      next = apply(c_p, r(0), x(1), x(2), reg);
      SWAPIN;
-     if (next != NULL) {
+     if (next != nullptr) {
 	 r(0) = reg[0];
 	 SET_I(next);
 	 Dispatch();
@@ -3153,7 +3153,7 @@ get_map_elements_fail:
      SWAPOUT;
      next = fixed_apply(c_p, reg, Arg(0));
      SWAPIN;
-     if (next != NULL) {
+     if (next != nullptr) {
 	 r(0) = reg[0];
 	 SET_CP(c_p, I+2);
 	 SET_I(next);
@@ -3170,7 +3170,7 @@ get_map_elements_fail:
      SWAPOUT;
      next = fixed_apply(c_p, reg, Arg(0));
      SWAPIN;
-     if (next != NULL) {
+     if (next != nullptr) {
 	 r(0) = reg[0];
 	 SET_CP(c_p, (BeamInstr *) EXPAND_POINTER(E[0]));
 	 E = ADD_BYTE_OFFSET(E, Arg(1));
@@ -3187,7 +3187,7 @@ get_map_elements_fail:
      SWAPOUT;
      next = apply_fun(c_p, r(0), x(1), reg);
      SWAPIN;
-     if (next != NULL) {
+     if (next != nullptr) {
 	 r(0) = reg[0];
 	 SET_CP(c_p, I+1);
 	 SET_I(next);
@@ -3202,7 +3202,7 @@ get_map_elements_fail:
      SWAPOUT;
      next = apply_fun(c_p, r(0), x(1), reg);
      SWAPIN;
-     if (next != NULL) {
+     if (next != nullptr) {
 	 r(0) = reg[0];
 	 SET_CP(c_p, (BeamInstr *) EXPAND_POINTER(E[0]));
 	 E = ADD_BYTE_OFFSET(E, Arg(0));
@@ -3218,7 +3218,7 @@ get_map_elements_fail:
      SWAPOUT;
      next = apply_fun(c_p, r(0), x(1), reg);
      SWAPIN;
-     if (next != NULL) {
+     if (next != nullptr) {
 	 r(0) = reg[0];
 	 SET_I(next);
 	 Dispatchfun();
@@ -3234,7 +3234,7 @@ get_map_elements_fail:
 
      next = call_fun(c_p, Arg(0), reg, THE_NON_VALUE);
      SWAPIN;
-     if (next != NULL) {
+     if (next != nullptr) {
 	 r(0) = reg[0];
 	 SET_CP(c_p, I+2);
 	 SET_I(next);
@@ -3250,7 +3250,7 @@ get_map_elements_fail:
      reg[0] = r(0);
      next = call_fun(c_p, Arg(0), reg, THE_NON_VALUE);
      SWAPIN;
-     if (next != NULL) {
+     if (next != nullptr) {
 	r(0) = reg[0];
 	SET_CP(c_p, (BeamInstr *) EXPAND_POINTER(E[0]));
 	E = ADD_BYTE_OFFSET(E, Arg(1));
@@ -3418,7 +3418,7 @@ get_map_elements_fail:
 	 struct StackTrace *s;
 	 c_p->ftrace = raise_val1;
 	 s = get_trace_from_exc(raise_val1);
-	 if (s == NULL) {
+         if (s == nullptr) {
 	   c_p->freason = EXC_ERROR;
 	 } else {
 	   c_p->freason = PRIMARY_EXCEPTION(s->freason);
@@ -3451,7 +3451,7 @@ get_map_elements_fail:
  find_func_info: {
      reg[0] = r(0);
      SWAPOUT;
-     I = handle_error(c_p, I, reg, NULL);
+     I = handle_error(c_p, I, reg, nullptr);
      goto post_error_handling;
  }
 
@@ -3480,7 +3480,7 @@ get_map_elements_fail:
     handle_error:
      reg[0] = r(0);
      SWAPOUT;
-     I = handle_error(c_p, NULL, reg, NULL);
+     I = handle_error(c_p, nullptr, reg, nullptr);
  post_error_handling:
      if (I == 0) {
 	 goto do_schedule;
@@ -4797,7 +4797,7 @@ get_map_elements_fail:
      erts_trace_return(c_p, code, r(0), E+1/*Process tracer*/);
      ERTS_SMP_REQ_PROC_MAIN_LOCK(c_p);
      SWAPIN;
-     c_p->cp = NULL;
+     c_p->cp = nullptr;
      SET_I((BeamInstr *) cp_val(E[2]));
      E += 3;
      Goto(*I);
@@ -4820,7 +4820,7 @@ get_map_elements_fail:
      SWAPOUT;
      erts_trace_time_return(c_p, pc);
      SWAPIN;
-     c_p->cp = NULL;
+     c_p->cp = nullptr;
      SET_I((BeamInstr *) cp_val(E[1]));
      E += 2;
      Goto(*I);
@@ -4844,7 +4844,7 @@ get_map_elements_fail:
 	 ERTS_SMP_REQ_PROC_MAIN_LOCK(c_p);
 	 SWAPIN;
      }
-     c_p->cp = NULL;
+     c_p->cp = nullptr;
      SET_I((BeamInstr *) cp_val(E[0]));
      E += 1;
      Goto(*I);
@@ -5051,7 +5051,7 @@ get_map_elements_fail:
 
 	     next = call_fun(c_p, c_p->arity - 1, reg, THE_NON_VALUE);
 	     SWAPIN;
-	     if (next != NULL) {
+             if (next != nullptr) {
 		 r(0) = reg[0];
 		 SET_I(next);
 		 Dispatchfun();
@@ -5059,8 +5059,8 @@ get_map_elements_fail:
 	     goto find_func_info;
 	 }
        case HIPE_MODE_SWITCH_RES_THROW:
-	 c_p->cp = NULL;
-	 I = handle_error(c_p, I, reg, NULL);
+         c_p->cp = nullptr;
+         I = handle_error(c_p, I, reg, nullptr);
 	 goto post_error_handling;
        default:
 	 erl_exit(1, "hipe_mode_switch: result %u\n", c_p->def_arg_reg[3]);
@@ -5078,7 +5078,7 @@ get_map_elements_fail:
       */
      struct hipe_call_count *hcc = (struct hipe_call_count*)I[-4];
      ASSERT(I[-5] == (Uint) OpCode(i_func_info_IaaI));
-     ASSERT(hcc != NULL);
+     ASSERT(hcc != nullptr);
      ASSERT(VALID_INSTR(hcc->opcode));
      ++(hcc->count);
      Goto(hcc->opcode);
@@ -5095,7 +5095,7 @@ get_map_elements_fail:
      c_p->arity = 1; /* One living register (the 'true' return value) */
      SWAPOUT;
      c_p->i = I + 1; /* Next instruction */
-     c_p->current = NULL;
+     c_p->current = nullptr;
      goto do_schedule;
  }
 
@@ -5382,7 +5382,7 @@ handle_error(Process* c_p, BeamInstr* pc, Eterm* reg, BifFunction bf)
     ERTS_SMP_UNREQ_PROC_MAIN_LOCK(c_p);
     terminate_proc(c_p, Value);
     ERTS_SMP_REQ_PROC_MAIN_LOCK(c_p);
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -5392,7 +5392,7 @@ static BeamInstr*
 next_catch(Process* c_p, Eterm *reg) {
     int active_catches = c_p->catches > 0;
     int have_return_to_trace = 0;
-    Eterm *ptr, *prev, *return_to_trace_ptr = NULL;
+    Eterm *ptr, *prev, *return_to_trace_ptr = nullptr;
 
     BeamInstr i_return_trace      = beam_return_trace[0];
     BeamInstr i_return_to_trace   = beam_return_to_trace[0];
@@ -5401,7 +5401,7 @@ next_catch(Process* c_p, Eterm *reg) {
     ptr = prev = c_p->stop;
     ASSERT(is_CP(*ptr));
     ASSERT(ptr <= STACK_START(c_p));
-    if (ptr == STACK_START(c_p)) return NULL;
+    if (ptr == STACK_START(c_p)) return nullptr;
     if ((is_not_CP(*ptr) || (*cp_val(*ptr) != i_return_trace &&
 			     *cp_val(*ptr) != i_return_to_trace &&
 			     *cp_val(*ptr) != i_return_time_trace ))
@@ -5447,7 +5447,7 @@ next_catch(Process* c_p, Eterm *reg) {
 		    if (is_catch(*ptr) && active_catches) goto found_catch;
 		}
 		have_return_to_trace = !0; /* Record next cp */
-		return_to_trace_ptr = NULL;
+                return_to_trace_ptr = nullptr;
 	    } else if (*cp_val(*prev) == i_return_time_trace) {
 		/* Skip stack frame variables */
 		while (++ptr, ptr < STACK_START(c_p) && is_not_CP(*ptr)) {
@@ -5460,12 +5460,12 @@ next_catch(Process* c_p, Eterm *reg) {
 		    /* Record this_ cp as possible return_to trace cp */
 		    have_return_to_trace = 0;
 		    return_to_trace_ptr = ptr;
-		} else return_to_trace_ptr = NULL;
+                } else return_to_trace_ptr = nullptr;
 		ptr++;
 	    }
 	} else ptr++;
     }
-    return NULL;
+    return nullptr;
     
  found_catch:
     ASSERT(ptr < STACK_START(c_p));
@@ -5615,7 +5615,7 @@ save_stacktrace(Process* c_p, BeamInstr* pc, Eterm* reg, BifFunction bf,
      * 'throw', find the bif-table index and save the argument
      * registers by consing up an arglist.
      */
-    if (bf != NULL && bf != error_1 && bf != error_2 &&
+    if (bf != nullptr && bf != error_1 && bf != error_2 &&
 	bf != exit_1 && bf != throw_1) {
         int i;
 	int a = 0;
@@ -5649,7 +5649,7 @@ save_stacktrace(Process* c_p, BeamInstr* pc, Eterm* reg, BifFunction bf,
 	    s->trace[s->depth++] = c_p->cp - 1;
 	    depth--;
 	}
-	s->pc = NULL;
+        s->pc = nullptr;
 	args = make_arglist(c_p, reg, a); /* Overwrite CAR(c_p->ftrace) */
     } else {
 	s->current = c_p->current;
@@ -5669,7 +5669,7 @@ save_stacktrace(Process* c_p, BeamInstr* pc, Eterm* reg, BifFunction bf,
 		s->trace[s->depth++] = c_p->cp - 1;
 		depth--;
 	    }
-	    s->pc = NULL; /* Ignore pc */
+            s->pc = nullptr; /* Ignore pc */
 	} else {
 	    if (depth > 0 && c_p->cp != 0 && c_p->cp != pc) {
 		s->trace[s->depth++] = c_p->cp - 1;
@@ -5695,7 +5695,7 @@ erts_save_stacktrace(Process* p, struct StackTrace* s, int depth)
 {
     if (depth > 0) {
 	Eterm *ptr;
-	BeamInstr *prev = s->depth ? s->trace[s->depth-1] : NULL;
+        BeamInstr *prev = s->depth ? s->trace[s->depth-1] : nullptr;
 	BeamInstr i_return_trace = beam_return_trace[0];
 	BeamInstr i_return_to_trace = beam_return_to_trace[0];
 
@@ -5751,7 +5751,7 @@ erts_save_stacktrace(Process* p, struct StackTrace* s, int depth)
 
 static struct StackTrace *get_trace_from_exc(Eterm exc) {
     if (exc == NIL) {
-	return NULL;
+        return nullptr;
     } else {
 	ASSERT(is_list(exc));
 	return (struct StackTrace *) big_val(CDR(list_val(exc)));
@@ -5828,7 +5828,7 @@ build_stacktrace(Process* c_p, Eterm exc) {
      * Find the current function. If the saved s->pc is null, then the
      * saved s->current should already contain the proper value.
      */
-    if (s->pc != NULL) {
+    if (s->pc != nullptr) {
 	erts_lookup_function_info(&fi, s->pc, 1);
     } else if (GET_EXC_INDEX(s->freason) ==
 	       GET_EXC_INDEX(EXC_FUNCTION_CLAUSE)) {
@@ -5838,10 +5838,10 @@ build_stacktrace(Process* c_p, Eterm exc) {
     }
 
     /*
-     * If fi.current is still NULL, default to the initial function
+     * If fi.current is still nullptr, default to the initial function
      * (e.g. spawn_link(erlang, abs, [1])).
      */
-    if (fi.current == NULL) {
+    if (fi.current == nullptr) {
 	erts_set_current_function(&fi, c_p->initial);
 	args = am_true; /* Just in case */
     } else {
@@ -5896,7 +5896,7 @@ call_error_handler(Process* p, BeamInstr* fi, Eterm* reg, Eterm func)
      */
     ep = erts_find_function(erts_proc_get_error_handler(p), func, 3,
 			    erts_active_code_ix());
-    if (ep == NULL) {		/* No error handler */
+    if (ep == nullptr) {		/* No error handler */
 	p->current = fi;
 	p->freason = EXC_UNDEF;
 	return 0;
@@ -5934,13 +5934,13 @@ apply_setup_error_handler(Process* p, Eterm module, Eterm function, Uint arity, 
     Export* ep;
 
     /*
-     * Find the export_ table index for the error handler. Return NULL if
+     * Find the export_ table index for the error handler. Return nullptr if
      * there is no error handler module.
      */
 
     if ((ep = erts_active_export_entry(erts_proc_get_error_handler(p),
-				     am_undefined_function, 3)) == NULL) {
-	return NULL;
+                                     am_undefined_function, 3)) == nullptr) {
+        return nullptr;
     } else {
 	int i;
 	Uint sz = 2*arity;
@@ -6045,8 +6045,8 @@ apply(Process* p, Eterm module, Eterm function, Eterm args, Eterm* reg)
      * Note: All BIFs have export_ entries; thus, no special case is needed.
      */
 
-    if ((ep = erts_active_export_entry(module, function, arity)) == NULL) {
-	if ((ep = apply_setup_error_handler(p, module, function, arity, reg)) == NULL) goto error;
+    if ((ep = erts_active_export_entry(module, function, arity)) == nullptr) {
+        if ((ep = apply_setup_error_handler(p, module, function, arity, reg)) == nullptr) goto error;
     } else if (ERTS_PROC_GET_SAVED_CALLS_BUF(p)) {
 	save_calls(p, ep);
     }
@@ -6099,8 +6099,8 @@ fixed_apply(Process* p, Eterm* reg, Uint arity)
      * Note: All BIFs have export_ entries; thus, no special case is needed.
      */
 
-    if ((ep = erts_active_export_entry(module, function, arity)) == NULL) {
-	if ((ep = apply_setup_error_handler(p, module, function, arity, reg)) == NULL)
+    if ((ep = erts_active_export_entry(module, function, arity)) == nullptr) {
+        if ((ep = apply_setup_error_handler(p, module, function, arity, reg)) == nullptr)
 	    goto error;
     } else if (ERTS_PROC_GET_SAVED_CALLS_BUF(p)) {
 	save_calls(p, ep);
@@ -6284,7 +6284,7 @@ call_fun(Process* p,		/* Current process. */
 		hp = HAlloc(p, 3);
 		p->freason = EXC_BADARITY;
 		p->fvalue = TUPLE2(hp, fun, args);
-		return NULL;
+                return nullptr;
 	    } else {
 		Export* ep;
 		Module* modp;
@@ -6298,8 +6298,8 @@ call_fun(Process* p,		/* Current process. */
 		 * or the module defining the fun has been unloaded.
 		 */
 		module = fe->module;
-		if ((modp = erts_get_module(module, code_ix)) != NULL
-		    && modp->curr.code != NULL) {
+                if ((modp = erts_get_module(module, code_ix)) != nullptr
+                    && modp->curr.code != nullptr) {
 		    /*
 		     * There is a module loaded, but obviously the fun is not
 		     * defined in it. We must not call the error_handler
@@ -6315,10 +6315,10 @@ call_fun(Process* p,		/* Current process. */
 
 		ep = erts_find_function(erts_proc_get_error_handler(p),
 					am_undefined_lambda, 3, code_ix);
-		if (ep == NULL) {	/* No error handler */
-		    p->current = NULL;
+                if (ep == nullptr) {	/* No error handler */
+                    p->current = nullptr;
 		    p->freason = EXC_UNDEF;
-		    return NULL;
+                    return nullptr;
 		}
 		reg[0] = module;
 		reg[1] = fun;
@@ -6354,14 +6354,14 @@ call_fun(Process* p,		/* Current process. */
 	    hp = HAlloc(p, 3);
 	    p->freason = EXC_BADARITY;
 	    p->fvalue = TUPLE2(hp, fun, args);
-	    return NULL;
+            return nullptr;
 	}
     } else {
     badfun:
-	p->current = NULL;
+        p->current = nullptr;
 	p->freason = EXC_BADFUN;
 	p->fvalue = fun;
-	return NULL;
+        return nullptr;
     }
 }
 
@@ -6384,13 +6384,13 @@ apply_fun(Process* p, Eterm fun, Eterm args, Eterm* reg)
 	    tmp = CDR(list_val(tmp));
 	} else {
 	    p->freason = SYSTEM_LIMIT;
-	    return NULL;
+            return nullptr;
 	}
     }
 
     if (is_not_nil(tmp)) {	/* Must be well-formed list */
 	p->freason = EXC_UNDEF;
-	return NULL;
+        return nullptr;
     }
     reg[arity] = fun;
     return call_fun(p, arity, reg, args);
@@ -6846,7 +6846,7 @@ erts_is_builtin(Eterm Mod, Eterm Name, int arity)
     e.code[1] = Name;
     e.code[2] = arity;
 
-    if ((ep = export_get(&e)) == NULL) {
+    if ((ep = export_get(&e)) == nullptr) {
 	return 0;
     }
     return ep->addressv[erts_active_code_ix()] == ep->code+3

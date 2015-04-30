@@ -221,12 +221,12 @@ efile_rename(Efile_error* errInfo,	/* Where to return error codes. */
 	memset(dstPath, '\0', sizeof(dstPath));
 #endif
 
-	if ((realpath(src, srcPath) != NULL)
-		&& (realpath(dst, dstPath) != NULL)
+	if ((realpath(src, srcPath) != nullptr)
+		&& (realpath(dst, dstPath) != nullptr)
 		&& (strncmp(srcPath, dstPath, strlen(srcPath)) != 0)) {
 	    dirPtr = opendir(dst);
-	    if (dirPtr != NULL) {
-		while ((dirEntPtr = readdir(dirPtr)) != NULL) {
+	    if (dirPtr != nullptr) {
+		while ((dirEntPtr = readdir(dirPtr)) != nullptr) {
 		    if ((strcmp(dirEntPtr->d_name, ".") != 0) &&
 			    (strcmp(dirEntPtr->d_name, "..") != 0)) {
 			errno = EEXIST;
@@ -276,7 +276,7 @@ efile_getdcwd(Efile_error* errInfo,	/* Where to return error codes. */
 	      size_t size)		/* Size of buffer. */
 {
     if (drive == 0) {
-	if (getcwd(buffer, size) == NULL)
+	if (getcwd(buffer, size) == nullptr)
 	    return check_error(-1, errInfo);
 	
 #ifdef SIMSPARCSOLARIS
@@ -320,9 +320,9 @@ efile_readdir(Efile_error* errInfo,	/* Where to return error codes. */
      * If this_ is the first call, we must open the directory.
      */
 
-    if (*p_dir_handle == NULL) {
+    if (*p_dir_handle == nullptr) {
 	dp = opendir(name);
-	if (dp == NULL)
+	if (dp == nullptr)
 	    return check_error(-1, errInfo);
 	*p_dir_handle = (EFILE_DIR_HANDLE) dp;
     }
@@ -334,7 +334,7 @@ efile_readdir(Efile_error* errInfo,	/* Where to return error codes. */
     dp = *((DIR **)((void *)p_dir_handle));
     for (;;) {
 	dirp = readdir(dp);
-	if (dirp == NULL) {
+	if (dirp == nullptr) {
 	    closedir(dp);
 	    return 0;
 	}
@@ -722,7 +722,7 @@ efile_pread(Efile_error* errInfo,     /* Where to return error codes. */
     return 1;
 #else
     {
-	int res = efile_seek(errInfo, fd, offset, EFILE_SEEK_SET, NULL);
+	int res = efile_seek(errInfo, fd, offset, EFILE_SEEK_SET, nullptr);
 	if (res) {
 	    return efile_read(errInfo, 0, fd, buf, count, pBytesRead);
 	} else {
@@ -764,7 +764,7 @@ efile_pwrite(Efile_error* errInfo,  /* Where to return error codes. */
     return 1;
 #else  /* For unix systems that don't support pread() and pwrite() */    
     {
-	int res = efile_seek(errInfo, fd, offset, EFILE_SEEK_SET, NULL);
+	int res = efile_seek(errInfo, fd, offset, EFILE_SEEK_SET, nullptr);
 	
 	if (res) {
 	    return efile_write(errInfo, 0, fd, buf, count);
@@ -970,7 +970,7 @@ efile_sendfile(Efile_error* errInfo, int in_fd, int out_fd,
 	len = SENDFILE_CHUNK_SIZE;
       else
 	len = *nbytes;
-      retval = sendfile(in_fd, out_fd, *offset, &len, NULL, 0);
+      retval = sendfile(in_fd, out_fd, *offset, &len, nullptr, 0);
       if (retval != -1 || errno == EAGAIN || errno == EINTR) {
         *offset += len;
 	*nbytes -= len;
@@ -983,9 +983,9 @@ efile_sendfile(Efile_error* errInfo, int in_fd, int out_fd,
     do {
       if (*nbytes > SENDFILE_CHUNK_SIZE)
 	retval = sendfile(in_fd, out_fd, *offset, SENDFILE_CHUNK_SIZE,
-			  NULL, &len, 0);
+			  nullptr, &len, 0);
       else
-	retval = sendfile(in_fd, out_fd, *offset, *nbytes, NULL, &len, 0);
+	retval = sendfile(in_fd, out_fd, *offset, *nbytes, nullptr, &len, 0);
       if (retval != -1 || errno == EAGAIN || errno == EINTR) {
 	*offset += len;
 	*nbytes -= len;

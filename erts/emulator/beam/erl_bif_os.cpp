@@ -75,7 +75,7 @@ BIF_RETTYPE os_getenv_0(BIF_ALIST_0)
     init_getenv_state(&state);
 
     ret = NIL;
-    while ((cp = getenv_string(&state)) != NULL) {
+    while ((cp = getenv_string(&state)) != nullptr) {
 	str = erts_convert_native_to_filename(BIF_P,(byte *)cp);
 	hp = HAlloc(BIF_P, 2);
 	ret = CONS(hp, str, ret);
@@ -146,14 +146,14 @@ BIF_RETTYPE os_putenv_2(BIF_ALIST_2)
 
     key_buf = erts_convert_filename_to_native(BIF_ARG_1,def_buf_key,
 					      STATIC_BUF_SIZE,
-					      ERTS_ALC_T_TMP,0,0,NULL);
+                                              ERTS_ALC_T_TMP,0,0,nullptr);
     if (!key_buf) {
 	BIF_ERROR(BIF_P, BADARG);
     }
     value_buf = erts_convert_filename_to_native(BIF_ARG_2,def_buf_value,
 						STATIC_BUF_SIZE,
 						ERTS_ALC_T_TMP,1,0,
-						NULL);
+                                                nullptr);
     if (!value_buf) {
 	if (key_buf != def_buf_key) {
 	    erts_free(ERTS_ALC_T_TMP, key_buf);
@@ -186,7 +186,7 @@ BIF_RETTYPE os_unsetenv_1(BIF_ALIST_1)
     char buf[STATIC_BUF_SIZE];
 
     key_buf = erts_convert_filename_to_native(BIF_ARG_1,buf,STATIC_BUF_SIZE,
-					      ERTS_ALC_T_TMP,0,0,NULL);
+                                              ERTS_ALC_T_TMP,0,0,nullptr);
     if (!key_buf) {
 	BIF_ERROR(BIF_P, BADARG);
     }

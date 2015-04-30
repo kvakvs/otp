@@ -332,7 +332,7 @@ stat_realloc(ErtsAlcType_t n, void *extra, void *ptr, Uint size)
 	old_size = ((StatBlock_t *) sptr)->size;
     }
     else {
-	sptr = NULL;
+	sptr = nullptr;
 	old_size = 0;
     }
 
@@ -369,7 +369,7 @@ stat_free(ErtsAlcType_t n, void *extra, void *ptr)
 	stat_upd_free(n, ((StatBlock_t *) sptr)->size);
     }
     else {
-	sptr = NULL;
+	sptr = nullptr;
     }
 
     (*real_af->free)(n, real_af->extra, sptr);
@@ -417,7 +417,7 @@ map_stat_alloc(ErtsAlcType_t n, void *extra, Uint size)
 	mb->type_no = n;
 	mb->pid = erts_get_current_pid();
 
-	mb->prev = NULL;
+	mb->prev = nullptr;
 	mb->next = mem_anchor;
 	if (mem_anchor)
 	    mem_anchor->prev = mb;
@@ -452,7 +452,7 @@ map_stat_realloc(ErtsAlcType_t n, void *extra, void *ptr, Uint size)
 	old_size = ((MapStatBlock_t *) mptr)->size;
     }
     else {
-	mptr = NULL;
+	mptr = nullptr;
 	old_size = 0;
     }
 
@@ -480,7 +480,7 @@ map_stat_realloc(ErtsAlcType_t n, void *extra, void *ptr, Uint size)
 		    mb->next->prev = mb;
 	    }
 	    else {
-		mb->prev = NULL;
+		mb->prev = nullptr;
 		mb->next = mem_anchor;
 		if (mem_anchor)
 		    mem_anchor->prev = mb;
@@ -526,7 +526,7 @@ map_stat_free(ErtsAlcType_t n, void *extra, void *ptr)
 	    mb->next->prev = mb->prev;
     }
     else {
-	mptr = NULL;
+	mptr = nullptr;
     }
 
     (*real_af->free)(n, real_af->extra, mptr);
@@ -616,7 +616,7 @@ int erts_instr_dump_memory_map_to_fd(int fd)
 	return 0;
 
     f = fdopen(fd, "w");
-    if (f == NULL)
+    if (f == nullptr)
 	return 0;
 
     /* Avoid allocating memory; we may have run out of it at this_ point. */
@@ -635,7 +635,7 @@ int erts_instr_dump_memory_map(const char *name)
 	return 0;
 
     f = fopen(name, "w");
-    if (f == NULL)
+    if (f == nullptr)
 	return 0;
 
     dump_memory_map_to_stream(f);
@@ -698,7 +698,7 @@ Eterm erts_instr_get_memory_map(Process *proc)
     hsz += 3; /* Root tuple */
 
     org_mem_anchor = mem_anchor;
-    mem_anchor = NULL;
+    mem_anchor = nullptr;
 
     erts_mtx_unlock(&instr_mutex);
 
@@ -949,7 +949,7 @@ erts_instr_get_stat(Process *proc, Eterm what, int begin_max_period)
 
     hsz = 0;
     hszp = &hsz;
-    hpp = NULL;
+    hpp = nullptr;
 
  restart_bld:
 
@@ -983,7 +983,7 @@ erts_instr_get_stat(Process *proc, Eterm what, int begin_max_period)
 
     if (!hpp) {
 	hp = HAlloc(proc, hsz);
-	hszp = NULL;
+	hszp = nullptr;
 	hpp = &hp;
 	goto restart_bld;
     }
@@ -1103,7 +1103,7 @@ int erts_instr_dump_stat_to_fd(int fd, int begin_max_period)
 	return 0;
 
     fp = fdopen(fd, "w");
-    if (fp == NULL)
+    if (fp == nullptr)
 	return 0;
 
     /* Avoid allocating memory; we may have run out of it at this_ point. */
@@ -1122,7 +1122,7 @@ int erts_instr_dump_stat(const char *name, int begin_max_period)
 	return 0;
 
     file = fopen(name, "w");
-    if (file == NULL)
+    if (file == nullptr)
 	return 0;
 
     dump_stat_to_stream(file, begin_max_period);
@@ -1167,7 +1167,7 @@ erts_instr_get_type_info(Process *proc)
 				* sizeof(Eterm));
     hsz = 0;
     hszp = &hsz;
-    hpp = NULL;
+    hpp = nullptr;
 
  restart_bld:
 
@@ -1191,7 +1191,7 @@ erts_instr_get_type_info(Process *proc)
     
     if (!hpp) {
 	hp = HAlloc(proc, hsz);
-	hszp = NULL;
+	hszp = nullptr;
 	hpp = &hp;
 	goto restart_bld;
     }
@@ -1207,10 +1207,10 @@ erts_instr_init(int stat, int map_stat)
     Uint extra_sz;
     int i;
 
-    am_tot = NULL;
-    am_n = NULL;
-    am_c = NULL;
-    am_a = NULL;
+    am_tot = nullptr;
+    am_n = nullptr;
+    am_c = nullptr;
+    am_a = nullptr;
 
     erts_instr_memory_map = 0;
     erts_instr_stat = 0;
@@ -1223,7 +1223,7 @@ erts_instr_init(int stat, int map_stat)
 
     erts_mtx_init(&instr_mutex, "instr");
 
-    mem_anchor = NULL;
+    mem_anchor = nullptr;
 
     /* Install instrumentation functions */
     ASSERT(sizeof(erts_allctrs) == sizeof(real_allctrs));

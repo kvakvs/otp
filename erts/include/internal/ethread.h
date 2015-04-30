@@ -468,7 +468,7 @@ typedef struct {
     void (*thread_create_child_func)(void *);
 } ethr_init_data;
 
-#define ETHR_INIT_DATA_DEFAULT_INITER {NULL, NULL, NULL}
+#define ETHR_INIT_DATA_DEFAULT_INITER {nullptr, nullptr, nullptr}
 
 typedef struct {
     void *(*alloc)(size_t);
@@ -476,7 +476,7 @@ typedef struct {
     void (*free)(void *);
 } ethr_memory_allocator;
 
-#define ETHR_MEM_ALLOC_DEF_INITER__ {NULL, NULL, NULL}
+#define ETHR_MEM_ALLOC_DEF_INITER__ {nullptr, nullptr, nullptr}
 
 typedef struct {
     ethr_memory_allocator std;
@@ -572,7 +572,7 @@ ETHR_INLINE_FUNC_NAME_(ethr_spinlock_init)(ethr_spinlock_t *lock)
 	return ethr_win_get_errno__();
     return 0;
 #else
-    return pthread_mutex_init((pthread_mutex_t *) lock, NULL);
+    return pthread_mutex_init((pthread_mutex_t *) lock, nullptr);
 #endif
 }
 
@@ -775,7 +775,7 @@ ETHR_INLINE_FUNC_NAME_(ethr_rwlock_init)(ethr_rwlock_t *lock)
     ethr_native_rwlock_init(lock);
     return 0;
 #else
-    return ethr_rwmutex_init_opt((ethr_rwmutex *) lock, NULL);
+    return ethr_rwmutex_init_opt((ethr_rwmutex *) lock, nullptr);
 #endif
 }
 

@@ -78,7 +78,7 @@
 #include "global.h"
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
-#define ASSERT_NO_LOCKED_LOCKS		erts_lc_check_exact(NULL, 0)
+#define ASSERT_NO_LOCKED_LOCKS		erts_lc_check_exact(nullptr, 0)
 #else
 #define ASSERT_NO_LOCKED_LOCKS
 #endif
@@ -155,7 +155,7 @@ static erts_short_time_t next_time_internal(void) /* PRE: tiw_lock taken by call
     i = tiw_pos;
     do {
 	p = tiw[i];
-	while (p != NULL) {
+	while (p != nullptr) {
 	    nto++;
 	    if (p->count == 0) {
 		/* found next timeout */
@@ -192,7 +192,7 @@ static void remove_timer(ErlTimer *p) {
     if (!p->prev) {
 	tiw[p->slot] = p->next;
 	if(p->next)
-	    p->next->prev = NULL;
+	    p->next->prev = nullptr;
     } else {
 	p->prev->next = p->next;
     }
@@ -200,13 +200,13 @@ static void remove_timer(ErlTimer *p) {
     /* last */
     if (!p->next) {
 	if (p->prev)
-	    p->prev->next = NULL;
+	    p->prev->next = nullptr;
     } else {
 	p->next->prev = p->prev;
     }
 
-    p->next = NULL;
-    p->prev = NULL;
+    p->next = nullptr;
+    p->prev = nullptr;
     /* Make sure cancel callback isn't called */
     p->active = 0;
     tiw_nto--;
@@ -242,19 +242,19 @@ static ERTS_INLINE void bump_timer_internal(erts_short_time_t dt) /* PRE: tiw_lo
     keep_pos = (tiw_pos + dtime) % TIW_SIZE;
     if (dtime > TIW_SIZE) dtime = TIW_SIZE;
   
-    timeout_head = NULL;
+    timeout_head = nullptr;
     timeout_tail = &timeout_head;
     while (dtime > 0) {
 	/* this_ is to decrease the counters with the right amount */
 	/* when dtime >= TIW_SIZE */
 	if (tiw_pos == keep_pos) count--;
 	prev = &tiw[tiw_pos];
-	while ((p = *prev) != NULL) {
+	while ((p = *prev) != nullptr) {
 	    ASSERT( p != p->next);
 	    if (p->count < count) {     /* we have a timeout */
 		/* remove min time */
 		if (tiw_min_ptr == p) {
-		    tiw_min_ptr = NULL;
+		    tiw_min_ptr = nullptr;
 		    tiw_min = 0;
 		}
 
@@ -288,8 +288,8 @@ static ERTS_INLINE void bump_timer_internal(erts_short_time_t dt) /* PRE: tiw_lo
 	 * accesses any field until the ->timeout
 	 * callback is called.
 	 */
-	p->next = NULL;
-	p->prev = NULL;
+	p->next = nullptr;
+	p->prev = nullptr;
 	p->slot = 0;
 	(*p->timeout)(p->arg);
     }
@@ -330,10 +330,10 @@ erts_init_time(void)
     tiw = (ErlTimer**) erts_alloc(ERTS_ALC_T_TIMER_WHEEL,
 				  TIW_SIZE * sizeof(ErlTimer*));
     for(i = 0; i < TIW_SIZE; i++)
-	tiw[i] = NULL;
+	tiw[i] = nullptr;
     do_time_init();
     tiw_pos = tiw_nto = 0;
-    tiw_min_ptr = NULL;
+    tiw_min_ptr = nullptr;
     tiw_min = 0;
 }
 
@@ -369,21 +369,21 @@ insert_timer(ErlTimer* p, Uint t)
   
     /* insert at head of list at slot */
     p->next = tiw[tm];
-    p->prev = NULL;
-    if (p->next != NULL)
+    p->prev = nullptr;
+    if (p->next != nullptr)
 	p->next->prev = p;
     tiw[tm] = p;
 
 
     /* insert min time */
-    if ((tiw_nto == 0) || ((tiw_min_ptr != NULL) && (ticks < tiw_min))) {
+    if ((tiw_nto == 0) || ((tiw_min_ptr != nullptr) && (ticks < tiw_min))) {
 	tiw_min = ticks;
 	tiw_min_ptr = p;
     }
     if ((tiw_min_ptr == p) && (ticks > tiw_min)) {
 	/* some other timer might be 'min' now */
 	tiw_min = 0;
-	tiw_min_ptr = NULL;
+	tiw_min_ptr = nullptr;
     }
 
     tiw_nto++;
@@ -423,14 +423,14 @@ erts_cancel_timer(ErlTimer* p)
 
     /* is it the 'min' timer, remove min */
     if (p == tiw_min_ptr) {
-	tiw_min_ptr = NULL;
+	tiw_min_ptr = nullptr;
 	tiw_min     = 0;
     }
 
     remove_timer(p);
     p->slot = p->count = 0;
 
-    if (p->cancel != NULL) {
+    if (p->cancel != nullptr) {
 	erts_smp_mtx_unlock(&tiw_lock);
 	(*p->cancel)(p->arg);
 	return;
@@ -483,17 +483,17 @@ void erts_p_slpq(void)
     /* print the whole wheel, starting at the current position */
     erts_printf("\ntiw_pos = %d tiw_nto %d\n", tiw_pos, tiw_nto);
     i = tiw_pos;
-    if (tiw[i] != NULL) {
+    if (tiw[i] != nullptr) {
 	erts_printf("%d:\n", i);
-	for(p = tiw[i]; p != NULL; p = p->next) {
+	for(p = tiw[i]; p != nullptr; p = p->next) {
 	    erts_printf(" (count %d, slot %d)\n",
 			p->count, p->slot);
 	}
     }
     for(i = (i+1)%TIW_SIZE; i != tiw_pos; i = (i+1)%TIW_SIZE) {
-	if (tiw[i] != NULL) {
+	if (tiw[i] != nullptr) {
 	    erts_printf("%d:\n", i);
-	    for(p = tiw[i]; p != NULL; p = p->next) {
+	    for(p = tiw[i]; p != nullptr; p = p->next) {
 		erts_printf(" (count %d, slot %d)\n",
 			    p->count, p->slot);
 	    }

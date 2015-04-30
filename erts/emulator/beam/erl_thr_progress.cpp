@@ -336,7 +336,7 @@ static ERTS_INLINE void
 return_tmp_thr_prgr_data(ErtsThrPrgrData *tpd)
 {
     if (tpd->is_temporary) {
-	erts_tsd_set(erts_thr_prgr_data_key__, NULL);
+	erts_tsd_set(erts_thr_prgr_data_key__, nullptr);
 	erts_free(ERTS_ALC_T_T_THR_PRGR_DATA, tpd);
     }
 }
@@ -370,7 +370,7 @@ block_count_inc(void)
 void
 erts_thr_progress_pre_init(void)
 {
-    intrnl = NULL;
+    intrnl = nullptr;
     erts_tsd_key_create(&erts_thr_prgr_data_key__,
 			"erts_thr_prgr_data_key");
     init_nob(&erts_thr_prgr__.current, ERTS_THR_PRGR_VAL_FIRST);
@@ -444,14 +444,14 @@ erts_thr_progress_init(int no_schedulers, int managed, int unmanaged)
 
     intrnl->managed.no = managed;
     for (i = 0; i < managed; i++) {
-	intrnl->managed.callbacks[i].arg = NULL;
-	intrnl->managed.callbacks[i].wakeup = NULL;
+	intrnl->managed.callbacks[i].arg = nullptr;
+	intrnl->managed.callbacks[i].wakeup = nullptr;
     }
 
     intrnl->unmanaged.no = unmanaged;
     for (i = 0; i < unmanaged; i++) {
-	intrnl->unmanaged.callbacks[i].arg = NULL;
-	intrnl->unmanaged.callbacks[i].wakeup = NULL;
+	intrnl->unmanaged.callbacks[i].arg = nullptr;
+	intrnl->unmanaged.callbacks[i].wakeup = nullptr;
     }
 
     for (i = 0; i < ERTS_THR_PRGR_WAKEUP_DATA_SIZE; i++) {
@@ -496,7 +496,7 @@ init_wakeup_request_array(ErtsThrPrgrVal *w)
 void
 erts_thr_progress_register_unmanaged_thread(ErtsThrPrgrCallbacks *callbacks)
 {
-    ErtsThrPrgrData *tpd = perhaps_thr_prgr_data(NULL);
+    ErtsThrPrgrData *tpd = perhaps_thr_prgr_data(nullptr);
     int is_blocking = 0;
 
     if (tpd) {
@@ -541,7 +541,7 @@ erts_thr_progress_register_managed_thread(ErtsSchedulerData *esdp,
 					  ErtsThrPrgrCallbacks *callbacks,
 					  int pref_wakeup)
 {
-    ErtsThrPrgrData *tpd = perhaps_thr_prgr_data(NULL);
+    ErtsThrPrgrData *tpd = perhaps_thr_prgr_data(nullptr);
     int is_blocking = 0, managed;
 
     if (tpd) {
@@ -621,7 +621,7 @@ static ERTS_INLINE int
 leader_update(ErtsThrPrgrData *tpd)
 {
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_lc_check_exact(NULL, 0);
+    erts_lc_check_exact(nullptr, 0);
 #endif
     if (!tpd->leader) {
 	/* Probably need to block... */
@@ -852,7 +852,7 @@ erts_thr_progress_prepare_wait(ErtsSchedulerData *esdp)
     ErtsThrPrgrData *tpd = thr_prgr_data(esdp);
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_lc_check_exact(NULL, 0);
+    erts_lc_check_exact(nullptr, 0);
 #endif
 
     block_count_dec();
@@ -879,7 +879,7 @@ erts_thr_progress_finalize_wait(ErtsSchedulerData *esdp)
     ErtsThrPrgrVal current, val;
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_lc_check_exact(NULL, 0);
+    erts_lc_check_exact(nullptr, 0);
 #endif
 
     /*
@@ -910,7 +910,7 @@ erts_thr_progress_active(ErtsSchedulerData *esdp, int on)
     ErtsThrPrgrData *tpd = thr_prgr_data(esdp);
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_lc_check_exact(NULL, 0);
+    erts_lc_check_exact(nullptr, 0);
 #endif
 
     ERTS_THR_PROGRESS_STATE_DEBUG_SET_ACTIVE(tpd->id, on);
@@ -966,7 +966,7 @@ void
 erts_thr_progress_unmanaged_continue__(ErtsThrPrgrDelayHandle handle)
 {
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    ErtsThrPrgrData *tpd = perhaps_thr_prgr_data(NULL);
+    ErtsThrPrgrData *tpd = perhaps_thr_prgr_data(nullptr);
     ERTS_LC_ASSERT(tpd && tpd->is_delaying);
     tpd->is_delaying = 0;
     return_tmp_thr_prgr_data(tpd);
@@ -993,7 +993,7 @@ erts_thr_progress_unmanaged_delay__(void)
     }
 #ifdef ERTS_ENABLE_LOCK_CHECK
     {
-	ErtsThrPrgrData *tpd = tmp_thr_prgr_data(NULL);
+	ErtsThrPrgrData *tpd = tmp_thr_prgr_data(nullptr);
 	tpd->is_delaying = 1;
     }
 #endif
@@ -1285,7 +1285,7 @@ block_thread(ErtsThrPrgrData *tpd)
 static erts_aint32_t
 thr_progress_block(ErtsThrPrgrData *tpd, int wait)
 {
-    erts_tse_t *event = NULL; /* Remove erroneous warning... sigh... */
+    erts_tse_t *event = nullptr; /* Remove erroneous warning... sigh... */
     erts_aint32_t lflgs, bc;
 
     if (tpd->is_blocking++)
@@ -1332,14 +1332,14 @@ thr_progress_block(ErtsThrPrgrData *tpd, int wait)
 void
 erts_thr_progress_block(void)
 {
-    thr_progress_block(tmp_thr_prgr_data(NULL), 1);
+    thr_progress_block(tmp_thr_prgr_data(nullptr), 1);
 }
 
 void
 erts_thr_progress_fatal_error_block(SWord timeout,
 				    ErtsThrPrgrData *tmp_tpd_bufp)
 {
-    ErtsThrPrgrData *tpd = perhaps_thr_prgr_data(NULL);
+    ErtsThrPrgrData *tpd = perhaps_thr_prgr_data(nullptr);
     erts_aint32_t bc;
     SWord time_left = timeout;
     SysTimeval to;
@@ -1394,7 +1394,7 @@ erts_thr_progress_unblock(void)
 {
     erts_tse_t *event;
     int id, break_id, sz, wakeup;
-    ErtsThrPrgrData *tpd = thr_prgr_data(NULL);
+    ErtsThrPrgrData *tpd = thr_prgr_data(nullptr);
 
     ASSERT(tpd->is_blocking);
     if (--tpd->is_blocking)
@@ -1446,7 +1446,7 @@ erts_thr_progress_unblock(void)
 int
 erts_thr_progress_is_blocking(void)
 {
-    ErtsThrPrgrData *tpd = perhaps_thr_prgr_data(NULL);
+    ErtsThrPrgrData *tpd = perhaps_thr_prgr_data(nullptr);
     return tpd && tpd->is_blocking;
 }
 

@@ -124,7 +124,7 @@
 #include "dtrace-wrapper.h" 
 
 
-void erl_exit(int n, char *fmt, ...);
+void erl_exit(int n, const char *fmt, ...);
 
 static ErlDrvSysInfo sys_info;
 
@@ -341,7 +341,7 @@ struct erl_drv_entry efile_driver_entry = {
 #ifdef HAVE_SENDFILE
     file_ready_output,
 #else
-    NULL,
+    nullptr,
 #endif /* HAVE_SENDFILE */
     "efile",
     nullptr,
@@ -362,7 +362,7 @@ struct erl_drv_entry efile_driver_entry = {
 #ifdef HAVE_SENDFILE
     file_stop_select
 #else
-    NULL
+    nullptr
 #endif /* HAVE_SENDFILE */
 };
 
@@ -620,8 +620,8 @@ static void ev_clear(ErlIOVec *ev) {
     ASSERT(ev);
     ev->size = 0;
     ev->vsize = 0;
-    ev->iov = NULL;
-    ev->binv = NULL;
+    ev->iov = nullptr;
+    ev->binv = nullptr;
 }
 
 /* Assumes that ->iov and ->binv were allocated with sys_alloc().
@@ -660,12 +660,12 @@ static ErlIOVec *ev_copy(ErlIOVec *dest, ErlIOVec *source) {
     /* Allocate ->iov and ->binv */
     dest->iov = EF_ALLOC(sizeof(*dest->iov) * source->vsize);
     if (! dest->iov) {
-	return NULL;
+	return nullptr;
     }
     dest->binv = EF_ALLOC(sizeof(*dest->binv) * source->vsize);
     if (! dest->binv) {
 	EF_FREE(dest->iov);
-	return NULL;
+	return nullptr;
     }
     dest->size = source->size;
     /* Copy one vector element at the time. 
@@ -677,8 +677,8 @@ static ErlIOVec *ev_copy(ErlIOVec *dest, ErlIOVec *source) {
 	if (source->iov[*ip].iov_len == 0) {
 	    /* Empty vector element */
 	    dest->iov[*ip].iov_len = 0;
-	    dest->iov[*ip].iov_base = NULL;
-	    dest->binv[*ip] = NULL;
+	    dest->iov[*ip].iov_base = nullptr;
+	    dest->binv[*ip] = nullptr;
 	} else {
 	    /* Non empty vector element */
 	    if (source->binv[*ip]) {
@@ -703,7 +703,7 @@ static ErlIOVec *ev_copy(ErlIOVec *dest, ErlIOVec *source) {
     return dest;
  failed:
     ev_free(dest);
-    return NULL;
+    return nullptr;
 }
 
 #endif
@@ -761,7 +761,7 @@ file_init(void)
 
 #ifdef  USE_VM_PROBES
     erts_mtx_init(&dt_driver_mutex, "efile_drv dtrace mutex");
-    pthread_key_create(&dt_driver_key, NULL);
+    pthread_key_create(&dt_driver_key, nullptr);
 #endif  /* USE_VM_PROBES */
 
     return 0;
@@ -996,7 +996,7 @@ static int reply_Sint64(file_descriptor *desc, Sint64 result) {
 static void reply_again(file_descriptor *desc) {
     char tmp[1];
     tmp[0] = FILE_RESP_AGAIN;
-    driver_output2(desc->port, tmp, sizeof(tmp), NULL, 0);
+    driver_output2(desc->port, tmp, sizeof(tmp), nullptr, 0);
 }
 #endif
 
@@ -1480,7 +1480,7 @@ static void invoke_ipread(void *data)
  * The port will normally not be terminated until the port queue is
  * empty, but if the port is killed, i.e., exit(Port, kill) is called,
  * it will terminate regardless of the port queue state. When the
- * port is invalid driver_peekq() returns NULL and set the size to -1,
+ * port is invalid driver_peekq() returns nullptr and set the size to -1,
  * and driver_sizeq() returns -1.
  */
 
@@ -2080,7 +2080,7 @@ static struct t_data *async_write(file_descriptor *desc, int *errp,
     d->c.writev.q_mtx = desc->q_mtx;
     d->c.writev.size = desc->write_buffered;
 #ifdef USE_VM_PROBES
-    if (dt_i1 != NULL) {
+    if (dt_i1 != nullptr) {
         *dt_i1 = d->fd;
         *dt_i2 = d->flags;
         *dt_i3 = d->c.writev.size;
@@ -2119,13 +2119,13 @@ static int flush_write(file_descriptor *desc, int *errp
     }
     MUTEX_UNLOCK(desc->q_mtx);
 #ifdef USE_VM_PROBES
-    if (d != NULL) {
+    if (d != nullptr) {
         d->sched_i1 = dt_priv->thread_num;
         d->sched_i2 = dt_priv->tag;
         d->sched_utag[0] = '\0';
-        if (dt_utag != NULL) {
+        if (dt_utag != nullptr) {
             if (dt_utag[0] == '\0') {
-                dt_utag = NULL;
+                dt_utag = nullptr;
             } else {
                 strncpy(d->sched_utag, dt_utag, sizeof(d->sched_utag) - 1);
                 d->sched_utag[sizeof(d->sched_utag) - 1] = '\0';
@@ -2133,7 +2133,7 @@ static int flush_write(file_descriptor *desc, int *errp
         }
         DTRACE11(efile_drv_entry, dt_priv->thread_num, dt_priv->tag++,
                  dt_utag, FILE_WRITE,
-                 NULL, NULL, dt_i1, dt_i2, dt_i3, 0, desc->port_str);
+                 nullptr, nullptr, dt_i1, dt_i2, dt_i3, 0, desc->port_str);
     }
 #endif /* USE_VM_PROBES */
     return result;
@@ -2184,7 +2184,7 @@ static struct t_data *async_lseek(file_descriptor *desc, int *errp, int reply,
     d->c.lseek.offset = offset;
     d->c.lseek.origin = origin;
 #ifdef USE_VM_PROBES
-    if (dt_i1 != NULL) {
+    if (dt_i1 != nullptr) {
         *dt_i1 = d->fd;
         *dt_i2 = d->c.lseek.offset;
         *dt_i3 = d->c.lseek.origin;
@@ -2232,9 +2232,9 @@ static int lseek_flush_read(file_descriptor *desc, int *errp
             d->sched_i1 = dt_priv->thread_num;
             d->sched_i2 = dt_priv->tag;
             d->sched_utag[0] = '\0';
-            if (dt_utag != NULL) {
+            if (dt_utag != nullptr) {
                 if (dt_utag[0] == '\0') {
-                    dt_utag = NULL;
+                    dt_utag = nullptr;
                 } else {
                     strncpy(d->sched_utag, dt_utag, sizeof(d->sched_utag) - 1);
                     d->sched_utag[sizeof(d->sched_utag) - 1] = '\0';
@@ -2242,7 +2242,7 @@ static int lseek_flush_read(file_descriptor *desc, int *errp
             }
             DTRACE11(efile_drv_entry, dt_priv->thread_num, dt_priv->tag++,
                      dt_utag, FILE_LSEEK,
-                     NULL, NULL, dt_i1, dt_i2, dt_i3, 0, desc->port_str);
+                     nullptr, nullptr, dt_i1, dt_i2, dt_i3, 0, desc->port_str);
 #endif /* USE_VM_PROBES */
         }
     }
@@ -2613,8 +2613,8 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
     int command;
     struct t_data *d = nullptr;
 #ifdef  USE_VM_PROBES
-    char *dt_utag = NULL;
-    char *dt_s1 = NULL, *dt_s2 = NULL;
+    char *dt_utag = nullptr;
+    char *dt_s1 = nullptr, *dt_s2 = nullptr;
     Sint64 dt_i1 = 0;
     Sint64 dt_i2 = 0;
     Sint64 dt_i3 = 0;
@@ -2803,8 +2803,8 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 		return;
 	    }
 #ifdef USE_VM_PROBES
-	    if (dt_utag != NULL && dt_utag[0] == '\0') {
-                dt_utag = NULL;
+	    if (dt_utag != nullptr && dt_utag[0] == '\0') {
+                dt_utag = nullptr;
             } 
 
 	    DTRACE11(efile_drv_entry, dt_priv->thread_num, dt_priv->tag,
@@ -3076,9 +3076,9 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 	d->sched_i1 = dt_priv->thread_num;
 	d->sched_i2 = dt_priv->tag;
 	d->sched_utag[0] = '\0';
-	if (dt_utag != NULL) {
+	if (dt_utag != nullptr) {
 	    if (dt_utag[0] == '\0') {
-		dt_utag = NULL;
+		dt_utag = nullptr;
 	    } else {
 		strncpy(d->sched_utag, dt_utag, sizeof(d->sched_utag) - 1);
 		d->sched_utag[sizeof(d->sched_utag) - 1] = '\0';
@@ -3116,7 +3116,7 @@ file_flush(ErlDrvData e) {
 #endif
          flush_write(desc, nullptr
 #ifdef USE_VM_PROBES
-		     , dt_priv, (desc->d == NULL) ? NULL : desc->d->sched_utag
+		     , dt_priv, (desc->d == nullptr) ? nullptr : desc->d->sched_utag
 #endif
 		     );
     /* Only possible reason for bad return value is ENOMEM, and 
@@ -3182,7 +3182,7 @@ file_timeout(ErlDrvData e) {
 #endif
                  flush_write(desc, nullptr
 #ifdef USE_VM_PROBES
-			     , dt_priv, (desc->d == NULL) ? NULL : desc->d->sched_utag
+			     , dt_priv, (desc->d == nullptr) ? nullptr : desc->d->sched_utag
 #endif
 			     );
 	/* Only possible reason for bad return value is ENOMEM, and 
@@ -3209,8 +3209,8 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 #ifdef USE_VM_PROBES
     Sint64 dt_i1 = 0, dt_i2 = 0, dt_i3 = 0;
     Sint64 dt_i4 = 0;
-    char *dt_utag = NULL;
-    char *dt_s1 = NULL;
+    char *dt_utag = nullptr;
+    char *dt_s1 = nullptr;
     dt_private *dt_priv = get_dt_private(dt_driver_io_worker_base);
 #endif
 
@@ -3290,7 +3290,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	    goto done;
 	}
 #if ALWAYS_READ_LINE_AHEAD
-	if (desc->read_bufsize == 0 && desc->read_binp != NULL && desc->read_size > 0) {
+	if (desc->read_bufsize == 0 && desc->read_binp != nullptr && desc->read_size > 0) {
 	    /* We have allocated a buffer for line mode but should not really have a 
 	       read-ahead buffer... */
 	    if (lseek_flush_read(desc, &err
@@ -3448,7 +3448,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	}
 	/* Now, it's up to the thread to work out the need for more buffers and such, it's
 	   no use doing it in this_ thread as we do not have the information required anyway. 
-	   Even a NULL buffer could be handled by the thread, but code is simplified by us 
+	   Even a nullptr buffer could be handled by the thread, but code is simplified by us 
 	   allocating it */
 	if (! desc->read_binp) {
 	    int alloc_size = (desc->read_bufsize > DEFAULT_LINEBUF_SIZE) ? desc->read_bufsize : 
@@ -4218,7 +4218,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
     if (d != nullptr) {
 #ifdef USE_VM_PROBES
 	/*
-	 * If d == NULL, then either:
+	 * If d == nullptr, then either:
 	 *    1). There was an error of some sort, or
 	 *    2). The command given to us is actually implemented
 	 *	  by file_output() instead.
@@ -4229,16 +4229,16 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	d->sched_i1 = dt_priv->thread_num;
 	d->sched_i2 = dt_priv->tag;
 	d->sched_utag[0] = '\0';
-	if (dt_utag != NULL) {
+	if (dt_utag != nullptr) {
 	    if (dt_utag[0] == '\0') {
-                dt_utag = NULL;
+                dt_utag = nullptr;
             } else {
 		strncpy(d->sched_utag, dt_utag, sizeof(d->sched_utag) - 1);
 		d->sched_utag[sizeof(d->sched_utag) - 1] = '\0';
 	    }
 	}
 	DTRACE11(efile_drv_entry, dt_priv->thread_num, dt_priv->tag++,
-		 dt_utag, command, dt_s1, NULL, dt_i1, dt_i2, dt_i3, dt_i4,
+		 dt_utag, command, dt_s1, nullptr, dt_i1, dt_i2, dt_i3, dt_i4,
 		 desc->port_str);
 #endif
     }
@@ -4251,7 +4251,7 @@ get_dt_private(int base)
 {
     dt_private *dt_priv = (dt_private *) pthread_getspecific(dt_driver_key);
 
-    if (dt_priv == NULL) {
+    if (dt_priv == nullptr) {
 	dt_priv = EF_SAFE_ALLOC(sizeof(dt_private));
 	erts_mtx_lock(&dt_driver_mutex);
 	dt_priv->thread_num = (base + dt_driver_idnum++);

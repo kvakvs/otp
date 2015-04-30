@@ -72,7 +72,7 @@ BIF_RETTYPE hipe_bifs_call_count_off_1(BIF_ALIST_1)
     hcc = (struct hipe_call_count*)pc[-4];
     count = hcc->count;
     pc[0] = hcc->opcode;
-    pc[-4] = (Eterm)NULL;
+    pc[-4] = (Eterm)nullptr;
     erts_free(ERTS_ALC_T_HIPE, hcc);
     BIF_RET(make_small(count));
 }
@@ -862,7 +862,7 @@ static double fallback_get_hrvtime(void)
 {
     unsigned long ms_user;
 
-    elapsed_time_both(&ms_user, NULL, NULL, NULL);
+    elapsed_time_both(&ms_user, nullptr, nullptr, nullptr);
     return (double)ms_user;
 }
 

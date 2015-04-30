@@ -150,13 +150,13 @@ ERTS_GLB_INLINE int erts_port_task_have_outstanding_io_tasks(void);
 ERTS_GLB_INLINE void
 erts_port_task_handle_init(ErtsPortTaskHandle *pthp)
 {
-    erts_smp_atomic_init_nob(pthp, (erts_aint_t) NULL);
+    erts_smp_atomic_init_nob(pthp, (erts_aint_t) nullptr);
 }
 
 ERTS_GLB_INLINE int
 erts_port_task_is_scheduled(ErtsPortTaskHandle *pthp)
 {
-    return ((void *) erts_smp_atomic_read_acqb(pthp)) != NULL;
+    return ((void *) erts_smp_atomic_read_acqb(pthp)) != nullptr;
 }
 
 ERTS_GLB_INLINE void erts_port_task_pre_init_sched(ErtsPortTaskSched *ptsp,
@@ -177,14 +177,14 @@ erts_port_task_init_sched(ErtsPortTaskSched *ptsp, Eterm instr_id)
 #ifdef ERTS_SMP
     char *lock_str = "port_sched_lock";
 #endif
-    ptsp->next = NULL;
-    ptsp->taskq.local.busy.first = NULL;
-    ptsp->taskq.local.busy.last = NULL;
-    ptsp->taskq.local.busy.table = NULL;
-    ptsp->taskq.local.busy.nosuspend = NULL;
-    ptsp->taskq.local.first = NULL;
-    ptsp->taskq.in.first = NULL;
-    ptsp->taskq.in.last = NULL;
+    ptsp->next = nullptr;
+    ptsp->taskq.local.busy.first = nullptr;
+    ptsp->taskq.local.busy.last = nullptr;
+    ptsp->taskq.local.busy.table = nullptr;
+    ptsp->taskq.local.busy.nosuspend = nullptr;
+    ptsp->taskq.local.first = nullptr;
+    ptsp->taskq.in.first = nullptr;
+    ptsp->taskq.in.last = nullptr;
     erts_smp_atomic32_init_nob(&ptsp->flags, 0);
 #ifdef ERTS_SMP
     erts_mtx_init_x(&ptsp->mtx, lock_str, instr_id,

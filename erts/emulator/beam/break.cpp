@@ -79,7 +79,7 @@ process_info(int to, void *to_arg)
 	    /* Do not include processes with no heap,
 	     * they are most likely just created and has invalid data
 	     */
-	    if (!ERTS_PROC_IS_EXITING(p) && p->heap != NULL)
+            if (!ERTS_PROC_IS_EXITING(p) && p->heap != nullptr)
 		print_process_info(to, to_arg, p);
 	}
     }
@@ -99,7 +99,7 @@ process_killer(void)
 	rp = erts_pix2proc(i);
 	if (rp && rp->i != ENULL) {
 	    int br;
-	    print_process_info(ERTS_PRINT_STDOUT, NULL, rp);
+            print_process_info(ERTS_PRINT_STDOUT, nullptr, rp);
 	    erts_printf("(k)ill (n)ext (r)eturn:\n");
 	    while(1) {
 		if ((j = sys_get_key(0)) <= 0)
@@ -121,13 +121,13 @@ process_killer(void)
 			erts_printf("Can only kill WAITING processes this_ way\n");
 		    }
 		    else {
-			(void) erts_send_exit_signal(NULL,
+                        (void) erts_send_exit_signal(nullptr,
 						     NIL,
 						     rp,
 						     &rp_locks,
 						     am_kill,
 						     NIL,
-						     NULL,
+                                                     nullptr,
 						     0);
 		    }
 		    erts_smp_proc_unlock(rp, rp_locks);
@@ -244,7 +244,7 @@ print_process_info(int to, void *to_arg, Process *p)
 	       p->initial[INITIAL_FUN],
 	       p->initial[INITIAL_ARI]);
     
-    if (p->current != NULL) {
+    if (p->current != nullptr) {
 	if (running) {
 	    erts_print(to, to_arg, "Last scheduled in for: ");
 	} else {
@@ -264,7 +264,7 @@ print_process_info(int to, void *to_arg, Process *p)
     erts_print(to, to_arg, "Message queue length: %d\n", p->msg.len);
 
     /* display the message queue only if there is anything in it */
-    if (!ERTS_IS_CRASH_DUMPING && p->msg.first != NULL && !garbing) {
+    if (!ERTS_IS_CRASH_DUMPING && p->msg.first != nullptr && !garbing) {
 	ErlMessage* mp;
 	erts_print(to, to_arg, "Message queue: [");
 	for (mp = p->msg.first; mp; mp = mp->next)
@@ -275,7 +275,7 @@ print_process_info(int to, void *to_arg, Process *p)
     {
        int frags = 0;
        ErlHeapFragment *m = p->mbuf;
-       while (m != NULL) {
+       while (m != nullptr) {
 	   frags++;
 	   m = m->next;
        }
@@ -320,7 +320,7 @@ print_process_info(int to, void *to_arg, Process *p)
     if (!ERTS_IS_CRASH_DUMPING) {
 
 	/* and the dictionary */
-	if (p->dictionary != NULL && !garbing) {
+        if (p->dictionary != nullptr && !garbing) {
 	    erts_print(to, to_arg, "Dictionary: ");
 	    erts_dictionary_dump(to, to_arg, p->dictionary);
 	    erts_print(to, to_arg, "\n");
@@ -332,10 +332,10 @@ print_process_info(int to, void *to_arg, Process *p)
 
     erts_print(to, to_arg, "Stack+heap: %beu\n", p->heap_sz);
     erts_print(to, to_arg, "OldHeap: %bpu\n",
-               (OLD_HEAP(p) == NULL) ? 0 : (OLD_HEND(p) - OLD_HEAP(p)) );
+               (OLD_HEAP(p) == nullptr) ? 0 : (OLD_HEND(p) - OLD_HEAP(p)) );
     erts_print(to, to_arg, "Heap unused: %bpu\n", (p->hend - p->htop));
     erts_print(to, to_arg, "OldHeap unused: %bpu\n",
-	       (OLD_HEAP(p) == NULL) ? 0 : (OLD_HEND(p) - OLD_HTOP(p)) );
+               (OLD_HEAP(p) == nullptr) ? 0 : (OLD_HEND(p) - OLD_HTOP(p)) );
     erts_print(to, to_arg, "Memory: %beu\n", erts_process_memory(p));
 
     if (garbing) {
@@ -371,7 +371,7 @@ print_garb_info(int to, void *to_arg, Process* p)
 void
 info(int to, void *to_arg)
 {
-    erts_memory(&to, to_arg, NULL, THE_NON_VALUE);
+    erts_memory(&to, to_arg, nullptr, THE_NON_VALUE);
     atom_info(to, to_arg);
     module_info(to, to_arg);
     export_info(to, to_arg);
@@ -379,7 +379,7 @@ info(int to, void *to_arg)
     erts_fun_info(to, to_arg);
     erts_node_table_info(to, to_arg);
     erts_dist_table_info(to, to_arg);
-    erts_allocated_areas(&to, to_arg, NULL);
+    erts_allocated_areas(&to, to_arg, nullptr);
     erts_allocator_info(to, to_arg);
 
 }
@@ -401,7 +401,7 @@ loaded(int to, void *to_arg)
      * Calculate and print totals.
      */
     for (i = 0; i < module_code_size(code_ix); i++) {
-	if ((modp = module_code(i, code_ix)) != NULL &&
+        if ((modp = module_code(i, code_ix)) != nullptr &&
 	    ((modp->curr.code_length != 0) ||
 	     (modp->old.code_length != 0))) {
 	    cur += modp->curr.code_length;
@@ -423,7 +423,7 @@ loaded(int to, void *to_arg)
 	    /*
 	     * Interactive dump; keep it brief.
 	     */
-	    if (modp != NULL &&
+            if (modp != nullptr &&
 	    ((modp->curr.code_length != 0) ||
 	     (modp->old.code_length != 0))) {
 		erts_print(to, to_arg, "%T", make_atom(modp->module));
@@ -440,7 +440,7 @@ loaded(int to, void *to_arg)
 	    /*
 	     * To crash dump; make it parseable.
 	     */
-	    if (modp != NULL &&
+            if (modp != nullptr &&
 		((modp->curr.code_length != 0) ||
 		 (modp->old.code_length != 0))) {
 		erts_print(to, to_arg, "=mod:");
@@ -449,12 +449,12 @@ loaded(int to, void *to_arg)
 		erts_print(to, to_arg, "Current size: %d\n",
 			   modp->curr.code_length);
 		code = modp->curr.code;
-		if (code != NULL && code[MI_ATTR_PTR]) {
+                if (code != nullptr && code[MI_ATTR_PTR]) {
 		    erts_print(to, to_arg, "Current attributes: ");
 		    dump_attributes(to, to_arg, (byte *) code[MI_ATTR_PTR],
 				    code[MI_ATTR_SIZE]);
 		}
-		if (code != NULL && code[MI_COMPILE_PTR]) {
+                if (code != nullptr && code[MI_COMPILE_PTR]) {
 		    erts_print(to, to_arg, "Current compilation info: ");
 		    dump_attributes(to, to_arg, (byte *) code[MI_COMPILE_PTR],
 				    code[MI_COMPILE_SIZE]);
@@ -528,18 +528,18 @@ do_break(void)
 	case 'c':
 	    return;
 	case 'p':
-	    process_info(ERTS_PRINT_STDOUT, NULL);
+            process_info(ERTS_PRINT_STDOUT, nullptr);
 	    return;
 	case 'm':
 	    return;
 	case 'o':
-	    port_info(ERTS_PRINT_STDOUT, NULL);
+            port_info(ERTS_PRINT_STDOUT, nullptr);
 	    return;
 	case 'i':
-	    info(ERTS_PRINT_STDOUT, NULL);
+            info(ERTS_PRINT_STDOUT, nullptr);
 	    return;
 	case 'l':
-	    loaded(ERTS_PRINT_STDOUT, NULL);
+            loaded(ERTS_PRINT_STDOUT, nullptr);
 	    return;
 	case 'v':
 	    erts_printf("Erlang (%s) emulator version "
@@ -548,10 +548,10 @@ do_break(void)
 	    erts_printf("Compiled on " ERLANG_COMPILE_DATE "\n");
 	    return;
 	case 'd':
-	    distribution_info(ERTS_PRINT_STDOUT, NULL);
+            distribution_info(ERTS_PRINT_STDOUT, nullptr);
 	    return;
 	case 'D':
-	    db_info(ERTS_PRINT_STDOUT, NULL, 1);
+            db_info(ERTS_PRINT_STDOUT, nullptr, 1);
 	    return; 
 	case 'k':
 	    process_killer();
@@ -564,7 +564,7 @@ do_break(void)
 	    {
 		int i;
 		for (i = 0; i <= HIGHEST_OP; i++) {
-		    if (opc[i].name != NULL) {
+                    if (opc[i].name != nullptr) {
 			erts_printf("%-16s %8d\n", opc[i].name, opc[i].count);
 		    }
 		}
@@ -608,7 +608,7 @@ dump_frequencies(void)
     static char name[] = "op_freq.dump";
 
     fp = fopen(name, "w");
-    if (fp == NULL) {
+    if (fp == nullptr) {
 	fprintf(stderr, "Failed to open %s for writing\n", name);
 	return;
     }
@@ -617,7 +617,7 @@ dump_frequencies(void)
     fprintf(fp, "# Generated %s\n", ctime(&now));
 
     for (i = 0; i <= HIGHEST_OP; i++) {
-	if (opc[i].name != NULL) {
+        if (opc[i].name != nullptr) {
 	    fprintf(fp, "%s %d\n", opc[i].name, opc[i].count);
 	}
     }
@@ -761,31 +761,31 @@ erl_crash_dump_v(const char *file, int line, const char* fmt, va_list args)
     time(&now);
     erts_fdprintf(fd, "=erl_crash_dump:0.3\n%s", ctime(&now));
 
-    if (file != NULL)
+    if (file != nullptr)
        erts_fdprintf(fd, "The error occurred in file %s, line %d\n", file, line);
 
-    if (fmt != NULL && *fmt != '\0') {
+    if (fmt != nullptr && *fmt != '\0') {
 	erts_fdprintf(fd, "Slogan: ");
 	erts_vfdprintf(fd, fmt, args);
     }
     erts_fdprintf(fd, "System version: ");
-    erts_print_system_version(fd, NULL, NULL);
+    erts_print_system_version(fd, nullptr, nullptr);
     erts_fdprintf(fd, "%s\n", "Compiled: " ERLANG_COMPILE_DATE);
     erts_fdprintf(fd, "Taints: ");
-    erts_print_nif_taints(fd, NULL);
+    erts_print_nif_taints(fd, nullptr);
     erts_fdprintf(fd, "Atoms: %d\n", atom_table_size());
-    info(fd, NULL); /* General system info */
+    info(fd, nullptr); /* General system info */
     if (erts_ptab_initialized(&erts_proc))
-	process_info(fd, NULL); /* Info about each process and port */
-    db_info(fd, NULL, 0);
-    erts_print_bif_timer_info(fd, NULL);
-    distribution_info(fd, NULL);
+        process_info(fd, nullptr); /* Info about each process and port */
+    db_info(fd, nullptr, 0);
+    erts_print_bif_timer_info(fd, nullptr);
+    distribution_info(fd, nullptr);
     erts_fdprintf(fd, "=loaded_modules\n");
-    loaded(fd, NULL);
-    erts_dump_fun_entries(fd, NULL);
-    erts_deep_process_dump(fd, NULL);
+    loaded(fd, nullptr);
+    erts_dump_fun_entries(fd, nullptr);
+    erts_deep_process_dump(fd, nullptr);
     erts_fdprintf(fd, "=atoms\n");
-    dump_atoms(fd, NULL);
+    dump_atoms(fd, nullptr);
 
     /* Keep the instrumentation data at the end of the dump */
     if (erts_instr_memory_map || erts_instr_stat) {

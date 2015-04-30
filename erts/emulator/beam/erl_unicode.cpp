@@ -70,8 +70,8 @@ static Export characters_to_list_trap_2_exp;
 static Export characters_to_list_trap_3_exp;
 static Export characters_to_list_trap_4_exp;
 
-static Export *c_to_b_int_trap_exportp = NULL;
-static Export *c_to_l_int_trap_exportp = NULL;
+static Export *c_to_b_int_trap_exportp = nullptr;
+static Export *c_to_l_int_trap_exportp = nullptr;
 
 void erts_init_unicode(void)
 {
@@ -116,9 +116,9 @@ static ERTS_INLINE void free_restart(void *ptr)
 
 static void cleanup_restart_context(RestartContext *rc)
 {
-    if (rc->bytes != NULL) {
+    if (rc->bytes != nullptr) {
 	free_restart(rc->bytes);
-	rc->bytes = NULL;
+	rc->bytes = nullptr;
     }
 }
 
@@ -200,7 +200,7 @@ static Sint aligned_binary_size(Eterm binary)
 static Sint latin1_binary_need(Eterm binary)
 {
     unsigned char *bytes;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
     Uint bitoffs;
     Uint bitsize;
     Uint size;
@@ -246,11 +246,11 @@ static int copy_utf8_bin(byte *target, byte *source, Uint size,
 			 byte *leftover, int *num_leftovers, 
 			 byte **err_pos, Uint *characters) {
     int copied = 0;
-    if (leftover != NULL && *num_leftovers) {
+    if (leftover != nullptr && *num_leftovers) {
 	int need = utf8_len(leftover[0]);
 	int from_source = need - (*num_leftovers);
 	int c;
-	byte *tmp_err_pos = NULL;
+	byte *tmp_err_pos = nullptr;
 	ASSERT(need > 0);
 	ASSERT(from_source > 0);
 	if (size < from_source) {
@@ -260,7 +260,7 @@ static int copy_utf8_bin(byte *target, byte *source, Uint size,
 	}
 	/* leftover has room for four bytes (see bif) */
 	memcpy(leftover + (*num_leftovers),source,from_source);
-	c = copy_utf8_bin(target, leftover, need, NULL, NULL, &tmp_err_pos, characters);
+	c = copy_utf8_bin(target, leftover, need, nullptr, nullptr, &tmp_err_pos, characters);
 	if (tmp_err_pos != 0) {
 	    *err_pos = source;
 	    return 0;
@@ -522,7 +522,7 @@ static Eterm do_build_utf8(Process *p, Eterm ioterm, int *left, int latin1,
 	Uint i;
 	Eterm res_term = NIL;
 	unsigned char *bytes;
-	byte *temp_alloc = NULL;
+	byte *temp_alloc = nullptr;
 	Uint orig_size;
 	
 	ERTS_GET_BINARY_BYTES(ioterm, bytes, bitoffs, bitsize);
@@ -573,11 +573,11 @@ static Eterm do_build_utf8(Process *p, Eterm ioterm, int *left, int latin1,
 
 	if (!latin1) {
 	    int num;
-	    byte *err_pos = NULL;
+	    byte *err_pos = nullptr;
 	    num = copy_utf8_bin(target + (*pos), bytes, 
 				size, leftover, num_leftovers,&err_pos,characters);
 	    *pos += num;
-	    if (err_pos != NULL) {
+	    if (err_pos != nullptr) {
 		int rest_bin_offset;
 		int rest_bin_size;
 		Eterm *hp;
@@ -905,7 +905,7 @@ static int is_valid_utf8(Eterm orig_bin)
     Uint bitoffs;
     Uint bitsize;
     Uint size;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
     byte *endpos;
     Uint numchar;
     byte *bytes;
@@ -921,7 +921,7 @@ static int is_valid_utf8(Eterm orig_bin)
     size = binary_size(orig_bin);
     ret = erts_analyze_utf8(bytes,
 		       size,
-		       &endpos,&numchar,NULL);
+		       &endpos,&numchar,nullptr);
     erts_free_aligned_binary_bytes(temp_alloc);
     return (ret == ERTS_UTF8_OK);
 }
@@ -968,7 +968,7 @@ BIF_RETTYPE unicode_characters_to_binary_2(BIF_ALIST_2)
     }
 	
 
-    bin = erts_new_mso_binary(BIF_P, (byte *)NULL, need);
+    bin = erts_new_mso_binary(BIF_P, (byte *)nullptr, need);
     bytes = binary_bytes(bin);
     cost_to_proc(BIF_P, simple_loops_to_common(cost_of_utf8_need)); 
     left = allowed_iterations(BIF_P) - 
@@ -995,7 +995,7 @@ BIF_RETTYPE unicode_characters_to_binary_2(BIF_ALIST_2)
 	    bin = NIL;
 	}
 	if (is_binary(bin)) {
-	    byte *t = NULL;
+	    byte *t = nullptr;
 	    Uint sz = binary_size(bin);
 	    byte *by = erts_get_aligned_binary_bytes(bin,&t);
 	    int i;
@@ -1084,7 +1084,7 @@ static BIF_RETTYPE characters_to_list_trap_1(BIF_ALIST_3)
     rc = get_rc_from_bin(BIF_ARG_1);
 
     bytes = rc->bytes;
-    rc->bytes = NULL; /* to avoid free due to later GC */
+    rc->bytes = nullptr; /* to avoid free due to later GC */
     pos = rc->num_bytes_to_process;
     characters = rc->num_resulting_chars;
 
@@ -1242,7 +1242,7 @@ analyze_utf8(byte *source, Uint size, byte **err_pos, Uint *num_chars, int *left
 int erts_analyze_utf8(byte *source, Uint size, 
 		      byte **err_pos, Uint *num_chars, int *left)
 {
-    return analyze_utf8(source, size, err_pos, num_chars, left, NULL, 0);
+    return analyze_utf8(source, size, err_pos, num_chars, left, nullptr, 0);
 }
 
 int erts_analyze_utf8_x(byte *source, Uint size, 
@@ -1598,7 +1598,7 @@ static BIF_RETTYPE characters_to_list_trap_2(BIF_ALIST_3)
     rc = get_rc_from_bin(BIF_ARG_1);
 
     bytes = rc->bytes;
-    rc->bytes = NULL; /* Don't want this_ freed just yet... */
+    rc->bytes = nullptr; /* Don't want this_ freed just yet... */
     return finalize_list_to_list(BIF_P, bytes, BIF_ARG_2, rc->num_processed_bytes,
 				 rc->num_bytes_to_process, rc->num_resulting_chars,
 				 rc->state, allowed_iterations(BIF_P), BIF_ARG_3);
@@ -1642,7 +1642,7 @@ static BIF_RETTYPE do_bif_utf8_to_list(Process *p,
     Eterm rest = NIL;
     Eterm *hp;
     Eterm ret;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
     byte *endpos;
     Uint numchar;
 
@@ -1885,7 +1885,7 @@ static BIF_RETTYPE
 binary_to_atom(Process* proc, Eterm bin, Eterm enc, int must_exist)
 {
     byte* bytes;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
     Uint bin_size;
 
     if ((bytes = erts_get_aligned_binary_bytes(bin, &temp_alloc)) == 0) {
@@ -1999,14 +1999,14 @@ char *erts_convert_filename_to_encoding(Eterm name, char *statbuf, size_t statbu
 					int allow_atom, int encoding, Sint *used,
 					Uint extra)
 {
-    char* name_buf = NULL;
+    char* name_buf = nullptr;
 
     if ((allow_atom && is_atom(name)) || 
 	is_list(name) || 
 	(allow_empty && is_nil(name))) {
 	Sint need;
 	if ((need = erts_native_filename_need(name,encoding)) < 0) {
-	    return NULL;
+	    return nullptr;
 	}
 	if (encoding == ERL_FILENAME_WIN_WCHAR) {
 	    need += 2;
@@ -2027,7 +2027,7 @@ char *erts_convert_filename_to_encoding(Eterm name, char *statbuf, size_t statbu
 	    name_buf[need-2] = 0;
 	}
     } else if (is_binary(name)) {
-	byte *temp_alloc = NULL;
+	byte *temp_alloc = nullptr;
 	byte *bytes;
 	Uint size;
 	
@@ -2052,7 +2052,7 @@ char *erts_convert_filename_to_encoding(Eterm name, char *statbuf, size_t statbu
         }
 	erts_free_aligned_binary_bytes(temp_alloc);
     } else {
-	return NULL;
+	return nullptr;
     }
     return name_buf;
 }
@@ -2064,11 +2064,11 @@ char* erts_convert_filename_to_wchar(byte* bytes, Uint size,
 {
     byte *err_pos;
     Uint num_chars;
-    char* name_buf = NULL;
+    char* name_buf = nullptr;
     Sint need;
     char *p;
 
-    if (erts_analyze_utf8(bytes,size,&err_pos,&num_chars,NULL) != ERTS_UTF8_OK ||
+    if (erts_analyze_utf8(bytes,size,&err_pos,&num_chars,nullptr) != ERTS_UTF8_OK ||
         erts_get_user_requested_filename_encoding() ==  ERL_FILENAME_LATIN1) {
 
         /* What to do now? Maybe latin1, so just take byte for byte instead */
@@ -2128,7 +2128,7 @@ Eterm erts_convert_native_to_filename(Process *p, byte *bytes)
 	size = strlen((char *) bytes);
 	if (size == 0)
 	    return NIL;
-	if (erts_analyze_utf8(bytes,size,&err_pos,&num_chars,NULL) != ERTS_UTF8_OK) {
+	if (erts_analyze_utf8(bytes,size,&err_pos,&num_chars,nullptr) != ERTS_UTF8_OK) {
 	    goto noconvert;
 	}
 	num_built = 0;
@@ -2532,7 +2532,7 @@ BIF_RETTYPE prim_file_internal_name2native_1(BIF_ALIST_1)
 	BIF_ERROR(BIF_P,BADARG);
     }
     if (is_binary(BIF_ARG_1)) {
-	byte *temp_alloc = NULL;
+	byte *temp_alloc = nullptr;
 	byte *bytes;
 	byte *err_pos;
 	Uint size,num_chars;
@@ -2542,7 +2542,7 @@ BIF_RETTYPE prim_file_internal_name2native_1(BIF_ALIST_1)
 	bytes = erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc);
 	if (encoding != ERL_FILENAME_WIN_WCHAR) {
 	    /*Add 0 termination only*/
-	    bin_term = new_binary(BIF_P, NULL, size+1);
+	    bin_term = new_binary(BIF_P, nullptr, size+1);
 	    bin_p = binary_bytes(bin_term);
 	    memcpy(bin_p,bytes,size);
 	    bin_p[size]=0;
@@ -2552,7 +2552,7 @@ BIF_RETTYPE prim_file_internal_name2native_1(BIF_ALIST_1)
 	/* In a wchar world, the emulator flags only affect how
 	   binaries are interpreted when sent from the user. */
 	/* Determine real length and create a new_ binary */
-	if (erts_analyze_utf8(bytes,size,&err_pos,&num_chars,NULL) != ERTS_UTF8_OK || 
+	if (erts_analyze_utf8(bytes,size,&err_pos,&num_chars,nullptr) != ERTS_UTF8_OK || 
 	    erts_get_user_requested_filename_encoding() ==  ERL_FILENAME_LATIN1) {
 	    /* What to do now? Maybe latin1, so just take byte for byte instead */
 	    bin_term = new_binary(BIF_P, 0, (size+1)*2);
@@ -2605,7 +2605,7 @@ BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
     Uint bitsize;
     Uint bitoffs;
     Eterm *hp;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
     byte *bytes;
     byte *err_pos;
     Uint num_built; /* characters */
@@ -2634,7 +2634,7 @@ BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
 	mac = 1;
     case ERL_FILENAME_UTF8:
 	bytes = erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc);
-	if (erts_analyze_utf8(bytes,size,&err_pos,&num_chars,NULL) != ERTS_UTF8_OK) {
+	if (erts_analyze_utf8(bytes,size,&err_pos,&num_chars,nullptr) != ERTS_UTF8_OK) {
 	    Eterm *hp = HAlloc(BIF_P,3);
 	    Eterm warn_type = NIL;
 	    erts_free_aligned_binary_bytes(temp_alloc);
@@ -2694,7 +2694,7 @@ BIF_RETTYPE prim_file_internal_normalize_utf8_1(BIF_ALIST_1)
     Uint bitsize;
     ERTS_DECLARE_DUMMY(Uint bitoffs);
     Eterm ret;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
     byte *bytes;
     byte *err_pos;
 
@@ -2710,7 +2710,7 @@ BIF_RETTYPE prim_file_internal_normalize_utf8_1(BIF_ALIST_1)
 	BIF_RET(NIL);
     }
     bytes = erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc);
-    if (erts_analyze_utf8(bytes,size,&err_pos,&num_chars,NULL) != ERTS_UTF8_OK) {
+    if (erts_analyze_utf8(bytes,size,&err_pos,&num_chars,nullptr) != ERTS_UTF8_OK) {
 	erts_free_aligned_binary_bytes(temp_alloc);
 	BIF_ERROR(BIF_P,BADARG);
     }
@@ -2727,7 +2727,7 @@ BIF_RETTYPE prim_file_is_translatable_1(BIF_ALIST_1)
     Uint num_chars;
     Uint bitsize;
     ERTS_DECLARE_DUMMY(Uint bitoffs);
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
     byte *bytes;
     byte *err_pos;
     int status;
@@ -2760,7 +2760,7 @@ BIF_RETTYPE prim_file_is_translatable_1(BIF_ALIST_1)
      * Check whether the binary contains legal UTF-8 sequences.
      */
     bytes = erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc);
-    status = erts_analyze_utf8(bytes, size, &err_pos, &num_chars, NULL);
+    status = erts_analyze_utf8(bytes, size, &err_pos, &num_chars, nullptr);
     erts_free_aligned_binary_bytes(temp_alloc);
     BIF_RET(status == ERTS_UTF8_OK ? am_true : am_false);
 }  

@@ -156,7 +156,7 @@ void erts_destroy_tmp_dsbuf(erts_dsprintf_buf_t *);
 
 #if HALFWORD_HEAP
 int eq_rel(Eterm a, Eterm* a_base, Eterm b, Eterm* b_base);
-#  define eq(A,B) eq_rel(A,NULL,B,NULL)
+#  define eq(A,B) eq_rel(A,nullptr,B,nullptr)
 #else
 int eq(Eterm, Eterm);
 #  define eq_rel(A,A_BASE,B,B_BASE) eq(A,B)
@@ -168,8 +168,8 @@ int eq(Eterm, Eterm);
 Sint erts_cmp_rel_opt(Eterm, Eterm*, Eterm, Eterm*, int);
 #define cmp_rel(A,A_BASE,B,B_BASE)       erts_cmp_rel_opt(A,A_BASE,B,B_BASE,0)
 #define cmp_rel_term(A,A_BASE,B,B_BASE)  erts_cmp_rel_opt(A,A_BASE,B,B_BASE,1)
-#define CMP(A,B)                         erts_cmp_rel_opt(A,NULL,B,NULL,0)
-#define CMP_TERM(A,B)                    erts_cmp_rel_opt(A,NULL,B,NULL,1)
+#define CMP(A,B)                         erts_cmp_rel_opt(A,nullptr,B,nullptr,0)
+#define CMP_TERM(A,B)                    erts_cmp_rel_opt(A,nullptr,B,nullptr,1)
 #else
 Sint cmp(Eterm, Eterm);
 Sint erts_cmp(Eterm, Eterm, int);

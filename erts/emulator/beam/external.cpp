@@ -511,19 +511,19 @@ Uint erts_encode_dist_ext_size(Eterm term, Uint32 flags, ErtsAtomCacheMap *acmp)
 
 Uint erts_encode_ext_size(Eterm term)
 {
-    return encode_size_struct2(NULL, term, TERM_TO_BINARY_DFLAGS)
+    return encode_size_struct2(nullptr, term, TERM_TO_BINARY_DFLAGS)
 	+ 1 /* VERSION_MAGIC */;
 }
 
 Uint erts_encode_ext_size_2(Eterm term, unsigned dflags)
 {
-    return encode_size_struct2(NULL, term, dflags)
+    return encode_size_struct2(nullptr, term, dflags)
         + 1 /* VERSION_MAGIC */;
 }
 
 Uint erts_encode_ext_size_ets(Eterm term)
 {
-    return encode_size_struct2(NULL, term, TERM_TO_BINARY_DFLAGS|DFLAG_INTERNAL_TAGS);
+    return encode_size_struct2(nullptr, term, TERM_TO_BINARY_DFLAGS|DFLAG_INTERNAL_TAGS);
 }
 
 
@@ -534,7 +534,7 @@ void erts_encode_dist_ext(Eterm term, byte **ext, Uint32 flags, ErtsAtomCacheMap
     if (!(flags & DFLAG_DIST_HDR_ATOM_CACHE))
 #endif
 	*ep++ = VERSION_MAGIC;
-    ep = enc_term(acmp, term, ep, flags, NULL);
+    ep = enc_term(acmp, term, ep, flags, nullptr);
     if (!ep)
 	erl_exit(ERTS_ABORT_EXIT,
 		 "%s:%d:erts_encode_dist_ext(): Internal data structure error\n",
@@ -546,7 +546,7 @@ void erts_encode_ext(Eterm term, byte **ext)
 {
     byte *ep = *ext;
     *ep++ = VERSION_MAGIC;
-    ep = enc_term(NULL, term, ep, TERM_TO_BINARY_DFLAGS, NULL);
+    ep = enc_term(nullptr, term, ep, TERM_TO_BINARY_DFLAGS, nullptr);
     if (!ep)
 	erl_exit(ERTS_ABORT_EXIT,
 		 "%s:%d:erts_encode_ext(): Internal data structure error\n",
@@ -556,7 +556,7 @@ void erts_encode_ext(Eterm term, byte **ext)
 
 byte* erts_encode_ext_ets(Eterm term, byte *ep, struct erl_off_heap_header** off_heap)
 {
-    return enc_term(NULL, term, ep, TERM_TO_BINARY_DFLAGS|DFLAG_INTERNAL_TAGS,
+    return enc_term(nullptr, term, ep, TERM_TO_BINARY_DFLAGS|DFLAG_INTERNAL_TAGS,
 		    off_heap);
 }
 
@@ -880,7 +880,7 @@ erts_decode_dist_ext_size(ErtsDistExternal *edep)
 	    goto fail;
 	ep = edep->extp+1;
     }
-    res = decoded_size(ep, edep->ext_endp, 0, NULL);
+    res = decoded_size(ep, edep->ext_endp, 0, nullptr);
     if (res >= 0)
 	return res;
  fail:
@@ -892,12 +892,12 @@ Sint erts_decode_ext_size(byte *ext, Uint size)
 {
     if (size == 0 || *ext != VERSION_MAGIC)
 	return -1;
-    return decoded_size(ext+1, ext+size, 0, NULL);
+    return decoded_size(ext+1, ext+size, 0, nullptr);
 }
 
 Sint erts_decode_ext_size_ets(byte *ext, Uint size)
 {
-    Sint sz = decoded_size(ext, ext+size, 1, NULL);
+    Sint sz = decoded_size(ext, ext+size, 1, nullptr);
     ASSERT(sz >= 0);
     return sz;
 }
@@ -930,7 +930,7 @@ erts_decode_dist_ext(Eterm** hpp,
 	    goto error;
 	ep++;
     }
-    ep = dec_term(edep, hpp, ep, off_heap, &obj, NULL);
+    ep = dec_term(edep, hpp, ep, off_heap, &obj, nullptr);
     if (!ep)
 	goto error;
 
@@ -951,10 +951,10 @@ Eterm erts_decode_ext(Eterm **hpp, ErlOffHeap *off_heap, byte **ext)
     byte *ep = *ext;
     if (*ep++ != VERSION_MAGIC)
 	return THE_NON_VALUE;
-    ep = dec_term(NULL, hpp, ep, off_heap, &obj, NULL);
+    ep = dec_term(nullptr, hpp, ep, off_heap, &obj, nullptr);
     if (!ep) {
 #ifdef DEBUG
-	bin_write(ERTS_PRINT_STDERR,NULL,*ext,500);
+	bin_write(ERTS_PRINT_STDERR,nullptr,*ext,500);
 #endif
 	return THE_NON_VALUE;
     }
@@ -965,7 +965,7 @@ Eterm erts_decode_ext(Eterm **hpp, ErlOffHeap *off_heap, byte **ext)
 Eterm erts_decode_ext_ets(Eterm **hpp, ErlOffHeap *off_heap, byte *ext)
 {
     Eterm obj;
-    ext = dec_term(NULL, hpp, ext, off_heap, &obj, NULL);
+    ext = dec_term(nullptr, hpp, ext, off_heap, &obj, nullptr);
     ASSERT(ext);
     return obj;
 }
@@ -989,7 +989,7 @@ BIF_RETTYPE erts_debug_dist_ext_to_term_2(BIF_ALIST_2)
     int i;
 
     ede.flags = ERTS_DIST_EXT_ATOM_TRANS_TAB;
-    ede.dep = NULL;
+    ede.dep = nullptr;
     ede.heap_size = -1;
     
     if (is_not_tuple(BIF_ARG_1))
@@ -1061,7 +1061,7 @@ HIPE_WRAPPER_BIF_DISABLE_GC(term_to_binary, 1)
 
 BIF_RETTYPE term_to_binary_1(BIF_ALIST_1)
 {
-    Eterm res = erts_term_to_binary_int(BIF_P, BIF_ARG_1, 0, TERM_TO_BINARY_DFLAGS, NULL);
+    Eterm res = erts_term_to_binary_int(BIF_P, BIF_ARG_1, 0, TERM_TO_BINARY_DFLAGS, nullptr);
     if (is_tuple(res)) {
 	erts_set_gc_state(BIF_P, 0);
 	BIF_TRAP1(&term_to_binary_trap_export,BIF_P,res);
@@ -1118,7 +1118,7 @@ BIF_RETTYPE term_to_binary_2(BIF_ALIST_2)
 	goto error;
     }
 
-    res = erts_term_to_binary_int(p, Term, level, flags, NULL);
+    res = erts_term_to_binary_int(p, Term, level, flags, nullptr);
     if (is_tuple(res)) {
 	erts_set_gc_state(p, 0);
 	BIF_TRAP1(&term_to_binary_trap_export,BIF_P,res);
@@ -1242,7 +1242,7 @@ binary2term_prepare(ErtsBinary2TermState *state, byte *data, Sint data_size,
 	bytes += 5;
 	size -= 5;	
 	if (dest_len > 32*1024*1024
-            || (state->extp = (byte*)erts_alloc_fnf(ERTS_ALC_T_EXT_TERM_DATA, dest_len)) == NULL) {
+            || (state->extp = (byte*)erts_alloc_fnf(ERTS_ALC_T_EXT_TERM_DATA, dest_len)) == nullptr) {
             /*
              * Try avoid out-of-memory crash due to corrupted 'dest_len'
              * by checking the actual length of the uncompressed data.
@@ -1289,7 +1289,7 @@ static ERTS_INLINE Eterm
 binary2term_create(ErtsDistExternal *edep, ErtsBinary2TermState *state, Eterm **hpp, ErlOffHeap *ohp)
 {
     Eterm res;
-    if (!dec_term(edep, hpp, state->extp, ohp, &res, NULL))
+    if (!dec_term(edep, hpp, state->extp, ohp, &res, nullptr))
 	res = THE_NON_VALUE;
     if (state->exttmp) {
 	state->exttmp = 0;
@@ -1303,12 +1303,12 @@ erts_binary2term_prepare(ErtsBinary2TermState *state, byte *data, Sint data_size
 {
     Sint res;
 
-    if (binary2term_prepare(state, data, data_size, NULL) < 0 ||
-        (res=decoded_size(state->extp, state->extp + state->extsize, 0, NULL)) < 0) {
+    if (binary2term_prepare(state, data, data_size, nullptr) < 0 ||
+        (res=decoded_size(state->extp, state->extp + state->extsize, 0, nullptr)) < 0) {
 
         if (state->exttmp)
             erts_free(ERTS_ALC_T_EXT_TERM_DATA, state->extp);
-        state->extp = NULL;
+        state->extp = nullptr;
 	state->exttmp = 0;
 	return -1;
     }
@@ -1324,14 +1324,14 @@ erts_binary2term_abort(ErtsBinary2TermState *state)
 Eterm
 erts_binary2term_create(ErtsBinary2TermState *state, Eterm **hpp, ErlOffHeap *ohp)
 {
-    return binary2term_create(NULL,state, hpp, ohp);
+    return binary2term_create(nullptr,state, hpp, ohp);
 }
 
 static void b2t_destroy_context(B2TContext* context)
 {
     erts_free_aligned_binary_bytes_extra(context->aligned_alloc,
                                          ERTS_ALC_T_EXT_TERM_DATA);
-    context->aligned_alloc = NULL;
+    context->aligned_alloc = nullptr;
     binary2term_abort(&context->b2ts);
     if (context->state == B2TUncompressChunk) {
 	erl_zlib_inflate_finish(&context->u.uc.stream);
@@ -1351,7 +1351,7 @@ static BIF_RETTYPE binary_to_term_trap_1(BIF_ALIST_1)
     Binary *context_bin = ((ProcBin *) binary_val(BIF_ARG_1))->val;
     ASSERT(ERTS_MAGIC_BIN_DESTRUCTOR(context_bin) == b2t_context_destructor);
 
-    return binary_to_term_int(BIF_P, 0, THE_NON_VALUE, context_bin, NULL,
+    return binary_to_term_int(BIF_P, 0, THE_NON_VALUE, context_bin, nullptr,
 			      THE_NON_VALUE, THE_NON_VALUE);
 }
 
@@ -1400,12 +1400,12 @@ static BIF_RETTYPE binary_to_term_int(Process* p, Uint32 flags, Eterm bin, Binar
     B2TContext *ctx;
     int is_first_call;
 
-    if (context_b == NULL) {
+    if (context_b == nullptr) {
 	/* Setup enough to get started */
         is_first_call = 1;
         ctx = &c_buff;
 	ctx->state = B2TPrepare;
-        ctx->aligned_alloc = NULL;
+        ctx->aligned_alloc = nullptr;
         ctx->flags = flags;
 	ctx->bif = bif_init;
 	ctx->arg[0] = arg0;
@@ -1427,7 +1427,7 @@ static BIF_RETTYPE binary_to_term_int(Process* p, Uint32 flags, Eterm bin, Binar
                                                         &ctx->aligned_alloc,
                                                         ERTS_ALC_T_EXT_TERM_DATA,
                                                         0);
-            if (bytes == NULL) {
+            if (bytes == nullptr) {
                 ctx->b2ts.exttmp = 0;
                 ctx->state = B2TBadArg;
                 break;
@@ -1466,7 +1466,7 @@ static BIF_RETTYPE binary_to_term_int(Process* p, Uint32 flags, Eterm bin, Binar
             break;
         }
 	case B2TSizeInit:
-	    ctx->u.sc.ep = NULL;
+	    ctx->u.sc.ep = nullptr;
 	    ctx->state = B2TSize;
 	    /*fall through*/
         case B2TSize:
@@ -1483,12 +1483,12 @@ static BIF_RETTYPE binary_to_term_int(Process* p, Uint32 flags, Eterm bin, Binar
                 ctx = b2t_export_context(p, &c_buff);
             }
             ctx->u.dc.ep = ctx->b2ts.extp;
-            ctx->u.dc.res = (Eterm) (UWord) NULL;
+            ctx->u.dc.res = (Eterm) (UWord) nullptr;
             ctx->u.dc.next = &ctx->u.dc.res;
             ctx->u.dc.hp_start = HAlloc(p, ctx->heap_size);
             ctx->u.dc.hp       = ctx->u.dc.hp_start;
             ctx->u.dc.hp_end   = ctx->u.dc.hp_start + ctx->heap_size;
-	    ctx->u.dc.maps_head = NULL;
+	    ctx->u.dc.maps_head = nullptr;
             ctx->state = B2TDecode;
             /*fall through*/
 	case B2TDecode:
@@ -1498,7 +1498,7 @@ static BIF_RETTYPE binary_to_term_int(Process* p, Uint32 flags, Eterm bin, Binar
         case B2TDecodeBinary: {
 	    ErtsDistExternal fakedep;
             fakedep.flags = ctx->flags;
-            dec_term(&fakedep, NULL, NULL, &MSO(p), NULL, ctx);
+            dec_term(&fakedep, nullptr, nullptr, &MSO(p), nullptr, ctx);
             break;
 	}
         case B2TDecodeFail:
@@ -1566,7 +1566,7 @@ HIPE_WRAPPER_BIF_DISABLE_GC(binary_to_term, 1)
 
 BIF_RETTYPE binary_to_term_1(BIF_ALIST_1)
 {
-    return binary_to_term_int(BIF_P, 0, BIF_ARG_1, NULL, bif_export[BIF_binary_to_term_1],
+    return binary_to_term_int(BIF_P, 0, BIF_ARG_1, nullptr, bif_export[BIF_binary_to_term_1],
 			      BIF_ARG_1, THE_NON_VALUE);
 }
 
@@ -1593,7 +1593,7 @@ BIF_RETTYPE binary_to_term_2(BIF_ALIST_2)
     if (is_not_nil(opts))
         goto error;
 
-    return binary_to_term_int(BIF_P, flags, BIF_ARG_1, NULL, bif_export[BIF_binary_to_term_2],
+    return binary_to_term_int(BIF_P, flags, BIF_ARG_1, nullptr, bif_export[BIF_binary_to_term_2],
 			      BIF_ARG_1, BIF_ARG_2);
 
 error:
@@ -1676,8 +1676,8 @@ erts_term_to_binary_simple(Process* p, Eterm Term, Uint size, int level, Uint fl
             bytes = (byte*)erts_alloc(ERTS_ALC_T_TMP, size);
 	}
 
-	if ((endp = enc_term(NULL, Term, bytes, flags, NULL))
-	    == NULL) {
+	if ((endp = enc_term(nullptr, Term, bytes, flags, nullptr))
+	    == nullptr) {
 	    erl_exit(1, "%s, line %d: bad term: %x\n",
 		     __FILE__, __LINE__, Term);
 	}
@@ -1700,7 +1700,7 @@ erts_term_to_binary_simple(Process* p, Eterm Term, Uint size, int level, Uint fl
 	} else {
 	    dest_len = real_size - 5;
 	}
-	bin = new_binary(p, NULL, real_size+1);
+	bin = new_binary(p, nullptr, real_size+1);
 	out_bytes = binary_bytes(bin);
 	out_bytes[0] = VERSION_MAGIC;
 	if (erl_zlib_compress2(out_bytes+6, &dest_len, bytes, real_size, level) != Z_OK) {
@@ -1718,11 +1718,11 @@ erts_term_to_binary_simple(Process* p, Eterm Term, Uint size, int level, Uint fl
     } else {
 	byte* bytes;
 
-	bin = new_binary(p, (byte *)NULL, size);
+	bin = new_binary(p, (byte *)nullptr, size);
 	bytes = binary_bytes(bin);
 	bytes[0] = VERSION_MAGIC;
-	if ((endp = enc_term(NULL, Term, bytes+1, flags, NULL))
-	    == NULL) {
+	if ((endp = enc_term(nullptr, Term, bytes+1, flags, nullptr))
+	    == nullptr) {
 	    erl_exit(1, "%s, line %d: bad term: %x\n",
 		     __FILE__, __LINE__, Term);
 	}
@@ -1738,7 +1738,7 @@ erts_term_to_binary_simple(Process* p, Eterm Term, Uint size, int level, Uint fl
 Eterm
 erts_term_to_binary(Process* p, Eterm Term, int level, Uint flags) {
     Uint size;
-    size = encode_size_struct2(NULL, Term, flags) + 1 /* VERSION_MAGIC */;
+    size = encode_size_struct2(nullptr, Term, flags) + 1 /* VERSION_MAGIC */;
     return erts_term_to_binary_simple(p, Term, size, level, flags);
 }
 
@@ -1802,25 +1802,25 @@ static void ttb_context_destructor(Binary *context_bin)
 	    break;
 	case TTBEncode:
 	    DESTROY_SAVED_WSTACK(&context->s.ec.wstack);
-	    if (context->s.ec.result_bin != NULL) { /* Set to NULL if ever made alive! */
+	    if (context->s.ec.result_bin != nullptr) { /* Set to nullptr if ever made alive! */
 		ASSERT(erts_refc_read(&(context->s.ec.result_bin->refc),0) == 0);
 		erts_bin_free(context->s.ec.result_bin);
-		context->s.ec.result_bin = NULL;
+		context->s.ec.result_bin = nullptr;
 	    }
 	    break;
 	case TTBCompress:
 	    erl_zlib_deflate_finish(&(context->s.cc.stream));
 
-	    if (context->s.cc.destination_bin != NULL) { /* Set to NULL if ever made alive! */
+	    if (context->s.cc.destination_bin != nullptr) { /* Set to nullptr if ever made alive! */
 		ASSERT(erts_refc_read(&(context->s.cc.destination_bin->refc),0) == 0);
 		erts_bin_free(context->s.cc.destination_bin);
-		context->s.cc.destination_bin = NULL;
+		context->s.cc.destination_bin = nullptr;
 	    }
 	    
-	    if (context->s.cc.result_bin != NULL) { /* Set to NULL if ever made alive! */
+	    if (context->s.cc.result_bin != nullptr) { /* Set to nullptr if ever made alive! */
 		ASSERT(erts_refc_read(&(context->s.cc.result_bin->refc),0) == 0);
 		erts_bin_free(context->s.cc.result_bin);
-		context->s.cc.result_bin = NULL;
+		context->s.cc.result_bin = nullptr;
 	    }
 	    break;
 	}
@@ -1844,7 +1844,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 
 #define EXPORT_CONTEXT()						\
     do {								\
-	if (context_b == NULL) {					\
+	if (context_b == nullptr) {					\
 	    context_b = erts_create_magic_binary(sizeof(TTBContext),    \
                                                  ttb_context_destructor);   \
             context =  ERTS_MAGIC_BIN_DATA<TTBContext*>(context_b);	\
@@ -1862,11 +1862,11 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
     } while (0);
 
 
-    if (context_b == NULL) {
+    if (context_b == nullptr) {
 	/* Setup enough to get started */
 	context->state = TTBSize;
 	context->alive = 1;
-	context->s.sc.estack.start = NULL;
+	context->s.sc.estack.start = nullptr;
 	context->s.sc.flags = flags;
 	context->s.sc.level = level;
     } else {
@@ -1882,7 +1882,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 		int level;
 		Uint flags;
 		/* Try for fast path */
-		if (encode_size_struct_int(&context->s.sc, NULL, Term,
+		if (encode_size_struct_int(&context->s.sc, nullptr, Term,
 					   context->s.sc.flags, &reds, &size) < 0) {
 		    EXPORT_CONTEXT();
 		    /* Same state */
@@ -1909,7 +1909,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 		context->state = TTBEncode;
 		context->s.ec.flags = flags;
 		context->s.ec.level = level;
-		context->s.ec.wstack.wstart = NULL;
+		context->s.ec.wstack.wstart = nullptr;
 		context->s.ec.result_bin = result_bin;
 		break;
 	    }
@@ -1921,7 +1921,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 		Binary *result_bin;
 
 		flags = context->s.ec.flags;
-		if (enc_term_int(&context->s.ec, NULL,Term, bytes+1, flags, NULL, &reds, &endp) < 0) {
+		if (enc_term_int(&context->s.ec, nullptr,Term, bytes+1, flags, nullptr, &reds, &endp) < 0) {
 		    EXPORT_CONTEXT();
 		    RETURN_STATE();
 		}
@@ -1933,7 +1933,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 		if (level == 0 || real_size < 6) { /* We are done */
 		    ProcBin* pb;
 		return_normal:
-		    context->s.ec.result_bin = NULL;
+		    context->s.ec.result_bin = nullptr;
 		    context->alive = 0;
 		    pb = (ProcBin *) HAlloc(p, PROC_BIN_SIZE);
 		    pb->thing_word = HEADER_PROC_BIN;
@@ -2008,7 +2008,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 			result_bin = erts_bin_realloc(context->s.cc.destination_bin,
 						      context->s.cc.dest_len+6);
 			result_bin->orig_size = context->s.cc.dest_len+6;
-			context->s.cc.destination_bin = NULL;
+			context->s.cc.destination_bin = nullptr;
 			pb = (ProcBin *) HAlloc(p, PROC_BIN_SIZE);
 			pb->thing_word = HEADER_PROC_BIN;
 			pb->size = context->s.cc.dest_len+6;
@@ -2020,7 +2020,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 			OH_OVERHEAD(&(MSO(p)), pb->size / sizeof(Eterm));
 			erts_refc_inc(&result_bin->refc, 1);
 			erts_bin_free(context->s.cc.result_bin);
-			context->s.cc.result_bin = NULL;
+			context->s.cc.result_bin = nullptr;
 			context->alive = 0;
 			BUMP_REDS(p, (this_time * CONTEXT_REDS) / TERM_TO_BINARY_COMPRESS_CHUNK);
 			if (context_b && erts_refc_read(&context_b->refc,0) == 0) {
@@ -2032,7 +2032,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 			    context) */
 		no_use_compressing:
 		    result_bin = context->s.cc.result_bin;
-		    context->s.cc.result_bin = NULL;
+		    context->s.cc.result_bin = nullptr;
 		    pb = (ProcBin *) HAlloc(p, PROC_BIN_SIZE);
 		    pb->thing_word = HEADER_PROC_BIN;
 		    pb->size = context->s.cc.real_size;
@@ -2045,7 +2045,7 @@ static Eterm erts_term_to_binary_int(Process* p, Eterm Term, int level, Uint fla
 		    erts_refc_inc(&result_bin->refc, 1);
 		    erl_zlib_deflate_finish(&(context->s.cc.stream));
 		    erts_bin_free(context->s.cc.destination_bin);
-		    context->s.cc.destination_bin = NULL;
+		    context->s.cc.destination_bin = nullptr;
 		    context->alive = 0;
 		    BUMP_REDS(p, (this_time * CONTEXT_REDS) / TERM_TO_BINARY_COMPRESS_CHUNK);
 		    if (context_b && erts_refc_read(&context_b->refc,0) == 0) {
@@ -2253,7 +2253,7 @@ dec_atom(ErtsDistExternal *edep, byte* ep, Eterm* objp)
     default:
     error:
 	*objp = NIL;	/* Don't leave a hole in the heap */
-	return NULL;
+	return nullptr;
     }
     return ep;
 }
@@ -2284,21 +2284,21 @@ dec_pid(ErtsDistExternal *edep, Eterm** hpp, byte* ep, ErlOffHeap* off_heap, Ete
     *objp = NIL;		/* In case we fail, don't leave a hole in the heap */
 
     /* eat first atom */
-    if ((ep = dec_atom(edep, ep, &sysname)) == NULL)
-	return NULL;
+    if ((ep = dec_atom(edep, ep, &sysname)) == nullptr)
+	return nullptr;
     num = get_int32(ep);
     ep += 4;
     if (num > ERTS_MAX_PID_NUMBER)
-	return NULL;
+	return nullptr;
     ser = get_int32(ep);
     ep += 4;
     if (ser > ERTS_MAX_PID_SERIAL)
-	return NULL;
+	return nullptr;
     cre = get_int8(ep);
     ep += 1;
 
     if (!is_valid_creation(cre)) {
-	return NULL;
+	return nullptr;
     }
     data = make_pid_data(ser, num);
 
@@ -2337,7 +2337,7 @@ enc_term(ErtsAtomCacheMap *acmp, Eterm obj, byte* ep, Uint32 dflags,
 	 struct erl_off_heap_header** off_heap)
 {
     byte *res;
-    (void) enc_term_int(NULL, acmp, obj, ep, dflags, off_heap, NULL, &res);
+    (void) enc_term_int(nullptr, acmp, obj, ep, dflags, off_heap, nullptr, &res);
     return res;
 }
 
@@ -2817,7 +2817,7 @@ enc_term_int(TTBEncodeContext* ctx, ErtsAtomCacheMap *acmp, Eterm obj, byte* ep,
     }
     DESTROY_WSTACK(s);
     if (ctx) {
-	ASSERT(ctx->wstack.wstart == NULL);
+	ASSERT(ctx->wstack.wstart == nullptr);
 	*reds = r;
     }
     *res = ep;
@@ -2869,12 +2869,12 @@ undo_offheap_in_area(ErlOffHeap* off_heap, Eterm* start, Eterm* end)
 {
     const Uint area_sz = (end - start) * sizeof(Eterm);
     struct erl_off_heap_header* hdr;
-    struct erl_off_heap_header** hdr_nextp = NULL;
+    struct erl_off_heap_header** hdr_nextp = nullptr;
 
     for (hdr = off_heap->first; ; hdr=hdr->next) {
 	if (!in_area(hdr, start, area_sz)) {
-	    if (hdr_nextp != NULL) {
-		*hdr_nextp = NULL;
+	    if (hdr_nextp != nullptr) {
+		*hdr_nextp = nullptr;
 		erts_cleanup_offheap(off_heap);
 		off_heap->first = hdr;
 	    }
@@ -2885,7 +2885,7 @@ undo_offheap_in_area(ErlOffHeap* off_heap, Eterm* start, Eterm* end)
 
     /* Assert that the ones to undo were indeed preluding the list. */ 
 #ifdef DEBUG
-    for (hdr = off_heap->first; hdr != NULL; hdr = hdr->next) {
+    for (hdr = off_heap->first; hdr != nullptr; hdr = hdr->next) {
 	ASSERT(!in_area(hdr, start, area_sz));
     }    
 #endif /* DEBUG */
@@ -2893,7 +2893,7 @@ undo_offheap_in_area(ErlOffHeap* off_heap, Eterm* start, Eterm* end)
 
 
 /* Decode term from external format into *objp.
-** On failure return NULL and (R13B04) *hpp will be unchanged.
+** On failure return nullptr and (R13B04) *hpp will be unchanged.
 */
 static byte*
 dec_term(ErtsDistExternal *edep, Eterm** hpp, byte* ep, ErlOffHeap* off_heap,
@@ -2985,7 +2985,7 @@ dec_term(ErtsDistExternal *edep, Eterm** hpp, byte* ep, ErlOffHeap* off_heap,
                 ctx->u.dc.next = next;
                 ctx->u.dc.ep = ep;
                 ctx->reds = 0;
-                return NULL;
+                return nullptr;
             }
         }
     }
@@ -2993,12 +2993,12 @@ dec_term(ErtsDistExternal *edep, Eterm** hpp, byte* ep, ErlOffHeap* off_heap,
         hp_saved = *hpp;
         reds = ERTS_SWORD_MAX;
         next = objp;
-        *next = (Eterm) (UWord) NULL;
-	maps_head = NULL;
+        *next = (Eterm) (UWord) nullptr;
+	maps_head = nullptr;
     }
     hp = *hpp;
 
-    while (next != NULL) {
+    while (next != nullptr) {
 
 	objp = next;
 	next = (Eterm *) EXPAND_POINTER(*objp);
@@ -3236,7 +3236,7 @@ dec_term_atom_common:
 	    *hpp = hp;
 	    ep = dec_pid(edep, hpp, ep, off_heap, objp);
 	    hp = *hpp;
-	    if (ep == NULL) {
+	    if (ep == nullptr) {
 		goto error;
 	    }
 	    break;
@@ -3247,7 +3247,7 @@ dec_term_atom_common:
 		Uint num;
 		Uint cre;
 
-		if ((ep = dec_atom(edep, ep, &sysname)) == NULL) {
+		if ((ep = dec_atom(edep, ep, &sysname)) == nullptr) {
 		    goto error;
 		}
 		if ((num = get_int32(ep)) > ERTS_MAX_PORT_NUMBER) {
@@ -3291,7 +3291,7 @@ dec_term_atom_common:
 
 		ref_words = 1;
 
-		if ((ep = dec_atom(edep, ep, &sysname)) == NULL)
+		if ((ep = dec_atom(edep, ep, &sysname)) == nullptr)
 		    goto error;
 		if ((r0 = get_int32(ep)) >= MAX_REFERENCE )
 		    goto error;
@@ -3311,7 +3311,7 @@ dec_term_atom_common:
 		if (ref_words > ERTS_MAX_REF_NUMBERS)
 		    goto error;
 
-		if ((ep = dec_atom(edep, ep, &sysname)) == NULL)
+		if ((ep = dec_atom(edep, ep, &sysname)) == nullptr)
 		    goto error;
 
 		cre = get_int8(ep);
@@ -3498,16 +3498,16 @@ dec_term_atom_common:
 		Eterm temp;
 		Sint arity;
 
-		if ((ep = dec_atom(edep, ep, &mod)) == NULL) {
+		if ((ep = dec_atom(edep, ep, &mod)) == nullptr) {
 		    goto error;
 		}
-		if ((ep = dec_atom(edep, ep, &name)) == NULL) {
+		if ((ep = dec_atom(edep, ep, &name)) == nullptr) {
 		    goto error;
 		}
 		*hpp = hp;
-		ep = dec_term(edep, hpp, ep, off_heap, &temp, NULL);
+		ep = dec_term(edep, hpp, ep, off_heap, &temp, nullptr);
 		hp = *hpp;
-		if (ep == NULL) {
+		if (ep == nullptr) {
 		    goto error;
 		}
 		if (!is_small(temp)) {
@@ -3604,12 +3604,12 @@ dec_term_atom_common:
 		*objp = make_fun(funp);
 
 		/* Module */
-		if ((ep = dec_atom(edep, ep, &module)) == NULL) {
+		if ((ep = dec_atom(edep, ep, &module)) == nullptr) {
 		    goto error;
 		}
 		*hpp = hp;
 		/* Index */
-		if ((ep = dec_term(edep, hpp, ep, off_heap, &temp, NULL)) == NULL) {
+		if ((ep = dec_term(edep, hpp, ep, off_heap, &temp, nullptr)) == nullptr) {
 		    goto error;
 		}
 		if (!is_small(temp)) {
@@ -3618,7 +3618,7 @@ dec_term_atom_common:
 		old_index = unsigned_val(temp);
 
 		/* Uniq */
-		if ((ep = dec_term(edep, hpp, ep, off_heap, &temp, NULL)) == NULL) {
+		if ((ep = dec_term(edep, hpp, ep, off_heap, &temp, nullptr)) == nullptr) {
 		    goto error;
 		}
 		if (!is_small(temp)) {
@@ -3637,7 +3637,7 @@ dec_term_atom_common:
 					       uniq, index, arity);
 		funp->arity = arity;
 #ifdef HIPE
-		if (funp->fe->native_address == NULL) {
+		if (funp->fe->native_address == nullptr) {
 		    hipe_set_closure_stub(funp->fe, num_free);
 		}
 		funp->native_address = funp->fe->native_address;
@@ -3676,17 +3676,17 @@ dec_term_atom_common:
 		/* Creator pid */
 		if (*ep != PID_EXT 
 		    || (ep = dec_pid(edep, hpp, ++ep, off_heap,
-				     &funp->creator))==NULL) { 
+				     &funp->creator))==nullptr) { 
 		    goto error;
 		}
 
 		/* Module */
-		if ((ep = dec_atom(edep, ep, &module)) == NULL) {
+		if ((ep = dec_atom(edep, ep, &module)) == nullptr) {
 		    goto error;
 		}
 
 		/* Index */
-		if ((ep = dec_term(edep, hpp, ep, off_heap, &temp, NULL)) == NULL) {
+		if ((ep = dec_term(edep, hpp, ep, off_heap, &temp, nullptr)) == nullptr) {
 		    goto error;
 		}
 		if (!is_small(temp)) {
@@ -3695,7 +3695,7 @@ dec_term_atom_common:
 		old_index = unsigned_val(temp);
 
 		/* Uniq */
-		if ((ep = dec_term(edep, hpp, ep, off_heap, &temp, NULL)) == NULL) {
+		if ((ep = dec_term(edep, hpp, ep, off_heap, &temp, nullptr)) == nullptr) {
 		    goto error;
 		}
 		if (!is_small(temp)) {
@@ -3796,7 +3796,7 @@ dec_term_atom_common:
                     ctx->u.dc.hp = hp;
 		    ctx->u.dc.maps_head = maps_head;
                     ctx->reds = 0;
-                    return NULL;
+                    return nullptr;
                 }
             }
             else {
@@ -3840,7 +3840,7 @@ error:
 	ctx->reds = reds;
     }
         
-    return NULL;
+    return nullptr;
 }
 
 /* returns the number of bytes needed to encode an object
@@ -3849,7 +3849,7 @@ error:
    (except for cached atoms) */
 static Uint encode_size_struct2(ErtsAtomCacheMap *acmp, Eterm obj, unsigned dflags) {
     Uint res;
-    (void) encode_size_struct_int(NULL, acmp, obj, dflags, NULL, &res);
+    (void) encode_size_struct_int(nullptr, acmp, obj, dflags, nullptr, &res);
     return res;
 }
 
@@ -4145,7 +4145,7 @@ encode_size_struct_int(TTBSizeContext* ctx, ErtsAtomCacheMap *acmp, Eterm obj,
 
     DESTROY_ESTACK(s);
     if (ctx) {
-	ASSERT(ctx->estack.start == NULL);
+	ASSERT(ctx->estack.start == nullptr);
 	*reds = r;
     }
     *res = result;

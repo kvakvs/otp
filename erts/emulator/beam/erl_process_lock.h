@@ -768,7 +768,7 @@ erts_smp_proc_lock(Process *p, ErtsProcLocks locks)
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_POSITION)
     erts_smp_proc_lock_x__(p,
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-			 NULL,
+			 nullptr,
 #else
 			 ERTS_PID2PIXLOCK(p->common.id),
 #endif /*ERTS_PROC_LOCK_ATOMIC_IMPL*/
@@ -776,7 +776,7 @@ erts_smp_proc_lock(Process *p, ErtsProcLocks locks)
 #elif defined(ERTS_SMP)
     erts_smp_proc_lock__(p,
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-			 NULL,
+			 nullptr,
 #else
 			 ERTS_PID2PIXLOCK(p->common.id),
 #endif /*ERTS_PROC_LOCK_ATOMIC_IMPL*/
@@ -790,7 +790,7 @@ erts_smp_proc_unlock(Process *p, ErtsProcLocks locks)
 #ifdef ERTS_SMP
     erts_smp_proc_unlock__(p,
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-			   NULL,
+			   nullptr,
 #else
 			   ERTS_PID2PIXLOCK(p->common.id),
 #endif
@@ -806,7 +806,7 @@ erts_smp_proc_trylock(Process *p, ErtsProcLocks locks)
 #else
     return erts_smp_proc_trylock__(p,
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-				   NULL,
+				   nullptr,
 #else
 				   ERTS_PID2PIXLOCK(p->common.id),
 #endif
@@ -892,7 +892,7 @@ ERTS_GLB_INLINE Process *erts_pix2proc(int ix)
     Process *proc;
     ASSERT(0 <= ix && ix < erts_ptab_max(&erts_proc));
     proc = (Process *) erts_ptab_pix2intptr_nob(&erts_proc, ix);
-    return proc == ERTS_PROC_LOCK_BUSY ? NULL : proc;
+    return proc == ERTS_PROC_LOCK_BUSY ? nullptr : proc;
 }
 
 ERTS_GLB_INLINE Process *erts_proc_lookup_raw(Eterm pid)
@@ -902,12 +902,12 @@ ERTS_GLB_INLINE Process *erts_proc_lookup_raw(Eterm pid)
     ERTS_SMP_LC_ASSERT(erts_thr_progress_lc_is_delaying());
 
     if (is_not_internal_pid(pid))
-	return NULL;
+	return nullptr;
 
     proc = (Process *) erts_ptab_pix2intptr_ddrb(&erts_proc,
 						 internal_pid_index(pid));
     if (proc && proc->common.id != pid)
-	return NULL;
+	return nullptr;
     return proc;
 }
 
@@ -915,7 +915,7 @@ ERTS_GLB_INLINE Process *erts_proc_lookup(Eterm pid)
 {
     Process *proc = erts_proc_lookup_raw(pid);
     if (proc && ERTS_PROC_IS_EXITING(proc))
-	return NULL;
+	return nullptr;
     return proc;
 }
 
@@ -931,7 +931,7 @@ erts_pid2proc_opt(Process *c_p_unused,
     return ((!(flags & ERTS_P2P_FLG_ALLOW_OTHER_X)
 	     && proc
 	     && ERTS_PROC_IS_EXITING(proc))
-	    ? NULL
+	    ? nullptr
 	    : proc);
 }
 #endif /* !ERTS_SMP */

@@ -14,15 +14,15 @@ Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
     * Redistributions of source code must retain the above copyright notice,
-      this_ list of conditions and the following disclaimer.
+      this list of conditions and the following disclaimer.
 
     * Redistributions in binary form must reproduce the above copyright
-      notice, this_ list of conditions and the following disclaimer in the
+      notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
 
     * Neither the name of the University of Cambridge nor the names of its
       contributors may be used to endorse or promote products derived from
-      this_ software without specific prior written permission.
+      this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -65,7 +65,7 @@ depending on the PRIV macro. */
 #endif
 
 /* If SUPPORT_UCP is defined, SUPPORT_UTF must also be defined. The
-"configure" script ensures this_, but not everybody uses "configure". */
+"configure" script ensures this, but not everybody uses "configure". */
 
 #if defined SUPPORT_UCP && !(defined SUPPORT_UTF)
 #define SUPPORT_UTF 1
@@ -94,7 +94,7 @@ script prevents both being selected, but not everybody uses "configure". */
 
 /* Use a macro for debugging printing, 'cause that eliminates the use of #ifdef
 inline, and there are *still* stupid compilers about that don't like indented
-pre-processor statements, or at least there were when I first wrote this_. After
+pre-processor statements, or at least there were when I first wrote this. After
 all, it had only been about 10 years then...
 
 It turns out that the Mac Debugging.h header also defines the macro DPRINTF, so
@@ -125,7 +125,7 @@ setjmp and stdarg are used is when NO_RECURSE is set. */
 #endif
 
 /* When compiling a DLL for Windows, the exported symbols have to be declared
-using some MS magic. I found some useful information on this_ web page:
+using some MS magic. I found some useful information on this web page:
 http://msdn2.microsoft.com/en-us/library/y4h7bcy6(VS.80).aspx. According to the
 information there, using __declspec(dllexport) without "extern" we have a
 definition; with "extern" we have a declaration. The settings here override the
@@ -142,8 +142,8 @@ does not want to have "extern" before variable definitions because it leads to
 compiler warnings. So we distinguish between functions and variables. In
 Windows, the two should always be the same.
 
-The reason for wrapping this_ in #ifndef PCRE_EXP_DECL is so that pcretest,
-which is an application, but needs to import this_ file in order to "peek" at
+The reason for wrapping this in #ifndef PCRE_EXP_DECL is so that pcretest,
+which is an application, but needs to import this file in order to "peek" at
 internals, can #include pcre.h first to get an application's-eye view.
 
 In principle, people compiling for non-Windows, non-Unix-like (i.e. uncommon,
@@ -183,7 +183,7 @@ information; I know nothing about MSVC myself). For example, something like
 
   void __cdecl function(....)
 
-might be needed. In order so make this_ easy, all the exported functions have
+might be needed. In order so make this easy, all the exported functions have
 PCRE_CALL_CONVENTION just before their names. It is rarely needed; if not
 set, we ensure here that it has no effect. */
 
@@ -230,7 +230,7 @@ typedef long int pcre_int32;
 /* When checking for integer overflow in pcre_compile(), we need to handle
 large integers. If a 64-bit integer type is available, we can use that.
 Otherwise we have to cast to double, which of course requires floating point
-arithmetic. Handle this_ by defining a macro for the appropriate type. If
+arithmetic. Handle this by defining a macro for the appropriate type. If
 stdint.h is available, include it; it may define INT64_MAX. Systems that do not
 have stdint.h (e.g. Solaris) may have inttypes.h. The macro int64_t may be set
 by "configure". */
@@ -275,7 +275,7 @@ typedef unsigned char pcre_uchar;
 
 #if USHRT_MAX != 65535
 /* This is a warning message. Change PCRE_UCHAR16 to a 16 bit data type in
-pcre.h(.in) and disable (comment out) this_ message. */
+pcre.h(.in) and disable (comment out) this message. */
 #error Warning: PCRE_UCHAR16 is not a 16 bit data type.
 #endif
 
@@ -344,7 +344,7 @@ start/end of string field names are. */
 /* When PCRE is compiled as a C++ library, the subject pointer can be replaced
 with a custom type. This makes it possible, for example, to allow pcre_exec()
 to process subject strings that are discontinuous by using a smart pointer
-class_. It must always be possible to inspect all of the subject string in
+class. It must always be possible to inspect all of the subject string in
 pcre_exec() because of the way it backtracks. Two macros are required in the
 normal case, for sign-unspecified and unsigned char pointers. The former is
 used for the external interface and appears in pcre.h, which is why its name
@@ -383,7 +383,7 @@ option on the command line. */
 /* To cope with SunOS4 and other systems that lack memmove() but have bcopy(),
 define a macro for memmove() if HAVE_MEMMOVE is false, provided that HAVE_BCOPY
 is set. Otherwise, include an emulating function for those systems that have
-neither (there some non-Unix environments where this_ is the case). */
+neither (there some non-Unix environments where this is the case). */
 
 #ifndef HAVE_MEMMOVE
 #undef  memmove        /* some systems may have a macro */
@@ -420,7 +420,7 @@ in big-endian order) by default. These are used, for example, to link from the
 start of a subpattern to its alternatives and its end. The use of 2 bytes per
 offset limits the size of the compiled regex to around 64K, which is big enough
 for almost everybody. However, I received a request for an even bigger limit.
-For this_ reason, and also to make the code easier to maintain, the storing and
+For this reason, and also to make the code easier to maintain, the storing and
 loading of offsets from the byte string is now handled by the macros that are
 defined here.
 
@@ -546,7 +546,7 @@ capturing parenthesis numbers in back references. */
   a[n] = (d) >> 8; \
   a[(n)+1] = (d) & 255
 
-/* For reasons that I do not understand, the expression in this_ GET2 macro is
+/* For reasons that I do not understand, the expression in this GET2 macro is
 treated by gcc as a signed expression, even when a is declared as unsigned. It
 seems that any kind of arithmetic results in a signed value. */
 
@@ -681,7 +681,7 @@ the pointer. */
 
 /* These macros were originally written in the form of loops that used data
 from the tables whose names start with PRIV(utf8_table). They were rewritten by
-a user so as not to use loops, because in some environments this_ gives a
+a user so as not to use loops, because in some environments this gives a
 significant performance advantage, and it seems never to do any harm. */
 
 /* Tells the biggest code point which can be encoded as a single character. */
@@ -1031,14 +1031,14 @@ These are all no-ops since all UTF-32 characters fit into one pcre_uchar. */
 #endif  /* SUPPORT_UTF */
 
 /* Tests for Unicode horizontal and vertical whitespace characters must check a
-number of different values. Using a switch statement for this_ generates the
+number of different values. Using a switch statement for this generates the
 fastest code (no loop, no memory access), and there are several places in the
-interpreter code where this_ happens. In order to ensure that all the case lists
+interpreter code where this happens. In order to ensure that all the case lists
 remain in step, we use macros so that there is only one place where the lists
 are defined.
 
 These values are also required as lists in pcre_compile.c when processing \h,
-\H, \v and \V in a character class_. The lists are defined in pcre_tables.c, but
+\H, \v and \V in a character class. The lists are defined in pcre_tables.c, but
 macros that define the values are here so that all the definitions are
 together. The lists must be in ascending character order, terminated by
 NOTACHAR (which is 0xffffffff).
@@ -1149,7 +1149,7 @@ compatibility. */
 #define PCRE_REQCHSET      0x00000040  /* req_byte is set */
 #define PCRE_RCH_CASELESS  0x00000080  /* caseless requested char */
 #define PCRE_STARTLINE     0x00000100  /* start after \n for multiline */
-#define PCRE_NOPARTIAL     0x00000200  /* can't use partial with this_ regex */
+#define PCRE_NOPARTIAL     0x00000200  /* can't use partial with this regex */
 #define PCRE_JCHANGED      0x00000400  /* j option used in regex */
 #define PCRE_HASCRORLF     0x00000800  /* explicit \r or \n in pattern */
 #define PCRE_HASTHEN       0x00001000  /* pattern contains (*THEN) */
@@ -1240,7 +1240,7 @@ EBCDIC, or UTF-8, but not both. To support both in the same compiled library
 would need different lookups depending on whether PCRE_UTF8 was set or not.
 This would make it impossible to use characters in switch/case statements,
 which would reduce performance. For a theoretical use (which nobody has asked
-for) in a minority area (EBCDIC platforms), this_ is not sensible. Any
+for) in a minority area (EBCDIC platforms), this is not sensible. Any
 application that did need both could compile two versions of the library, using
 macros to give the functions distinct names. */
 
@@ -1251,7 +1251,7 @@ so that PCRE works in both ASCII and EBCDIC environments, but only in non-UTF
 mode. Newline characters are problematic in EBCDIC. Though it has CR and LF
 characters, a common practice has been to use its NL (0x15) character as the
 line terminator in C-like processing environments. However, sometimes the LF
-(0x25) character is used instead, according to this_ Unicode document:
+(0x25) character is used instead, according to this Unicode document:
 
 http://unicode.org/standard/reports/tr13/tr13-5.html
 
@@ -1285,7 +1285,7 @@ same code point. */
 
 #else  /* Not EBCDIC */
 
-/* In ASCII/Unicode, linefeed is '\n' and we equate this_ to NL for
+/* In ASCII/Unicode, linefeed is '\n' and we equate this to NL for
 compatibility. NEL is the Unicode newline character; make sure it is
 a positive value. */
 
@@ -1858,10 +1858,10 @@ only. */
 #define PT_CLIST      9    /* Pseudo-property: match character list */
 #define PT_UCNC      10    /* Universal Character nameable character */
 
-/* Flag bits and data types for the extended class_ (OP_XCLASS) for classes that
+/* Flag bits and data types for the extended class (OP_XCLASS) for classes that
 contain characters with values greater than 255. */
 
-#define XCL_NOT    0x01    /* Flag: this_ is a negative class_ */
+#define XCL_NOT    0x01    /* Flag: this is a negative class */
 #define XCL_MAP    0x02    /* Flag: a 32-byte map is present */
 
 #define XCL_END       0    /* Marks end of individual items */
@@ -1886,7 +1886,7 @@ looked up from a table.
 Negative numbers are used to encode a backreference (\1, \2, \3, etc.) in
 check_escape(). There are two tests in the code for an escape
 greater than ESC_b and less than ESC_Z to detect the types that may be
-repeated. These are the types that consume characters. If any new_ escapes are
+repeated. These are the types that consume characters. If any new escapes are
 put in between that don't consume a character, that code will have to change.
 */
 
@@ -1899,7 +1899,7 @@ enum { ESC_A = 1, ESC_G, ESC_K, ESC_B, ESC_b, ESC_D, ESC_d, ESC_S, ESC_s,
 /* Opcode table: Starting from 1 (i.e. after OP_END), the values up to
 OP_EOD must correspond in order to the list of escapes immediately above.
 
-*** NOTE NOTE NOTE *** Whenever this_ list is updated, the two macro definitions
+*** NOTE NOTE NOTE *** Whenever this list is updated, the two macro definitions
 that follow must also be updated to match. There are also tables called
 "coptable" and "poptable" in pcre_dfa_exec.c that must be updated. */
 
@@ -2052,12 +2052,12 @@ enum {
 
   /* End of quantifier opcodes */
 
-  OP_CLASS,          /* 106 Match a character class_, chars < 256 only */
+  OP_CLASS,          /* 106 Match a character class, chars < 256 only */
   OP_NCLASS,         /* 107 Same, but the bitmap was created from a negative
-                              class_ - the difference is relevant only when a
+                              class - the difference is relevant only when a
                               character > 255 is encountered. */
-  OP_XCLASS,         /* 108 Extended class_ for handling > 255 chars within the
-                              class_. This does both positive and negative. */
+  OP_XCLASS,         /* 108 Extended class for handling > 255 chars within the
+                              class. This does both positive and negative. */
   OP_REF,            /* 109 Match a back reference, casefully */
   OP_REFI,           /* 110 Match a back reference, caselessly */
   OP_RECURSE,        /* 111 Match a numbered subpattern (possibly recursive) */
@@ -2065,7 +2065,7 @@ enum {
 
   OP_ALT,            /* 113 Start of alternation */
   OP_KET,            /* 114 End of group that doesn't have an unbounded repeat */
-  OP_KETRMAX,        /* 115 These two must remain together and in this_ */
+  OP_KETRMAX,        /* 115 These two must remain together and in this */
   OP_KETRMIN,        /* 116 order. They are for groups the repeat for ever. */
   OP_KETRPOS,        /* 117 Possessive unlimited repeat. */
 
@@ -2108,7 +2108,7 @@ enum {
   OP_NRREF,          /* 138 Same, but generated by a name reference*/
   OP_DEF,            /* 139 The DEFINE condition */
 
-  OP_BRAZERO,        /* 140 These two must remain together and in this_ */
+  OP_BRAZERO,        /* 140 These two must remain together and in this */
   OP_BRAMINZERO,     /* 141 order. */
   OP_BRAPOSZERO,     /* 142 */
 
@@ -2172,7 +2172,7 @@ some cases doesn't actually use these names at all). */
   "*", "*?", "+", "+?", "?", "??", "{", "{", "{",                 \
   "*+","++", "?+", "{",                                           \
   "*", "*?", "+", "+?", "?", "??", "{", "{",                      \
-  "class_", "nclass", "xclass", "Ref", "Refi",                     \
+  "class", "nclass", "xclass", "Ref", "Refi",                     \
   "Recurse", "Callout",                                           \
   "Alt", "Ket", "KetRmax", "KetRmin", "KetRpos",                  \
   "Reverse", "Assert", "Assert not", "AssertB", "AssertB not",    \
@@ -2196,7 +2196,7 @@ defined close to the definitions of the opcodes themselves.
 
 As things have been extended, some of these are no longer fixed lenths, but are
 minima instead. For example, the length of a single-character repeat may vary
-in UTF-8 mode. The code that uses this_ table must know about such things. */
+in UTF-8 mode. The code that uses this table must know about such things. */
 
 #define OP_LENGTHS \
   1,                             /* End                                    */ \
@@ -2234,7 +2234,7 @@ in UTF-8 mode. The code that uses this_ table must know about such things. */
   2+IMM2_SIZE, 2+IMM2_SIZE,      /* Type upto, minupto                     */ \
   2+IMM2_SIZE,                   /* Type exact                             */ \
   2, 2, 2, 2+IMM2_SIZE,          /* Possessive *+, ++, ?+, upto+           */ \
-  /* Character class_ & ref repeats                                         */ \
+  /* Character class & ref repeats                                         */ \
   1, 1, 1, 1, 1, 1,              /* *, *?, +, +?, ?, ??                    */ \
   1+2*IMM2_SIZE, 1+2*IMM2_SIZE,  /* CRRANGE, CRMINRANGE                    */ \
   1+(32/sizeof(pcre_uchar)),     /* CLASS                                  */ \
@@ -2282,7 +2282,7 @@ condition. */
 #define RREF_ANY  0xffff
 
 /* Compile time error code numbers. They are given names so that they can more
-easily be tracked. When a new_ number is added, the table called eint in
+easily be tracked. When a new number is added, the table called eint in
 pcreposix.c must be updated. */
 
 enum { ERR0,  ERR1,  ERR2,  ERR3,  ERR4,  ERR5,  ERR6,  ERR7,  ERR8,  ERR9,
@@ -2315,7 +2315,7 @@ typedef because pcretest needs access to the struct of the 8-, 16- and 32-bit
 variants.
 
 *** WARNING ***
-When new_ fields are added to these structures, remember to adjust the code in
+When new fields are added to these structures, remember to adjust the code in
 pcre_byte_order.c that is concerned with swapping the byte order of the fields
 when a compiled regex is reloaded on a host with different endianness.
 *** WARNING ***
@@ -2347,8 +2347,8 @@ typedef struct real_pcre8_or_16 {
   void             *nullpad;      /* NULL padding */
 } real_pcre8_or_16;
 
-typedef real_pcre8_or_16 real_pcre;
-typedef real_pcre8_or_16 real_pcre16;
+typedef struct real_pcre8_or_16 real_pcre;
+typedef struct real_pcre8_or_16 real_pcre16;
 
 typedef struct real_pcre32 {
   pcre_uint32 magic_number;
@@ -2392,7 +2392,7 @@ typedef int __assert_real_pcre_size_divisible_8[(sizeof(REAL_PCRE) % 8) == 0 ? 1
 #define REAL_PCRE_FLAGS(re)     (((REAL_PCRE*)re)->flags)
 
 /* The format of the block used to store data from pcre_study(). The same
-remark (see NOTE above) about extending this_ structure applies. */
+remark (see NOTE above) about extending this structure applies. */
 
 typedef struct pcre_study_data {
   pcre_uint32 size;               /* Total that was malloced */
@@ -2574,7 +2574,7 @@ typedef struct dfa_match_data {
 #define ctype_meta    0x80   /* regexp meta char or zero (end pattern) */
 
 /* Offsets for the bitmap tables in pcre_cbits. Each table contains a set
-of bits for a class_ map. Some classes are built by combining these tables. */
+of bits for a class map. Some classes are built by combining these tables. */
 
 #define cbit_space     0      /* [:space:] or \s */
 #define cbit_xdigit   32      /* [:xdigit:] */

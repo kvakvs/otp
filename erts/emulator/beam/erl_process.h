@@ -910,7 +910,7 @@ struct process {
 	void *terminate;
     } u;
 
-    ProcDict  *dictionary;       /* Process dictionary, may be NULL */
+    ProcDict  *dictionary;       /* Process dictionary, may be nullptr */
 
     Uint seq_trace_clock;
     Uint seq_trace_lastcnt;
@@ -1154,7 +1154,7 @@ ERTS_GLB_INLINE void erts_heap_frag_shrink(Process* p, Eterm* hp)
 {
     ErlHeapFragment* hf = MBUF(p);
 
-    ASSERT(hf!=NULL && (hp - hf->mem < (unsigned long)hf->alloc_size));
+    ASSERT(hf!=nullptr && (hp - hf->mem < (unsigned long)hf->alloc_size));
 
     hf->used_size = hp - hf->mem;
 }	
@@ -1424,7 +1424,7 @@ ERTS_GLB_INLINE ErtsProcList *erts_proclist_peek_first(ErtsProcList *list)
 ERTS_GLB_INLINE ErtsProcList *erts_proclist_peek_last(ErtsProcList *list)
 {
     if (!list)
-	return NULL;
+        return nullptr;
     else
 	return list->prev;
 }
@@ -1435,7 +1435,7 @@ ERTS_GLB_INLINE ErtsProcList *erts_proclist_peek_next(ErtsProcList *list,
     ErtsProcList *next;
     ASSERT(list && element);
     next = element->next;
-    return list == next ? NULL : next;
+    return list == next ? nullptr : next;
 }
 
 ERTS_GLB_INLINE ErtsProcList *erts_proclist_peek_prev(ErtsProcList *list,
@@ -1444,17 +1444,17 @@ ERTS_GLB_INLINE ErtsProcList *erts_proclist_peek_prev(ErtsProcList *list,
     ErtsProcList *prev;
     ASSERT(list && element);
     prev = element->prev;
-    return list == element ? NULL : prev;
+    return list == element ? nullptr : prev;
 }
 
 ERTS_GLB_INLINE ErtsProcList *erts_proclist_fetch_first(ErtsProcList **list)
 {
     if (!*list)
-	return NULL;
+        return nullptr;
     else {
 	ErtsProcList *res = *list;
 	if (res == *list)
-	    *list = NULL;
+            *list = nullptr;
 	else
 	    *list = res->next;
 	res->next->prev = res->prev;
@@ -1466,11 +1466,11 @@ ERTS_GLB_INLINE ErtsProcList *erts_proclist_fetch_first(ErtsProcList **list)
 ERTS_GLB_INLINE ErtsProcList *erts_proclist_fetch_last(ErtsProcList **list)
 {
     if (!*list)
-	return NULL;
+        return nullptr;
     else {
 	ErtsProcList *res = (*list)->prev;
 	if (res == *list)
-	    *list = NULL;
+            *list = nullptr;
 	res->next->prev = res->prev;
 	res->prev->next = res->next;
 	return res;
@@ -1482,14 +1482,14 @@ ERTS_GLB_INLINE int erts_proclist_fetch(ErtsProcList **list_first,
 {
     if (!*list_first) {
 	if (list_last)
-	    *list_last = NULL;
+            *list_last = nullptr;
 	return 0;
     }
     else {
 	if (list_last)
 	    *list_last = (*list_first)->prev;
-	(*list_first)->prev->next = NULL;
-	(*list_first)->prev = NULL;
+        (*list_first)->prev->next = nullptr;
+        (*list_first)->prev = nullptr;
 	return !0;
     }
 }
@@ -1501,7 +1501,7 @@ ERTS_GLB_INLINE void erts_proclist_remove(ErtsProcList **list,
     if (*list == element) {
 	*list = element->next;
 	if (*list == element)
-	    *list = NULL;
+            *list = nullptr;
     }
     element->next->prev = element->prev;
     element->prev->next = element->next;
@@ -1509,7 +1509,7 @@ ERTS_GLB_INLINE void erts_proclist_remove(ErtsProcList **list,
 
 ERTS_GLB_INLINE int erts_proclist_is_empty(ErtsProcList *list)
 {
-    return list == NULL;
+    return list == nullptr;
 }
 
 ERTS_GLB_INLINE int erts_proclist_is_first(ErtsProcList *list,
@@ -1750,7 +1750,7 @@ erts_psd_get(Process *p, int ix)
     }
 #endif
     ASSERT(0 <= ix && ix < ERTS_PSD_SIZE);
-    return p->psd ? p->psd->data[ix] : NULL;
+    return p->psd ? p->psd->data[ix] : nullptr;
 }
 
 
@@ -1778,7 +1778,7 @@ erts_psd_set(Process *p, ErtsProcLocks plocks, int ix, void *data)
     }
     else {
 	if (!data)
-	    return NULL;
+            return nullptr;
 	else
 	    return erts_psd_set_init(p, plocks, ix, data);
     }
@@ -1839,7 +1839,7 @@ erts_proc_set_error_handler(Process *p, ErtsProcLocks plocks, Eterm handler)
     void *old_val;
     void *new_val;
     ASSERT(is_atom(handler));
-    new_val = (handler == am_error_handler) ? NULL : (void *) (UWord) handler;
+    new_val = (handler == am_error_handler) ? nullptr : (void *) (UWord) handler;
     old_val = erts_psd_set(p, plocks, ERTS_PSD_ERROR_HANDLER, new_val);
     if (!old_val)
 	return am_error_handler;
@@ -1884,7 +1884,7 @@ erts_get_migration_paths(void)
     if (erts_thr_progress_is_managed_thread())
 	return erts_get_migration_paths_managed();
     else
-	return NULL;
+        return nullptr;
 }
 
 ERTS_GLB_INLINE ErtsRunQueue *
@@ -1895,7 +1895,7 @@ erts_check_emigration_need(ErtsRunQueue *c_rq, int prio)
     Uint32 flags;
 
     if (!mps)
-	return NULL;
+        return nullptr;
 
     mp = &mps->mpath[c_rq->ix];
     flags = mp->flags;
@@ -1950,7 +1950,7 @@ erts_check_emigration_need(ErtsRunQueue *c_rq, int prio)
 	    }
 	}
     }
-    return NULL;
+    return nullptr;
 }
 
 #endif
@@ -1992,7 +1992,7 @@ ERTS_GLB_INLINE
 Process *erts_get_current_process(void)
 {
     ErtsSchedulerData *esdp = erts_get_scheduler_data();
-    return esdp ? esdp->current_process : NULL;
+    return esdp ? esdp->current_process : nullptr;
 }
 
 ERTS_GLB_INLINE

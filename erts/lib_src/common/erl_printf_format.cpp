@@ -165,7 +165,7 @@ static char heX[] = "0123456789ABCDEF";
 #define SIGN(X) ((X) > 0 ? 1 : ((X) < 0 ? -1 : 0)) 
 #define USIGN(X) ((X) == 0 ? 0 : 1)
 
-int (*erts_printf_eterm_func)(fmtfn_t, void*, ErlPfEterm, long, ErlPfEterm*) = NULL;
+int (*erts_printf_eterm_func)(fmtfn_t, void*, ErlPfEterm, long, ErlPfEterm*) = nullptr;
 
 static int
 noop_fn(void *vfp, char* buf, size_t len)
@@ -835,9 +835,9 @@ int erts_printf_format(fmtfn_t fn, void* arg, char* fmt, va_list ap)
 		    prec = (long) precision;
 		eterm = va_arg(ap, ErlPfEterm);
 		eterm_base = ((fmt & FMTC_MASK) == FMTC_R) ?
-		    va_arg(ap, ErlPfEterm*) : NULL;
+		    va_arg(ap, ErlPfEterm*) : nullptr;
 		if (width > 0 && !(fmt & FMTF_adj)) {
-		    res = (*erts_printf_eterm_func)(noop_fn, NULL, eterm, prec, eterm_base);
+		    res = (*erts_printf_eterm_func)(noop_fn, nullptr, eterm, prec, eterm_base);
 		    if (res < 0)
 			return res;
 		    if (width > res)

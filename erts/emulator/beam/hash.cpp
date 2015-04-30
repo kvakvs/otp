@@ -222,7 +222,7 @@ static void rehash(Hash* h, int grow)
 	while (b != (HashBucket*) 0) {
 	    HashBucket* b_next = b->next;
 	    int ix = b->hvalue % h->size;
-	    if (new_bucket[ix] == NULL)
+	    if (new_bucket[ix] == nullptr)
 		h->used++;
 	    b->next = new_bucket[ix];
 	    new_bucket[ix] = b;
@@ -267,7 +267,7 @@ void* hash_put(Hash* h, void* tmpl)
     }
     b = (HashBucket*) h->fun.alloc(tmpl);
 
-    if (h->bucket[ix] == NULL)
+    if (h->bucket[ix] == nullptr)
 	h->used++;
 
     b->hvalue = hval;
@@ -293,7 +293,7 @@ hash_insert_entry(Hash* h, HashBucket* entry)
 	b = b->next;
     }
 
-    if (h->bucket[ix] == NULL)
+    if (h->bucket[ix] == nullptr)
 	h->used++;
 
     entry->next = h->bucket[ix];
@@ -320,7 +320,7 @@ erts_hash_merge(Hash* src, Hash* dst)
 	HashBucket* b = bucket[i];
 	HashBucket* next;
 
-	bucket[i] = NULL;
+	bucket[i] = nullptr;
 	while (b) {
 	    next = b->next;
 	    hash_insert_entry(dst, b);
@@ -347,7 +347,7 @@ void* hash_erase(Hash* h, void* tmpl)
 	    else
 		h->bucket[ix] = b->next;
 	    h->fun.free((void*)b);
-	    if (h->bucket[ix] == NULL)
+	    if (h->bucket[ix] == nullptr)
 		h->used--;
 	    if (h->used < h->size20percent)  /* rehash at 20% */
 		rehash(h, 0);
@@ -361,7 +361,7 @@ void* hash_erase(Hash* h, void* tmpl)
 
 /*
 ** Remove hash entry from table return entry if removed
-** return NULL if not removed
+** return nullptr if not removed
 ** NOTE: hash_remove() differs from hash_erase() in that
 **       it returns entry (not the template) and does
 **       *not* call the free() callback.
@@ -372,7 +372,7 @@ hash_remove(Hash *h, void *tmpl)
     HashValue hval = h->fun.hash(tmpl);
     int ix = hval % h->size;
     HashBucket *b = h->bucket[ix];
-    HashBucket *prev = NULL;
+    HashBucket *prev = nullptr;
 	
     while (b) {
 	if ((b->hvalue == hval) && (h->fun.cmp(tmpl, (void*)b) == 0)) {
@@ -380,7 +380,7 @@ hash_remove(Hash *h, void *tmpl)
 		prev->next = b->next;
 	    else
 		h->bucket[ix] = b->next;
-	    if (h->bucket[ix] == NULL)
+	    if (h->bucket[ix] == nullptr)
 		h->used--;
 	    if (h->used < h->size20percent)  /* rehash at 20% */
 		rehash(h, 0);
@@ -389,7 +389,7 @@ hash_remove(Hash *h, void *tmpl)
 	prev = b;
 	b = b->next;
     }
-    return NULL;
+    return nullptr;
 }
 
 void hash_foreach(Hash* h, void (*func)(void *, void *), void *func_arg2)

@@ -79,7 +79,7 @@ volatile unsigned long *erts_get_current_fp_exception(void)
 static void set_current_fp_exception(unsigned long pc)
 {
     volatile unsigned long *fpexnp = erts_get_current_fp_exception();
-    ASSERT(fpexnp != NULL);
+    ASSERT(fpexnp != nullptr);
     *fpexnp = pc;
 }
 
@@ -384,7 +384,7 @@ static void *fpu_fpe_enable(void *arg)
 	exit(1);
 #endif
     }
-    return NULL; /* Ok, we appear to be on Darwin 6.0 or later */
+    return nullptr; /* Ok, we appear to be on Darwin 6.0 or later */
 }
 
 static void set_fpexc_precise(void)
@@ -392,9 +392,9 @@ static void set_fpexc_precise(void)
     thread_t self = mach_thread_self();
     pthread_t enabler;
 
-    if (pthread_create(&enabler, NULL, fpu_fpe_enable, &self)) {
+    if (pthread_create(&enabler, nullptr, fpu_fpe_enable, &self)) {
 	perror("pthread_create");
-    } else if (pthread_join(enabler, NULL)) {
+    } else if (pthread_join(enabler, nullptr)) {
 	perror("pthread_join");
     }
 }
@@ -654,7 +654,7 @@ static void erts_thread_catch_fp_exceptions(void)
     memset(&act, 0, sizeof act);
     act.sa_sigaction = fpe_sig_action;
     act.sa_flags = SA_SIGINFO;
-    sigaction(SIGFPE, &act, NULL);
+    sigaction(SIGFPE, &act, nullptr);
     unmask_fpe();
 }
 
@@ -839,7 +839,7 @@ matherr(struct exception *exc)
 {
 #if !defined(NO_FPE_SIGNALS)
     volatile unsigned long *fpexnp = erts_get_current_fp_exception();
-    if (fpexnp != NULL)
+    if (fpexnp != nullptr)
 	*fpexnp = (unsigned long)__builtin_return_address(0);
 #endif
     return 1;

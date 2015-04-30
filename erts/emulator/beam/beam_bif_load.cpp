@@ -55,7 +55,7 @@ BIF_RETTYPE code_is_module_native_1(BIF_ALIST_1)
 	BIF_ERROR(BIF_P, BADARG);
     }
     code_ix = erts_active_code_ix();
-    if ((modp = erts_get_module(BIF_ARG_1, code_ix)) == NULL) {
+    if ((modp = erts_get_module(BIF_ARG_1, code_ix)) == nullptr) {
 	return am_undefined;
     }
     erts_rlock_old_code(code_ix);
@@ -82,7 +82,7 @@ BIF_RETTYPE code_make_stub_module_3(BIF_ALIST_3)
     modp = erts_get_module(BIF_ARG_1, erts_active_code_ix());
 
     if (modp && modp->curr.num_breakpoints > 0) {
-	ASSERT(modp->curr.code != NULL);
+        ASSERT(modp->curr.code != nullptr);
 	erts_clear_module_break(modp);
 	ASSERT(modp->curr.num_breakpoints == 0);
     }
@@ -107,7 +107,7 @@ BIF_RETTYPE code_make_stub_module_3(BIF_ALIST_3)
 BIF_RETTYPE
 prepare_loading_2(BIF_ALIST_2)
 {
-    byte* temp_alloc = NULL;
+    byte* temp_alloc = nullptr;
     byte* code;
     Uint sz;
     Binary* magic;
@@ -120,7 +120,7 @@ prepare_loading_2(BIF_ALIST_2)
 	erts_free_aligned_binary_bytes(temp_alloc);
 	BIF_ERROR(BIF_P, BADARG);
     }
-    if ((code = erts_get_aligned_binary_bytes(BIF_ARG_2, &temp_alloc)) == NULL) {
+    if ((code = erts_get_aligned_binary_bytes(BIF_ARG_2, &temp_alloc)) == nullptr) {
 	goto error;
     }
 
@@ -182,7 +182,7 @@ finish_loading_1(BIF_ALIST_1)
 {
     int i;
     int n;
-    struct m* p = NULL;
+    struct m* p = nullptr;
     Uint exceptions;
     Eterm res;
     int is_blocking = 0;
@@ -368,11 +368,11 @@ staging_epilogue(Process* c_p, int commit, Eterm res, int is_blocking,
 	 * schedulers to read active code_ix in a safe way while executing
 	 * without any memory barriers at all. 
 	 */
-	ASSERT(commiter_state.stager == NULL);
+        ASSERT(commiter_state.stager == nullptr);
 	commiter_state.stager = c_p;
-	erts_schedule_thr_prgr_later_op(smp_code_ix_commiter, NULL, &commiter_state.lop);
+        erts_schedule_thr_prgr_later_op(smp_code_ix_commiter, nullptr, &commiter_state.lop);
 	erts_smp_proc_inc_refc(c_p);
-	erts_suspend(c_p, ERTS_PROC_LOCK_MAIN, NULL);
+        erts_suspend(c_p, ERTS_PROC_LOCK_MAIN, nullptr);
 	/*
 	 * smp_code_ix_commiter() will do the rest "later"
 	 * and resume this_ process to return 'res'.  
@@ -390,7 +390,7 @@ static void smp_code_ix_commiter(void* null)
 
     erts_commit_staging_code_ix();
 #ifdef DEBUG
-    commiter_state.stager = NULL;
+    commiter_state.stager = nullptr;
 #endif
     erts_release_code_write_permission();
     erts_smp_proc_lock(p, ERTS_PROC_LOCK_STATUS);
@@ -416,9 +416,9 @@ check_old_code_1(BIF_ALIST_1)
     }
     code_ix = erts_active_code_ix();
     modp = erts_get_module(BIF_ARG_1, code_ix);
-    if (modp != NULL) {
+    if (modp != nullptr) {
 	erts_rlock_old_code(code_ix);
-	if (modp->old.code != NULL) {
+        if (modp->old.code != nullptr) {
 	    res = am_true;
 	}
 	erts_runlock_old_code(code_ix);
@@ -550,7 +550,7 @@ BIF_RETTYPE delete_module_1(BIF_ALIST_1)
 	    success = 1;
 	}
     }
-    return staging_epilogue(BIF_P, success, res, is_blocking, NULL, 0);  
+    return staging_epilogue(BIF_P, success, res, is_blocking, nullptr, 0);
 }
 
 BIF_RETTYPE module_loaded_1(BIF_ALIST_1)
@@ -563,8 +563,8 @@ BIF_RETTYPE module_loaded_1(BIF_ALIST_1)
 	BIF_ERROR(BIF_P, BADARG);
     }
     code_ix = erts_active_code_ix();
-    if ((modp = erts_get_module(BIF_ARG_1, code_ix)) != NULL) {
-	if (modp->curr.code != NULL
+    if ((modp = erts_get_module(BIF_ARG_1, code_ix)) != nullptr) {
+        if (modp->curr.code != nullptr
 	    && modp->curr.code[MI_ON_LOAD_FUNCTION_PTR] == 0) {
 	    res = am_true;
 	}
@@ -587,7 +587,7 @@ BIF_RETTYPE loaded_0(BIF_ALIST_0)
     int j = 0;
 
     for (i = 0; i < module_code_size(code_ix); i++) {
-	if ((modp = module_code(i, code_ix)) != NULL &&
+        if ((modp = module_code(i, code_ix)) != nullptr &&
 	    ((modp->curr.code_length != 0) ||
 	     (modp->old.code_length != 0))) {
 	    j++;
@@ -597,7 +597,7 @@ BIF_RETTYPE loaded_0(BIF_ALIST_0)
 	hp = HAlloc(BIF_P, j*2);
 
 	for (i = 0; i < module_code_size(code_ix); i++) {
-	    if ((modp=module_code(i,code_ix)) != NULL &&
+            if ((modp=module_code(i,code_ix)) != nullptr &&
 		((modp->curr.code_length != 0) ||
 		 (modp->old.code_length != 0))) {
 		previous = CONS(hp, make_atom(modp->module), previous);
@@ -661,7 +661,7 @@ BIF_RETTYPE finish_after_on_load_2(BIF_ALIST_2)
 	 */
 	for (i = 0; i < export_list_size(code_ix); i++) {
 	    Export *ep = export_list(i,code_ix);
-	    if (ep != NULL &&
+            if (ep != nullptr &&
 		ep->code[0] == BIF_ARG_1 &&
 		ep->code[4] != 0) {
 		ep->addressv[code_ix] = (void *) ep->code[4];
@@ -686,7 +686,7 @@ BIF_RETTYPE finish_after_on_load_2(BIF_ALIST_2)
 	beam_catches_delmod(modp->curr.catches, code, modp->curr.code_length,
 			    erts_active_code_ix());
 	erts_free(ERTS_ALC_T_CODE, (void *) code);
-	modp->curr.code = NULL;
+        modp->curr.code = nullptr;
 	modp->curr.code_length = 0;
 	modp->curr.catches = BEAM_CATCHES_NIL;
 	erts_remove_from_ranges(code);
@@ -851,7 +851,7 @@ check_process_code(Process* rp, Module* modp, int allow_gc, int *redsp)
 	    goto need_gc;
 	}
 
-	if (rp->dictionary != NULL) {
+        if (rp->dictionary != nullptr) {
 	    Eterm* start = rp->dictionary->data;
 	    Eterm* end = start + rp->dictionary->used;
 
@@ -860,7 +860,7 @@ check_process_code(Process* rp, Module* modp, int allow_gc, int *redsp)
 	    }
 	}
 
-	for (mp = rp->msg.first; mp != NULL; mp = mp->next) {
+        for (mp = rp->msg.first; mp != nullptr; mp = mp->next) {
 	    if (any_heap_ref_ptrs(mp->m, mp->m+2, mod_start, mod_size)) {
 		goto need_gc;
 	    }
@@ -974,7 +974,7 @@ BIF_RETTYPE purge_module_1(BIF_ALIST_1)
      * Correct module?
      */
 
-    if ((modp = erts_get_module(BIF_ARG_1, code_ix)) == NULL) {
+    if ((modp = erts_get_module(BIF_ARG_1, code_ix)) == nullptr) {
 	ERTS_BIF_PREP_ERROR(ret, BIF_P, BADARG);
     }
     else {
@@ -990,7 +990,7 @@ BIF_RETTYPE purge_module_1(BIF_ALIST_1)
 	    /*
 	     * Unload any NIF library
 	     */
-	    if (modp->old.nif != NULL) {
+            if (modp->old.nif != nullptr) {
 		/* ToDo: Do unload nif without blocking */
 		erts_rwunlock_old_code(code_ix);
 		erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_MAIN);
@@ -998,7 +998,7 @@ BIF_RETTYPE purge_module_1(BIF_ALIST_1)
 		is_blocking = 1;
 		erts_rwlock_old_code(code_ix);
 		erts_unload_nif(modp->old.nif);
-		modp->old.nif = NULL;
+                modp->old.nif = nullptr;
 	    }
 
 	    /*
@@ -1013,7 +1013,7 @@ BIF_RETTYPE purge_module_1(BIF_ALIST_1)
 				code_ix);
 	    decrement_refc(code);
 	    erts_free(ERTS_ALC_T_CODE, (void *) code);
-	    modp->old.code = NULL;
+            modp->old.code = nullptr;
 	    modp->old.code_length = 0;
 	    modp->old.catches = BEAM_CATCHES_NIL;
 	    erts_remove_from_ranges(code);
@@ -1059,7 +1059,7 @@ delete_code(Module* modp)
 
     for (i = 0; i < export_list_size(code_ix); i++) {
 	Export *ep = export_list(i, code_ix);
-        if (ep != NULL && (ep->code[0] == module)) {
+        if (ep != nullptr && (ep->code[0] == module)) {
 	    if (ep->addressv[code_ix] == ep->code+3) {
 		if (ep->code[3] == (BeamInstr) em_apply_bif) {
 		    continue;
@@ -1082,10 +1082,10 @@ delete_code(Module* modp)
     ASSERT(modp->curr.num_breakpoints == 0);
     ASSERT(modp->curr.num_traced_exports == 0);
     modp->old = modp->curr;
-    modp->curr.code = NULL;
+    modp->curr.code = nullptr;
     modp->curr.code_length = 0;
     modp->curr.catches = BEAM_CATCHES_NIL;
-    modp->curr.nif = NULL;
+    modp->curr.nif = nullptr;
 }
 
 
@@ -1099,9 +1099,9 @@ beam_make_current_old(Process *c_p, ErtsProcLocks c_p_locks, Eterm module)
      * if not, delete old code; error if old code already exists.
      */
 
-    if (modp->curr.code != NULL && modp->old.code != NULL)  {
+    if (modp->curr.code != nullptr && modp->old.code != nullptr)  {
 	return am_not_purged;
-    } else if (modp->old.code == NULL) { /* Make the current version old. */
+    } else if (modp->old.code == nullptr) { /* Make the current version old. */
 	delete_code(modp);
     }
     return NIL;

@@ -623,7 +623,7 @@ void move_multi_frags(Eterm** hpp, ErlOffHeap* off_heap, ErlHeapFragment* first,
     Eterm* hp;
     unsigned i;
 
-    for (bp=first; bp!=NULL; bp=bp->next) {
+    for (bp=first; bp!=nullptr; bp=bp->next) {
 	move_one_frag(hpp, bp->mem, bp->used_size, off_heap);
 	OH_OVERHEAD(off_heap, bp->off_heap.overhead);
     }

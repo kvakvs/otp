@@ -78,7 +78,7 @@ static Eterm Uint_to_term(Uint x, Process *p)
 void *term_to_address(Eterm arg)
 {
     Uint u;
-    return term_to_Uint(arg, &u) ? (void*)u : NULL;
+    return term_to_Uint(arg, &u) ? (void*)u : nullptr;
 }
 
 static Eterm address_to_term(const void *address, Process *p)
@@ -165,7 +165,7 @@ BIF_RETTYPE hipe_bifs_bytearray_2(BIF_ALIST_2)
 	(nelts = signed_val(BIF_ARG_1)) < 0 ||
 	!is_byte(BIF_ARG_2))
 	BIF_ERROR(BIF_P, BADARG);
-    bin = new_binary(BIF_P, NULL, nelts);
+    bin = new_binary(BIF_P, nullptr, nelts);
     memset(binary_bytes(bin), unsigned_val(BIF_ARG_2), nelts);
     BIF_RET(bin);
 }
@@ -185,7 +185,7 @@ static inline unsigned char *bytearray_lvalue(Eterm bin, Eterm idx)
     if (is_not_binary(bin) ||
 	is_not_small(idx) ||
 	(i = unsigned_val(idx)) >= binary_size(bin))
-	return NULL;
+	return nullptr;
     ERTS_GET_BINARY_BYTES(bin, bytes, bitoffs, bitsize);
     ASSERT(bitoffs == 0);
     ASSERT(bitsize == 0);
@@ -232,7 +232,7 @@ BIF_RETTYPE hipe_bifs_bitarray_2(BIF_ALIST_2)
     else
 	BIF_ERROR(BIF_P, BADARG);
     nbytes = ((Uint)nbits + ((1 << 3) - 1)) >> 3;
-    bin = new_binary(BIF_P, NULL, nbytes);
+    bin = new_binary(BIF_P, nullptr, nbytes);
     memset(binary_bytes(bin), bytemask, nbytes);
     BIF_RET(bin);
 }
@@ -538,7 +538,7 @@ static void init_const_term_table(void)
     f.hash = (H_FUN) const_term_hash;
     f.cmp = (HCMP_FUN) const_term_cmp;
     f.alloc = (HALLOC_FUN) const_term_alloc;
-    f.free = (HFREE_FUN) NULL;
+    f.free = (HFREE_FUN) nullptr;
     hash_init(ERTS_ALC_T_HIPE, &const_term_table, "const_term_table", 97, f);
 }
 
@@ -610,8 +610,8 @@ static Uint *hipe_find_emu_address(Eterm mod, Eterm name, unsigned int arity)
     int i, n;
 
     modp = erts_get_module(mod, erts_active_code_ix());
-    if (modp == NULL || (code_base = modp->curr.code) == NULL)
-	return NULL;
+    if (modp == nullptr || (code_base = modp->curr.code) == nullptr)
+	return nullptr;
     n = code_base[MI_NUM_FUNCTIONS];
     for (i = 0; i < n; ++i) {
 	Uint *code_ptr = (Uint*)code_base[MI_FUNCTIONS+i];
@@ -619,7 +619,7 @@ static Uint *hipe_find_emu_address(Eterm mod, Eterm name, unsigned int arity)
 	if (code_ptr[3] == name && code_ptr[4] == arity)
 	    return code_ptr+5;
     }
-    return NULL;
+    return nullptr;
 }
 
 Uint *hipe_bifs_find_pc_from_mfa(Eterm term)
@@ -627,7 +627,7 @@ Uint *hipe_bifs_find_pc_from_mfa(Eterm term)
     struct mfa mfa;
 
     if (!term_to_mfa(term, &mfa))
-	return NULL;
+	return nullptr;
     return hipe_find_emu_address(mfa.mod, mfa.fun, mfa.ari);
 }
 
@@ -641,7 +641,7 @@ BIF_RETTYPE hipe_bifs_fun_to_address_1(BIF_ALIST_1)
 
 static void *hipe_get_emu_address(Eterm m, Eterm f, unsigned int arity, int is_remote)
 {
-    void *address = NULL;
+    void *address = nullptr;
     if (!is_remote)
 	address = hipe_find_emu_address(m, f, arity);
     if (!address) {
@@ -742,7 +742,7 @@ BIF_RETTYPE hipe_bifs_address_to_fun_1(BIF_ALIST_1)
 
 BIF_RETTYPE hipe_bifs_enter_sdesc_1(BIF_ALIST_1)
 {
-    struct sdesc *sdesc;
+    sdesc_t *sdesc;
 
     sdesc = hipe_decode_sdesc(BIF_ARG_1);
     if (!sdesc) {
@@ -800,7 +800,7 @@ static void init_nbif_table(void)
     f.hash = (H_FUN) nbif_hash;
     f.cmp = (HCMP_FUN) nbif_cmp;
     f.alloc = (HALLOC_FUN) nbif_alloc;
-    f.free = NULL;
+    f.free = nullptr;
 
     hash_init(ERTS_ALC_T_NBIF_TABLE, &nbif_table, "nbif_table", 500, f);
 
@@ -817,8 +817,8 @@ static const void *nbif_address(Eterm mod, Eterm fun, unsigned arity)
     tmpl.fun = fun;
     tmpl.arity = arity;
 
-    nbif = hash_get(&nbif_table, &tmpl);
-    return nbif ? nbif->address : NULL;
+    nbif = (struct nbif*)hash_get(&nbif_table, (void*)&tmpl);
+    return nbif ? nbif->address : nullptr;
 }
 
 /*
@@ -858,7 +858,7 @@ struct primop {
 };
 
 static struct primop primops[] = {
-#define PRIMOP_LIST(ATOM,ADDRESS)	{ {0,_unchecked_atom_val(ATOM)}, ADDRESS },
+#define PRIMOP_LIST(ATOM,ADDRESS)	{ {0,_unchecked_atom_val(ATOM)}, (const void*)ADDRESS },
 #include "hipe_primops.h"
 #undef PRIMOP_LIST
 };
@@ -893,7 +893,7 @@ static void init_primop_table(void)
     f.hash = (H_FUN) primop_hash;
     f.cmp = (HCMP_FUN) primop_cmp;
     f.alloc = (HALLOC_FUN) primop_alloc;
-    f.free = NULL;
+    f.free = nullptr;
 
     hash_init(ERTS_ALC_T_HIPE, &primop_table, "primop_table", 50, f);
 
@@ -907,7 +907,7 @@ static struct primop *primop_table_get(Eterm name)
 
     init_primop_table();
     tmpl.bucket.hvalue = atom_val(name);
-    return hash_get(&primop_table, &tmpl);
+    return (primop*)hash_get(&primop_table, &tmpl);
 }
 
 #if defined(__arm__)
@@ -923,7 +923,7 @@ static struct primop *primop_table_put(Eterm name)
 void *hipe_primop_get_trampoline(Eterm name)
 {
     struct primop *primop = primop_table_get(name);
-    return primop ? primop->trampoline : NULL;
+    return primop ? primop->trampoline : nullptr;
 }
 
 void hipe_primop_set_trampoline(Eterm name, void *trampoline)
@@ -1130,7 +1130,7 @@ BIF_RETTYPE hipe_bifs_get_fe_2(BIF_ALIST_2)
 	BIF_ERROR(BIF_P, BADARG);
 
     fe = erts_get_fun_entry(mod, uniq, index);
-    if (fe == NULL) {
+    if (fe == nullptr) {
 	int i = atom_val(mod);
 	char atom_buf[256];
 
@@ -1157,7 +1157,7 @@ BIF_RETTYPE hipe_bifs_set_native_address_in_fe_2(BIF_ALIST_2)
     if (!native_address)
 	BIF_ERROR(BIF_P, BADARG);
 
-    fe->native_address = native_address;
+    fe->native_address = (UWord*)native_address;
     if (erts_refc_dectest(&fe->refc, 0) == 0)
 	erts_erase_fun_entry(fe);
     BIF_RET(am_true);
@@ -1250,7 +1250,7 @@ static inline void hipe_mfa_info_table_rwunlock(void)
 static struct hipe_mfa_info **hipe_mfa_info_table_alloc_bucket(unsigned int size)
 {
     unsigned long nbytes = size * sizeof(struct hipe_mfa_info*);
-    struct hipe_mfa_info **bucket = erts_alloc(ERTS_ALC_T_HIPE, nbytes);
+    struct hipe_mfa_info **bucket = erts::alloc_bytes<hipe_mfa_info *>(ERTS_ALC_T_HIPE, nbytes);
     sys_memzero(bucket, nbytes);
     return bucket;
 }
@@ -1271,7 +1271,7 @@ static void hipe_mfa_info_table_grow(void)
     hipe_mfa_info_table.bucket = new_bucket;
     for (i = 0; i < old_size; ++i) {
 	struct hipe_mfa_info *b = old_bucket[i];
-	while (b != NULL) {
+	while (b != nullptr) {
 	    struct hipe_mfa_info *next = b->bucket.next;
 	    unsigned int j = b->bucket.hvalue & new_mask;
 	    b->bucket.next = new_bucket[j];
@@ -1290,14 +1290,14 @@ static struct hipe_mfa_info *hipe_mfa_info_table_alloc(Eterm m, Eterm f, unsigne
     res->m = m;
     res->f = f;
     res->a = arity;
-    res->remote_address = NULL;
-    res->local_address = NULL;
-    res->beam_code = NULL;
+    res->remote_address = nullptr;
+    res->local_address = nullptr;
+    res->beam_code = nullptr;
     res->orig_beam_op = 0;
-    res->refers_to = NULL;
-    res->referred_from = NULL;
+    res->refers_to = nullptr;
+    res->referred_from = nullptr;
 #if defined(__powerpc__) || defined(__ppc__) || defined(__powerpc64__) || defined(__arm__)
-    res->trampoline = NULL;
+    res->trampoline = nullptr;
 #endif
 
     return res;
@@ -1330,7 +1330,7 @@ static inline struct hipe_mfa_info *hipe_mfa_info_table_get_locked(Eterm m, Eter
 	/* XXX: do we want to compare p->bucket.hvalue as well? */
 	if (p->m == m && p->f == f && p->a == arity)
 	    return p;
-    return NULL;
+    return nullptr;
 }
 
 #if 0 /* XXX: unused */
@@ -1339,7 +1339,7 @@ void *hipe_mfa_find_na(Eterm m, Eterm f, unsigned int arity)
     const struct hipe_mfa_info *p;
 
     p = hipe_mfa_info_table_get(m, f, arity);
-    return p ? p->address : NULL;
+    return p ? p->address : nullptr;
 }
 #endif
 
@@ -1393,7 +1393,7 @@ void *hipe_mfa_get_trampoline(Eterm m, Eterm f, unsigned int arity)
 
     hipe_mfa_info_table_rlock();
     p = hipe_mfa_info_table_get_locked(m, f, arity);
-    trampoline = p ? p->trampoline : NULL;
+    trampoline = p ? p->trampoline : nullptr;
     hipe_mfa_info_table_runlock();
     return trampoline;
 }
@@ -1444,8 +1444,8 @@ BIF_RETTYPE hipe_bifs_invalidate_funinfo_native_addresses_1(BIF_ALIST_1)
 	lst = CDR(list_val(lst));
 	p = hipe_mfa_info_table_get_locked(mfa.mod, mfa.fun, mfa.ari);
 	if (p) {
-	    p->remote_address = NULL;
-	    p->local_address = NULL;
+	    p->remote_address = nullptr;
+	    p->local_address = nullptr;
 	    if (p->beam_code) {
 #ifdef DEBUG_LINKER
 		printf("%s: ", __FUNCTION__);
@@ -1454,7 +1454,7 @@ BIF_RETTYPE hipe_bifs_invalidate_funinfo_native_addresses_1(BIF_ALIST_1)
 		       p->beam_code, p->orig_beam_op);
 #endif
 		p->beam_code[0] = p->orig_beam_op;
-		p->beam_code = NULL;
+		p->beam_code = nullptr;
 		p->orig_beam_op = 0;
 	    } else {
 #ifdef DEBUG_LINKER
@@ -1505,7 +1505,7 @@ static void *hipe_make_stub(Eterm m, Eterm f, unsigned int arity, int is_remote)
 
 #if 0
     if (is_not_atom(m) || is_not_atom(f) || arity > 255)
-	return NULL;
+	return nullptr;
 #endif
     BEAMAddress = hipe_get_emu_address(m, f, arity, is_remote);
     StubAddress = hipe_make_native_stub(BEAMAddress, arity);
@@ -1538,7 +1538,7 @@ static void *hipe_get_na_try_locked(Eterm m, Eterm f, unsigned int a, int is_rem
        it to avoid some work if it already holds the write lock.  */
     if (pp)
 	*pp = p;
-    return NULL;
+    return nullptr;
 }
 
 static void *hipe_get_na_slow_rwlocked(Eterm m, Eterm f, unsigned int a, int is_remote, struct hipe_mfa_info *p)
@@ -1571,13 +1571,13 @@ static void *hipe_get_na_nofail(Eterm m, Eterm f, unsigned int a, int is_remote)
     void *address;
 
     hipe_mfa_info_table_rlock();
-    address = hipe_get_na_try_locked(m, f, a, is_remote, NULL);
+    address = hipe_get_na_try_locked(m, f, a, is_remote, nullptr);
     hipe_mfa_info_table_runlock();
     if (address)
 	return address;
 
     hipe_mfa_info_table_rwlock();
-    address = hipe_get_na_slow_rwlocked(m, f, a, is_remote, NULL);
+    address = hipe_get_na_slow_rwlocked(m, f, a, is_remote, nullptr);
     hipe_mfa_info_table_rwunlock();
     return address;
 }
@@ -1586,7 +1586,7 @@ static void *hipe_get_na_nofail(Eterm m, Eterm f, unsigned int a, int is_remote)
 void *hipe_get_remote_na(Eterm m, Eterm f, unsigned int a)
 {
     if (is_not_atom(m) || is_not_atom(f) || a > 255)
-	return NULL;
+	return nullptr;
     return hipe_get_na_nofail(m, f, a, 1);
 }
 
@@ -1643,7 +1643,7 @@ BIF_RETTYPE hipe_nonclosure_address(BIF_ALIST_2)
     BIF_RET((Eterm)address);
 
  badfun:
-    BIF_P->current = NULL;
+    BIF_P->current = nullptr;
     BIF_P->fvalue = BIF_ARG_1;
     BIF_ERROR(BIF_P, EXC_BADFUN);
 }
@@ -1661,11 +1661,11 @@ int hipe_find_mfa_from_ra(const void *ra, Eterm *m, Eterm *f, unsigned int *a)
     hipe_mfa_info_table_rlock();
     bucket = hipe_mfa_info_table.bucket;
     nrbuckets = 1 << hipe_mfa_info_table.log2size;
-    mfa = NULL;
+    mfa = nullptr;
     mfa_offset = LONG_MAX;
     for (i = 0; i < nrbuckets; ++i) {
 	struct hipe_mfa_info *b = bucket[i];
-	while (b != NULL) {
+	while (b != nullptr) {
 	    ra_offset = (char*)ra - (char*)b->local_address;
 	    if (ra_offset > 0 && ra_offset < mfa_offset) {
 		mfa_offset = ra_offset;
@@ -1741,7 +1741,7 @@ BIF_RETTYPE hipe_bifs_add_ref_2(BIF_ALIST_2)
 	goto badarg;
     }
     if (is_nil(tuple[4]))
-	trampoline = NULL;
+	trampoline = nullptr;
     else {
 	trampoline = term_to_address(tuple[4]);
 	if (!trampoline)
@@ -1760,12 +1760,12 @@ BIF_RETTYPE hipe_bifs_add_ref_2(BIF_ALIST_2)
     callee_mfa = hipe_mfa_info_table_put_rwlocked(callee.mod, callee.fun, callee.ari);
     caller_mfa = hipe_mfa_info_table_put_rwlocked(caller.mod, caller.fun, caller.ari);
 
-    refers_to = erts_alloc(ERTS_ALC_T_HIPE, sizeof(*refers_to));
+    refers_to = erts::alloc<hipe_mfa_info_list>(ERTS_ALC_T_HIPE, 1);
     refers_to->mfa = callee_mfa;
     refers_to->next = caller_mfa->refers_to;
     caller_mfa->refers_to = refers_to;
 
-    ref = erts_alloc(ERTS_ALC_T_HIPE, sizeof(*ref));
+    ref = erts::alloc<struct ref>(ERTS_ALC_T_HIPE, 1);
     ref->caller_mfa = caller_mfa;
     ref->address = address;
     ref->trampoline = trampoline;
@@ -1795,7 +1795,7 @@ BIF_RETTYPE hipe_bifs_mark_referred_from_1(BIF_ALIST_1) /* get_refs_from */
     hipe_mfa_info_table_rwlock();
     p = hipe_mfa_info_table_get_locked(mfa.mod, mfa.fun, mfa.ari);
     if (p)
-	for (ref = p->referred_from; ref != NULL; ref = ref->next)
+	for (ref = p->referred_from; ref != nullptr; ref = ref->next)
 	    ref->flags |= REF_FLAG_PENDING_REDIRECT;
     hipe_mfa_info_table_rwunlock();
     BIF_RET(NIL);
@@ -1816,7 +1816,7 @@ static void hipe_purge_all_refs(void)
     bucket = hipe_mfa_info_table.bucket;
     nrbuckets = 1 << hipe_mfa_info_table.log2size;
     for (i = 0; i < nrbuckets; ++i) {	
-	while (bucket[i] != NULL) {
+	while (bucket[i] != nullptr) {
 	    struct hipe_mfa_info* mfa = bucket[i];
 	    bucket[i] = mfa->bucket.next;
 
@@ -1879,7 +1879,7 @@ BIF_RETTYPE hipe_bifs_remove_refs_from_1(BIF_ALIST_1)
 	    refers_to = refers_to->next;
 	    erts_free(ERTS_ALC_T_HIPE, tmp_refers_to);
 	}
-	caller_mfa->refers_to = NULL;
+	caller_mfa->refers_to = nullptr;
     }
     hipe_mfa_info_table_rwunlock();
     BIF_RET(am_ok);
@@ -2027,7 +2027,7 @@ static void init_modinfo_table(void)
     f.hash = (H_FUN) modinfo_hash;
     f.cmp = (HCMP_FUN) modinfo_cmp;
     f.alloc = (HALLOC_FUN) modinfo_alloc;
-    f.free = (HFREE_FUN) NULL;
+    f.free = (HFREE_FUN) nullptr;
     hash_init(ERTS_ALC_T_HIPE, &modinfo_table, "modinfo_table", 11, f);
 }
 
@@ -2072,7 +2072,7 @@ BIF_RETTYPE hipe_bifs_patch_insn_3(BIF_ALIST_3)
 {
     Uint *address, value;
 
-    address = term_to_address(BIF_ARG_1);
+    address = (Uint*)term_to_address(BIF_ARG_1);
     if (!address)
 	BIF_ERROR(BIF_P, BADARG);
     if (!term_to_Uint(BIF_ARG_2, &value))
@@ -2086,16 +2086,16 @@ BIF_RETTYPE hipe_bifs_patch_call_3(BIF_ALIST_3)
 {
     Uint *callAddress, *destAddress, *trampAddress;
 
-    callAddress = term_to_address(BIF_ARG_1);
+    callAddress = (Uint*)term_to_address(BIF_ARG_1);
     if (!callAddress)
 	BIF_ERROR(BIF_P, BADARG);
-    destAddress = term_to_address(BIF_ARG_2);
+    destAddress = (Uint*)term_to_address(BIF_ARG_2);
     if (!destAddress)
 	BIF_ERROR(BIF_P, BADARG);
     if (is_nil(BIF_ARG_3))
-	trampAddress = NULL;
+	trampAddress = nullptr;
     else {
-	trampAddress = term_to_address(BIF_ARG_3);
+        trampAddress = (Uint*)term_to_address(BIF_ARG_3);
 	if (!trampAddress)
 	    BIF_ERROR(BIF_P, BADARG);
     }

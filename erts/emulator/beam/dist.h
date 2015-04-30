@@ -237,11 +237,11 @@ erts_remove_dist_link(ErtsDistLinkData *dldp,
     erts_smp_de_links_lock(dep);
     dldp->d_lnk = erts_lookup_link(dep->nlinks, lid);
     if (!dldp->d_lnk)
-	dldp->d_sub_lnk = NULL;
+	dldp->d_sub_lnk = nullptr;
     else {
 	dldp->d_sub_lnk = erts_remove_link(&ERTS_LINK_ROOT(dldp->d_lnk), rid);
 	dldp->d_lnk = (ERTS_LINK_ROOT(dldp->d_lnk)
-		       ? NULL
+		       ? nullptr
 		       : erts_remove_link(&dep->nlinks, lid));
     }
     erts_smp_de_links_unlock(dep);
@@ -250,7 +250,7 @@ erts_remove_dist_link(ErtsDistLinkData *dldp,
 ERTS_GLB_INLINE int
 erts_was_dist_link_removed(ErtsDistLinkData *dldp)
 {
-    return dldp->d_sub_lnk != NULL;
+    return dldp->d_sub_lnk != nullptr;
 }
 
 ERTS_GLB_INLINE void

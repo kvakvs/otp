@@ -95,23 +95,23 @@ erts_afalc_start(AFAllctr_t *afallctr,
     allctr->unlink_free_block		= unlink_free_block;
     allctr->info_options		= info_options;
 
-    allctr->get_next_mbc_size		= NULL;
-    allctr->creating_mbc		= NULL;
-    allctr->destroying_mbc		= NULL;
-    allctr->add_mbc                     = NULL;
-    allctr->remove_mbc                  = NULL;
-    allctr->largest_fblk_in_mbc         = NULL;
+    allctr->get_next_mbc_size		= nullptr;
+    allctr->creating_mbc		= nullptr;
+    allctr->destroying_mbc		= nullptr;
+    allctr->add_mbc                     = nullptr;
+    allctr->remove_mbc                  = nullptr;
+    allctr->largest_fblk_in_mbc         = nullptr;
     allctr->init_atoms			= init_atoms;
 
 #ifdef ERTS_ALLOC_UTIL_HARD_DEBUG
-    allctr->check_block			= NULL;
-    allctr->check_mbc			= NULL;
+    allctr->check_block			= nullptr;
+    allctr->check_mbc			= nullptr;
 #endif
 
     allctr->atoms_initialized		= 0;
 
     if (!erts_alcu_start(allctr, init))
-	return NULL;
+	return nullptr;
 
     return allctr;
 }
@@ -127,11 +127,11 @@ get_free_block(Allctr_t *allctr, Uint size, Block_t *cand_blk, Uint cand_size)
 	AFFreeBlock_t *res = afallctr->free_list;	
 	afallctr->free_list = res->next;
 	if (res->next)
-	    res->next->prev = NULL;
+	    res->next->prev = nullptr;
 	return (Block_t *) res;
     }
     else
-	return NULL;
+	return nullptr;
 }
 
 static void
@@ -147,7 +147,7 @@ link_free_block(Allctr_t *allctr, Block_t *block)
     }
     else {
 	blk->next = afallctr->free_list;
-	blk->prev = NULL;
+	blk->prev = nullptr;
 	afallctr->free_list = blk;
     }
 

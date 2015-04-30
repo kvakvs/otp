@@ -88,8 +88,8 @@
 #include "zlib.h"
 #include "gzio.h"
 
-#ifndef NULL
-#define NULL ((void*)0)
+#ifndef nullptr
+#define nullptr ((void*)0)
 #endif
 
 #define BFILE_BLOCK  1024
@@ -107,25 +107,25 @@ struct erl_drv_entry ram_file_driver_entry = {
     rfile_start,
     rfile_stop,
     rfile_command,
-    NULL,
-    NULL,
+    (erl_drv_entry::ready_input_fn_t)nullptr,
+    (erl_drv_entry::ready_output_fn_t)nullptr,
     "ram_file_drv",
-    NULL,
-    NULL, /* handle */
-    NULL, /* control */
-    NULL, /* timeout */
-    NULL, /* outputv */
-    NULL, /* ready_async */
-    NULL, /* flush */
-    NULL, /* call */
-    NULL, /* event */
+    (erl_drv_entry::finish_fn_t)nullptr,
+    nullptr, /* handle */
+    (erl_drv_entry::control_fn_t)nullptr, /* control */
+    (erl_drv_entry::timeout_fn_t)nullptr, /* timeout */
+    (erl_drv_entry::outputv_fn_t)nullptr, /* outputv */
+    (erl_drv_entry::ready_async_fn_t)nullptr, /* ready_async */
+    (erl_drv_entry::flush_fn_t)nullptr, /* flush */
+    (erl_drv_entry::call_fn_t)nullptr, /* call */
+    (erl_drv_entry::event_fn_t)nullptr, /* event */
     (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0,
-    NULL,
-    NULL,
-    NULL,
+    nullptr,
+    (erl_drv_entry::process_exit_fn_t)nullptr,
+    (erl_drv_entry::stop_select_fn_t)nullptr,
 };
 
 /* A File is represented as a array of bytes, this_ array is
@@ -158,8 +158,8 @@ DriverEntry* driver_init(void *handle)
     ram_file_driver_entry.start = rfile_start;
     ram_file_driver_entry.stop = rfile_stop;
     ram_file_driver_entry.output = rfile_command;
-    ram_file_driver_entry.ready_input = NULL;
-    ram_file_driver_entry.ready_output = NULL;
+    ram_file_driver_entry.ready_input = nullptr;
+    ram_file_driver_entry.ready_output = nullptr;
     return &ram_file_driver_entry;
 }
 #endif
@@ -173,14 +173,14 @@ static ErlDrvData rfile_start(ErlDrvPort port, char* buf)
 {
     RamFile* f;
 
-    if ((f = (RamFile*) driver_alloc(sizeof(RamFile))) == NULL) {
+    if ((f = (RamFile*) driver_alloc(sizeof(RamFile))) == nullptr) {
 	errno = ENOMEM;
 	return ERL_DRV_ERROR_ERRNO;
     }
     f->port = port;
     f->flags = 0;
-    f->bin = NULL;
-    f->buf = NULL;
+    f->bin = (ErlDrvBinary*)nullptr;
+    f->buf = (char*)nullptr;
     f->size = f->cur = f->end = 0;
     return (ErlDrvData)f;
 }
@@ -188,7 +188,7 @@ static ErlDrvData rfile_start(ErlDrvPort port, char* buf)
 static void rfile_stop(ErlDrvData e)
 {
     RamFile* f = (RamFile*)e;
-    if (f->bin != NULL) 
+    if (f->bin != nullptr) 
 	driver_free_binary(f->bin);
     driver_free(f);
 }
@@ -213,7 +213,7 @@ static int error_reply(RamFile *f, int err)
     response[0] = RAM_FILE_RESP_ERROR;
     for (s = erl_errno_id(err), t = response+1; *s; s++, t++)
 	*t = tolower(*s);
-    driver_output2(f->port, response, t-response, NULL, 0);
+    driver_output2(f->port, response, t-response, (char*)nullptr, 0);
     return 0;
 }
 
@@ -223,7 +223,7 @@ static int reply(RamFile *f, int ok, int err)
 	error_reply(f, err);
     else {
 	char c = RAM_FILE_RESP_OK;
-        driver_output2(f->port, &c, 1, NULL, 0);
+        driver_output2(f->port, &c, 1, (char*)nullptr, 0);
     }
     return 0;
 }
@@ -242,7 +242,7 @@ static int numeric_reply(RamFile *f, ErlDrvSSizeT result)
 
     tmp[0] = RAM_FILE_RESP_NUMBER;
     put_int32(result, tmp+1);
-    driver_output2(f->port, tmp, sizeof(tmp), NULL, 0);
+    driver_output2(f->port, tmp, sizeof(tmp), (char*)nullptr, 0);
     return 0;
 }
 
@@ -272,11 +272,11 @@ static int ram_file_init(RamFile *f, char *buf, ErlDrvSSizeT count, int *error)
 	bsize = INT_MAX;
     }
 
-    if (f->bin == NULL)
+    if (f->bin == nullptr)
 	bin = driver_alloc_binary(bsize);
     else 
 	bin = driver_realloc_binary(f->bin, bsize);
-    if (bin == NULL) {
+    if (bin == nullptr) {
 	*error = ENOMEM;
 	return -1;
     }
@@ -303,7 +303,7 @@ static ErlDrvSSizeT ram_file_expand(RamFile *f, ErlDrvSSizeT size, int *error)
     if (bsize <= f->size)
 	return f->size;
     else {
-	if ((bin = driver_realloc_binary(f->bin, bsize)) == NULL) {
+	if ((bin = driver_realloc_binary(f->bin, bsize)) == nullptr) {
 	    *error = ENOMEM;
 	    return -1;
 	}
@@ -360,7 +360,7 @@ static ErlDrvSSizeT ram_file_read(RamFile *f, ErlDrvSSizeT len, ErlDrvBinary **b
     } else {
 	len = 0; /* eof */
     }
-    if ((bin = driver_alloc_binary(len)) == NULL) {
+    if ((bin = driver_alloc_binary(len)) == nullptr) {
 	*error = ENOMEM;
 	return -1;
     }
@@ -416,7 +416,7 @@ static int ram_file_uuencode(RamFile *f)
     uchar* outp;
     ErlDrvSSizeT count = 0;
 
-    if ((bin = driver_alloc_binary(usize)) == NULL)
+    if ((bin = driver_alloc_binary(usize)) == nullptr)
 	return error_reply(f, ENOMEM);
     outp = (uchar*)bin->orig_bytes;
     inp = (uchar*)f->buf;
@@ -474,7 +474,7 @@ static int ram_file_uudecode(RamFile *f)
     int count = 0;
     int n;
 
-    if ((bin = driver_alloc_binary(usize)) == NULL)
+    if ((bin = driver_alloc_binary(usize)) == nullptr)
 	return error_reply(f, ENOMEM);
     outp = (uchar*)bin->orig_bytes;
     inp  = (uchar*)f->buf;
@@ -532,7 +532,7 @@ static int ram_file_compress(RamFile *f)
     ErlDrvSSizeT size = f->end;
     ErlDrvBinary* bin;
 
-    if ((bin = erts_gzdeflate_buffer(f->buf, size)) == NULL) {
+    if ((bin = erts_gzdeflate_buffer(f->buf, size)) == nullptr) {
 	return error_reply(f, EINVAL);
     }
     driver_free_binary(f->bin);
@@ -550,7 +550,7 @@ static int ram_file_uncompress(RamFile *f)
     ErlDrvSSizeT size = f->end;
     ErlDrvBinary* bin;
 
-    if ((bin = erts_gzinflate_buffer(f->buf, size)) == NULL) {
+    if ((bin = erts_gzinflate_buffer(f->buf, size)) == nullptr) {
 	return error_reply(f, EINVAL);
     }
     driver_free_binary(f->bin);
@@ -595,7 +595,7 @@ static void rfile_command(ErlDrvData e, char* buf, ErlDrvSizeT count)
 	break;
 
     case RAM_FILE_WRITE:
-	if (ram_file_write(f, buf, count, NULL, &error) < 0)
+        if (ram_file_write(f, buf, count, (ErlDrvSSizeT*)nullptr, &error) < 0)
 	    error_reply(f, error);
 	else
 	    numeric_reply(f, count);
@@ -639,7 +639,7 @@ static void rfile_command(ErlDrvData e, char* buf, ErlDrvSizeT count)
 
     case RAM_FILE_READ:
 	count = get_int32(buf);
-	if ((n = ram_file_read(f, count, &bin, NULL, &error)) < 0)
+        if ((n = ram_file_read(f, count, &bin, (ErlDrvSSizeT*)nullptr, &error)) < 0)
 	    error_reply(f, error);
 	else {
 	    header[0] = RAM_FILE_RESP_DATA;
@@ -663,7 +663,7 @@ static void rfile_command(ErlDrvData e, char* buf, ErlDrvSizeT count)
 
     case RAM_FILE_GET:        /* return a copy of the file */
 	n = f->end;  /* length */
-	if ((bin = driver_alloc_binary(n)) == NULL) {
+	if ((bin = driver_alloc_binary(n)) == nullptr) {
 	    error_reply(f, ENOMEM);
 	    break;
 	}
@@ -679,7 +679,7 @@ static void rfile_command(ErlDrvData e, char* buf, ErlDrvSizeT count)
     case RAM_FILE_GET_CLOSE:  /* return the file and close driver */
 	n = f->end;  /* length */
 	bin = f->bin;
-	f->bin = NULL;  /* NUKE IT */
+        f->bin = (ErlDrvBinary*)nullptr;  /* NUKE IT */
 	header[0] = RAM_FILE_RESP_DATA;
 	put_int32(n, header+1);
 	driver_output_binary(f->port, header, sizeof(header),

@@ -55,7 +55,7 @@ static Eterm do_chksum(ChksumFun sumfun, Process *p, Eterm ioterm, int left,
     Eterm obj;
     int c;
     DECLARE_ESTACK(stack);
-    unsigned char *bytes = NULL;
+    unsigned char *bytes = nullptr;
     int numbytes = 0;
 
     *err = 0;
@@ -70,7 +70,7 @@ static Eterm do_chksum(ChksumFun sumfun, Process *p, Eterm ioterm, int left,
 	Uint size;
 	Eterm res_term = NIL;
 	unsigned char *bytes;
-	byte *temp_alloc = NULL;
+        byte *temp_alloc = nullptr;
 	
 	ERTS_GET_BINARY_BYTES(ioterm, bytes, bitoffs, bitsize);
 	if (bitsize != 0) {
@@ -193,7 +193,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 		    if (serr != 0) {
 			*err = 1;
 			DESTROY_ESTACK(stack);
-			if (bytes != NULL)
+                        if (bytes != nullptr)
 			    erts_free(ERTS_ALC_T_TMP, bytes);
 			return NIL;
 		    }
@@ -216,7 +216,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 		} else {
 		    *err = 1;
 		    DESTROY_ESTACK(stack);
-		    if (bytes != NULL)
+                    if (bytes != nullptr)
 			erts_free(ERTS_ALC_T_TMP, bytes);
 		    return NIL;
 		} 
@@ -256,7 +256,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 		if (serr != 0) {
 		    *err = 1;
 		    DESTROY_ESTACK(stack);
-		    if (bytes != NULL)
+                    if (bytes != nullptr)
 			erts_free(ERTS_ALC_T_TMP, bytes);
 		    return NIL;
 		}
@@ -264,7 +264,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 	    } else {
 		*err = 1;
 		DESTROY_ESTACK(stack);
-		if (bytes != NULL)
+                if (bytes != nullptr)
 		    erts_free(ERTS_ALC_T_TMP, bytes);
 		return NIL;
 	    }
@@ -280,7 +280,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 	}
     }
     DESTROY_ESTACK(stack);
-    if (bytes != NULL)
+    if (bytes != nullptr)
 	erts_free(ERTS_ALC_T_TMP, bytes);
     return ioterm;
 }
@@ -314,7 +314,7 @@ crc32_1(BIF_ALIST_1)
     unsigned long chksum;
     int res, err;
     Eterm rest,res_sum;
-    chksum = crc32(0,NULL,0);
+    chksum = crc32(0,nullptr,0);
 
     rest = do_chksum(&crc32_wrap,BIF_P,BIF_ARG_1,CHUNK_PER_SCHEDULE,
 		     (void *) &chksum,&res,
@@ -394,7 +394,7 @@ adler32_1(BIF_ALIST_1)
     unsigned long chksum;
     int res, err;
     Eterm rest,res_sum;
-    chksum = adler32(0,NULL,0);
+    chksum = adler32(0,nullptr,0);
 
     rest = do_chksum(&adler32_wrap,BIF_P,BIF_ARG_1,CHUNK_PER_SCHEDULE,
 		     (void *) &chksum,&res,
@@ -496,7 +496,7 @@ md5_1(BIF_ALIST_1)
 	 BIF_TRAP2(&chksum_md5_2_exp, BIF_P, bin, rest);
     }
     BUMP_REDS(BIF_P,res);
-    bin = new_binary(BIF_P, (byte *)NULL, 16);
+    bin = new_binary(BIF_P, (byte *)nullptr, 16);
     bytes = binary_bytes(bin);
     MD5Final(bytes, &context);
     BIF_RET(bin);
@@ -528,7 +528,7 @@ md5_2(BIF_ALIST_2)
 	BIF_TRAP2(&chksum_md5_2_exp, BIF_P, bin, rest);
     }
     BUMP_REDS(BIF_P,res);
-    bin = new_binary(BIF_P, (byte *)NULL, 16);
+    bin = new_binary(BIF_P, (byte *)nullptr, 16);
     bytes = binary_bytes(bin);
     MD5Final(bytes, &context);
     BIF_RET(bin);
@@ -540,7 +540,7 @@ md5_init_0(BIF_ALIST_0)
     Eterm bin;
     byte* bytes;
 
-    bin = erts_new_heap_binary(BIF_P, (byte *)NULL, sizeof(MD5_CTX), &bytes);
+    bin = erts_new_heap_binary(BIF_P, (byte *)nullptr, sizeof(MD5_CTX), &bytes);
     MD5Init((MD5_CTX *)bytes);
     BIF_RET(bin);
 }
@@ -553,9 +553,9 @@ md5_update_2(BIF_ALIST_2)
     Eterm rest;
     Eterm bin;
     int res, err;
-    byte *temp_alloc = NULL;
+    byte *temp_alloc = nullptr;
 
-    if ((bytes = erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc)) == NULL) {
+    if ((bytes = erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc)) == nullptr) {
 	erts_free_aligned_binary_bytes(temp_alloc);
 	BIF_ERROR(BIF_P, BADARG);
     }
@@ -587,9 +587,9 @@ md5_final_1(BIF_ALIST_1)
     byte* context;
     byte* result;
     MD5_CTX ctx_copy;
-    byte* temp_alloc = NULL;
+    byte* temp_alloc = nullptr;
 
-    if ((context = erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc)) == NULL) {
+    if ((context = erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc)) == nullptr) {
     error:
 	erts_free_aligned_binary_bytes(temp_alloc);
 	BIF_ERROR(BIF_P, BADARG);
@@ -597,7 +597,7 @@ md5_final_1(BIF_ALIST_1)
     if (binary_size(BIF_ARG_1) != sizeof(MD5_CTX)) {
 	goto error;
     }
-    bin = erts_new_heap_binary(BIF_P, (byte *)NULL, 16, &result);
+    bin = erts_new_heap_binary(BIF_P, (byte *)nullptr, 16, &result);
     memcpy(&ctx_copy, context, sizeof(MD5_CTX));
     erts_free_aligned_binary_bytes(temp_alloc);
     MD5Final(result, &ctx_copy);

@@ -52,7 +52,7 @@ extern int erts_port_parallelism;
 typedef struct erts_driver_t_ erts_driver_t;
 
 /*
- * It would have been preferred to use NULL as value of
+ * It would have been preferred to use nullptr as value of
  * ERTS_INVALID_ERL_DRV_PORT. That would, however, not be
  * backward compatible. In pre-R16 systems, 0 was a valid
  * port handle and -1 was used as invalid handle, so we
@@ -219,7 +219,7 @@ erts_port_runq(Port *prt)
     ErtsRunQueue *rq1, *rq2;
     rq1 = (ErtsRunQueue *) erts_smp_atomic_read_nob(&prt->run_queue);
     if (!rq1)
-	return NULL;
+        return nullptr;
     while (1) {
 	erts_smp_runq_lock(rq1);
 	rq2 = (ErtsRunQueue *) erts_smp_atomic_read_nob(&prt->run_queue);
@@ -228,7 +228,7 @@ erts_port_runq(Port *prt)
 	erts_smp_runq_unlock(rq1);
 	rq1 = rq2;
 	if (!rq1)
-	    return NULL;
+            return nullptr;
     }
 #else
     return ERTS_RUNQ_IX(0);
@@ -246,7 +246,7 @@ ERTS_GLB_INLINE void *erts_prtsd_set(Port *p, int ix, void *new_);
 ERTS_GLB_INLINE void *
 erts_prtsd_get(Port *prt, int ix)
 {
-    return prt->psd ? prt->psd->data[ix] : NULL;
+    return prt->psd ? prt->psd->data[ix] : nullptr;
 }
 
 ERTS_GLB_INLINE void *
@@ -260,7 +260,7 @@ erts_prtsd_set(Port *prt, int ix, void *data)
     else {
         prt->psd = (ErtsPrtSD *)erts_alloc(ERTS_ALC_T_PRTSD, sizeof(ErtsPrtSD));
 	prt->psd->data[ix] = data;
-	return NULL;
+        return nullptr;
     }
 }
 
@@ -474,7 +474,7 @@ ERTS_GLB_INLINE int erts_is_port_alive(Eterm);
 ERTS_GLB_INLINE int erts_is_valid_tracer_port(Eterm);
 ERTS_GLB_INLINE int erts_port_driver_callback_epilogue(Port *, erts_aint32_t *);
 
-#define erts_drvport2port(Prt) erts_drvport2port_state((Prt), NULL)
+#define erts_drvport2port(Prt) erts_drvport2port_state((Prt), nullptr)
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
@@ -483,7 +483,7 @@ ERTS_GLB_INLINE Port *erts_pix2port(int ix)
     Port *prt;
     ASSERT(0 <= ix && ix < erts_ptab_max(&erts_port));
     prt = (Port *) erts_ptab_pix2intptr_nob(&erts_port, ix);
-    return prt == ERTS_PORT_LOCK_BUSY ? NULL : prt;
+    return prt == ERTS_PORT_LOCK_BUSY ? nullptr : prt;
 }
 
 ERTS_GLB_INLINE Port *
@@ -494,11 +494,11 @@ erts_port_lookup_raw(Eterm id)
     ERTS_SMP_LC_ASSERT(erts_thr_progress_lc_is_delaying());
 
     if (is_not_internal_port(id))
-	return NULL;
+        return nullptr;
 
     prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
 					     internal_port_index(id));
-    return prt && prt->common.id == id ? prt : NULL;
+    return prt && prt->common.id == id ? prt : nullptr;
 }
 
 ERTS_GLB_INLINE Port *
@@ -506,9 +506,9 @@ erts_port_lookup(Eterm id, Uint32 invalid_sflgs)
 {
     Port *prt = erts_port_lookup_raw(id);
     return (!prt
-	    ? NULL
+            ? nullptr
 	    : ((invalid_sflgs & erts_atomic32_read_nob(&prt->state))
-	       ? NULL
+               ? nullptr
 	       : prt));
 }
 
@@ -523,19 +523,19 @@ erts_id2port(Eterm id)
     ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
 
     if (is_not_internal_port(id))
-	return NULL;
+        return nullptr;
 
     prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
 					     internal_port_index(id));
 
     if (!prt || prt->common.id != id)
-	return NULL;
+        return nullptr;
 
     erts_smp_port_lock(prt);
     state = erts_atomic32_read_nob(&prt->state);
     if (state & ERTS_PORT_SFLGS_INVALID_LOOKUP) {
 	erts_smp_port_unlock(prt);
-	return NULL;
+        return nullptr;
     }
 
     return prt;
@@ -557,13 +557,13 @@ erts_id2port_sflgs(Eterm id,
     ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
 
     if (is_not_internal_port(id))
-	return NULL;
+        return nullptr;
 
     prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
 					     internal_port_index(id));
 
     if (!prt || prt->common.id != id)
-	return NULL;
+        return nullptr;
 
 #ifdef ERTS_SMP
     if (no_proc_locks)
@@ -580,7 +580,7 @@ erts_id2port_sflgs(Eterm id,
 #ifdef ERTS_SMP
 	erts_smp_port_unlock(prt);
 #endif
-	return NULL;
+        return nullptr;
     }
 
     return prt;
@@ -614,7 +614,7 @@ erts_thr_id2port_sflgs(Eterm id, Uint32 invalid_sflgs)
     ErtsThrPrgrDelayHandle dhndl;
 
     if (is_not_internal_port(id))
-	return NULL;
+        return nullptr;
 
     dhndl = erts_thr_progress_unmanaged_delay();
 
@@ -623,7 +623,7 @@ erts_thr_id2port_sflgs(Eterm id, Uint32 invalid_sflgs)
 
     if (!prt || prt->common.id != id) {
 	erts_thr_progress_unmanaged_continue(dhndl);
-	prt = NULL;
+        prt = nullptr;
     }
     else {
 	erts_aint32_t state;
@@ -638,7 +638,7 @@ erts_thr_id2port_sflgs(Eterm id, Uint32 invalid_sflgs)
 	    erts_mtx_unlock(prt->lock);
 	    if (dhndl != ERTS_THR_PRGR_DHANDLE_MANAGED)
 		erts_port_dec_refc(prt);
-	    prt = NULL;
+            prt = nullptr;
 	}
     }
 
@@ -661,7 +661,7 @@ ERTS_GLB_INLINE Port *
 erts_thr_drvport2port(ErlDrvPort drvport, int lock_pdl)
 {
     Port *prt = ERTS_ErlDrvPort2Port(drvport);
-    ASSERT(prt != NULL);
+    ASSERT(prt != nullptr);
     if (prt == ERTS_INVALID_ERL_DRV_PORT)
 	return ERTS_INVALID_ERL_DRV_PORT;
 

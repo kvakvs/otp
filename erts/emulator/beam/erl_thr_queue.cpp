@@ -138,12 +138,12 @@ erts_thr_q_initialize(ErtsThrQ_t *q, ErtsThrQInit_t *qi)
     q->init = *qi;
     if (!q->init.notify)
 	q->init.notify = noop_callback;
-    q->first = NULL;
-    q->last = NULL;
-    q->q.blk = NULL;
+    q->first = nullptr;
+    q->last = nullptr;
+    q->q.blk = nullptr;
 #else
     erts_atomic_init_nob(&q->tail.data.marker.next, ERTS_AINT_NULL);
-    q->tail.data.marker.data.ptr = NULL;
+    q->tail.data.marker.data.ptr = nullptr;
     erts_atomic_init_nob(&q->tail.data.last,
 			 (erts_aint_t) &q->tail.data.marker);
     erts_atomic_init_nob(&q->tail.data.um_refc[0], 0);
@@ -161,8 +161,8 @@ erts_thr_q_initialize(ErtsThrQ_t *q, ErtsThrQInit_t *qi)
     q->head.unref_end = &q->tail.data.marker;
     q->head.clean_reached_head_count = 0;
     q->head.deq_fini.automatic = qi->auto_finalize_dequeue;
-    q->head.deq_fini.start = NULL;
-    q->head.deq_fini.end = NULL;
+    q->head.deq_fini.start = nullptr;
+    q->head.deq_fini.end = nullptr;
 #ifdef ERTS_SMP
     q->head.next.thr_progress = erts_thr_progress_current();
     q->head.next.thr_progress_reached = 1;
@@ -174,7 +174,7 @@ erts_thr_q_initialize(ErtsThrQ_t *q, ErtsThrQInit_t *qi)
     q->head.notify = q->tail.data.notify;
     q->q.finalizing = 0;
     q->q.live = qi->live.queue;
-    q->q.blk = NULL;
+    q->q.blk = nullptr;
 #endif
 }
 
@@ -435,14 +435,14 @@ clean(ErtsThrQ_t *q, int max_ops, int do_notify)
 
 	    if (!q->head.used_marker
 		&& q->head.unref_end == (ErtsThrQElement_t *) ilast)
-		ilast = (erts_aint_t) enqueue_marker(q, NULL);
+		ilast = (erts_aint_t) enqueue_marker(q, nullptr);
 
 	    if (q->head.unref_end == (ErtsThrQElement_t *) ilast)
 		ERTS_SMP_MEMORY_BARRIER;
 	    else {
 		q->head.next.unref_end = (ErtsThrQElement_t *) ilast;
 #ifdef ERTS_SMP
-		q->head.next.thr_progress = erts_thr_progress_later(NULL);
+		q->head.next.thr_progress = erts_thr_progress_later(nullptr);
 #endif
 		erts_atomic32_set_relb(&q->tail.data.um_refc_ix,
 				       um_refc_ix);
@@ -571,7 +571,7 @@ enqueue(ErtsThrQ_t *q, void *data, ErtsThrQElement_t *this_)
 #ifndef USE_THREADS
     ASSERT(data);
 
-    this_->next = NULL;
+    this_->next = nullptr;
     this_->data.ptr = data;
 
     if (q->last)
@@ -666,10 +666,10 @@ erts_thr_q_get_finalize_dequeue_data(ErtsThrQ_t *q, ErtsThrQFinDeQ_t *fdp)
     fdp->start = q->head.deq_fini.start;
     fdp->end = q->head.deq_fini.end;
     if (fdp->end)
-	ErtsThrQDirtySetEl(&fdp->end->next, NULL);
-    q->head.deq_fini.start = NULL;
-    q->head.deq_fini.end = NULL;
-    return fdp->start != NULL;
+	ErtsThrQDirtySetEl(&fdp->end->next, nullptr);
+    q->head.deq_fini.start = nullptr;
+    q->head.deq_fini.end = nullptr;
+    return fdp->start != nullptr;
 #endif
 }
 
@@ -708,7 +708,7 @@ int erts_thr_q_finalize_dequeue(ErtsThrQFinDeQ_t *state)
 	state->start = start;
 	if (start)
 	    return 1; /* More to do */
-	state->end = NULL;
+	state->end = nullptr;
     }
 #endif
     return 0;
@@ -718,8 +718,8 @@ void
 erts_thr_q_finalize_dequeue_state_init(ErtsThrQFinDeQ_t *state)
 {
 #ifdef USE_THREADS
-    state->start = NULL;
-    state->end = NULL;
+    state->start = nullptr;
+    state->end = nullptr;
 #endif
 }
 
@@ -739,12 +739,12 @@ erts_thr_q_dequeue(ErtsThrQ_t *q)
     ErtsThrQElement_t *tmp;
 
     if (!q->first)
-	return NULL;
+	return nullptr;
     tmp = q->first;
     res = tmp->data.ptr;
     q->first = tmp->next;
     if (!q->first)
-	q->last = NULL;
+	q->last = nullptr;
 
     element_free(q, tmp);
 
@@ -757,19 +757,19 @@ erts_thr_q_dequeue(ErtsThrQ_t *q)
     head = ErtsThrQDirtyReadEl(&q->head.head);
     inext = erts_atomic_read_acqb(&head->next);
     if (inext == ERTS_AINT_NULL)
-	return NULL;
+	return nullptr;
     head = (ErtsThrQElement_t *) inext;
     ErtsThrQDirtySetEl(&q->head.head, head);
     if (head == &q->tail.data.marker) {
 	inext = erts_atomic_read_acqb(&head->next);
 	if (inext == ERTS_AINT_NULL)
-	    return NULL;
+	    return nullptr;
 	head = (ErtsThrQElement_t *) inext;
 	ErtsThrQDirtySetEl(&q->head.head, head);
     }
     res = head->data.ptr;
 #if ERTS_THR_Q_DBG_CHK_DATA
-    head->data.ptr = NULL;
+    head->data.ptr = nullptr;
     if (!res)
 	erl_exit(ERTS_ABORT_EXIT, "Missing data in dequeue\n");
 #endif

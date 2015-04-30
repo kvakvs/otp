@@ -206,9 +206,9 @@ erts_debug_disassemble_1(BIF_ALIST_1)
     Eterm* tp;
     Eterm bin;
     Eterm mfa;
-    BeamInstr* funcinfo = NULL;	/* Initialized to eliminate warning. */
+    BeamInstr* funcinfo = nullptr;	/* Initialized to eliminate warning. */
     BeamInstr* code_base;
-    BeamInstr* code_ptr = NULL;	/* Initialized to eliminate warning. */
+    BeamInstr* code_ptr = nullptr;	/* Initialized to eliminate warning. */
     BeamInstr instr;
     BeamInstr uaddr;
     Uint hsz;
@@ -216,7 +216,7 @@ erts_debug_disassemble_1(BIF_ALIST_1)
 
     if (term_to_UWord(addr, &uaddr)) {
 	code_ptr = (BeamInstr *) uaddr;
-	if ((funcinfo = find_function_from_pc(code_ptr)) == NULL) {
+        if ((funcinfo = find_function_from_pc(code_ptr)) == nullptr) {
 	    BIF_RET(am_false);
 	}
     } else if (is_tuple(addr)) {
@@ -246,18 +246,18 @@ erts_debug_disassemble_1(BIF_ALIST_1)
 	 * Try the export_ entry first to allow disassembly of special functions
 	 * such as erts_debug:apply/4.  Then search for it in the module.
 	 */
-	if ((ep = erts_find_function(mod, name, arity, code_ix)) != NULL) {
+        if ((ep = erts_find_function(mod, name, arity, code_ix)) != nullptr) {
 	    /* XXX: add "&& ep->address != ep->code+3" condition?
 	     * Consider a traced function.
 	     * Its ep will have ep->address == ep->code+3.
-	     * erts_find_function() will return the non-NULL ep.
+             * erts_find_function() will return the non-nullptr ep.
 	     * Below we'll try to derive a code_ptr from ep->address.
 	     * But this_ code_ptr will point to the start of the Export,
 	     * not the function's func_info instruction. BOOM !?
 	     */
 	    code_ptr = ((BeamInstr *) ep->addressv[code_ix]) - 5;
 	    funcinfo = code_ptr+2;
-	} else if (modp == NULL || (code_base = modp->curr.code) == NULL) {
+        } else if (modp == nullptr || (code_base = modp->curr.code) == nullptr) {
 	    BIF_RET(am_undef);
 	} else {
 	    n = code_base[MI_NUM_FUNCTIONS];
@@ -294,9 +294,9 @@ erts_debug_disassemble_1(BIF_ALIST_1)
     bin = new_binary(p, (byte *) dsbufp->str, dsbufp->str_len);
     erts_destroy_tmp_dsbuf(dsbufp);
     hsz = 4+4;
-    (void) erts_bld_uword(NULL, &hsz, (BeamInstr) code_ptr);
+    (void) erts_bld_uword(nullptr, &hsz, (BeamInstr) code_ptr);
     hp = HAlloc(p, hsz);
-    addr = erts_bld_uword(&hp, NULL, (BeamInstr) code_ptr);
+    addr = erts_bld_uword(&hp, nullptr, (BeamInstr) code_ptr);
     ASSERT(is_atom(funcinfo[0]));
     ASSERT(is_atom(funcinfo[1]));
     mfa = TUPLE3(hp, (Eterm) funcinfo[0], (Eterm) funcinfo[1], make_small((Eterm) funcinfo[2]));
@@ -326,7 +326,7 @@ dbg_where(BeamInstr* addr, Eterm x0, Eterm* reg)
 {
     BeamInstr* f = find_function_from_pc(addr);
 
-    if (f == NULL) {
+    if (f == nullptr) {
 	erts_fprintf(stderr, "???\n");
     } else {
 	int arity;

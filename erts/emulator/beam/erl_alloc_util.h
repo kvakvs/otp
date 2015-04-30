@@ -81,7 +81,7 @@ typedef struct {
 }
 
 #define ERTS_DEFAULT_ALLCTR_INIT {                                         \
-    NULL,                                                                  \
+    nullptr,                                                                  \
     ERTS_ALC_A_INVALID,	/* (number) alloc_no: allocator number           */\
     0,			/* (bool_)   force:  force enabled                */\
     0,			/* (number) ix: instance index                   */\
@@ -103,8 +103,8 @@ typedef struct {
     10,			/* (amount) mbcgs:  mbc growth stages            */\
     0,			/* (%)      acul:  abandon carrier utilization limit */\
     /* --- Data not options -------------------------------------------- */\
-    NULL,		/* (ptr)    fix                                  */\
-    NULL		/* (ptr)    fix_type_size                        */\
+    nullptr,		/* (ptr)    fix                                  */\
+    nullptr		/* (ptr)    fix_type_size                        */\
 }
 
 #else /* if SMALL_MEMORY */
@@ -116,7 +116,7 @@ typedef struct {
 }
 
 #define ERTS_DEFAULT_ALLCTR_INIT {                                         \
-    NULL,                                                                  \
+    nullptr,                                                                  \
     ERTS_ALC_A_INVALID,	/* (number) alloc_no: allocator number           */\
     0,			/* (bool_)   force:  force enabled                */\
     0,			/* (number) ix: instance index                   */\
@@ -137,8 +137,8 @@ typedef struct {
     10,			/* (amount) mbcgs:  mbc growth stages            */\
     0,			/* (%)      acul:  abandon carrier utilization limit */\
     /* --- Data not options -------------------------------------------- */\
-    NULL,		/* (ptr)    fix                                  */\
-    NULL		/* (ptr)    fix_type_size                        */\
+    nullptr,		/* (ptr)    fix                                  */\
+    nullptr		/* (ptr)    fix_type_size                        */\
 }
 
 #endif

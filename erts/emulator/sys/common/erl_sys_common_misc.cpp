@@ -115,7 +115,7 @@ void erts_init_sys_common_misc(void)
 	
 #  else
 	l = setlocale(LC_CTYPE, "");  /* Set international environment */
-	if (l != NULL) {
+	if (l != nullptr) {
 	    if (strcmp(nl_langinfo(CODESET), "UTF-8") == 0) {
 		filename_encoding = ERL_FILENAME_UTF8;
 	    }

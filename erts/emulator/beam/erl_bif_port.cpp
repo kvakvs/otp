@@ -494,7 +494,7 @@ erts_cleanup_port_data(Port *prt)
 {
     ASSERT(erts_atomic32_read_nob(&prt->state) & ERTS_PORT_SFLGS_INVALID_LOOKUP);
     cleanup_old_port_data(erts_smp_atomic_xchg_nob(&prt->data,
-						   (erts_aint_t) NULL));
+                                                   (erts_aint_t) nullptr));
 }
 
 Uint
@@ -519,7 +519,7 @@ erts_port_data_offheap(Port *prt)
 
     if ((data & 0x3) != 0) {
 	ASSERT(is_immed((Eterm) (UWord) data));
-	return NULL;
+        return nullptr;
     }
     else {
 	ErtsPortDataHeap *pdhp = (ErtsPortDataHeap *) data;
@@ -552,7 +552,7 @@ BIF_RETTYPE port_set_data_2(BIF_ALIST_2)
         pdhp = (ErtsPortDataHeap*)erts_alloc(ERTS_ALC_T_PORT_DATA_HEAP,
 			  sizeof(ErtsPortDataHeap) + (hsize-1)*sizeof(Eterm));
 	hp = &pdhp->heap[0];
-	pdhp->off_heap.first = NULL;
+        pdhp->off_heap.first = nullptr;
 	pdhp->off_heap.overhead = 0;
 	pdhp->hsize = hsize;
 	pdhp->data = copy_struct(BIF_ARG_2, hsize, &hp, &pdhp->off_heap);
@@ -562,10 +562,10 @@ BIF_RETTYPE port_set_data_2(BIF_ALIST_2)
 
     data = erts_smp_atomic_xchg_wb(&prt->data, data);
 
-    if (data == (erts_aint_t)NULL) {
+    if (data == (erts_aint_t)nullptr) {
 	/* Port terminated by racing thread */
 	data = erts_smp_atomic_xchg_wb(&prt->data, data);
-	ASSERT(data != (erts_aint_t)NULL);
+        ASSERT(data != (erts_aint_t)nullptr);
 	cleanup_old_port_data(data);
 	BIF_ERROR(BIF_P, BADARG);
     }
@@ -588,7 +588,7 @@ BIF_RETTYPE port_get_data_1(BIF_ALIST_1)
         BIF_ERROR(BIF_P, BADARG);
 
     data = erts_smp_atomic_read_ddrb(&prt->data);
-    if (data == (erts_aint_t)NULL)
+    if (data == (erts_aint_t)nullptr)
         BIF_ERROR(BIF_P, BADARG);  /* Port terminated by racing thread */
 
     if ((data & 0x3) != 0) {
@@ -622,7 +622,7 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
     Eterm* tp;
     Uint* nargs;
     erts_driver_t* driver;
-    char* name_buf = NULL;
+    char* name_buf = nullptr;
     SysDriverOpts opts;
     Sint linebuf;
     Eterm edir = NIL;
@@ -636,12 +636,12 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
     opts.redir_stderr = 0;
     opts.read_write = 0;
     opts.hide_window = 0;
-    opts.wd = NULL;
-    opts.envir = NULL;
+    opts.wd = nullptr;
+    opts.envir = nullptr;
     opts.exit_status = 0;
     opts.overlapped_io = 0; 
     opts.spawn_type = ERTS_SPAWN_ANY; 
-    opts.argv = NULL;
+    opts.argv = nullptr;
     opts.parallelism = erts_port_parallelism;
     linebuf = 0;
 
@@ -684,14 +684,14 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 		    }
 		} else if (option == am_env) {
 		    byte* bytes;
-		    if ((bytes = convert_environment(p, *tp)) == NULL) {
+                    if ((bytes = convert_environment(p, *tp)) == nullptr) {
 			goto badarg;
 		    }
 		    opts.envir = (char *) bytes;
 		} else if (option == am_args) {
 		    char **av;
 		    char **oav = opts.argv;
-		    if ((av = convert_args(*tp)) == NULL) {
+                    if ((av = convert_args(*tp)) == nullptr) {
 			goto badarg;
 		    }
 		    opts.argv = av;
@@ -704,14 +704,14 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 		} else if (option == am_arg0) {
 		    char *a0;
 
-		    if ((a0 = erts_convert_filename_to_native(*tp, NULL, 0, ERTS_ALC_T_TMP, 1, 1, NULL)) == NULL) {
+                    if ((a0 = erts_convert_filename_to_native(*tp, nullptr, 0, ERTS_ALC_T_TMP, 1, 1, nullptr)) == nullptr) {
 			goto badarg;
 		    }
-		    if (opts.argv == NULL) {
+                    if (opts.argv == nullptr) {
                         opts.argv = (char**)erts_alloc(ERTS_ALC_T_TMP,
 					       2 * sizeof(char **));
 			opts.argv[0] = a0;
-			opts.argv[1] = NULL;
+                        opts.argv[1] = nullptr;
 		    } else {
 			if (opts.argv[0] != erts_default_arg0) {
 			    erts_free(ERTS_ALC_T_TMP, opts.argv[0]);
@@ -817,8 +817,8 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 	    if (encoding == ERL_FILENAME_WIN_WCHAR) {
 		encoding = ERL_FILENAME_UTF8;
 	    }
-	    if ((name_buf = erts_convert_filename_to_encoding(name, NULL, 0, ERTS_ALC_T_TMP,0,1, encoding, NULL, 0))
-		== NULL) {
+            if ((name_buf = erts_convert_filename_to_encoding(name, nullptr, 0, ERTS_ALC_T_TMP,0,1, encoding, nullptr, 0))
+                == nullptr) {
 		goto badarg;
 	    }
 
@@ -859,16 +859,16 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 	}
     }
 
-    if ((driver != &spawn_driver && opts.argv != NULL) ||
+    if ((driver != &spawn_driver && opts.argv != nullptr) ||
 	(driver == &spawn_driver && 
 	 opts.spawn_type != ERTS_SPAWN_EXECUTABLE && 
-	 opts.argv != NULL)) {
+         opts.argv != nullptr)) {
 	/* Argument vector only if explicit spawn_executable */
 	goto badarg;
     }
 
     if (edir != NIL) {
-	if ((opts.wd = erts_convert_filename_to_native(edir, NULL, 0, ERTS_ALC_T_TMP,0,1,NULL)) == NULL) {
+        if ((opts.wd = erts_convert_filename_to_native(edir, nullptr, 0, ERTS_ALC_T_TMP,0,1,nullptr)) == nullptr) {
 	    goto badarg;
 	}
     }
@@ -911,7 +911,7 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
         trace_virtual_sched(p, am_in);
     }
 
-    if (linebuf && port->linebuf == NULL){
+    if (linebuf && port->linebuf == nullptr){
 	port->linebuf = allocate_linebuf(linebuf);
 	sflgs |= ERTS_PORT_SFLG_LINEBUF_IO;
     }
@@ -935,7 +935,7 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 	*err_typep = -3;
     if (err_nump)
 	*err_nump = BADARG;
-    port = NULL;
+    port = nullptr;
     goto do_return;
 }
 
@@ -948,35 +948,35 @@ static char **convert_args(Eterm l)
     int i = 0;
     Eterm str;
     if (is_not_list(l) && is_not_nil(l)) {
-	return NULL;
+        return nullptr;
     }
 
     n = erts_list_length(l);
-    /* We require at least one element in argv[0] + NULL at end */
+    /* We require at least one element in argv[0] + nullptr at end */
     pp = (char**)erts_alloc(ERTS_ALC_T_TMP, (n + 2) * sizeof(char **));
     pp[i++] = erts_default_arg0;
     while (is_list(l)) {
 	str = CAR(list_val(l));
-	if ((b = erts_convert_filename_to_native(str,NULL,0,ERTS_ALC_T_TMP,1,1,NULL)) == NULL) {
+        if ((b = erts_convert_filename_to_native(str,nullptr,0,ERTS_ALC_T_TMP,1,1,nullptr)) == nullptr) {
 	    int j;
 	    for (j = 1; j < i; ++j)
 		erts_free(ERTS_ALC_T_TMP, pp[j]);
 	    erts_free(ERTS_ALC_T_TMP, pp);
-	    return NULL;
+            return nullptr;
 	}	    
 	pp[i++] = b;
 	l = CDR(list_val(l));
     }
-    pp[i] = NULL;
+    pp[i] = nullptr;
     return pp;
 }
 
 static void free_args(char **av)
 {
     int i;
-    if (av == NULL)
+    if (av == nullptr)
 	return;
-    for (i = 0; av[i] != NULL; ++i) {
+    for (i = 0; av[i] != nullptr; ++i) {
 	if (av[i] != erts_default_arg0) {
 	    erts_free(ERTS_ALC_T_TMP, av[i]);
 	}
@@ -997,11 +997,11 @@ static byte* convert_environment(Process* p, Eterm env)
     int encoding = erts_get_native_filename_encoding();
 
     if ((n = erts_list_length(env)) < 0) {
-	return NULL;
+        return nullptr;
     }
     heap_size = 2*(5*n+1);
     temp_heap = hp = (Eterm *) erts_alloc(ERTS_ALC_T_TMP, heap_size*sizeof(Eterm));
-    bytes = NULL;		/* Indicating error */
+    bytes = nullptr;		/* Indicating error */
 
     /*
      * All errors below are handled by jumping to 'done', to ensure that the memory
@@ -1045,7 +1045,7 @@ static byte* convert_environment(Process* p, Eterm env)
     /*
      * Put the result in a binary (no risk for a memory leak that way).
      */
-    (void) erts_new_heap_binary(p, NULL, size, &bytes);
+    (void) erts_new_heap_binary(p, nullptr, size, &bytes);
     erts_native_filename_put(all,encoding,bytes);
 
  done:
@@ -1125,12 +1125,12 @@ static int http_response_erl(void *arg, int major, int minor,
     Eterm* hend;
 #endif
 
-    http_bld_string(pca, NULL, &hsize, phrase, phrase_len);
+    http_bld_string(pca, nullptr, &hsize, phrase, phrase_len);
     hp = HAlloc(pca->p, hsize);
 #ifdef DEBUG
     hend = hp + hsize;
 #endif
-    phrase_term = http_bld_string(pca, &hp, NULL, phrase, phrase_len);
+    phrase_term = http_bld_string(pca, &hp, nullptr, phrase, phrase_len);
     ver = TUPLE2(hp, make_small(major), make_small(minor));
     hp += 3;
     pca->res = TUPLE4(hp, am_http_response, ver, make_small(status), phrase_term);
@@ -1181,22 +1181,22 @@ static int http_request_erl(void* arg, const http_atom_t* meth,
     Uint sz = 0;
     Uint* szp = &sz;
     Eterm* hp;
-    Eterm** hpp = NULL;
+    Eterm** hpp = nullptr;
 
     /* {http_request,Meth,Uri,Version} */
 
     for (;;) {
-        meth_term = (meth!=NULL) ? meth->atom :
+        meth_term = (meth!=nullptr) ? meth->atom :
 	    http_bld_string(pca, hpp, szp, meth_ptr, meth_len);
         uri_term = http_bld_uri(pca, hpp, szp, uri);
         ver_term = erts_bld_tuple(hpp, szp, 2,
                                   make_small(major), make_small(minor));
         pca->res = erts_bld_tuple(hpp, szp, 4, am_http_request, meth_term,
                                   uri_term, ver_term); 
-        if (hpp != NULL) break;
+        if (hpp != nullptr) break;
         hpp = &hp;
         hp = HAlloc(pca->p, sz);
-        szp = NULL;        
+        szp = nullptr;
     }
     return 1;
 }
@@ -1215,26 +1215,26 @@ http_header_erl(void* arg, const http_atom_t* name, const char* name_ptr,
     
     /* {http_header,Bit,Name,IValue,Value} */
 
-    if (name == NULL) {
-	http_bld_string(pca, NULL, &sz, name_ptr, name_len);
+    if (name == nullptr) {
+        http_bld_string(pca, nullptr, &sz, name_ptr, name_len);
     }
-    http_bld_string(pca, NULL, &sz, value_ptr, value_len);
+    http_bld_string(pca, nullptr, &sz, value_ptr, value_len);
 
     hp = HAlloc(pca->p, sz);
 #ifdef DEBUG
     hend = hp + sz;
 #endif	
 
-    if (name != NULL) {
+    if (name != nullptr) {
 	bit_term = make_small(name->index+1);
 	name_term = name->atom;
     }
     else {	
 	bit_term = make_small(0);	
-	name_term = http_bld_string(pca, &hp,NULL,name_ptr,name_len);
+        name_term = http_bld_string(pca, &hp,nullptr,name_ptr,name_len);
     }
 
-    val_term = http_bld_string(pca, &hp, NULL, value_ptr, value_len);
+    val_term = http_bld_string(pca, &hp, nullptr, value_ptr, value_len);
     pca->res = TUPLE5(hp, am_http_header, bit_term, name_term, am_undefined, val_term);
     ASSERT(hp+6==hend);
     return 1;
@@ -1258,14 +1258,14 @@ static int http_error_erl(void* arg, const char* buf, int len)
     Eterm* hend;
 #endif
 
-    http_bld_string(pca, NULL, &sz, buf, len);
+    http_bld_string(pca, nullptr, &sz, buf, len);
 
     hp = HAlloc(pca->p, sz);
 #ifdef DEBUG
     hend = hp + sz;
 #endif
-    pca->res = erts_bld_tuple(&hp, NULL, 2, am_http_error,
-			      http_bld_string(pca, &hp, NULL, buf, len));
+    pca->res = erts_bld_tuple(&hp, nullptr, 2, am_http_error,
+                              http_bld_string(pca, &hp, nullptr, buf, len));
     ASSERT(hp==hend);
     return 1;
 }
@@ -1277,7 +1277,7 @@ int ssl_tls_erl(void* arg, unsigned type, unsigned major, unsigned minor,
     struct packet_callback_args* pca = (struct packet_callback_args*) arg;
     Eterm* hp;
     Eterm ver;
-    Eterm bin = new_binary(pca->p, NULL, plen+len);
+    Eterm bin = new_binary(pca->p, nullptr, plen+len);
     byte* bin_ptr = binary_bytes(bin);
 
     memcpy(bin_ptr+plen, buf, len);

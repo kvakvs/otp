@@ -145,7 +145,7 @@ erts_dictionary_dump(int to, void *to_arg, ProcDict *pd)
 #ifdef DEBUG
 
     /*PD_CHECK(pd);*/
-    if (pd == NULL)
+    if (pd == nullptr)
 	return;
     erts_print(to, to_arg, "(size = %d, used = %d, homeSize = %d, "
 	       "splitPosition = %d, numElements = %d)\n",
@@ -161,7 +161,7 @@ erts_dictionary_dump(int to, void *to_arg, ProcDict *pd)
     Eterm t;
 
     erts_print(to, to_arg, "[");
-    if (pd != NULL) {
+    if (pd != nullptr) {
 	for (i = 0; i < HASH_RANGE(pd); ++i) {
 	    t = ARRAY_GET(pd, i);
 	    if (is_list(t)) {
@@ -185,7 +185,7 @@ erts_deep_dictionary_dump(int to, void *to_arg,
     unsigned int i;
     Eterm t;
 
-    if (pd != NULL) {
+    if (pd != nullptr) {
 	for (i = 0; i < HASH_RANGE(pd); ++i) {
 	    t = ARRAY_GET(pd, i);
 	    if (is_list(t)) {
@@ -213,7 +213,7 @@ erts_erase_dicts(Process *p)
 {
     if (p->dictionary) {
 	pd_hash_erase_all(p);
-	p->dictionary = NULL;
+	p->dictionary = nullptr;
     }
 }
 
@@ -228,7 +228,7 @@ Eterm erts_dictionary_copy(Process *p, ProcDict *pd)
     Eterm tmp, tmp2;
     unsigned int i, num;
 
-    if (pd == NULL) {
+    if (pd == nullptr) {
 	return res;
     }
 
@@ -328,7 +328,7 @@ static void pd_hash_erase(Process *p, Eterm id, Eterm *ret)
     unsigned int range;
 
     *ret = am_undefined;
-    if (p->dictionary == NULL) {
+    if (p->dictionary == nullptr) {
 	return;
     }
     hval = pd_hash_value(p->dictionary, id);
@@ -375,9 +375,9 @@ static void pd_hash_erase(Process *p, Eterm id, Eterm *ret)
 
 static void pd_hash_erase_all(Process *p)
 {
-    if (p->dictionary != NULL) {
+    if (p->dictionary != nullptr) {
         PD_FREE(p->dictionary /*PD_SZ2BYTES(p->dictionary->size)*/);
-	p->dictionary = NULL;
+	p->dictionary = nullptr;
     }
 }
 
@@ -387,7 +387,7 @@ Eterm erts_pd_hash_get(Process *p, Eterm id)
     Eterm tmp;
     ProcDict *pd = p->dictionary;
 
-    if (pd == NULL)
+    if (pd == nullptr)
 	return am_undefined;
     hval = pd_hash_value(pd, id);
     tmp = ARRAY_GET(pd, hval);
@@ -423,7 +423,7 @@ static Eterm pd_hash_get_keys(Process *p, Eterm value)
     unsigned int i, num;
     Eterm tmp, tmp2;
 
-    if (pd == NULL) {
+    if (pd == nullptr) {
 	return res;
     }
 
@@ -460,7 +460,7 @@ pd_hash_get_all(Process *p, ProcDict *pd)
     unsigned int i;
     unsigned int num;
 
-    if (pd == NULL) {
+    if (pd == nullptr) {
 	return res;
     }
     num = HASH_RANGE(pd);
@@ -497,7 +497,7 @@ static Eterm pd_hash_put(Process *p, Eterm id, Eterm value)
     Eterm *hp_limit;
 #endif
 
-    if (p->dictionary == NULL) {
+    if (p->dictionary == nullptr) {
 	/* Create it */
 	array_put(&(p->dictionary), INITIAL_SIZE - 1, NIL);
 	p->dictionary->homeSize = INITIAL_SIZE;
@@ -846,7 +846,7 @@ static Eterm array_put(ProcDict **ppdict, unsigned int ndx, Eterm term)
 {
     unsigned int i;
     Eterm ret;
-    if (*ppdict == NULL) {
+    if (*ppdict == nullptr) {
 	Uint siz = next_array_size(ndx+1);
 	ProcDict *p;
 
@@ -953,7 +953,7 @@ static void pd_check(ProcDict *pd)
 {
     unsigned int i;
     Uint num;
-    if (pd == NULL)
+    if (pd == nullptr)
 	return;
     ASSERT(pd->size >= pd->used);
     ASSERT(HASH_RANGE(pd) <= MAX_HASH);

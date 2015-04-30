@@ -41,11 +41,11 @@
 #include "erl_ptab.h"
 #include "erl_bits.h"
 
-static Export* flush_monitor_message_trap = NULL;
-static Export* set_cpu_topology_trap = NULL;
-static Export* await_proc_exit_trap = NULL;
-static Export* await_port_send_result_trap = NULL;
-Export* erts_format_cpu_topology_trap = NULL;
+static Export* flush_monitor_message_trap = nullptr;
+static Export* set_cpu_topology_trap = nullptr;
+static Export* await_proc_exit_trap = nullptr;
+static Export* await_port_send_result_trap = nullptr;
+Export* erts_format_cpu_topology_trap = nullptr;
 
 static Export *await_sched_wall_time_mod_trap;
 static erts_smp_atomic32_t sched_wall_time;
@@ -178,7 +178,7 @@ BIF_RETTYPE link_1(BIF_ALIST_1)
 
 	if (send_link_signal) {
 	    Eterm ref;
-	    Eterm *refp = erts_port_synchronous_ops ? &ref : NULL;
+            Eterm *refp = erts_port_synchronous_ops ? &ref : nullptr;
 
 	    switch (erts_port_link(BIF_P, prt, BIF_P->common.id, refp)) {
 	    case ERTS_PORT_OP_DROPPED:
@@ -205,7 +205,7 @@ BIF_RETTYPE link_1(BIF_ALIST_1)
 	erts_smp_proc_lock(BIF_P, ERTS_PROC_LOCK_LINK);
 
 	/* We may earn time by checking first that we're not linked already */
-	if (erts_lookup_link(ERTS_P_LINKS(BIF_P), BIF_ARG_1) != NULL) {
+        if (erts_lookup_link(ERTS_P_LINKS(BIF_P), BIF_ARG_1) != nullptr) {
 	    erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_LINK);
 	    BIF_RET(am_true);
 	}
@@ -236,7 +236,7 @@ BIF_RETTYPE link_1(BIF_ALIST_1)
 		lnk = erts_add_or_lookup_link(&(dep->nlinks),
 					      LINK_PID,
 					      BIF_P->common.id);
-		ASSERT(lnk != NULL);
+                ASSERT(lnk != nullptr);
 		erts_add_link(&ERTS_LINK_ROOT(lnk), LINK_PID, BIF_ARG_1);
 
 		erts_smp_de_links_unlock(dep);
@@ -393,10 +393,10 @@ remote_demonitor(Process *c_p, DistEntry *dep, Eterm ref, Eterm to)
 
 static int demonitor(Process *c_p, Eterm ref)
 {
-   ErtsMonitor *mon = NULL;  /* The monitor entry to delete */
+   ErtsMonitor *mon = nullptr;  /* The monitor entry to delete */
    Process  *rp;    /* Local target process */
    Eterm     to = NIL;    /* Monitor link traget */
-   DistEntry *dep = NULL;  /* Target's distribution entry */
+   DistEntry *dep = nullptr;  /* Target's distribution entry */
    int deref_de = 0;
    int res;
    int unlock_link = 1;
@@ -442,7 +442,7 @@ static int demonitor(Process *c_p, Eterm ref)
 	   deref_de = 0;
 	   erts_deref_dist_entry(dep);
        }
-       dep = NULL;
+       dep = nullptr;
        rp = erts_pid2proc_opt(c_p,
 			      ERTS_PROC_LOCK_MAIN|ERTS_PROC_LOCK_LINK,
 			      to,
@@ -465,7 +465,7 @@ static int demonitor(Process *c_p, Eterm ref)
 	   rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), ref);
 	   if (rp != c_p)
 	       erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
-	   if (rmon != NULL)
+           if (rmon != nullptr)
 	       erts_destroy_monitor(rmon);
        }
        else {
@@ -740,7 +740,7 @@ BIF_RETTYPE monitor_2(BIF_ALIST_2)
 {
     Eterm target = BIF_ARG_2;
     BIF_RETTYPE ret;
-    DistEntry  *dep = NULL; 
+    DistEntry  *dep = nullptr;
     int deref_de = 0;
 
     /* Only process monitors are implemented */
@@ -944,7 +944,7 @@ BIF_RETTYPE unlink_1(BIF_ALIST_1)
 {
     Process *rp;
     DistEntry *dep;
-    ErtsLink *l = NULL, *rl = NULL;
+    ErtsLink *l = nullptr, *rl = nullptr;
 
     /*
      * SMP specific note concerning incoming exit signals:
@@ -983,7 +983,7 @@ BIF_RETTYPE unlink_1(BIF_ALIST_1)
 	    if (prt) {
 		ErtsPortOpResult res;
 		Eterm ref;
-		Eterm *refp = erts_port_synchronous_ops ? &ref : NULL;
+                Eterm *refp = erts_port_synchronous_ops ? &ref : nullptr;
 #ifdef DEBUG
 		ref = NIL;
 #endif
@@ -1081,7 +1081,7 @@ BIF_RETTYPE unlink_1(BIF_ALIST_1)
 
     /* unlink and ignore errors */
     l = erts_remove_link(&ERTS_P_LINKS(BIF_P), BIF_ARG_1);
-    if (l != NULL)
+    if (l != nullptr)
 	erts_destroy_link(l);
 
     if (!rp) {
@@ -1089,10 +1089,10 @@ BIF_RETTYPE unlink_1(BIF_ALIST_1)
     }
     else {
 	rl = erts_remove_link(&ERTS_P_LINKS(rp), BIF_P->common.id);
-	if (rl != NULL)
+        if (rl != nullptr)
 	    erts_destroy_link(rl);
 
-	if (IS_TRACED_FL(rp, F_TRACE_PROCS) && rl != NULL) {
+        if (IS_TRACED_FL(rp, F_TRACE_PROCS) && rl != nullptr) {
 	    trace_proc(BIF_P, rp, am_getting_unlinked, BIF_P->common.id);
 	}
 
@@ -1312,8 +1312,8 @@ BIF_RETTYPE raise_3(BIF_ALIST_3)
     s = (struct StackTrace *) hp;
     s->header = make_neg_bignum_header(sz - 1);
     s->freason = reason;
-    s->pc = NULL;
-    s->current = NULL;
+    s->pc = nullptr;
+    s->current = nullptr;
     s->depth = 0;
     hp += sz;
     if (must_copy) {
@@ -1375,7 +1375,7 @@ BIF_RETTYPE exit_2(BIF_ALIST_2)
 	     invalid_flags = ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP;
 	 }
 	 else {
-	     refp = NULL;
+             refp = nullptr;
 	     invalid_flags = ERTS_PORT_SFLGS_INVALID_LOOKUP;
 	 }
 
@@ -1465,7 +1465,7 @@ BIF_RETTYPE exit_2(BIF_ALIST_2)
 			       &rp_locks,
 			       BIF_ARG_2,
 			       NIL,
-			       NULL,
+                               nullptr,
 			       BIF_P == rp ? ERTS_XSIG_FLG_NO_IGN_NORMAL : 0);
 #ifdef ERTS_SMP
 	 if (rp == BIF_P)
@@ -1502,7 +1502,7 @@ static BIF_RETTYPE process_flag_aux(Process *BIF_P,
 	   goto error;
 
        if (i == 0)
-	   scb = NULL;
+           scb = nullptr;
        else {
 	   Uint sz = sizeof(*scb) + (i-1) * sizeof(scb->ct[0]);
            scb = (saved_calls *)erts_alloc(ERTS_ALC_T_CALLS_BUF, sz);
@@ -1594,7 +1594,7 @@ BIF_RETTYPE process_flag_2(BIF_ALIST_2)
 	   goto error;
 
        if (sched == 0) {
-	   new_ = NULL;
+           new_ = nullptr;
 	   state = erts_smp_atomic32_read_band_mb(&BIF_P->state,
 						  ~ERTS_PSFLG_BOUND);
        }
@@ -1608,7 +1608,7 @@ BIF_RETTYPE process_flag_2(BIF_ALIST_2)
        }
 
        curr = ERTS_GET_SCHEDULER_DATA_FROM_PROC(BIF_P)->run_queue;
-       old = (ERTS_PSFLG_BOUND & state) ? curr : NULL;
+       old = (ERTS_PSFLG_BOUND & state) ? curr : nullptr;
 
        ASSERT(!old || old == curr);
 
@@ -1711,7 +1711,7 @@ BIF_RETTYPE process_flag_3(BIF_ALIST_3)
    Eterm res;
 
    if ((rp = erts_pid2proc(BIF_P, ERTS_PROC_LOCK_MAIN,
-			   BIF_ARG_1, ERTS_PROC_LOCK_MAIN)) == NULL) {
+                           BIF_ARG_1, ERTS_PROC_LOCK_MAIN)) == nullptr) {
        BIF_ERROR(BIF_P, BADARG);
    }
 
@@ -1748,7 +1748,7 @@ BIF_RETTYPE unregister_1(BIF_ALIST_1)
     if (is_not_atom(BIF_ARG_1)) {
 	BIF_ERROR(BIF_P, BADARG);
     }
-    res = erts_unregister_name(BIF_P, ERTS_PROC_LOCK_MAIN, NULL, BIF_ARG_1);
+    res = erts_unregister_name(BIF_P, ERTS_PROC_LOCK_MAIN, nullptr, BIF_ARG_1);
     if (res == 0) {
 	BIF_ERROR(BIF_P, BADARG);
     }
@@ -2004,7 +2004,7 @@ do_send(Process *p, Eterm to, Eterm msg, int suspend, Eterm *refp) {
 	if (is_not_atom(tp[1]) || is_not_atom(tp[2]))
 	    return SEND_BADARG;
 	
-	/* sysname_to_connected_dist_entry will return NULL if there
+        /* sysname_to_connected_dist_entry will return nullptr if there
 	   is no dist_entry or the dist_entry has no port,
 	   but remote_send() will handle that. */
 
@@ -2662,7 +2662,7 @@ BIF_RETTYPE atom_to_list_1(BIF_ALIST_1)
 #ifdef DEBUG
     ares =
 #endif
-	erts_analyze_utf8(ap->name, ap->len, &err_pos, &num_chars, NULL);
+        erts_analyze_utf8(ap->name, ap->len, &err_pos, &num_chars, nullptr);
     ASSERT(ares == ERTS_UTF8_OK);
     
     res = erts_utf8_to_list(BIF_P, num_chars, ap->name, ap->len, ap->len,
@@ -2964,7 +2964,7 @@ BIF_RETTYPE list_to_integer_2(BIF_ALIST_2)
      copy the list to buf. */
     int i;
     Eterm res;
-    char *buf = NULL;
+    char *buf = nullptr;
     int base;
 
     i = erts_list_length(BIF_ARG_1);
@@ -3135,7 +3135,7 @@ BIF_RETTYPE string_to_float_1(BIF_ALIST_1)
     int part = SIGN;	/* expect a + or - (or a digit) first */
     FloatDef f;
     Eterm tup;
-    byte *buf = NULL;
+    byte *buf = nullptr;
     Uint bufsz = STRING_TO_FLOAT_BUF_INC_SZ;
 
     /* check it's a valid list to start with */
@@ -3304,7 +3304,7 @@ BIF_RETTYPE list_to_float_1(BIF_ALIST_1)
 {
     int i;
     Eterm res;
-    char *buf = NULL;
+    char *buf = nullptr;
 
     i = erts_list_length(BIF_ARG_1);
     if (i < 0)
@@ -3725,9 +3725,9 @@ BIF_RETTYPE universaltime_to_posixtime_1(BIF_ALIST_1)
 	BIF_ERROR(BIF_P, BADARG);
     }
 
-    erts_bld_sint64(NULL, &hsz, seconds);
+    erts_bld_sint64(nullptr, &hsz, seconds);
     hp = HAlloc(BIF_P, hsz);
-    BIF_RET(erts_bld_sint64(&hp, NULL, seconds));
+    BIF_RET(erts_bld_sint64(&hp, nullptr, seconds));
 }
 
 /* convert calendar:seconds_to_universaltime/1 */
@@ -3783,7 +3783,7 @@ BIF_RETTYPE garbage_collect_0(BIF_ALIST_0)
     int reds;
 
     FLAGS(BIF_P) |= F_NEED_FULLSWEEP;
-    reds = erts_garbage_collect(BIF_P, 0, NULL, 0);
+    reds = erts_garbage_collect(BIF_P, 0, nullptr, 0);
     BIF_RET2(am_true, reds);
 }
 
@@ -4004,7 +4004,7 @@ BIF_RETTYPE function_exported_3(BIF_ALIST_3)
 	BIF_ERROR(BIF_P, BADARG);
     }
     if (erts_find_function(BIF_ARG_1, BIF_ARG_2, signed_val(BIF_ARG_3),
-			   erts_active_code_ix()) == NULL) {
+                           erts_active_code_ix()) == nullptr) {
 	BIF_RET(am_false);
     }
     BIF_RET(am_true);
@@ -4124,7 +4124,7 @@ BIF_RETTYPE list_to_pid_1(BIF_ALIST_1)
     Uint a = 0, b = 0, c = 0;
     char* cp;
     int i;
-    DistEntry *dep = NULL;
+    DistEntry *dep = nullptr;
     char *buf = (char *) erts_alloc(ERTS_ALC_T_TMP, 65);
     /*
      * Max 'Uint64' has 20 decimal digits. If X, Y, Z in <X.Y.Z>
@@ -4159,7 +4159,7 @@ BIF_RETTYPE list_to_pid_1(BIF_ALIST_1)
     if (*cp != '\0') goto bad;
 
     erts_free(ERTS_ALC_T_TMP, (void *) buf);
-    buf = NULL;
+    buf = nullptr;
 
     /* <a.b.c> a = node, b = process number, c = serial */
 
@@ -4456,7 +4456,7 @@ BIF_RETTYPE system_flag_2(BIF_ALIST_2)
 		p->seq_trace_lastcnt = 0;
 		ERTS_SMP_MSGQ_MV_INQ2PRIVQ(p);
 		mp = p->msg.first;
-		while(mp != NULL) {
+                while(mp != nullptr) {
 #ifdef USE_VM_PROBES
 		    ERL_MESSAGE_TOKEN(mp) = (ERL_MESSAGE_DT_UTAG(mp) != NIL) ? am_have_dt_utag : NIL;
 #else
@@ -4803,7 +4803,7 @@ void erts_init_bif(void)
 
     erts_smp_spinlock_init(&make_ref_lock, "make_ref");
     erts_smp_mtx_init(&ports_snapshot_mtx, "ports_snapshot");
-    erts_smp_atomic_init_nob(&erts_dead_ports_ptr, (erts_aint_t) NULL);
+    erts_smp_atomic_init_nob(&erts_dead_ports_ptr, (erts_aint_t) nullptr);
 
     /*
      * bif_return_trap/1 is a hidden BIF that bifs that need to
@@ -4963,8 +4963,8 @@ BIF_RETTYPE dt_prepend_vm_tag_data_1(BIF_ALIST_1)
 	Uint sz = binary_size(DT_UTAG(BIF_P));
 	int i;
 	unsigned char *p,*q;
-	byte *temp_alloc = NULL;
-	b = new_binary(BIF_P,NULL,sz+1);
+        byte *temp_alloc = nullptr;
+        b = new_binary(BIF_P,nullptr,sz+1);
 	q = binary_bytes(b);
 	p = erts_get_aligned_binary_bytes(DT_UTAG(BIF_P),&temp_alloc);
 	for(i=0;i<sz;++i) {
@@ -4990,8 +4990,8 @@ BIF_RETTYPE dt_append_vm_tag_data_1(BIF_ALIST_1)
 	Uint sz = binary_size(DT_UTAG(BIF_P));
 	int i;
 	unsigned char *p,*q;
-	byte *temp_alloc = NULL;
-	b = new_binary(BIF_P,NULL,sz+1);
+        byte *temp_alloc = nullptr;
+        b = new_binary(BIF_P,nullptr,sz+1);
 	q = binary_bytes(b);
 	p = erts_get_aligned_binary_bytes(DT_UTAG(BIF_P),&temp_alloc);
 	for(i=0;i<sz;++i) {

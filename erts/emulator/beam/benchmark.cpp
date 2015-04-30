@@ -60,7 +60,7 @@ static void stop_hrvtime(void)
     {
 	vperfctr_stop(system_clock);
 	vperfctr_close(system_clock);
-	system_clock = NULL;
+	system_clock = nullptr;
     }
 }
 
@@ -124,7 +124,7 @@ void init_benchmarking()
     int i;
 
     system_clock = vperfctr_open();
-    if (system_clock != NULL)
+    if (system_clock != nullptr)
     {
         if (vperfctr_info(system_clock,&info) >= 0)
         {
@@ -138,7 +138,7 @@ void init_benchmarking()
         if (vperfctr_control(system_clock,&control) < 0)
         {
             vperfctr_close(system_clock);
-            system_clock = NULL;
+            system_clock = nullptr;
         }
     }
 

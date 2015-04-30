@@ -76,25 +76,25 @@ ErlDrvEntry zlib_driver_entry = {
     zlib_init,
     zlib_start,
     zlib_stop,
-    NULL,                           /* output */
-    NULL,                           /* ready_input */
-    NULL,                           /* ready_output */
+    nullptr,                           /* output */
+    nullptr,                           /* ready_input */
+    nullptr,                           /* ready_output */
     "zlib_drv",
-    NULL,                           /* finish */
-    NULL,                           /* handle */
+    nullptr,                           /* finish */
+    nullptr,                           /* handle */
     zlib_ctl,
-    NULL,                           /* timeout */
+    nullptr,                           /* timeout */
     zlib_outputv,
-    NULL,                           /* read_async */
+    nullptr,                           /* read_async */
     zlib_flush,
-    NULL,                           /* call */
-    NULL,                           /* event */
+    nullptr,                           /* call */
+    nullptr,                           /* event */
     (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     ERL_DRV_FLAG_USE_PORT_LOCKING,
-    NULL,                           /* handle2 */
-    NULL,                           /* process_exit */
+    nullptr,                           /* handle2 */
+    nullptr,                           /* process_exit */
 };
 
 typedef enum {
@@ -209,9 +209,9 @@ static ErlDrvSSizeT zlib_value(int value, char** rbuf, ErlDrvSizeT rlen)
 
 static int zlib_output_init(ZLibData* d)
 {
-    if (d->bin != NULL)
+    if (d->bin != nullptr)
 	driver_free_binary(d->bin);
-    if ((d->bin = driver_alloc_binary(d->binsz_need)) == NULL)
+    if ((d->bin = driver_alloc_binary(d->binsz_need)) == nullptr)
 	return -1;
     d->binsz = d->binsz_need;
     d->s.next_out = (unsigned char*)d->bin->orig_bytes;
@@ -225,14 +225,14 @@ static int zlib_output_init(ZLibData* d)
  */
 static int zlib_output(ZLibData* d)
 {
-    if (d->bin != NULL) {
+    if (d->bin != nullptr) {
 	int len = d->binsz - d->s.avail_out;
 	if (len > 0) {
-	    if (driver_output_binary(d->port, NULL, 0, d->bin, 0, len) < 0) 
+	    if (driver_output_binary(d->port, nullptr, 0, d->bin, 0, len) < 0) 
 		return -1;
 	}
 	driver_free_binary(d->bin);
-	d->bin = NULL;
+	d->bin = nullptr;
 	d->binsz = 0;
     }
     return zlib_output_init(d);
@@ -242,7 +242,7 @@ static int zlib_inflate(ZLibData* d, int flush)
 {
     int res = Z_OK;
 
-    if ((d->bin == NULL) && (zlib_output_init(d) < 0)) {
+    if ((d->bin == nullptr) && (zlib_output_init(d) < 0)) {
 	errno = ENOMEM;
 	return Z_ERRNO;
     }
@@ -299,7 +299,7 @@ static int zlib_deflate(ZLibData* d, int flush)
 {
     int res = Z_OK;
 
-    if ((d->bin == NULL) && (zlib_output_init(d) < 0)) {
+    if ((d->bin == nullptr) && (zlib_output_init(d) < 0)) {
 	errno = ENOMEM;
 	return Z_ERRNO;
     }
@@ -377,7 +377,7 @@ static ErlDrvData zlib_start(ErlDrvPort port, char* buf)
 {
     ZLibData* d;
 
-    if ((d = (ZLibData*) driver_alloc(sizeof(ZLibData))) == NULL)
+    if ((d = (ZLibData*) driver_alloc(sizeof(ZLibData))) == nullptr)
         return ERL_DRV_ERROR_GENERAL;
 
     memset(&d->s, 0, sizeof(z_stream));
@@ -389,7 +389,7 @@ static ErlDrvData zlib_start(ErlDrvPort port, char* buf)
 
     d->port      = port;
     d->state     = ST_NONE;
-    d->bin       = NULL;
+    d->bin       = nullptr;
     d->binsz     = 0;
     d->binsz_need = DEFAULT_BUFSZ;
     d->crc       = crc32(0L, Z_NULL, 0);
@@ -408,7 +408,7 @@ static void zlib_stop(ErlDrvData e)
     else if (d->state == ST_INFLATE)
 	inflateEnd(&d->s);
 
-    if (d->bin != NULL)
+    if (d->bin != nullptr)
 	driver_free_binary(d->bin);
 
     driver_free(d);
@@ -582,10 +582,10 @@ static ErlDrvSSizeT zlib_ctl(ErlDrvData drv_data, unsigned int command, char *bu
 	    goto badarg;
 	if (d->binsz_need != need) {
 	    d->binsz_need = need;
-	    if (d->bin != NULL) {
+	    if (d->bin != nullptr) {
 		if (d->s.avail_out == d->binsz) {
 		    driver_free_binary(d->bin);
-		    d->bin = NULL;
+		    d->bin = nullptr;
 		    d->binsz = 0;
 		}
 		else

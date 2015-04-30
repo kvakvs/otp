@@ -199,7 +199,7 @@ erts_cleanup_funs_on_purge(BeamInstr* start, BeamInstr* end)
 {
     int limit;
     HashBucket** bucket;
-    ErlFunEntry* to_delete = NULL;
+    ErlFunEntry* to_delete = nullptr;
     int i;
 
     erts_fun_write_lock();
@@ -223,7 +223,7 @@ erts_cleanup_funs_on_purge(BeamInstr* start, BeamInstr* end)
 	}
     }
 
-    while (to_delete != NULL) {
+    while (to_delete != nullptr) {
 	ErlFunEntry* next = (ErlFunEntry *) to_delete->address;
 	erts_erase_fun_entry_unlocked(to_delete);
 	to_delete = next;
@@ -291,7 +291,7 @@ fun_alloc(ErlFunEntry* template_)
     erts_refc_init(&obj->refc, -1);
     obj->address = unloaded_fun;
 #ifdef HIPE
-    obj->native_address = NULL;
+    obj->native_address = nullptr;
 #endif
     return obj;
 }

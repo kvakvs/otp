@@ -48,7 +48,7 @@ typedef struct erl_off_heap {
 
 #define ERTS_INIT_OFF_HEAP(OHP)			\
     do {					\
-	(OHP)->first = NULL;			\
+        (OHP)->first = nullptr;			\
 	(OHP)->overhead = 0;			\
     } while (0)
 #include "external.h"
@@ -136,7 +136,7 @@ do {									\
 	*(P)->msg.last = (P)->msg_inq.first;				\
 	(P)->msg.last = (P)->msg_inq.last;				\
 	(P)->msg.len += (P)->msg_inq.len;				\
-	(P)->msg_inq.first = NULL;					\
+        (P)->msg_inq.first = nullptr;					\
 	(P)->msg_inq.last = &(P)->msg_inq.first;			\
 	(P)->msg_inq.len = 0;						\
     }									\
@@ -163,7 +163,7 @@ do {									\
      ErlMessage* __mp = (msgp)->next; \
      *(p)->msg.save = __mp; \
      (p)->msg.len--; \
-     if (__mp == NULL) \
+     if (__mp == nullptr) \
          (p)->msg.last = (p)->msg.save; \
      (p)->msg.mark = 0; \
 } while(0)
@@ -205,7 +205,7 @@ do {									\
 	}								\
 	else {								\
 	    { SWPO ; }							\
-	    (FC) -= erts_garbage_collect((P), 0, NULL, 0);		\
+            (FC) -= erts_garbage_collect((P), 0, nullptr, 0);		\
 	    { SWPI ; }							\
 	}								\
 	ASSERT(!(M)->data.attached);					\
@@ -219,10 +219,10 @@ do {									\
 
 #define ERTS_INIT_HEAP_FRAG(HEAP_FRAG_P, DATA_WORDS)	\
 do {							\
-    (HEAP_FRAG_P)->next = NULL;				\
+    (HEAP_FRAG_P)->next = nullptr;				\
     (HEAP_FRAG_P)->alloc_size = (DATA_WORDS);		\
     (HEAP_FRAG_P)->used_size = (DATA_WORDS);            \
-    (HEAP_FRAG_P)->off_heap.first = NULL; 	        \
+    (HEAP_FRAG_P)->off_heap.first = nullptr; 	        \
     (HEAP_FRAG_P)->off_heap.overhead = 0;		\
 } while (0)
 
@@ -261,7 +261,7 @@ ERTS_GLB_INLINE Uint erts_msg_used_frag_sz(const ErlMessage *msg)
 {
     const ErlHeapFragment *bp;
     Uint sz = 0;
-    for (bp = msg->data.heap_frag; bp!=NULL; bp=bp->next) {
+    for (bp = msg->data.heap_frag; bp!=nullptr; bp=bp->next) {
 	sz += bp->used_size;
     }
     return sz;
