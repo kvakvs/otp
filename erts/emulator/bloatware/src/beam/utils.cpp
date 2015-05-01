@@ -290,18 +290,18 @@ erts_list_length(Eterm list)
 }
 
 static const struct {
-  Sint64 mask;
+  int64_t mask;
   int bits;
 } fib_data[] = {{ERTS_I64_LITERAL(0x2), 1},
   {ERTS_I64_LITERAL(0xc), 2},
   {ERTS_I64_LITERAL(0xf0), 4},
   {ERTS_I64_LITERAL(0xff00), 8},
   {ERTS_I64_LITERAL(0xffff0000), 16},
-  {ERTS_I64_LITERAL((Sint64)0xffffffff00000000), 32}
+  {ERTS_I64_LITERAL((int64_t)0xffffffff00000000), 32}
 };
 
 static ERTS_INLINE int
-fit_in_bits(Sint64 value, int start)
+fit_in_bits(int64_t value, int start)
 {
   int bits = 0;
   int i;
@@ -318,14 +318,14 @@ fit_in_bits(Sint64 value, int start)
   return bits;
 }
 
-int erts_fit_in_bits_int64(Sint64 value)
+int erts_fit_in_bits_int64(int64_t value)
 {
   return fit_in_bits(value, 5);
 }
 
 int erts_fit_in_bits_int32(int32_t value)
 {
-  return fit_in_bits((Sint64)(uint32_t) value, 4);
+  return fit_in_bits((int64_t)(uint32_t) value, 4);
 }
 
 int
@@ -458,7 +458,7 @@ erts_bld_uword(Uint **hpp, Uint *szp, UWord uw)
 
 
 Eterm
-erts_bld_uint64(Uint **hpp, Uint *szp, Uint64 ui64)
+erts_bld_uint64(Uint **hpp, Uint *szp, uint64_t ui64)
 {
   Eterm res = THE_NON_VALUE;
 
@@ -480,7 +480,7 @@ erts_bld_uint64(Uint **hpp, Uint *szp, Uint64 ui64)
 }
 
 Eterm
-erts_bld_sint64(Uint **hpp, Uint *szp, Sint64 si64)
+erts_bld_sint64(Uint **hpp, Uint *szp, int64_t si64)
 {
   Eterm res = THE_NON_VALUE;
 
@@ -4809,61 +4809,61 @@ erts_smp_interval_init(erts_interval_t *icp)
 #endif
 }
 
-static ERTS_INLINE Uint64
+static ERTS_INLINE uint64_t
 step_interval_nob(erts_interval_t *icp)
 {
-  return (Uint64) erts_atomic64_inc_read_nob(&icp->counter.atomic);
+  return (uint64_t) erts_atomic64_inc_read_nob(&icp->counter.atomic);
 }
 
-static ERTS_INLINE Uint64
+static ERTS_INLINE uint64_t
 step_interval_relb(erts_interval_t *icp)
 {
-  return (Uint64) erts_atomic64_inc_read_relb(&icp->counter.atomic);
+  return (uint64_t) erts_atomic64_inc_read_relb(&icp->counter.atomic);
 }
 
 
-static ERTS_INLINE Uint64
-ensure_later_interval_nob(erts_interval_t *icp, Uint64 ic)
+static ERTS_INLINE uint64_t
+ensure_later_interval_nob(erts_interval_t *icp, uint64_t ic)
 {
-  Uint64 curr_ic;
-  curr_ic = (Uint64) erts_atomic64_read_nob(&icp->counter.atomic);
+  uint64_t curr_ic;
+  curr_ic = (uint64_t) erts_atomic64_read_nob(&icp->counter.atomic);
 
   if (curr_ic > ic) {
     return curr_ic;
   }
 
-  return (Uint64) erts_atomic64_inc_read_nob(&icp->counter.atomic);
+  return (uint64_t) erts_atomic64_inc_read_nob(&icp->counter.atomic);
 }
 
 
-static ERTS_INLINE Uint64
-ensure_later_interval_acqb(erts_interval_t *icp, Uint64 ic)
+static ERTS_INLINE uint64_t
+ensure_later_interval_acqb(erts_interval_t *icp, uint64_t ic)
 {
-  Uint64 curr_ic;
-  curr_ic = (Uint64) erts_atomic64_read_acqb(&icp->counter.atomic);
+  uint64_t curr_ic;
+  curr_ic = (uint64_t) erts_atomic64_read_acqb(&icp->counter.atomic);
 
   if (curr_ic > ic) {
     return curr_ic;
   }
 
-  return (Uint64) erts_atomic64_inc_read_acqb(&icp->counter.atomic);
+  return (uint64_t) erts_atomic64_inc_read_acqb(&icp->counter.atomic);
 }
 
-Uint64
+uint64_t
 erts_step_interval_nob(erts_interval_t *icp)
 {
   ASSERT(!icp->smp_api);
   return step_interval_nob(icp);
 }
 
-Uint64
+uint64_t
 erts_step_interval_relb(erts_interval_t *icp)
 {
   ASSERT(!icp->smp_api);
   return step_interval_relb(icp);
 }
 
-Uint64
+uint64_t
 erts_smp_step_interval_nob(erts_interval_t *icp)
 {
   ASSERT(icp->smp_api);
@@ -4874,7 +4874,7 @@ erts_smp_step_interval_nob(erts_interval_t *icp)
 #endif
 }
 
-Uint64
+uint64_t
 erts_smp_step_interval_relb(erts_interval_t *icp)
 {
   ASSERT(icp->smp_api);
@@ -4885,22 +4885,22 @@ erts_smp_step_interval_relb(erts_interval_t *icp)
 #endif
 }
 
-Uint64
-erts_ensure_later_interval_nob(erts_interval_t *icp, Uint64 ic)
+uint64_t
+erts_ensure_later_interval_nob(erts_interval_t *icp, uint64_t ic)
 {
   ASSERT(!icp->smp_api);
   return ensure_later_interval_nob(icp, ic);
 }
 
-Uint64
-erts_ensure_later_interval_acqb(erts_interval_t *icp, Uint64 ic)
+uint64_t
+erts_ensure_later_interval_acqb(erts_interval_t *icp, uint64_t ic)
 {
   ASSERT(!icp->smp_api);
   return ensure_later_interval_acqb(icp, ic);
 }
 
-Uint64
-erts_smp_ensure_later_interval_nob(erts_interval_t *icp, Uint64 ic)
+uint64_t
+erts_smp_ensure_later_interval_nob(erts_interval_t *icp, uint64_t ic)
 {
   ASSERT(icp->smp_api);
 #ifdef ERTS_SMP
@@ -4916,8 +4916,8 @@ erts_smp_ensure_later_interval_nob(erts_interval_t *icp, Uint64 ic)
 #endif
 }
 
-Uint64
-erts_smp_ensure_later_interval_acqb(erts_interval_t *icp, Uint64 ic)
+uint64_t
+erts_smp_ensure_later_interval_acqb(erts_interval_t *icp, uint64_t ic)
 {
   ASSERT(icp->smp_api);
 #ifdef ERTS_SMP
@@ -4937,16 +4937,16 @@ erts_smp_ensure_later_interval_acqb(erts_interval_t *icp, Uint64 ic)
  * A millisecond timestamp without time correction where there's no hrtime
  * - for tracing on "long" things...
  */
-Uint64 erts_timestamp_millis(void)
+uint64_t erts_timestamp_millis(void)
 {
 #ifdef HAVE_GETHRTIME
-  return (Uint64)(sys_gethrtime() / 1000000);
+  return (uint64_t)(sys_gethrtime() / 1000000);
 #else
-  Uint64 res;
+  uint64_t res;
   SysTimeval tv;
   sys_gettimeofday(&tv);
-  res = (Uint64) tv.tv_sec * 1000000;
-  res += (Uint64) tv.tv_usec;
+  res = (uint64_t) tv.tv_sec * 1000000;
+  res += (uint64_t) tv.tv_usec;
   return (res / 1000);
 #endif
 }

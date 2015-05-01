@@ -43,7 +43,7 @@ struct erl_off_heap_header {
 
 typedef struct erl_off_heap {
   struct erl_off_heap_header *first;
-  Uint64 overhead;     /* Administrative overhead (used to force GC). */
+  uint64_t overhead;     /* Administrative overhead (used to force GC). */
 } ErlOffHeap;
 
 #define ERTS_INIT_OFF_HEAP(OHP)     \

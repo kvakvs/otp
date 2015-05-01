@@ -361,12 +361,12 @@ typedef UWord BeamInstr;
 #ifndef HAVE_INT64
 #if SIZEOF_LONG == 8
 #define HAVE_INT64 1
-typedef unsigned long Uint64;
-typedef long          Sint64;
+typedef unsigned long uint64_t;
+typedef long          int64_t;
 #elif SIZEOF_LONG_LONG == 8
 #define HAVE_INT64 1
-typedef unsigned long long Uint64;
-typedef long long          Sint64;
+typedef unsigned long long uint64_t;
+typedef long long          int64_t;
 #else
 #define HAVE_INT64 0
 #endif
@@ -399,7 +399,7 @@ typedef short          int16_t;
 //#endif
 
 #if defined(ARCH_64) && !HAVE_INT64
-#error 64-bit architecture, but no appropriate type to use for Uint64 and Sint64 found
+#error 64-bit architecture, but no appropriate type to use for uint64_t and int64_t found
 #endif
 
 #ifdef WORDS_BIGENDIAN
@@ -722,12 +722,12 @@ void get_localtime(int *year, int *month, int *day,
                    int *hour, int *minute, int *second);
 void get_universaltime(int *year, int *month, int *day,
                        int *hour, int *minute, int *second);
-int seconds_to_univ(Sint64 seconds,
+int seconds_to_univ(int64_t seconds,
                     Sint *year, Sint *month, Sint *day,
                     Sint *hour, Sint *minute, Sint *second);
 int univ_to_seconds(Sint year, Sint month, Sint day,
                     Sint hour, Sint minute, Sint second,
-                    Sint64 *seconds);
+                    int64_t *seconds);
 int univ_to_local(
   Sint *year, Sint *month, Sint *day,
   Sint *hour, Sint *minute, Sint *second);
@@ -966,23 +966,23 @@ extern int erts_use_kernel_poll;
 
 /* Standard set of integer macros  .. */
 
-#define get_int64(s) (((Uint64)(((uint8_t*) (s))[0]) << 56) | \
-                      (((Uint64)((uint8_t*) (s))[1]) << 48) | \
-                      (((Uint64)((uint8_t*) (s))[2]) << 40) | \
-                      (((Uint64)((uint8_t*) (s))[3]) << 32) | \
-                      (((Uint64)((uint8_t*) (s))[4]) << 24) | \
-                      (((Uint64)((uint8_t*) (s))[5]) << 16) | \
-                      (((Uint64)((uint8_t*) (s))[6]) << 8)  | \
-                      (((Uint64)((uint8_t*) (s))[7])))
+#define get_int64(s) (((uint64_t)(((uint8_t*) (s))[0]) << 56) | \
+                      (((uint64_t)((uint8_t*) (s))[1]) << 48) | \
+                      (((uint64_t)((uint8_t*) (s))[2]) << 40) | \
+                      (((uint64_t)((uint8_t*) (s))[3]) << 32) | \
+                      (((uint64_t)((uint8_t*) (s))[4]) << 24) | \
+                      (((uint64_t)((uint8_t*) (s))[5]) << 16) | \
+                      (((uint64_t)((uint8_t*) (s))[6]) << 8)  | \
+                      (((uint64_t)((uint8_t*) (s))[7])))
 
-#define put_int64(i, s) do {((char*)(s))[0] = (char)((Sint64)(i) >> 56) & 0xff;\
-                            ((char*)(s))[1] = (char)((Sint64)(i) >> 48) & 0xff;\
-                            ((char*)(s))[2] = (char)((Sint64)(i) >> 40) & 0xff;\
-                            ((char*)(s))[3] = (char)((Sint64)(i) >> 32) & 0xff;\
-                            ((char*)(s))[4] = (char)((Sint64)(i) >> 24) & 0xff;\
-                            ((char*)(s))[5] = (char)((Sint64)(i) >> 16) & 0xff;\
-                            ((char*)(s))[6] = (char)((Sint64)(i) >> 8)  & 0xff;\
-                            ((char*)(s))[7] = (char)((Sint64)(i))       & 0xff;\
+#define put_int64(i, s) do {((char*)(s))[0] = (char)((int64_t)(i) >> 56) & 0xff;\
+                            ((char*)(s))[1] = (char)((int64_t)(i) >> 48) & 0xff;\
+                            ((char*)(s))[2] = (char)((int64_t)(i) >> 40) & 0xff;\
+                            ((char*)(s))[3] = (char)((int64_t)(i) >> 32) & 0xff;\
+                            ((char*)(s))[4] = (char)((int64_t)(i) >> 24) & 0xff;\
+                            ((char*)(s))[5] = (char)((int64_t)(i) >> 16) & 0xff;\
+                            ((char*)(s))[6] = (char)((int64_t)(i) >> 8)  & 0xff;\
+                            ((char*)(s))[7] = (char)((int64_t)(i))       & 0xff;\
                            } while (0)
 
 #define get_int32(s) ((((uint8_t*) (s))[0] << 24) | \

@@ -31,57 +31,57 @@ typedef struct {
   int smp_api;
 #endif
   union {
-    Uint64 not_atomic;
+    uint64_t not_atomic;
     erts_atomic64_t atomic;
   } counter;
 } erts_interval_t;
 
 void erts_interval_init(erts_interval_t *);
 void erts_smp_interval_init(erts_interval_t *);
-Uint64 erts_step_interval_nob(erts_interval_t *);
-Uint64 erts_step_interval_relb(erts_interval_t *);
-Uint64 erts_smp_step_interval_nob(erts_interval_t *);
-Uint64 erts_smp_step_interval_relb(erts_interval_t *);
-Uint64 erts_ensure_later_interval_nob(erts_interval_t *, Uint64);
-Uint64 erts_ensure_later_interval_acqb(erts_interval_t *, Uint64);
-Uint64 erts_smp_ensure_later_interval_nob(erts_interval_t *, Uint64);
-Uint64 erts_smp_ensure_later_interval_acqb(erts_interval_t *, Uint64);
-ERTS_GLB_INLINE Uint64 erts_current_interval_nob__(erts_interval_t *);
-ERTS_GLB_INLINE Uint64 erts_current_interval_acqb__(erts_interval_t *);
-ERTS_GLB_INLINE Uint64 erts_current_interval_nob(erts_interval_t *);
-ERTS_GLB_INLINE Uint64 erts_current_interval_acqb(erts_interval_t *);
-ERTS_GLB_INLINE Uint64 erts_smp_current_interval_nob(erts_interval_t *);
-ERTS_GLB_INLINE Uint64 erts_smp_current_interval_acqb(erts_interval_t *);
+uint64_t erts_step_interval_nob(erts_interval_t *);
+uint64_t erts_step_interval_relb(erts_interval_t *);
+uint64_t erts_smp_step_interval_nob(erts_interval_t *);
+uint64_t erts_smp_step_interval_relb(erts_interval_t *);
+uint64_t erts_ensure_later_interval_nob(erts_interval_t *, uint64_t);
+uint64_t erts_ensure_later_interval_acqb(erts_interval_t *, uint64_t);
+uint64_t erts_smp_ensure_later_interval_nob(erts_interval_t *, uint64_t);
+uint64_t erts_smp_ensure_later_interval_acqb(erts_interval_t *, uint64_t);
+ERTS_GLB_INLINE uint64_t erts_current_interval_nob__(erts_interval_t *);
+ERTS_GLB_INLINE uint64_t erts_current_interval_acqb__(erts_interval_t *);
+ERTS_GLB_INLINE uint64_t erts_current_interval_nob(erts_interval_t *);
+ERTS_GLB_INLINE uint64_t erts_current_interval_acqb(erts_interval_t *);
+ERTS_GLB_INLINE uint64_t erts_smp_current_interval_nob(erts_interval_t *);
+ERTS_GLB_INLINE uint64_t erts_smp_current_interval_acqb(erts_interval_t *);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
-ERTS_GLB_INLINE Uint64
+ERTS_GLB_INLINE uint64_t
 erts_current_interval_nob__(erts_interval_t *icp)
 {
-  return (Uint64) erts_atomic64_read_nob(&icp->counter.atomic);
+  return (uint64_t) erts_atomic64_read_nob(&icp->counter.atomic);
 }
 
-ERTS_GLB_INLINE Uint64
+ERTS_GLB_INLINE uint64_t
 erts_current_interval_acqb__(erts_interval_t *icp)
 {
-  return (Uint64) erts_atomic64_read_acqb(&icp->counter.atomic);
+  return (uint64_t) erts_atomic64_read_acqb(&icp->counter.atomic);
 }
 
-ERTS_GLB_INLINE Uint64
+ERTS_GLB_INLINE uint64_t
 erts_current_interval_nob(erts_interval_t *icp)
 {
   ASSERT(!icp->smp_api);
   return erts_current_interval_nob__(icp);
 }
 
-ERTS_GLB_INLINE Uint64
+ERTS_GLB_INLINE uint64_t
 erts_current_interval_acqb(erts_interval_t *icp)
 {
   ASSERT(!icp->smp_api);
   return erts_current_interval_acqb__(icp);
 }
 
-ERTS_GLB_INLINE Uint64
+ERTS_GLB_INLINE uint64_t
 erts_smp_current_interval_nob(erts_interval_t *icp)
 {
   ASSERT(icp->smp_api);
@@ -92,7 +92,7 @@ erts_smp_current_interval_nob(erts_interval_t *icp)
 #endif
 }
 
-ERTS_GLB_INLINE Uint64
+ERTS_GLB_INLINE uint64_t
 erts_smp_current_interval_acqb(erts_interval_t *icp)
 {
   ASSERT(icp->smp_api);
@@ -111,7 +111,7 @@ erts_smp_current_interval_acqb(erts_interval_t *icp)
 void erts_silence_warn_unused_result(long unused);
 
 
-int erts_fit_in_bits_int64(Sint64);
+int erts_fit_in_bits_int64(int64_t);
 int erts_fit_in_bits_int32(int32_t);
 int erts_list_length(Eterm);
 int erts_is_builtin(Eterm, Eterm, int);
@@ -127,8 +127,8 @@ Eterm erts_get_ethread_info(struct process *c_p);
 Eterm erts_bld_atom(Uint **hpp, Uint *szp, char *str);
 Eterm erts_bld_uint(Uint **hpp, Uint *szp, Uint ui);
 Eterm erts_bld_uword(Uint **hpp, Uint *szp, UWord uw);
-Eterm erts_bld_uint64(Uint **hpp, Uint *szp, Uint64 ui64);
-Eterm erts_bld_sint64(Uint **hpp, Uint *szp, Sint64 si64);
+Eterm erts_bld_uint64(Uint **hpp, Uint *szp, uint64_t ui64);
+Eterm erts_bld_sint64(Uint **hpp, Uint *szp, int64_t si64);
 Eterm erts_bld_cons(Uint **hpp, Uint *szp, Eterm car, Eterm cdr);
 Eterm erts_bld_tuple(Uint **hpp, Uint *szp, Uint arity, ...);
 #define erts_bld_tuple2(H,S,E1,E2) erts_bld_tuple(H,S,2,E1,E2)

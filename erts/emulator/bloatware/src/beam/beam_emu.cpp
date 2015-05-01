@@ -750,13 +750,13 @@ extern int count_instructions;
 
 #if defined(ARCH_64) && !HALFWORD_HEAP
 #define BsSafeMul(A, B, Fail, Target)   \
-   do { Uint64 _res = (A) * (B);    \
+   do { uint64_t _res = (A) * (B);    \
       if (_res / B != A) { Fail; }    \
       Target = _res;        \
    } while (0)
 #else
 #define BsSafeMul(A, B, Fail, Target)     \
-   do { Uint64 _res = (Uint64)(A) * (Uint64)(B);  \
+   do { uint64_t _res = (uint64_t)(A) * (uint64_t)(B);  \
       if ((_res >> (8*sizeof(Uint))) != 0) { Fail; }  \
       Target = _res;          \
    } while (0)
@@ -1176,7 +1176,7 @@ void process_main(void)
 
   Eterm pt_arity;   /* Used by do_put_tuple */
 
-  Uint64 start_time = 0;          /* Monitor long schedule */
+  uint64_t start_time = 0;          /* Monitor long schedule */
   BeamInstr *start_time_i = nullptr;
 
   ERL_BITS_DECLARE_STATEP; /* Has to be last declaration */
@@ -1208,7 +1208,7 @@ do_schedule:
 do_schedule1:
 
   if (start_time != 0) {
-    Sint64 diff = erts_timestamp_millis() - start_time;
+    int64_t diff = erts_timestamp_millis() - start_time;
 
     if (diff > 0 && (Uint) diff >  erts_system_monitor_long_schedule
 #ifdef ERTS_DIRTY_SCHEDULERS
@@ -3927,7 +3927,7 @@ do_bs_init_bits:
        * Operands: NotUsed Live Dst
        */
 do_bs_init_bits_known:
-      num_bytes = ((Uint64)num_bits + (Uint64)7) >> 3;
+      num_bytes = ((uint64_t)num_bits + (uint64_t)7) >> 3;
 
       if (num_bits & 7) {
         alloc += ERL_SUB_BIN_SIZE;

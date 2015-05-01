@@ -882,7 +882,7 @@ void erl_drv_thr_init(void);
 /* utils.c */
 void erts_cleanup_offheap(ErlOffHeap *offheap);
 
-Uint64 erts_timestamp_millis(void);
+uint64_t erts_timestamp_millis(void);
 
 Export *erts_find_function(Eterm, Eterm, unsigned int, ErtsCodeIndex);
 

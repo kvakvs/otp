@@ -384,7 +384,7 @@ static void
 insert_timer(ErlTimer *p, Uint t)
 {
   Uint tm;
-  Uint64 ticks;
+  uint64_t ticks;
 
   /* The current slot (tiw_pos) in timing wheel is the next slot to be
    * be processed. Hence no extra time tick is needed.
@@ -394,7 +394,7 @@ insert_timer(ErlTimer *p, Uint t)
   ticks = (t + (TIW_ITIME - 1)) / TIW_ITIME;
 
   /*
-   * Ticks must be a Uint64, or the addition may overflow here,
+   * Ticks must be a uint64_t, or the addition may overflow here,
    * resulting in an incorrect value for p->count below.
    */
   ticks += do_time_update(); /* Add backlog of unprocessed time */

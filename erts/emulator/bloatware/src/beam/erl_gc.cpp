@@ -210,7 +210,7 @@ erts_init_gc(void)
    */
 
   max_heap_size = sizeof(Eterm) < 8 ? (Sint)((~(Uint)0) / (sizeof(Eterm))) :
-                  (Sint)(((Uint64)1 << 53) / sizeof(Eterm));
+                  (Sint)(((uint64_t)1 << 53) / sizeof(Eterm));
 
   /* Growth stage 2 - 20% growth */
   /* At 1.3 mega words heap, we start to slow down. */
@@ -2339,8 +2339,8 @@ shrink_new_heap(Process *p, Uint new_sz, Eterm *objv, int nobj)
   HEAP_SIZE(p) = new_sz;
 }
 
-static Uint64
-do_next_vheap_size(Uint64 vheap, Uint64 vheap_sz)
+static uint64_t
+do_next_vheap_size(uint64_t vheap, uint64_t vheap_sz)
 {
 
   /*                grow
@@ -2358,12 +2358,12 @@ do_next_vheap_size(Uint64 vheap, Uint64 vheap_sz)
    *          ----------------------
    */
 
-  if ((Uint64) vheap / 3 > (Uint64)(vheap_sz / 4)) {
-    Uint64 new_vheap_sz = vheap_sz;
+  if ((uint64_t) vheap / 3 > (uint64_t)(vheap_sz / 4)) {
+    uint64_t new_vheap_sz = vheap_sz;
 
-    while ((Uint64) vheap / 3 > (Uint64)(vheap_sz / 4)) {
+    while ((uint64_t) vheap / 3 > (uint64_t)(vheap_sz / 4)) {
       /* the golden ratio = 1.618 */
-      new_vheap_sz = (Uint64) vheap_sz * 1.618;
+      new_vheap_sz = (uint64_t) vheap_sz * 1.618;
 
       if (new_vheap_sz < vheap_sz) {
         return vheap_sz;
@@ -2375,7 +2375,7 @@ do_next_vheap_size(Uint64 vheap, Uint64 vheap_sz)
     return vheap_sz;
   }
 
-  if (vheap < (Uint64)(vheap_sz / 4)) {
+  if (vheap < (uint64_t)(vheap_sz / 4)) {
     return (vheap_sz >> 1);
   }
 
@@ -2383,10 +2383,10 @@ do_next_vheap_size(Uint64 vheap, Uint64 vheap_sz)
 
 }
 
-static Uint64
-next_vheap_size(Process *p, Uint64 vheap, Uint64 vheap_sz)
+static uint64_t
+next_vheap_size(Process *p, uint64_t vheap, uint64_t vheap_sz)
 {
-  Uint64 new_vheap_sz = do_next_vheap_size(vheap, vheap_sz);
+  uint64_t new_vheap_sz = do_next_vheap_size(vheap, vheap_sz);
   return new_vheap_sz < p->min_vheap_size ? p->min_vheap_size : new_vheap_sz;
 }
 
@@ -2457,7 +2457,7 @@ sweep_off_heap(Process *p, int fullsweep)
   struct erl_off_heap_header **prev;
   char *oheap = nullptr;
   Uint oheap_sz = 0;
-  Uint64 bin_vheap = 0;
+  uint64_t bin_vheap = 0;
 #ifdef DEBUG
   int seen_mature = 0;
 #endif
@@ -2817,7 +2817,7 @@ init_gc_info(ErtsGCInfo *gcip)
 static void
 reply_gc_info(void *vgcirp)
 {
-  Uint64 reclaimed = 0, garbage_cols = 0;
+  uint64_t reclaimed = 0, garbage_cols = 0;
   ErtsSchedulerData *esdp = erts_get_scheduler_data();
   ErtsGCInfoReq *gcirp = (ErtsGCInfoReq *) vgcirp;
   ErtsProcLocks rp_locks = (gcirp->req_sched == esdp->no

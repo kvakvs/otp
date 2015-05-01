@@ -142,18 +142,18 @@ do {                  \
 
 #define PUT_VSZ_UI64(P, M, V)           \
 do {                  \
-    Uint64 v__ = (Uint64) (V);            \
-    if (v__ >= (((Uint64) 1) << 32)) {          \
-  if (v__ >= (((Uint64) 1) << 48)) {        \
-      if (v__ >= (((Uint64) 1) << 56)) (M) = 7; else (M) = 6; \
+    uint64_t v__ = (uint64_t) (V);            \
+    if (v__ >= (((uint64_t) 1) << 32)) {          \
+  if (v__ >= (((uint64_t) 1) << 48)) {        \
+      if (v__ >= (((uint64_t) 1) << 56)) (M) = 7; else (M) = 6; \
   } else {              \
-      if (v__ >= (((Uint64) 1) << 40)) (M) = 5; else (M) = 4; \
+      if (v__ >= (((uint64_t) 1) << 40)) (M) = 5; else (M) = 4; \
   }               \
     } else {                \
-  if (v__ >= (((Uint64) 1) << 16)) {        \
-      if (v__ >= (((Uint64) 1) << 24)) (M) = 3; else (M) = 2; \
+  if (v__ >= (((uint64_t) 1) << 16)) {        \
+      if (v__ >= (((uint64_t) 1) << 24)) (M) = 3; else (M) = 2; \
   } else {              \
-      if (v__ >= (((Uint64) 1) << 8)) (M) = 1; else (M) = 0;  \
+      if (v__ >= (((uint64_t) 1) << 8)) (M) = 1; else (M) = 0;  \
   }               \
     }                     \
     switch ((M)) {              \

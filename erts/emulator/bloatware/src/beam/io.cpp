@@ -5788,7 +5788,7 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
     case ERL_DRV_INT:  /* signed int argument */
       ERTS_DDT_CHK_ENOUGH_ARGS(1);
 #if HALFWORD_HEAP
-      erts_bld_sint64(nullptr, &need, (Sint64)ptr[0]);
+      erts_bld_sint64(nullptr, &need, (int64_t)ptr[0]);
 #else
 
       /* check for bignum */
@@ -5804,7 +5804,7 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
     case ERL_DRV_UINT:  /* unsigned int argument */
       ERTS_DDT_CHK_ENOUGH_ARGS(1);
 #if HALFWORD_HEAP
-      erts_bld_uint64(nullptr, &need, (Uint64)ptr[0]);
+      erts_bld_uint64(nullptr, &need, (uint64_t)ptr[0]);
 #else
 
       /* check for bignum */
@@ -5819,14 +5819,14 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 
     case ERL_DRV_INT64:  /* pointer to signed 64-bit int argument  */
       ERTS_DDT_CHK_ENOUGH_ARGS(1);
-      erts_bld_sint64(nullptr, &need, *((Sint64 *) ptr[0]));
+      erts_bld_sint64(nullptr, &need, *((int64_t *) ptr[0]));
       ptr++;
       depth++;
       break;
 
     case ERL_DRV_UINT64:  /* pointer to unsigned 64-bit int argument */
       ERTS_DDT_CHK_ENOUGH_ARGS(1);
-      erts_bld_uint64(nullptr, &need, *((Uint64 *) ptr[0]));
+      erts_bld_uint64(nullptr, &need, *((uint64_t *) ptr[0]));
       ptr++;
       depth++;
       break;
@@ -6070,7 +6070,7 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 
     case ERL_DRV_INT:  /* signed int argument */
 #if HALFWORD_HEAP
-      mess = erts_bld_sint64(&hp, nullptr, (Sint64)ptr[0]);
+      mess = erts_bld_sint64(&hp, nullptr, (int64_t)ptr[0]);
 #else
 
       if (IS_SSMALL((Sint)ptr[0])) {
@@ -6086,7 +6086,7 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 
     case ERL_DRV_UINT:  /* unsigned int argument */
 #if HALFWORD_HEAP
-      mess = erts_bld_uint64(&hp, nullptr, (Uint64)ptr[0]);
+      mess = erts_bld_uint64(&hp, nullptr, (uint64_t)ptr[0]);
 #else
 
       if (IS_USMALL(0, (Uint)ptr[0])) {
@@ -6101,12 +6101,12 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
       break;
 
     case ERL_DRV_INT64: /* pointer to unsigned 64-bit int argument */
-      mess = erts_bld_sint64(&hp, nullptr, *((Sint64 *) ptr[0]));
+      mess = erts_bld_sint64(&hp, nullptr, *((int64_t *) ptr[0]));
       ptr++;
       break;
 
     case ERL_DRV_UINT64: /* pointer to unsigned 64-bit int argument */
-      mess = erts_bld_uint64(&hp, nullptr, *((Uint64 *) ptr[0]));
+      mess = erts_bld_uint64(&hp, nullptr, *((uint64_t *) ptr[0]));
       ptr++;
       break;
 

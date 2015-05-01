@@ -4186,7 +4186,7 @@ BIF_RETTYPE universaltime_to_posixtime_1(BIF_ALIST_1)
   Sint year, month, day;
   Sint hour, minute, second;
 
-  Sint64 seconds = 0;
+  int64_t seconds = 0;
   Eterm *hp;
   Uint hsz = 0;
 
@@ -4213,7 +4213,7 @@ BIF_RETTYPE posixtime_to_universaltime_1(BIF_ALIST_1)
   Eterm res1, res2;
   Eterm *hp;
 
-  Sint64 time = 0;
+  int64_t time = 0;
 
   if (!term_to_Sint64(BIF_ARG_1, &time)) {
     BIF_ERROR(BIF_P, BADARG);
@@ -4632,8 +4632,8 @@ BIF_RETTYPE list_to_pid_1(BIF_ALIST_1)
   DistEntry *dep = nullptr;
   char *buf = (char *) erts_alloc(ERTS_ALC_T_TMP, 65);
   /*
-   * Max 'Uint64' has 20 decimal digits. If X, Y, Z in <X.Y.Z>
-   * are 'Uint64's. Max chars are 1 + 20 + 1 + 20 + 1 + 20 + 1 = 64,
+   * Max 'uint64_t' has 20 decimal digits. If X, Y, Z in <X.Y.Z>
+   * are 'uint64_t's. Max chars are 1 + 20 + 1 + 20 + 1 + 20 + 1 = 64,
    * i.e, if the input list is longer than 64 it does not represent
    * a pid.
    */

@@ -139,7 +139,7 @@ int efile_readdir(Efile_error *errInfo, char *name,
                   EFILE_DIR_HANDLE *dir_handle,
                   char *buffer, size_t *size);
 int efile_openfile(Efile_error *errInfo, char *name, int flags,
-                   int *pfd, Sint64 *pSize);
+                   int *pfd, int64_t *pSize);
 void efile_closefile(int fd);
 int efile_fdatasync(Efile_error *errInfo, int fd);
 int efile_fsync(Efile_error *errInfo, int fd);
@@ -153,12 +153,12 @@ int efile_writev(Efile_error *errInfo, int flags, int fd,
 int efile_read(Efile_error *errInfo, int flags, int fd,
                char *buf, size_t count, size_t *pBytesRead);
 int efile_seek(Efile_error *errInfo, int fd,
-               Sint64 offset, int origin, Sint64 *new_location);
+               int64_t offset, int origin, int64_t *new_location);
 int efile_truncate_file(Efile_error *errInfo, int *fd, int flags);
 int efile_pwrite(Efile_error *errInfo, int fd,
-                 char *buf, size_t count, Sint64 offset);
+                 char *buf, size_t count, int64_t offset);
 int efile_pread(Efile_error *errInfo, int fd,
-                Sint64 offset, char *buf, size_t count, size_t *pBytesRead);
+                int64_t offset, char *buf, size_t count, size_t *pBytesRead);
 int efile_readlink(Efile_error *errInfo, char *name,
                    char *buffer, size_t size);
 int efile_altname(Efile_error *errInfo, char *name,
@@ -166,10 +166,10 @@ int efile_altname(Efile_error *errInfo, char *name,
 int efile_link(Efile_error *errInfo, char *old, char *new_);
 int efile_symlink(Efile_error *errInfo, char *old, char *new_);
 int efile_may_openfile(Efile_error *errInfo, char *name);
-int efile_fadvise(Efile_error *errInfo, int fd, Sint64 offset, Sint64 length,
+int efile_fadvise(Efile_error *errInfo, int fd, int64_t offset, int64_t length,
                   int advise);
 #ifdef HAVE_SENDFILE
 int efile_sendfile(Efile_error *errInfo, int in_fd, int out_fd,
-                   off_t *offset, Uint64 *nbytes, struct t_sendfile_hdtl *hdtl);
+                   off_t *offset, uint64_t *nbytes, struct t_sendfile_hdtl *hdtl);
 #endif /* HAVE_SENDFILE */
-int efile_fallocate(Efile_error *errInfo, int fd, Sint64 offset, Sint64 length);
+int efile_fallocate(Efile_error *errInfo, int fd, int64_t offset, int64_t length);

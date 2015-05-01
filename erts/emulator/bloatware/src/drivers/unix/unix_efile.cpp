@@ -381,7 +381,7 @@ efile_openfile(Efile_error *errInfo,  /* Where to return error codes. */
                int flags,   /* Flags to user for opening. */
                int *pfd,    /* Where to store the file
              descriptor. */
-               Sint64 *pSize)   /* Where to store the size of the
+               int64_t *pSize)   /* Where to store the size of the
              file. */
 {
   struct stat statbuf;
@@ -765,7 +765,7 @@ efile_read(Efile_error *errInfo,     /* Where to return error codes. */
 int
 efile_pread(Efile_error *errInfo,     /* Where to return error codes. */
             int fd,         /* File descriptor to read from. */
-            Sint64 offset,            /* Offset in bytes from BOF. */
+            int64_t offset,            /* Offset in bytes from BOF. */
             char *buf,          /* Buffer to read into. */
             size_t count,       /* Number of bytes to read. */
             size_t *pBytesRead)       /* Where to return
@@ -810,7 +810,7 @@ efile_pwrite(Efile_error *errInfo,  /* Where to return error codes. */
              int fd,        /* File descriptor to write to. */
              char *buf,       /* Buffer to write. */
              size_t count,      /* Number of bytes to write. */
-             Sint64 offset)     /* where to write it */
+             int64_t offset)     /* where to write it */
 {
 #if defined(HAVE_PREAD) && defined(HAVE_PWRITE)
   ssize_t written;        /* Bytes written in last operation. */
@@ -854,11 +854,11 @@ efile_pwrite(Efile_error *errInfo,  /* Where to return error codes. */
 int
 efile_seek(Efile_error *errInfo,      /* Where to return error codes. */
            int fd,                    /* File descriptor to do the seek on. */
-           Sint64 offset,             /* Offset in bytes from the given
+           int64_t offset,             /* Offset in bytes from the given
            origin. */
            int origin,                /* Origin of seek (SEEK_SET, SEEK_CUR,
                  SEEK_END). */
-           Sint64 *new_location)      /* Resulting new_ location in file. */
+           int64_t *new_location)      /* Resulting new_ location in file. */
 {
   off_t off, result;
 
@@ -963,8 +963,8 @@ efile_symlink(Efile_error *errInfo, char *old, char *new_)
 }
 
 int
-efile_fadvise(Efile_error *errInfo, int fd, Sint64 offset,
-              Sint64 length, int advise)
+efile_fadvise(Efile_error *errInfo, int fd, int64_t offset,
+              int64_t length, int advise)
 {
 #ifdef HAVE_POSIX_FADVISE
   return check_error(posix_fadvise(fd, offset, length, advise), errInfo);
@@ -1006,9 +1006,9 @@ efile_fadvise(Efile_error *errInfo, int fd, Sint64 offset,
 
 int
 efile_sendfile(Efile_error *errInfo, int in_fd, int out_fd,
-               off_t *offset, Uint64 *nbytes, struct t_sendfile_hdtl *hdtl)
+               off_t *offset, uint64_t *nbytes, struct t_sendfile_hdtl *hdtl)
 {
-  Uint64 written = 0;
+  uint64_t written = 0;
 #if defined(__linux__)
   ssize_t retval;
 
@@ -1114,7 +1114,7 @@ efile_sendfile(Efile_error *errInfo, int in_fd, int out_fd,
 
 #ifdef HAVE_POSIX_FALLOCATE
 static int
-call_posix_fallocate(int fd, Sint64 offset, Sint64 length)
+call_posix_fallocate(int fd, int64_t offset, int64_t length)
 {
   int ret;
 
@@ -1138,7 +1138,7 @@ call_posix_fallocate(int fd, Sint64 offset, Sint64 length)
 #endif /* HAVE_POSIX_FALLOCATE */
 
 int
-efile_fallocate(Efile_error *errInfo, int fd, Sint64 offset, Sint64 length)
+efile_fallocate(Efile_error *errInfo, int fd, int64_t offset, int64_t length)
 {
 #if defined HAVE_FALLOCATE
   /* Linux specific, more efficient than posix_fallocate. */

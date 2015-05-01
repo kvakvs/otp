@@ -62,7 +62,7 @@
 **    sys_gethrtime() will return a SysHrTime (long long) representing
 **    nanoseconds, sys_init_hrtime() will do any initialization.
 ** else
-**    a long (64bit) integer type called Sint64 should be defined.
+**    a long (64bit) integer type called int64_t should be defined.
 **
 ** sys_times() will return clock_ticks since start and
 **    fill in a SysTimes structure (struct tms). Instead of CLK_TCK,
@@ -235,10 +235,10 @@ static void get_tolerant_timeofday(SysTimeval *tv)
 #define get_tolerant_timeofday(tvp) sys_gettimeofday(tvp)
 #else
 
-typedef Sint64 Milli;
+typedef int64_t Milli;
 
 static clock_t init_ct;
-static Sint64 ct_wrap;
+static int64_t ct_wrap;
 static Milli init_tv_m;
 static Milli correction_supress;
 static Milli last_ct_diff;
@@ -300,7 +300,7 @@ static void get_tolerant_timeofday(SysTimeval *tvp)
      on some systems, but I allow for small backward
      jumps to avoid such problems if they exist...*/
   if (last_ct > 100 && current_ct < (last_ct - 100)) {
-    ct_wrap += ((Sint64) 1) << ((sizeof(clock_t) * 8) - 1);
+    ct_wrap += ((int64_t) 1) << ((sizeof(clock_t) * 8) - 1);
   }
 
   last_ct = current_ct;
@@ -728,7 +728,7 @@ static time_t gregday(int year, int month, int day)
 #define SECONDS_PER_HOUR    (60 * SECONDS_PER_MINUTE)
 #define SECONDS_PER_DAY     (24 * SECONDS_PER_HOUR)
 
-int seconds_to_univ(Sint64 time, Sint *year, Sint *month, Sint *day,
+int seconds_to_univ(int64_t time, Sint *year, Sint *month, Sint *day,
                     Sint *hour, Sint *minute, Sint *second)
 {
 
@@ -749,7 +749,7 @@ int seconds_to_univ(Sint64 time, Sint *year, Sint *month, Sint *day,
   *second = tmp  % SECONDS_PER_MINUTE;
 
   days   += 719468;
-  y       = (10000 * ((Sint64)days) + 14780) / 3652425;
+  y       = (10000 * ((int64_t)days) + 14780) / 3652425;
   tmp     = days - (365 * y + y / 4 - y / 100 + y / 400);
 
   if (tmp < 0) {
@@ -766,7 +766,7 @@ int seconds_to_univ(Sint64 time, Sint *year, Sint *month, Sint *day,
 }
 
 int univ_to_seconds(Sint year, Sint month, Sint day, Sint hour, Sint minute, Sint second,
-                    Sint64 *time)
+                    int64_t *time)
 {
   Sint days;
 

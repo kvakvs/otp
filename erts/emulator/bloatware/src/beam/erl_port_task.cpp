@@ -1824,7 +1824,7 @@ erts_port_task_execute(ErtsRunQueue *runq, Port **curr_port_pp)
   int fpe_was_unmasked;
   erts_aint32_t state;
   int active;
-  Uint64 start_time = 0;
+  uint64_t start_time = 0;
 
   ERTS_SMP_LC_ASSERT(erts_smp_lc_runq_is_locked(runq));
 
@@ -1982,7 +1982,7 @@ erts_port_task_execute(ErtsRunQueue *runq, Port **curr_port_pp)
     reds += erts_port_driver_callback_epilogue(pp, &state);
 
     if (start_time != 0) {
-      Sint64 diff = erts_timestamp_millis() - start_time;
+      int64_t diff = erts_timestamp_millis() - start_time;
 
       if (diff > 0 && (Uint) diff >  erts_system_monitor_long_schedule) {
         monitor_long_schedule_port(pp, ptp->type, (Uint) diff);

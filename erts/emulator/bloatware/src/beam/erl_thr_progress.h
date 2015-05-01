@@ -48,7 +48,7 @@ void erts_thr_progress_block(void);
 void erts_thr_progress_unblock(void);
 int erts_thr_progress_is_blocking(void);
 
-typedef Uint64 ErtsThrPrgrVal;
+typedef uint64_t ErtsThrPrgrVal;
 
 #define ERTS_THR_PRGR_WAKEUP_DATA_SIZE 4 /* Need to be an even power of 2. */
 

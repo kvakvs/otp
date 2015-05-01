@@ -1125,7 +1125,7 @@ typedef struct {
   unsigned int hsz;           /* the list header size, -1 is large !!! */
   /* statistics */
 #ifdef ARCH_64
-  Uint64        recv_oct;     /* number of received octets, 64 bits */
+  uint64_t        recv_oct;     /* number of received octets, 64 bits */
 #else
   uint32_t        recv_oct[2];  /* number of received octets, 64 bits */
 #endif
@@ -1134,7 +1134,7 @@ typedef struct {
   double recv_avg;            /* average packet size received */
   double recv_dvi;            /* avarage deviation from avg_size */
 #ifdef ARCH_64
-  Uint64        send_oct;     /* number of octets sent, 64 bits */
+  uint64_t        send_oct;     /* number of octets sent, 64 bits */
 #else
   uint32_t        send_oct[2];  /* number of octets sent, 64 bits */
 #endif

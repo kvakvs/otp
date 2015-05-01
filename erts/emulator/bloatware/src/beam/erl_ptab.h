@@ -59,7 +59,7 @@ typedef struct {
   union {
     /* --- While being alive --- */
     struct {
-      Uint64 started_interval;
+      uint64_t started_interval;
       struct reg_proc *reg;
       ErtsLink *links;
       ErtsMonitor *monitors;

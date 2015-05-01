@@ -1646,12 +1646,12 @@ Eterm small_to_big(Sint x, Eterm *y)
 }
 
 
-Eterm erts_uint64_to_big(Uint64 x, Eterm **hpp)
+Eterm erts_uint64_to_big(uint64_t x, Eterm **hpp)
 {
   Eterm *hp = *hpp;
 #if defined(ARCH_32) || HALFWORD_HEAP
 
-  if (x >= (((Uint64) 1) << 32)) {
+  if (x >= (((uint64_t) 1) << 32)) {
     *hp = make_pos_bignum_header(2);
     BIG_DIGIT(hp, 0) = (Uint)(x & ((Uint) 0xffffffff));
     BIG_DIGIT(hp, 1) = (Uint)((x >> 32) & ((Uint) 0xffffffff));
@@ -1667,10 +1667,10 @@ Eterm erts_uint64_to_big(Uint64 x, Eterm **hpp)
   return make_big(hp);
 }
 
-Eterm erts_sint64_to_big(Sint64 x, Eterm **hpp)
+Eterm erts_sint64_to_big(int64_t x, Eterm **hpp)
 {
   Eterm *hp = *hpp;
-  Uint64 ux;
+  uint64_t ux;
   int neg;
 
   if (x >= 0) {
@@ -1678,12 +1678,12 @@ Eterm erts_sint64_to_big(Sint64 x, Eterm **hpp)
     ux = x;
   } else {
     neg = 1;
-    ux = -(Uint64)x;
+    ux = -(uint64_t)x;
   }
 
 #if defined(ARCH_32) || HALFWORD_HEAP
 
-  if (ux >= (((Uint64) 1) << 32)) {
+  if (ux >= (((uint64_t) 1) << 32)) {
     if (neg) {
       *hp = make_neg_bignum_header(2);
     } else {
@@ -2214,7 +2214,7 @@ term_to_UWord(Eterm term, UWord *up)
 }
 
 int
-term_to_Uint64(Eterm term, Uint64 *up)
+term_to_Uint64(Eterm term, uint64_t *up)
 {
 #if SIZEOF_VOID_P == 8
   return term_to_UWord(term, up);
@@ -2228,24 +2228,24 @@ term_to_Uint64(Eterm term, Uint64 *up)
       return 0;
     }
 
-    *up = (Uint64) i;
+    *up = (uint64_t) i;
     return 1;
   } else if (is_big(term)) {
     ErtsDigit *xr = big_v(term);
     dsize_t  xl = big_size(term);
-    Uint64 uval = 0;
+    uint64_t uval = 0;
     int n = 0;
 
     if (big_sign(term)) {
       *up = BADARG;
       return 0;
-    } else if (xl * D_EXP > sizeof(Uint64) * 8) {
+    } else if (xl * D_EXP > sizeof(uint64_t) * 8) {
       *up = SYSTEM_LIMIT;
       return 0;
     }
 
     while (xl-- > 0) {
-      uval |= ((Uint64)(*xr++)) << n;
+      uval |= ((uint64_t)(*xr++)) << n;
       n += D_EXP;
     }
 
@@ -2301,7 +2301,7 @@ int term_to_Sint(Eterm term, Sint *sp)
 }
 
 #if HAVE_INT64
-int term_to_Sint64(Eterm term, Sint64 *sp)
+int term_to_Sint64(Eterm term, int64_t *sp)
 {
 #if ERTS_SIZEOF_ETERM == 8
   return term_to_Sint(term, sp);
@@ -2314,26 +2314,26 @@ int term_to_Sint64(Eterm term, Sint64 *sp)
     ErtsDigit *xr = big_v(term);
     dsize_t xl = big_size(term);
     int sign = big_sign(term);
-    Uint64 uval = 0;
+    uint64_t uval = 0;
     int n = 0;
 
-    if (xl * D_EXP > sizeof(Uint64) * 8) {
+    if (xl * D_EXP > sizeof(uint64_t) * 8) {
       return 0;
     }
 
     while (xl-- > 0) {
-      uval |= ((Uint64)(*xr++)) << n;
+      uval |= ((uint64_t)(*xr++)) << n;
       n += D_EXP;
     }
 
     if (sign) {
       uval = -uval;
 
-      if ((Sint64)uval > 0) {
+      if ((int64_t)uval > 0) {
         return 0;
       }
     } else {
-      if ((Sint64)uval < 0) {
+      if ((int64_t)uval < 0) {
         return 0;
       }
     }

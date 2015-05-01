@@ -426,7 +426,7 @@ typedef struct {
 } erts_dw_aint_t;
 typedef SWord erts_aint_t;
 typedef int32_t erts_aint32_t;
-typedef Sint64 erts_aint64_t;
+typedef int64_t erts_aint64_t;
 
 #define erts_dw_atomic_t erts_dw_aint_t
 #define erts_atomic_t erts_aint_t

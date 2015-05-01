@@ -36,7 +36,7 @@ typedef Uint     ErtsDigit;
 
 #if ((SIZEOF_VOID_P == 4) || HALFWORD_HEAP) && defined(SIZEOF_LONG_LONG) && (SIZEOF_LONG_LONG == 8)
 /* Assume 32-bit machine with long long support */
-typedef Uint64   ErtsDoubleDigit;
+typedef uint64_t   ErtsDoubleDigit;
 typedef uint16_t   ErtsHalfDigit;
 #define BIG_HAVE_DOUBLE_DIGIT 1
 
@@ -97,11 +97,11 @@ typedef Uint  dsize_t;   /* Vector size type */
 #if defined(ARCH_32) || HALFWORD_HEAP
 
 #define ERTS_UINT64_BIG_HEAP_SIZE__(X) \
-  ((X) >= (((Uint64) 1) << 32) ? (1 + 2) : (1 + 1))
+  ((X) >= (((uint64_t) 1) << 32) ? (1 + 2) : (1 + 1))
 #define ERTS_SINT64_HEAP_SIZE(X)        \
   (IS_SSMALL((X))           \
    ? 0                \
-   : ERTS_UINT64_BIG_HEAP_SIZE__((X) >= 0 ? (X) : -(Uint64)(X)))
+   : ERTS_UINT64_BIG_HEAP_SIZE__((X) >= 0 ? (X) : -(uint64_t)(X)))
 #define ERTS_UINT64_HEAP_SIZE(X)        \
   (IS_USMALL(0, (X)) ? 0 : ERTS_UINT64_BIG_HEAP_SIZE__((X)))
 
@@ -156,15 +156,15 @@ int term_to_Uint(Eterm, Uint *);
 int term_to_UWord(Eterm, UWord *);
 int term_to_Sint(Eterm, Sint *);
 #if HAVE_INT64
-int term_to_Uint64(Eterm, Uint64 *);
-int term_to_Sint64(Eterm, Sint64 *);
+int term_to_Uint64(Eterm, uint64_t *);
+int term_to_Sint64(Eterm, int64_t *);
 #endif
 
 uint32_t big_to_uint32(Eterm b);
 int term_equals_2pow32(Eterm);
 
-Eterm erts_uint64_to_big(Uint64, Eterm **);
-Eterm erts_sint64_to_big(Sint64, Eterm **);
+Eterm erts_uint64_to_big(uint64_t, Eterm **);
+Eterm erts_sint64_to_big(int64_t, Eterm **);
 
 Eterm erts_chars_to_integer(Process *, char *, Uint, const int);
 

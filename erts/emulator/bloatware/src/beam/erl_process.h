@@ -313,7 +313,7 @@ struct ErtsSchedulerSleepInfo_ {
 typedef struct ErtsProcList_ ErtsProcList;
 struct ErtsProcList_ {
   Eterm pid;
-  Uint64 started_interval;
+  uint64_t started_interval;
   ErtsProcList *next;
   ErtsProcList *prev;
 };
@@ -357,8 +357,8 @@ typedef erts_atomic64_t ErtsAtomicSchedTime;
 typedef struct {
   ErtsAtomicSchedTime last;
   struct {
-    Uint64 short_interval;
-    Uint64 long_interval;
+    uint64_t short_interval;
+    uint64_t long_interval;
   } worktime;
   int is_working;
 } ErtsRunQueueSchedUtil;
@@ -474,17 +474,17 @@ do {                \
 typedef struct {
   int need; /* "+sbu true" or scheduler_wall_time enabled */
   int enabled;
-  Uint64 start;
+  uint64_t start;
   struct {
-    Uint64 total;
-    Uint64 start;
+    uint64_t total;
+    uint64_t start;
     int currently;
   } working;
 } ErtsSchedWallTime;
 
 typedef struct {
-  Uint64 reclaimed;
-  Uint64 garbage_cols;
+  uint64_t reclaimed;
+  uint64_t garbage_cols;
 } ErtsGCInfo;
 
 typedef struct {
@@ -530,7 +530,7 @@ typedef struct {
 #endif
 #ifdef ERTS_SMP
   struct {
-    Uint64 next;
+    uint64_t next;
     int *sched2jix;
     int jix;
     ErtsDelayedAuxWorkWakeupJob *job;
@@ -590,7 +590,7 @@ struct ErtsSchedulerData_ {
 
   ErtsSchedAllocData alloc_data;
 
-  Uint64 reductions;
+  uint64_t reductions;
   ErtsSchedWallTime sched_wall_time;
   ErtsGCInfo gc_info;
   ErtsPortTaskHandle nosuspend_port_task_handle;
@@ -961,10 +961,10 @@ struct process {
   Uint mbuf_sz;   /* Size of all message buffers */
   ErtsPSD *psd;   /* Rarely used process specific data */
 
-  Uint64 bin_vheap_sz;  /* Virtual heap block size for binaries */
-  Uint64 bin_vheap_mature;  /* Virtual heap block size for binaries */
-  Uint64 bin_old_vheap_sz;  /* Virtual old heap block size for binaries */
-  Uint64 bin_old_vheap; /* Virtual old heap size for binaries */
+  uint64_t bin_vheap_sz;  /* Virtual heap block size for binaries */
+  uint64_t bin_vheap_mature;  /* Virtual heap block size for binaries */
+  uint64_t bin_old_vheap_sz;  /* Virtual old heap block size for binaries */
+  uint64_t bin_old_vheap; /* Virtual old heap size for binaries */
 
   ErtsProcSysTaskQs *sys_task_qs;
 
@@ -1364,9 +1364,9 @@ void erts_init_scheduling(int, int
 int erts_set_gc_state(Process *c_p, int enable);
 Eterm erts_sched_wall_time_request(Process *c_p, int set, int enable);
 Eterm erts_gc_info_request(Process *c_p);
-Uint64 erts_get_proc_interval(void);
-Uint64 erts_ensure_later_proc_interval(Uint64);
-Uint64 erts_step_proc_interval(void);
+uint64_t erts_get_proc_interval(void);
+uint64_t erts_ensure_later_proc_interval(uint64_t);
+uint64_t erts_step_proc_interval(void);
 
 int erts_setup_nif_gc(Process *proc, Eterm **objv, int *nobj); /* see erl_nif.c */
 void erts_destroy_nif_export(void *); /* see erl_nif.c */

@@ -211,7 +211,7 @@ static void debug_ptab_list_verify_all_pids(ErtsPTabListBifData *ptlbdp);
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_FOUND_PIDS
 static void debug_ptab_list_check_found_pid(ErtsPTabListBifData *ptlbdp,
     Eterm pid,
-    Uint64 ic,
+    uint64_t ic,
     int pid_should_be_found);
 #endif
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_DEL_LIST
@@ -227,11 +227,11 @@ struct ErtsPTabDeletedElement_ {
   union {
     struct {
       Eterm id;
-      Uint64 inserted;
-      Uint64 deleted;
+      uint64_t inserted;
+      uint64_t deleted;
     } element;
     struct {
-      Uint64 interval;
+      uint64_t interval;
     } bif_invocation;
   } u;
 };
@@ -239,7 +239,7 @@ struct ErtsPTabDeletedElement_ {
 static Export ptab_list_continue_export;
 
 typedef struct {
-  Uint64 interval;
+  uint64_t interval;
 } ErtsPTabListBifChunkInfo;
 
 typedef enum {
@@ -265,7 +265,7 @@ struct ErtsPTabListBifData_ {
   struct {
     Eterm caller;
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_FOUND_PIDS
-    Uint64 *pid_started;
+    uint64_t *pid_started;
 #endif
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_HALLOC
     Eterm *heap;
@@ -281,47 +281,47 @@ struct ErtsPTabListBifData_ {
 };
 
 static ERTS_INLINE void
-last_data_init_nob(ErtsPTab *ptab, Uint64 val)
+last_data_init_nob(ErtsPTab *ptab, uint64_t val)
 {
   erts_smp_atomic64_init_nob(&ptab->vola.tile.last_data, (erts_aint64_t) val);
 }
 
 static ERTS_INLINE void
-last_data_set_relb(ErtsPTab *ptab, Uint64 val)
+last_data_set_relb(ErtsPTab *ptab, uint64_t val)
 {
   erts_smp_atomic64_set_relb(&ptab->vola.tile.last_data, (erts_aint64_t) val);
 }
 
-static ERTS_INLINE Uint64
+static ERTS_INLINE uint64_t
 last_data_read_nob(ErtsPTab *ptab)
 {
-  return (Uint64) erts_smp_atomic64_read_nob(&ptab->vola.tile.last_data);
+  return (uint64_t) erts_smp_atomic64_read_nob(&ptab->vola.tile.last_data);
 }
 
-static ERTS_INLINE Uint64
+static ERTS_INLINE uint64_t
 last_data_read_acqb(ErtsPTab *ptab)
 {
-  return (Uint64) erts_smp_atomic64_read_acqb(&ptab->vola.tile.last_data);
+  return (uint64_t) erts_smp_atomic64_read_acqb(&ptab->vola.tile.last_data);
 }
 
-static ERTS_INLINE Uint64
-last_data_cmpxchg_relb(ErtsPTab *ptab, Uint64 new_, Uint64 exp)
+static ERTS_INLINE uint64_t
+last_data_cmpxchg_relb(ErtsPTab *ptab, uint64_t new_, uint64_t exp)
 {
-  return (Uint64) erts_smp_atomic64_cmpxchg_relb(&ptab->vola.tile.last_data,
+  return (uint64_t) erts_smp_atomic64_cmpxchg_relb(&ptab->vola.tile.last_data,
          (erts_aint64_t) new_,
          (erts_aint64_t) exp);
 }
 
 static ERTS_INLINE int
-last_data_cmp(Uint64 ld1, Uint64 ld2)
+last_data_cmp(uint64_t ld1, uint64_t ld2)
 {
-  Uint64 ld1_wrap;
+  uint64_t ld1_wrap;
 
   if (ld1 == ld2) {
     return 0;
   }
 
-  ld1_wrap = ld1 + (((Uint64) 1) << 63);
+  ld1_wrap = ld1 + (((uint64_t) 1) << 63);
 
   if (ld1 < ld1_wrap) {
     return (ld1 < ld2 && ld2 < ld1_wrap) ? -1 : 1;
@@ -331,7 +331,7 @@ last_data_cmp(Uint64 ld1, Uint64 ld2)
 }
 
 #define ERTS_PTAB_LastData2EtermData(LD) \
-    ((Eterm) ((LD) & ~(~((Uint64) 0) << ERTS_PTAB_ID_DATA_SIZE)))
+    ((Eterm) ((LD) & ~(~((uint64_t) 0) << ERTS_PTAB_ID_DATA_SIZE)))
 
 static ERTS_INLINE uint32_t
 ix_to_free_id_data_ix(ErtsPTab *ptab, uint32_t ix)
@@ -377,7 +377,7 @@ erts_ptab_init_table(ErtsPTab *ptab,
 
   erts_smp_rwmtx_init_opt(&ptab->list.data.rwmtx, &rwmtx_opts, name);
   erts_smp_atomic32_init_nob(&ptab->vola.tile.count, 0);
-  last_data_init_nob(ptab, ~((Uint64) 0));
+  last_data_init_nob(ptab, ~((uint64_t) 0));
 
   /* A size that is a power of 2 is to prefer performance wise */
   bits = erts_fit_in_bits_int32(size - 1);
@@ -565,7 +565,7 @@ erts_ptab_new_element(ErtsPTab *ptab,
 
   } else {
     int rlocked = ERTS_PTAB_NEW_MAX_RESERVE_FAIL;
-    Uint64 ld, exp_ld;
+    uint64_t ld, exp_ld;
     /* Deprecated legacy algorithm... */
 
 restart:
@@ -614,7 +614,7 @@ restart:
 
     /* Move last data forward */
     while (1) {
-      Uint64 act_ld;
+      uint64_t act_ld;
 
       if (last_data_cmp(ld, exp_ld) < 0) {
         break;
@@ -938,7 +938,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_FOUND_PIDS
       ptlbdp->debug.pid_started
         = erts_alloc(ERTS_ALC_T_PTAB_LIST_PIDS,
-                     sizeof(Uint64) * ptlbdp->pid_sz);
+                     sizeof(uint64_t) * ptlbdp->pid_sz);
 #endif
 
       ERTS_PTAB_LIST_DBG_SAVE_PIDS(ptlbdp);
@@ -984,7 +984,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
       int indices = ERTS_PTAB_LIST_BIF_TAB_CHUNK_SIZE;
       int cix = ix / ERTS_PTAB_LIST_BIF_TAB_CHUNK_SIZE;
       int end_ix = ix + indices;
-      Uint64 *invocation_interval_p;
+      uint64_t *invocation_interval_p;
       ErtsPTabElementCommon *invalid_element;
 
       invocation_interval_p
@@ -1081,7 +1081,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
       int i;
       int max_reds;
       int free_deleted = 0;
-      Uint64 invocation_interval;
+      uint64_t invocation_interval;
       ErtsPTabDeletedElement *ptdep;
       ErtsPTabDeletedElement *free_list = nullptr;
 
@@ -1137,7 +1137,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
           }
         } else {
           int cix = ptdep->ix / ERTS_PTAB_LIST_BIF_TAB_CHUNK_SIZE;
-          Uint64 chunk_interval = ptlbdp->chunk[cix].interval;
+          uint64_t chunk_interval = ptlbdp->chunk[cix].interval;
           Eterm pid = ptdep->u.element.id;
           ERTS_PTAB_LIST_ASSERT(erts_ptab_is_valid_id(pid));
 
@@ -1289,7 +1289,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
         ptlbdp->debug.pid_started
           = erts_realloc(ERTS_ALC_T_PTAB_LIST_PIDS,
                          ptlbdp->debug.pid_started,
-                         sizeof(Uint64) * ptlbdp->pid_sz);
+                         sizeof(uint64_t) * ptlbdp->pid_sz);
 #endif
       }
 
@@ -1405,7 +1405,7 @@ static void assert_ptab_consistency(ErtsPTab *ptab)
 Sint
 erts_ptab_test_next_id(ErtsPTab *ptab, int set, Uint next)
 {
-  Uint64 ld;
+  uint64_t ld;
   Sint res;
   Eterm data;
   int first_pix = -1;
@@ -1470,7 +1470,7 @@ erts_ptab_test_next_id(ErtsPTab *ptab, int set, Uint next)
       ld = last_data_read_nob(ptab);
     } else {
 
-      ld = (Uint64) next;
+      ld = (uint64_t) next;
       data = ERTS_PTAB_LastData2EtermData(ld);
 
       if (ptab->r.o.invalid_data == data) {
@@ -1594,7 +1594,7 @@ erts_debug_ptab_list_bif_info(Process *c_p, ErtsPTab *ptab)
 static void
 debug_ptab_list_check_found_pid(ErtsPTabListBifData *ptlbdp,
                                 Eterm pid,
-                                Uint64 ic,
+                                uint64_t ic,
                                 int pid_should_be_found)
 {
   int i;
@@ -1702,8 +1702,8 @@ debug_ptab_list_check_del_list(ErtsPTab *ptab)
   if (!ptab->list.data.deleted.start) {
     ERTS_PTAB_LIST_ASSERT(!ptab->list.data.deleted.end);
   } else {
-    Uint64 curr_interval = erts_smp_current_interval_nob(erts_ptab_interval(ptab));
-    Uint64 *prev_x_interval_p = nullptr;
+    uint64_t curr_interval = erts_smp_current_interval_nob(erts_ptab_interval(ptab));
+    uint64_t *prev_x_interval_p = nullptr;
     ErtsPTabDeletedElement *ptdep;
 
     for (ptdep = ptab->list.data.deleted.start;
@@ -1722,11 +1722,11 @@ debug_ptab_list_check_del_list(ErtsPTab *ptab)
       }
 
       if (ptdep->ix < 0) {
-        Uint64 interval = ptdep->u.bif_invocation.interval;
+        uint64_t interval = ptdep->u.bif_invocation.interval;
         ERTS_PTAB_LIST_ASSERT(interval <= curr_interval);
       } else {
-        Uint64 s_interval = ptdep->u.element.inserted;
-        Uint64 x_interval = ptdep->u.element.deleted;
+        uint64_t s_interval = ptdep->u.element.inserted;
+        uint64_t x_interval = ptdep->u.element.deleted;
 
         ERTS_PTAB_LIST_ASSERT(s_interval <= x_interval);
 

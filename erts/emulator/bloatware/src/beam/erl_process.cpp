@@ -45,8 +45,8 @@
 #include "erl_ptab.h"
 
 
-#define ERTS_DELAYED_WAKEUP_INFINITY (~(Uint64) 0)
-#define ERTS_DELAYED_WAKEUP_REDUCTIONS ((Uint64) CONTEXT_REDS/2)
+#define ERTS_DELAYED_WAKEUP_INFINITY (~(uint64_t) 0)
+#define ERTS_DELAYED_WAKEUP_REDUCTIONS ((uint64_t) CONTEXT_REDS/2)
 
 #define ERTS_RUNQ_CHECK_BALANCE_REDS_PER_SCHED (2000*CONTEXT_REDS)
 #define ERTS_RUNQ_CALL_CHECK_BALANCE_REDS \
@@ -531,25 +531,25 @@ erts_smp_lc_runq_is_locked(ErtsRunQueue *runq)
 #endif
 
 
-static ERTS_INLINE Uint64
-ensure_later_proc_interval(Uint64 interval)
+static ERTS_INLINE uint64_t
+ensure_later_proc_interval(uint64_t interval)
 {
   return erts_smp_ensure_later_interval_nob(erts_ptab_interval(&erts_proc), interval);
 }
 
-Uint64
+uint64_t
 erts_get_proc_interval(void)
 {
   return erts_smp_current_interval_nob(erts_ptab_interval(&erts_proc));
 }
 
-Uint64
-erts_ensure_later_proc_interval(Uint64 interval)
+uint64_t
+erts_ensure_later_proc_interval(uint64_t interval)
 {
   return ensure_later_proc_interval(interval);
 }
 
-Uint64
+uint64_t
 erts_step_proc_interval(void)
 {
   return erts_smp_step_interval_nob(erts_ptab_interval(&erts_proc));
@@ -707,31 +707,31 @@ init_sched_wall_time(ErtsSchedWallTime *swtp)
   swtp->working.currently = 0;
 }
 
-static ERTS_INLINE Uint64
+static ERTS_INLINE uint64_t
 sched_wall_time_ts(void)
 {
 #ifdef HAVE_GETHRTIME
-  return (Uint64) sys_gethrtime();
+  return (uint64_t) sys_gethrtime();
 #else
-  Uint64 res;
+  uint64_t res;
   SysTimeval tv;
   sys_gettimeofday(&tv);
-  res = (Uint64) tv.tv_sec * 1000000;
-  res += (Uint64) tv.tv_usec;
+  res = (uint64_t) tv.tv_sec * 1000000;
+  res += (uint64_t) tv.tv_usec;
   return res;
 #endif
 }
 
 #if ERTS_HAVE_SCHED_UTIL_BALANCING_SUPPORT
 
-static ERTS_INLINE Uint64
+static ERTS_INLINE uint64_t
 aschedtime_read(ErtsAtomicSchedTime *var)
 {
-  return (Uint64) erts_atomic64_read_nob((erts_atomic64_t *) var);
+  return (uint64_t) erts_atomic64_read_nob((erts_atomic64_t *) var);
 }
 
 static ERTS_INLINE void
-aschedtime_set(ErtsAtomicSchedTime *var, Uint64 val)
+aschedtime_set(ErtsAtomicSchedTime *var, uint64_t val)
 {
   erts_atomic64_set_nob((erts_atomic64_t *) var, (erts_aint64_t) val);
 }
@@ -743,21 +743,21 @@ aschedtime_init(ErtsAtomicSchedTime *var)
 }
 
 #define ERTS_GET_AVG_MAX_UNLOCKED_TRY 50
-#define ERTS_SCHED_AVG_UTIL_WRITE_MARKER (~((Uint64) 0))
+#define ERTS_SCHED_AVG_UTIL_WRITE_MARKER (~((uint64_t) 0))
 
 /* Intervals in nanoseconds */
-#define ERTS_SCHED_UTIL_SHORT_INTERVAL ((Uint64) 1*1000*1000*1000)
-#define ERTS_SCHED_UTIL_LONG_INTERVAL ((Uint64) 10*1000*1000*1000)
+#define ERTS_SCHED_UTIL_SHORT_INTERVAL ((uint64_t) 1*1000*1000*1000)
+#define ERTS_SCHED_UTIL_LONG_INTERVAL ((uint64_t) 10*1000*1000*1000)
 
 
 #define ERTS_SCHED_UTIL_IGNORE_IMBALANCE_DIFF 5000 /* ppm */
 
-static ERTS_INLINE Uint64
-calc_sched_worktime(int is_working, Uint64 now, Uint64 last,
-                    Uint64 interval, Uint64 old_worktime)
+static ERTS_INLINE uint64_t
+calc_sched_worktime(int is_working, uint64_t now, uint64_t last,
+                    uint64_t interval, uint64_t old_worktime)
 {
-  Uint64 worktime;
-  Uint64 new_;
+  uint64_t worktime;
+  uint64_t new_;
 
   if (now <= last) {
     return old_worktime;
@@ -766,7 +766,7 @@ calc_sched_worktime(int is_working, Uint64 now, Uint64 last,
   new_ = now - last;
 
   if (new_ >= interval) {
-    return is_working ? interval : (Uint64) 0;
+    return is_working ? interval : (uint64_t) 0;
   }
 
 
@@ -789,11 +789,11 @@ calc_sched_worktime(int is_working, Uint64 now, Uint64 last,
 }
 
 static ERTS_INLINE void
-update_avg_sched_util(ErtsSchedulerData *esdp, Uint64 now, int is_working)
+update_avg_sched_util(ErtsSchedulerData *esdp, uint64_t now, int is_working)
 {
   ErtsRunQueue *rq;
   int worked;
-  Uint64 swt, lwt, last;
+  uint64_t swt, lwt, last;
 
   rq = esdp->run_queue;
   last = aschedtime_read(&rq->sched_util.last);
@@ -829,7 +829,7 @@ erts_get_sched_util(ErtsRunQueue *rq, int initially_locked, int short_interval)
   int is_working;
   int try_ = 0;
   int locked = initially_locked;
-  Uint64 worktime, old_worktime, now, last, interval, *old_worktimep;
+  uint64_t worktime, old_worktime, now, last, interval, *old_worktimep;
 
   if (short_interval) {
     old_worktimep = &rq->sched_util.worktime.short_interval;
@@ -840,7 +840,7 @@ erts_get_sched_util(ErtsRunQueue *rq, int initially_locked, int short_interval)
   }
 
   while (1) {
-    Uint64 chk_last;
+    uint64_t chk_last;
     last = aschedtime_read(&rq->sched_util.last);
     ERTS_THR_READ_MEMORY_BARRIER;
     is_working = rq->sched_util.is_working;
@@ -885,12 +885,12 @@ init_runq_sched_util(ErtsRunQueueSchedUtil *rqsu, int enabled)
   }
 
   rqsu->is_working = 0;
-  rqsu->worktime.short_interval = (Uint64) 0;
-  rqsu->worktime.long_interval = (Uint64) 0;
+  rqsu->worktime.short_interval = (uint64_t) 0;
+  rqsu->worktime.long_interval = (uint64_t) 0;
 
 #ifdef DEBUG
   {
-    Uint64 intrvl;
+    uint64_t intrvl;
     /*
      * If one of these asserts fail we may have
      * overflow in calc_sched_worktime(). Which
@@ -912,7 +912,7 @@ static ERTS_INLINE void
 sched_wall_time_change(ErtsSchedulerData *esdp, int working)
 {
   if (esdp->sched_wall_time.need) {
-    Uint64 ts = sched_wall_time_ts();
+    uint64_t ts = sched_wall_time_ts();
 #if ERTS_HAVE_SCHED_UTIL_BALANCING_SUPPORT
     update_avg_sched_util(esdp, ts, working);
 #endif
@@ -971,7 +971,7 @@ swtreq_free(ErtsSchedWallTimeReq *ptr)
 static void
 reply_sched_wall_time(void *vswtrp)
 {
-  Uint64 working = 0, total = 0;
+  uint64_t working = 0, total = 0;
   ErtsSchedulerData *esdp = erts_get_scheduler_data();
   ErtsSchedWallTimeReq *swtrp = (ErtsSchedWallTimeReq *) vswtrp;
   ErtsProcLocks rp_locks = (swtrp->req_sched == esdp->no
@@ -995,7 +995,7 @@ reply_sched_wall_time(void *vswtrp)
       esdp->sched_wall_time.need = erts_sched_balance_util;
       esdp->sched_wall_time.enabled = 0;
     } else if (swtrp->enable && !esdp->sched_wall_time.enabled) {
-      Uint64 ts = sched_wall_time_ts();
+      uint64_t ts = sched_wall_time_ts();
       esdp->sched_wall_time.need = 1;
       esdp->sched_wall_time.enabled = 1;
       esdp->sched_wall_time.start = ts;
@@ -1006,7 +1006,7 @@ reply_sched_wall_time(void *vswtrp)
   }
 
   if (esdp->sched_wall_time.enabled) {
-    Uint64 ts = sched_wall_time_ts();
+    uint64_t ts = sched_wall_time_ts();
     ASSERT(esdp->sched_wall_time.working.currently);
     ts -= esdp->sched_wall_time.start;
     total = ts;
@@ -4602,7 +4602,7 @@ check_balance(ErtsRunQueue * c_rq) {
 #endif
   ErtsMigrationPaths *new_mpaths, *old_mpaths;
   ErtsRunQueueBalance avg = {0};
-  Sint64 scheds_reds, full_scheds_reds;
+  int64_t scheds_reds, full_scheds_reds;
   int forced, active, current_active, oowc, half_full_scheds, full_scheds,
       mmax_len, blnc_no_rqs, qix, pix, freds_hist_ix;
 #if ERTS_HAVE_SCHED_UTIL_BALANCING_SUPPORT
@@ -4747,14 +4747,14 @@ check_balance(ErtsRunQueue * c_rq) {
           run_queue_info[qix].prio[pix].avail = 0;
         }
       } else {
-        Sint64 xreds = 0;
-        Sint64 procreds = treds;
+        int64_t xreds = 0;
+        int64_t procreds = treds;
         procreds -=
-          ((Sint64)
+          ((int64_t)
            run_queue_info[qix].prio[ERTS_PORT_PRIO_LEVEL].reds);
 
         for (pix = 0; pix < ERTS_NO_PROC_PRIO_LEVELS; pix++) {
-          Sint64 av;
+          int64_t av;
 
           if (xreds == 0) {
             av = 100;
@@ -4772,7 +4772,7 @@ check_balance(ErtsRunQueue * c_rq) {
           ASSERT(run_queue_info[qix].prio[pix].avail >= 0);
 
           if (pix < PRIORITY_NORMAL) { /* ie., max or high */
-            xreds += (Sint64) run_queue_info[qix].prio[pix].reds;
+            xreds += (int64_t) run_queue_info[qix].prio[pix].reds;
           }
         }
 
@@ -4903,11 +4903,11 @@ all_active:
       if (full_scheds_reds > 0) {
         /* Calculate availability compared to other schedulers */
         if (!(run_queue_info[qix].flags & ERTS_RUNQ_FLG_OUT_OF_WORK)) {
-          Sint64 tmp = ((Sint64) run_queue_info[qix].full_reds
-                        * (Sint64) full_scheds);
+          int64_t tmp = ((int64_t) run_queue_info[qix].full_reds
+                        * (int64_t) full_scheds);
 
           for (pix = 0; pix < ERTS_NO_PRIO_LEVELS; pix++) {
-            Sint64 avail = run_queue_info[qix].prio[pix].avail;
+            int64_t avail = run_queue_info[qix].prio[pix].avail;
             avail = (avail * tmp) / full_scheds_reds;
             ASSERT(avail >= 0);
             run_queue_info[qix].prio[pix].avail = (int) avail;
@@ -4932,8 +4932,8 @@ all_active:
         int avail = avg.prio[pix].avail;
 
         if (avail != 0) {
-          max_len = (int)((100 * ((Sint64) max_len) - 1)
-                          / ((Sint64) avail)) + 1;
+          max_len = (int)((100 * ((int64_t) max_len) - 1)
+                          / ((int64_t) avail)) + 1;
           avg.prio[pix].max_len = max_len;
           ASSERT(max_len >= 0);
         }
@@ -4952,8 +4952,8 @@ all_active:
             || run_queue_info[qix].prio[pix].avail == 0) {
           limit = 0;
         } else
-          limit = (int)(((((Sint64) avg.prio[pix].max_len)
-                          * ((Sint64) run_queue_info[qix].prio[pix].avail))
+          limit = (int)(((((int64_t) avg.prio[pix].max_len)
+                          * ((int64_t) run_queue_info[qix].prio[pix].avail))
                          - 1)
                         / 100 + 1);
 

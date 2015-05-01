@@ -152,7 +152,7 @@ pthread_key_t   dt_driver_key;
 
 typedef struct {
   int         thread_num;
-  Uint64      tag;
+  uint64_t      tag;
 } dt_private;
 
 dt_private *get_dt_private(int);
@@ -384,7 +384,7 @@ if (thread_short_circuit >= (level)) { \
 
 
 struct t_pbuf_spec {
-  Sint64 offset;
+  int64_t offset;
   size_t size;
 };
 
@@ -402,7 +402,7 @@ struct t_preadv {
   unsigned n;
   unsigned cnt;
   size_t   size;
-  Sint64   offsets[1];
+  int64_t   offsets[1];
 };
 
 #define READDIR_BUFSIZE (8*1024)*READDIR_CHUNKS
@@ -428,7 +428,7 @@ struct t_data {
   int            reply;
 #ifdef  USE_VM_PROBES
   int               sched_i1;
-  Uint64            sched_i2;
+  uint64_t            sched_i2;
   char              sched_utag[DTRACE_EFILE_BUFSIZ + 1];
 #endif
   int            result_ok;
@@ -447,9 +447,9 @@ struct t_data {
   /**/
   union {
     struct {
-      Sint64 offset;
+      int64_t offset;
       int    origin;
-      Sint64 location;
+      int64_t location;
     } lseek;
     struct {
       ErlDrvPort    port;
@@ -485,8 +485,8 @@ struct t_data {
       struct t_readdir_buf *last_buf;
     } read_dir;
     struct {
-      Sint64 offset;
-      Sint64 length;
+      int64_t offset;
+      int64_t length;
       int advise;
     } fadvise;
 #ifdef HAVE_SENDFILE
@@ -495,13 +495,13 @@ struct t_data {
       ErlDrvPDL q_mtx;
       int out_fd;
       off_t offset;
-      Uint64 nbytes;
-      Uint64 written;
+      uint64_t nbytes;
+      uint64_t written;
     } sendfile;
 #endif /* HAVE_SENDFILE */
     struct {
-      Sint64 offset;
-      Sint64 length;
+      int64_t offset;
+      int64_t length;
     } fallocate;
   } c;
   char b[1];
@@ -596,14 +596,14 @@ efile_ev_get_uint32(ErlIOVec *ev, uint32_t *p, size_t *pp, size_t *qp)
   return 0;
 }
 
-/* Uint64 EV_UINT64(ErlIOVec *ev, int p, int q)*/
+/* uint64_t EV_UINT64(ErlIOVec *ev, int p, int q)*/
 #define EV_UINT64(ev, p, q)           \
-    ((Uint64) ((uint8_t *)(ev)->iov[q].iov_base)[p])
+    ((uint64_t) ((uint8_t *)(ev)->iov[q].iov_base)[p])
 
-/* int EV_GET_UINT64(ErlIOVec *ev, Uint64 *p, int *pp, int *qp) */
+/* int EV_GET_UINT64(ErlIOVec *ev, uint64_t *p, int *pp, int *qp) */
 #define EV_GET_UINT64(ev, p, pp, qp) efile_ev_get_uint64(ev, p, pp, qp)
 static int
-efile_ev_get_uint64(ErlIOVec *ev, Uint64 *p, size_t *pp, size_t *qp)
+efile_ev_get_uint64(ErlIOVec *ev, uint64_t *p, size_t *pp, size_t *qp)
 {
   if (*pp + 8 <= ev->iov[*qp].iov_len) {
     *p = (EV_UINT64(ev, *pp, *qp) << 56)
@@ -628,12 +628,12 @@ efile_ev_get_uint64(ErlIOVec *ev, Uint64 *p, size_t *pp, size_t *qp)
   return 0;
 }
 
-/* int EV_GET_SINT64(ErlIOVec *ev, Uint64 *p, int *pp, int *qp) */
+/* int EV_GET_SINT64(ErlIOVec *ev, uint64_t *p, int *pp, int *qp) */
 #define EV_GET_SINT64(ev, p, pp, qp) efile_ev_get_sint64(ev, p, pp, qp)
 static int
-efile_ev_get_sint64(ErlIOVec *ev, Sint64 *p, size_t *pp, size_t *qp)
+efile_ev_get_sint64(ErlIOVec *ev, int64_t *p, size_t *pp, size_t *qp)
 {
-  Uint64 *tmp = (Uint64 *)p;
+  uint64_t *tmp = (uint64_t *)p;
   return EV_GET_UINT64(ev, tmp, pp, qp);
 }
 
@@ -1038,7 +1038,7 @@ static int reply_Uint(file_descriptor *desc, Uint result)
   return 0;
 }
 
-static int reply_Sint64(file_descriptor *desc, Sint64 result)
+static int reply_Sint64(file_descriptor *desc, int64_t result)
 {
   char tmp[1 + 4 + 4];
 
@@ -1339,17 +1339,17 @@ static void invoke_read_line(void *data)
           ASSERT(d->c.read_line.read_size >= 0);
 
           if (d->flags & EFILE_COMPRESSED) {
-            Sint64 location = erts_gzseek((ErtsGzFile)d->fd,
-                                          -((Sint64) too_much), EFILE_SEEK_CUR);
+            int64_t location = erts_gzseek((ErtsGzFile)d->fd,
+                                          -((int64_t) too_much), EFILE_SEEK_CUR);
 
             if (location == -1) {
               d->result_ok = 0;
               d->errInfo.posix_errno = errno;
             }
           } else {
-            Sint64 location;
+            int64_t location;
             d->result_ok = efile_seek(&d->errInfo, (int) d->fd,
-                                      -((Sint64) too_much), EFILE_SEEK_CUR,
+                                      -((int64_t) too_much), EFILE_SEEK_CUR,
                                       &location);
           }
         }
@@ -1389,7 +1389,7 @@ static void invoke_read_file(void *data)
 
   if (! d->c.read_file.binp) { /* First invocation only */
     int fd;
-    Sint64 size;
+    int64_t size;
 
     if (!(d->result_ok =
             efile_openfile(&d->errInfo, d->b,
@@ -2099,7 +2099,7 @@ static void invoke_sendfile(void *data)
   struct t_data *d = (struct t_data *)data;
   int fd = d->fd;
   int out_fd = (int)d->c.sendfile.out_fd;
-  Uint64 nbytes = d->c.sendfile.nbytes;
+  uint64_t nbytes = d->c.sendfile.nbytes;
   int result = 0;
   d->again = 0;
 
@@ -2181,8 +2181,8 @@ static void invoke_fallocate(void *data)
 {
   struct t_data *d = (struct t_data *) data;
   int fd = (int) d->fd;
-  Sint64 offset = d->c.fallocate.offset;
-  Sint64 length = d->c.fallocate.length;
+  int64_t offset = d->c.fallocate.offset;
+  int64_t length = d->c.fallocate.length;
 
   d->again = 0;
   d->result_ok = efile_fallocate(&d->errInfo, fd, offset, length);
@@ -2267,7 +2267,7 @@ static void cq_execute(file_descriptor *desc)
 static struct t_data *async_write(file_descriptor *desc, int *errp,
                                   int reply, uint32_t reply_size
 #ifdef USE_VM_PROBES
-                                  , Sint64 *dt_i1, Sint64 *dt_i2, Sint64 *dt_i3
+                                  , int64_t *dt_i1, int64_t *dt_i2, int64_t *dt_i3
 #endif
                                  )
 {
@@ -2315,7 +2315,7 @@ static int flush_write(file_descriptor *desc, int *errp
 {
   int    result = 0;
 #ifdef USE_VM_PROBES
-  Sint64 dt_i1 = 0, dt_i2 = 0, dt_i3 = 0;
+  int64_t dt_i1 = 0, dt_i2 = 0, dt_i3 = 0;
 #endif
   struct t_data *d = nullptr;
 
@@ -2392,9 +2392,9 @@ static int flush_write_check_error(file_descriptor *desc, int *errp
 }
 
 static struct t_data *async_lseek(file_descriptor *desc, int *errp, int reply,
-                                  Sint64 offset, int origin
+                                  int64_t offset, int origin
 #ifdef USE_VM_PROBES
-                                  , Sint64 *dt_i1, Sint64 *dt_i2, Sint64 *dt_i3
+                                  , int64_t *dt_i1, int64_t *dt_i2, int64_t *dt_i3
 #endif
                                  )
 {
@@ -2447,7 +2447,7 @@ static int lseek_flush_read(file_descriptor *desc, int *errp
   int r = 0;
   size_t read_size = desc->read_size;
 #ifdef USE_VM_PROBES
-  Sint64 dt_i1 = 0, dt_i2 = 0, dt_i3 = 0;
+  int64_t dt_i1 = 0, dt_i2 = 0, dt_i3 = 0;
 #endif
   struct t_data *d;
 
@@ -2900,10 +2900,10 @@ file_output(ErlDrvData e, char *buf, ErlDrvSizeT count)
 #ifdef  USE_VM_PROBES
   char *dt_utag = nullptr;
   char *dt_s1 = nullptr, *dt_s2 = nullptr;
-  Sint64 dt_i1 = 0;
-  Sint64 dt_i2 = 0;
-  Sint64 dt_i3 = 0;
-  Sint64 dt_i4 = 0;
+  int64_t dt_i1 = 0;
+  int64_t dt_i2 = 0;
+  int64_t dt_i3 = 0;
+  int64_t dt_i4 = 0;
   dt_private *dt_priv = get_dt_private(0);
 #endif  /* USE_VM_PROBES */
 
@@ -3202,9 +3202,9 @@ file_output(ErlDrvData e, char *buf, ErlDrvSizeT count)
     d->info.mode       = get_int32(buf +  0 * 4);
     d->info.uid        = get_int32(buf +  1 * 4);
     d->info.gid        = get_int32(buf +  2 * 4);
-    d->info.accessTime = (time_t)((Sint64)get_int64(buf +  3 * 4));
-    d->info.modifyTime = (time_t)((Sint64)get_int64(buf +  5 * 4));
-    d->info.cTime      = (time_t)((Sint64)get_int64(buf +  7 * 4));
+    d->info.accessTime = (time_t)((int64_t)get_int64(buf +  3 * 4));
+    d->info.modifyTime = (time_t)((int64_t)get_int64(buf +  5 * 4));
+    d->info.cTime      = (time_t)((int64_t)get_int64(buf +  7 * 4));
 
     FILENAME_COPY(d->b, buf + 9 * 4);
 #ifdef USE_VM_PROBES
@@ -3313,14 +3313,14 @@ file_output(ErlDrvData e, char *buf, ErlDrvSizeT count)
     d->free = free_data;
     d->level = 2;
     d->c.fadvise.offset = get_int64((uchar *) buf);
-    d->c.fadvise.length = get_int64(((uchar *) buf) + sizeof(Sint64));
-    d->c.fadvise.advise = get_int32(((uchar *) buf) + 2 * sizeof(Sint64));
+    d->c.fadvise.length = get_int64(((uchar *) buf) + sizeof(int64_t));
+    d->c.fadvise.advise = get_int32(((uchar *) buf) + 2 * sizeof(int64_t));
 #ifdef USE_VM_PROBES
     dt_i1 = d->fd;
     dt_i2 = d->c.fadvise.offset;
     dt_i3 = d->c.fadvise.length;
     dt_i4 = d->c.fadvise.advise;
-    dt_utag = buf + 3 * sizeof(Sint64);
+    dt_utag = buf + 3 * sizeof(int64_t);
 #endif
     goto done;
   }
@@ -3334,7 +3334,7 @@ file_output(ErlDrvData e, char *buf, ErlDrvSizeT count)
     d->free = free_data;
     d->level = 2;
     d->c.fallocate.offset = get_int64((uchar *) buf);
-    d->c.fallocate.length = get_int64(((uchar *) buf) + sizeof(Sint64));
+    d->c.fallocate.length = get_int64(((uchar *) buf) + sizeof(int64_t));
     goto done;
   }
 
@@ -3497,8 +3497,8 @@ file_outputv(ErlDrvData e, ErlIOVec *ev)
   int err;
   struct t_data *d = nullptr;
 #ifdef USE_VM_PROBES
-  Sint64 dt_i1 = 0, dt_i2 = 0, dt_i3 = 0;
-  Sint64 dt_i4 = 0;
+  int64_t dt_i1 = 0, dt_i2 = 0, dt_i3 = 0;
+  int64_t dt_i4 = 0;
   char *dt_utag = nullptr;
   char *dt_s1 = nullptr;
   dt_private *dt_priv = get_dt_private(dt_driver_io_worker_base);
@@ -4225,7 +4225,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev)
     goto done; /* case FILE_PREADV: */
 
   case FILE_LSEEK: {
-    Sint64 offset;    /* Offset for seek */
+    int64_t offset;    /* Offset for seek */
     uint32_t origin;    /* Origin of seek. */
 
     if (ev->size < 1 + 8 + 4
@@ -4346,7 +4346,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev)
      */
     register void *void_ptr;
     char mode;
-    Sint64 hdr_offset;
+    int64_t hdr_offset;
     uint32_t max_size;
     ErlIOVec *res_ev;
     int vsize;
@@ -4542,7 +4542,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev)
 #ifdef HAVE_SENDFILE
     struct t_data *d;
     uint32_t out_fd, offsetH, offsetL, hd_len, tl_len;
-    Uint64 nbytes;
+    uint64_t nbytes;
     char flags;
 
     if (ev->size < 1 + 7 * sizeof(uint32_t) + sizeof(char)
