@@ -57,7 +57,7 @@ union ErtsSmpPTimer_ {
 	Eterm id;
 	void (*timeout_func)(void*);
 	ErtsSmpPTimer **timer_ref;
-	Uint32 flags;
+	uint32_t flags;
     } timer;
     ErtsSmpPTimer *next;
 };

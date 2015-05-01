@@ -3857,7 +3857,7 @@ BIF_RETTYPE erts_debug_set_internal_state_2(BIF_ALIST_2)
 	    if (!dep)
 		BIF_RET(am_false);
 	    else {
-		Uint32 con_id;
+		uint32_t con_id;
 		erts_smp_de_rlock(dep);
 		con_id = dep->connection_id;
 		erts_smp_de_runlock(dep);

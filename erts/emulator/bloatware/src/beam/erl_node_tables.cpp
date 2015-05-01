@@ -470,7 +470,7 @@ erts_set_dist_entry_connected(DistEntry *dep, Eterm cid, Uint flags)
 static HashValue
 node_table_hash(void *venp)
 {
-    Uint32 cre = ((ErlNode *) venp)->creation;
+    uint32_t cre = ((ErlNode *) venp)->creation;
     HashValue h = atom_tab(atom_val(((ErlNode *) venp)->sysname))->slot.bucket.hvalue;
 
     h *= PRIME0;
@@ -494,7 +494,7 @@ node_table_hash(void *venp)
 #if 0
 /* XXX Problems in older versions of GCC */
  #if MAX_CREATION >= (1UL << 32)
- #error "MAX_CREATION larger than size of expected creation storage (Uint32)"
+ #error "MAX_CREATION larger than size of expected creation storage (uint32_t)"
  #endif
 #endif
     return h;

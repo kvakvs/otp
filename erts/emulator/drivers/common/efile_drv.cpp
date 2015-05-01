@@ -554,14 +554,14 @@ efile_ev_get_char(ErlIOVec *ev, char *p, size_t *pp, size_t *qp) {
     return 0;
 }
 
-/* Uint32 EV_UINT32(ErlIOVec *ev, int p, int q)*/
+/* uint32_t EV_UINT32(ErlIOVec *ev, int p, int q)*/
 #define EV_UINT32(ev, p, q)						\
-    ((Uint32) ((uint8_t *)(ev)->iov[q].iov_base)[p])
+    ((uint32_t) ((uint8_t *)(ev)->iov[q].iov_base)[p])
 
-/* int EV_GET_UINT32(ErlIOVec *ev, Uint32 *p, int *pp, int *qp) */
+/* int EV_GET_UINT32(ErlIOVec *ev, uint32_t *p, int *pp, int *qp) */
 #define EV_GET_UINT32(ev, p, pp, qp) efile_ev_get_uint32(ev, p, pp, qp)
 static int
-efile_ev_get_uint32(ErlIOVec *ev, Uint32 *p, size_t *pp, size_t *qp) {
+efile_ev_get_uint32(ErlIOVec *ev, uint32_t *p, size_t *pp, size_t *qp) {
     if (*pp + 4 <= ev->iov[*qp].iov_len) {
 	*p = (EV_UINT32(ev, *pp,   *qp) << 24)
 	    | (EV_UINT32(ev, *pp + 1, *qp) << 16)
@@ -899,7 +899,7 @@ static void reply_Uint_posix_error(file_descriptor *desc, Uint num,
 #else
     put_int32(num>>32, response+1);
 #endif
-    put_int32((Uint32)num, response+1+4);
+    put_int32((uint32_t)num, response+1+4);
     for (s = erl_errno_id(posix_errno), t = response+1+4+4; *s; s++, t++)
 	*t = tolower(*s);
     driver_output2(desc->port, response, t-response, nullptr, 0);
@@ -968,7 +968,7 @@ static int reply_Uint(file_descriptor *desc, Uint result) {
 #else
     put_int32(result>>32, tmp+1);
 #endif
-    put_int32((Uint32)result, tmp+1+4);
+    put_int32((uint32_t)result, tmp+1+4);
     driver_output2(desc->port, tmp, sizeof(tmp), nullptr, 0);
     return 0;
 }
@@ -1021,7 +1021,7 @@ static void reply_data(file_descriptor *desc,
 #else
     put_int32(len>>32, header+1);
 #endif
-    put_int32((Uint32)len, header+1+4);
+    put_int32((uint32_t)len, header+1+4);
     driver_output_binary(desc->port, header, sizeof(header),
 			 binp, offset, len);
 }
@@ -1037,7 +1037,7 @@ static void reply_buf(file_descriptor *desc, char *buf, size_t len) {
 #else
     put_int32(len>>32, header+1);
 #endif
-    put_int32((Uint32)len, header+1+4);
+    put_int32((uint32_t)len, header+1+4);
     driver_output2(desc->port, header, sizeof(header), buf, len);
 }
 
@@ -1419,8 +1419,8 @@ static void invoke_ipread(void *data)
     struct t_preadv *c = &d->c.preadv;
     ErlIOVec        *ev = &c->eiov;
     size_t bytes_read = 0;
-    char buf[2*sizeof(Uint32)];
-    Uint32 offset, size;
+    char buf[2*sizeof(uint32_t)];
+    uint32_t offset, size;
     DTRACE_INVOKE_SETUP(FILE_IPREAD);
     
     /* Read indirection header */
@@ -2062,7 +2062,7 @@ static void cq_execute(file_descriptor *desc) {
 }
 
 static struct t_data *async_write(file_descriptor *desc, int *errp,
-		       int reply, Uint32 reply_size
+		       int reply, uint32_t reply_size
 #ifdef USE_VM_PROBES
 		       ,Sint64 *dt_i1, Sint64 *dt_i2, Sint64 *dt_i3
 #endif
@@ -3269,7 +3269,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
     } goto done;
 
     case FILE_READ: {
-	Uint32 sizeH, sizeL;
+	uint32_t sizeH, sizeL;
 	size_t size, alloc_size;
 
 	if (!EV_GET_UINT32(ev, &sizeH, &p, &q)
@@ -3547,7 +3547,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
     case FILE_PWRITEV: { /* Dtrace: The dtrace user tag is not last in message, 
 			   but follows the message tag directly. 
 			   This is handled specially in prim_file.erl */
-	Uint32 i, j, n; 
+	uint32_t i, j, n; 
 	size_t total;
 #ifdef USE_VM_PROBES
 	char dt_tmp;
@@ -3629,7 +3629,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	 * for all non-zero size binaries. Calculate total size.
 	 */
 	for(i = 0; i < n; i++) {
-	    Uint32 sizeH, sizeL;
+	    uint32_t sizeH, sizeL;
 	    size_t size;
 	    if (   !EV_GET_SINT64(ev, &d->c.pwritev.specs[i].offset, &p, &q)
 		|| !EV_GET_UINT32(ev, &sizeH, &p, &q)
@@ -3693,7 +3693,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 			   but follows the message tag directly. 
 			   This is handled specially in prim_file.erl */
 	register void * void_ptr;
-	Uint32 i, n;
+	uint32_t i, n;
 	ErlIOVec *res_ev;
 #ifdef USE_VM_PROBES
 	char dt_tmp;
@@ -3771,7 +3771,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
         res_ev->binv = (ErlDrvBinary**)(void_ptr = &res_ev->iov[res_ev->vsize]);
 	/* Read in the pos/size specs and allocate binaries for the results */
 	for (i = 1; i < 1+n; i++) {
-	    Uint32 sizeH, sizeL;
+	    uint32_t sizeH, sizeL;
 	    size_t size;
 	    if (   !EV_GET_SINT64(ev, &d->c.preadv.offsets[i-1], &p, &q)
 		|| !EV_GET_UINT32(ev, &sizeH, &p, &q)
@@ -3838,7 +3838,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 
     case FILE_LSEEK: {
 	Sint64 offset;		/* Offset for seek */
-	Uint32 origin;		/* Origin of seek. */
+	uint32_t origin;		/* Origin of seek. */
 
 	if (ev->size < 1+8+4
 	    || !EV_GET_SINT64(ev, &offset, &p, &q)
@@ -3941,7 +3941,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	register void * void_ptr;
 	char mode;
 	Sint64 hdr_offset;
-	Uint32 max_size;
+	uint32_t max_size;
 	ErlIOVec *res_ev;
 	int vsize;
 	if (! EV_GET_CHAR(ev, &mode, &p, &q)) {
@@ -4029,8 +4029,8 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 #endif
 	switch (opt) {
 	case FILE_OPT_DELAYED_WRITE: {
-	    Uint32 sizeH, sizeL, delayH, delayL;
-	    if (ev->size != 1+1+4*sizeof(Uint32)
+	    uint32_t sizeH, sizeL, delayH, delayL;
+	    if (ev->size != 1+1+4*sizeof(uint32_t)
 #ifdef USE_VM_PROBES
 		+ FILENAME_BYTELEN(dt_utag) + FILENAME_CHARSIZE
 #endif
@@ -4067,8 +4067,8 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	    reply_ok(desc);
 	} goto done;
 	case FILE_OPT_READ_AHEAD: {
-	    Uint32 sizeH, sizeL;
-	    if (ev->size != 1+1+2*sizeof(Uint32)
+	    uint32_t sizeH, sizeL;
+	    if (ev->size != 1+1+2*sizeof(uint32_t)
 #ifdef USE_VM_PROBES
 		+ FILENAME_BYTELEN(dt_utag)+FILENAME_CHARSIZE
 #endif
@@ -4103,11 +4103,11 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 
 #ifdef HAVE_SENDFILE
         struct t_data *d;
-	Uint32 out_fd, offsetH, offsetL, hd_len, tl_len;
+	uint32_t out_fd, offsetH, offsetL, hd_len, tl_len;
 	Uint64 nbytes;
 	char flags;
 
-	if (ev->size < 1 + 7 * sizeof(Uint32) + sizeof(char)
+	if (ev->size < 1 + 7 * sizeof(uint32_t) + sizeof(char)
 		|| !EV_GET_UINT32(ev, &out_fd, &p, &q)
 		|| !EV_GET_CHAR(ev, &flags, &p, &q)
 		|| !EV_GET_UINT32(ev, &offsetH, &p, &q)

@@ -93,17 +93,17 @@ typedef struct _Efile_error {
  */
 
 typedef struct _Efile_info {
-    Uint32 size_low;		/* Size of file, lower 32 bits.. */
-    Uint32 size_high;		/* Size of file, higher 32 bits. */
-    Uint32 type;		/* Type of file -- one of FT_*. */
-    Uint32 access;		/* Access to file -- one of FA_*. */
-    Uint32 mode;		/* Access permissions -- bit field. */
-    Uint32 links;		/* Number of links to file. */
-    Uint32 major_device;	/* Major device or file system. */
-    Uint32 minor_device;	/* Minor device (for devices). */
-    Uint32 inode;		/* Inode number. */
-    Uint32 uid;			/* User id of owner. */
-    Uint32 gid;			/* Group id of owner. */
+    uint32_t size_low;		/* Size of file, lower 32 bits.. */
+    uint32_t size_high;		/* Size of file, higher 32 bits. */
+    uint32_t type;		/* Type of file -- one of FT_*. */
+    uint32_t access;		/* Access to file -- one of FA_*. */
+    uint32_t mode;		/* Access permissions -- bit field. */
+    uint32_t links;		/* Number of links to file. */
+    uint32_t major_device;	/* Major device or file system. */
+    uint32_t minor_device;	/* Minor device (for devices). */
+    uint32_t inode;		/* Inode number. */
+    uint32_t uid;			/* User id of owner. */
+    uint32_t gid;			/* Group id of owner. */
     time_t accessTime;		/* Last time the file was accessed. */
     time_t modifyTime;		/* Last time the file was modified. */
     time_t cTime;		/* Creation time (Windows) or last

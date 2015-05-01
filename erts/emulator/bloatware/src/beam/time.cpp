@@ -136,7 +136,7 @@ static ERTS_INLINE void do_time_init(void)
 static erts_short_time_t next_time_internal(void) /* PRE: tiw_lock taken by caller */
 {
     int i, tm, nto;
-    Uint32 min;
+    uint32_t min;
     ErlTimer* p;
     erts_short_time_t dt;
   
@@ -151,7 +151,7 @@ static erts_short_time_t next_time_internal(void) /* PRE: tiw_lock taken by call
   
     /* start going through wheel to find next timeout */
     tm = nto = 0;
-    min = (Uint32) -1;	/* max Uint32 */
+    min = (uint32_t) -1;	/* max uint32_t */
     i = tiw_pos;
     do {
 	p = tiw[i];
@@ -180,11 +180,11 @@ static erts_short_time_t next_time_internal(void) /* PRE: tiw_lock taken by call
 	i = (i + 1) % TIW_SIZE;
     } while (i != tiw_pos);
     dt = do_time_read();
-    if (min <= (Uint32) dt)
+    if (min <= (uint32_t) dt)
 	return 0;
-    if ((min - (Uint32) dt) > (Uint32) ERTS_SHORT_TIME_T_MAX)
+    if ((min - (uint32_t) dt) > (uint32_t) ERTS_SHORT_TIME_T_MAX)
 	return ERTS_SHORT_TIME_T_MAX;
-    return (erts_short_time_t) (min - (Uint32) dt);
+    return (erts_short_time_t) (min - (uint32_t) dt);
 }
 
 static void remove_timer(ErlTimer *p) {

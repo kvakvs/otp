@@ -90,7 +90,7 @@ static volatile int cols_needs_update = FALSE;
 
 
 static int lbuf_size = BUFSIZ;
-static Uint32 *lbuf;		/* The current line buffer */
+static uint32_t *lbuf;		/* The current line buffer */
 static int llen;		/* The current line length */
 static int lpos;                /* The current "cursor position" in the line buffer */
 
@@ -132,7 +132,7 @@ static int ins_chars(uint8_t *,int);
 static int del_chars(int);
 static int step_over_chars(int);
 static int insert_buf(uint8_t*,int);
-static int write_buf(Uint32 *,int);
+static int write_buf(uint32_t *,int);
 static int outc(int c);
 static int move_cursor(int,int);
 
@@ -336,13 +336,13 @@ static ErlDrvData ttysl_start(ErlDrvPort port, char* buf)
 
 #define DEF_HEIGHT 24
 #define DEF_WIDTH 80
-static void ttysl_get_window_size(Uint32 *width, Uint32 *height)
+static void ttysl_get_window_size(uint32_t *width, uint32_t *height)
 {
 #ifdef TIOCGWINSZ 
     struct winsize ws;
     if (ioctl(ttysl_fd,TIOCGWINSZ,&ws) == 0) {
-	*width = (Uint32) ws.ws_col;
-	*height = (Uint32) ws.ws_row;
+	*width = (uint32_t) ws.ws_col;
+	*height = (uint32_t) ws.ws_row;
 	if (*width <= 0) 
 	    *width = DEF_WIDTH;
 	if (*height <= 0) 
@@ -359,16 +359,16 @@ static ErlDrvSSizeT ttysl_control(ErlDrvData drv_data,
 				  char *buf, ErlDrvSizeT len,
 				  char **rbuf, ErlDrvSizeT rlen)
 {
-    char resbuff[2*sizeof(Uint32)];
+    char resbuff[2*sizeof(uint32_t)];
     ErlDrvSizeT res_size;
     switch (command) {
     case CTRL_OP_GET_WINSIZE:
 	{
-	    Uint32 w,h;
+	    uint32_t w,h;
 	    ttysl_get_window_size(&w,&h);
-	    memcpy(resbuff,&w,sizeof(Uint32));
-	    memcpy(resbuff+sizeof(Uint32),&h,sizeof(Uint32));
-	    res_size = 2*sizeof(Uint32);
+	    memcpy(resbuff,&w,sizeof(uint32_t));
+	    memcpy(resbuff+sizeof(uint32_t),&h,sizeof(uint32_t));
+	    res_size = 2*sizeof(uint32_t);
 	}
 	break;
     case CTRL_OP_GET_UNICODE_STATE:
@@ -641,7 +641,7 @@ static int check_buf_size(uint8_t *s, int n)
     if (size + lpos >= lbuf_size) {
 
 	lbuf_size = size + lpos + BUFSIZ;
-        if ((lbuf = (Uint32*)driver_realloc(lbuf, lbuf_size * sizeof(Uint32))) == nullptr) {
+        if ((lbuf = (uint32_t*)driver_realloc(lbuf, lbuf_size * sizeof(uint32_t))) == nullptr) {
 	    driver_failure(ttysl_port, -1);
 	    return(0);
 	}
@@ -750,7 +750,7 @@ static Sint16 get_sint16(char *s)
 
 static int start_lbuf(void)
 {
-    if (!lbuf && !(lbuf = ( Uint32*) driver_alloc(lbuf_size * sizeof(Uint32))))
+    if (!lbuf && !(lbuf = ( uint32_t*) driver_alloc(lbuf_size * sizeof(uint32_t))))
       return FALSE;
     llen = 0;
     lpos = 0;
@@ -800,17 +800,17 @@ static int move_rel(int n)
 static int ins_chars(uint8_t *s, int l)
 {
     int n, tl;
-    Uint32 *tbuf = nullptr;    /* Suppress warning about use-before-set */
+    uint32_t *tbuf = nullptr;    /* Suppress warning about use-before-set */
 
     /* Move tail of buffer to make space. */
     if ((tl = llen - lpos) > 0) {
-        if ((tbuf = (Uint32*)driver_alloc(tl * sizeof(Uint32))) == nullptr)
+        if ((tbuf = (uint32_t*)driver_alloc(tl * sizeof(uint32_t))) == nullptr)
 	    return FALSE;
-	memcpy(tbuf, lbuf + lpos, tl * sizeof(Uint32));
+	memcpy(tbuf, lbuf + lpos, tl * sizeof(uint32_t));
     }
     n = insert_buf(s, l);
     if (tl > 0) {
-	memcpy(lbuf + lpos, tbuf, tl * sizeof(Uint32));
+	memcpy(lbuf + lpos, tbuf, tl * sizeof(uint32_t));
 	driver_free(tbuf);
     }
     llen += n;
@@ -839,7 +839,7 @@ static int del_chars(int n)
 	r = llen - lpos - l;	/* Characters after deleted */
 	/* Fix up buffer and buffer pointers. */
 	if (r > 0)
-	    memmove(lbuf + lpos, lbuf + pos, r * sizeof(Uint32));
+	    memmove(lbuf + lpos, lbuf + pos, r * sizeof(uint32_t));
 	llen -= l;
 	/* Write out characters after, blank the tail and jump back to lpos. */
 	write_buf(lbuf + lpos, r);
@@ -858,7 +858,7 @@ static int del_chars(int n)
 	move_cursor(lpos, lpos-l);	/* Move back */
 	/* Fix up buffer and buffer pointers. */
 	if (r > 0)
-	    memmove(lbuf + pos, lbuf + lpos, r * sizeof(Uint32));
+	    memmove(lbuf + pos, lbuf + lpos, r * sizeof(uint32_t));
 	lpos -= l;
 	llen -= l;
 	/* Write out characters after, blank the tail and jump back to lpos. */
@@ -878,7 +878,7 @@ static int del_chars(int n)
 /* Step over n logical characters, check for overflow. */
 static int step_over_chars(int n)
 {
-    Uint32 *c, *beg, *end;
+    uint32_t *c, *beg, *end;
 
     beg = lbuf;
     end = lbuf + llen;
@@ -930,21 +930,21 @@ static int insert_buf(uint8_t *s, int n)
 	    if ((width = wcwidth(ch)) > 1) {
 		while (--width) {
 		    DEBUGLOG(("insert_buf: Wide(UTF-8):%d,%d",width,ch));
-		    lbuf[lpos++] = (WIDE_TAG | ((Uint32) ch));
+		    lbuf[lpos++] = (WIDE_TAG | ((uint32_t) ch));
 		}
 	    }
 #endif
 	    DEBUGLOG(("insert_buf: Printable(UTF-8):%d",ch));
-	    lbuf[lpos++] = (Uint32) ch;
+	    lbuf[lpos++] = (uint32_t) ch;
 	} else if (ch >= 128) { /* not utf8 mode */
 	    int nc = octal_or_hex_positions(ch);
-	    lbuf[lpos++] = ((Uint32) ch) | ESCAPED_TAG;
+	    lbuf[lpos++] = ((uint32_t) ch) | ESCAPED_TAG;
 	    while (nc--) {
 		lbuf[lpos++] = ESCAPED_TAG;
 	    }
 	} else if (ch == '\t') {
 	    do {
-		lbuf[lpos++] = (CONTROL_TAG | ((Uint32) ch));
+		lbuf[lpos++] = (CONTROL_TAG | ((uint32_t) ch));
 		ch = 0;
 	    } while (lpos % 8);
 	} else if (ch == '\e' || ch == '\n' || ch == '\r') {
@@ -979,7 +979,7 @@ static int insert_buf(uint8_t *s, int n)
  * occur normally.
  */
 
-static int write_buf(Uint32 *s, int n)
+static int write_buf(uint32_t *s, int n)
 {
     uint8_t ubuf[4];
     int ubytes = 0, i;
@@ -1004,7 +1004,7 @@ static int write_buf(Uint32 *s, int n)
 	    --n;
 	    ++s;
 	}
-	else if (*s == (CONTROL_TAG | ((Uint32) '\t'))) {
+	else if (*s == (CONTROL_TAG | ((uint32_t) '\t'))) {
 	    outc(lastput = ' ');
 	    --n; s++;
 	    while (n > 0 && *s == CONTROL_TAG) {
@@ -1017,7 +1017,7 @@ static int write_buf(Uint32 *s, int n)
 	    n -= 2;
 	    s += 2;
 	} else if (*s & ESCAPED_TAG) {
-	    Uint32 ch = *s & ~(TAG_MASK);
+	    uint32_t ch = *s & ~(TAG_MASK);
 	    uint8_t *octbuff;
 	    uint8_t octtmp[256];
 	    int octbytes;
@@ -1203,7 +1203,7 @@ static int move_down(int n)
  */
 static void update_cols(void)
 {
-    Uint32 width, height;
+    uint32_t width, height;
  
     if (cols_needs_update) {
 	cols_needs_update = FALSE;

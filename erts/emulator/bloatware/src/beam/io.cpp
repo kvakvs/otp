@@ -1409,7 +1409,7 @@ queue_port_sched_op_reply(Process *rp,
 			  Eterm *hp,
 			  Uint h_size,
 			  ErlHeapFragment* bp,
-			  Uint32 *ref_num,
+			  uint32_t *ref_num,
 			  Eterm msg)
 {
     Eterm ref = make_internal_ref(hp);
@@ -1441,7 +1441,7 @@ queue_port_sched_op_reply(Process *rp,
 }
 
 static void
-port_sched_op_reply(Eterm to, Uint32 *ref_num, Eterm msg)
+port_sched_op_reply(Eterm to, uint32_t *ref_num, Eterm msg)
 {
     Process *rp = erts_proc_lookup_raw(to);
     if (rp) {

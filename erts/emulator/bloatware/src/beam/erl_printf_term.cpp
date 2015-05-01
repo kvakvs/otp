@@ -235,7 +235,7 @@ print_term(fmtfn_t fn, void* arg, Eterm obj, long *dcount,
     int res;
     int i;
     Eterm val;
-    Uint32 *ref_num;
+    uint32_t *ref_num;
     union {
 	UWord word;
 	Eterm* ptr;

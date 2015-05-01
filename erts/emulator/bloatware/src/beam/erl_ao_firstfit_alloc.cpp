@@ -100,8 +100,8 @@ struct AOFF_RBTree_t_ {
     AOFF_RBTree_t *parent;
     AOFF_RBTree_t *left;
     AOFF_RBTree_t *right;
-    Uint32 flags;
-    Uint32 max_sz;  /* of all blocks in this_ sub-tree */
+    uint32_t flags;
+    uint32_t max_sz;  /* of all blocks in this_ sub-tree */
 };
 #define AOFF_BLK_SZ(B) MBC_FBLK_SZ(&(B)->hdr)
 

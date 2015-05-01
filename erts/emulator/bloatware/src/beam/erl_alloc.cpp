@@ -3268,7 +3268,7 @@ erts_request_alloc_info(struct process *c_p,
     erts_smp_atomic32_init_nob(&air->refc,
 			       (erts_aint32_t) erts_no_schedulers);
 
-    erts_smp_proc_add_refc(c_p, (Sint32) erts_no_schedulers);
+    erts_smp_proc_add_refc(c_p, (int32_t) erts_no_schedulers);
 
 #ifdef ERTS_SMP
     if (erts_no_schedulers > 1)

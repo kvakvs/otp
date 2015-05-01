@@ -1581,7 +1581,7 @@ static CompEntry compose_tab[] = {
 {12442, 0, 10, compose_tab_60, hash_compose_tab_60}
 }; /* compose_tab */ 
 #define COMP_CANDIDATE_MAP_OFFSET 24
-static Uint32 comp_candidate_map[] = {
+static uint32_t comp_candidate_map[] = {
     0x081ABFDFU,
     0x000361B8U,
     0x00000024U,

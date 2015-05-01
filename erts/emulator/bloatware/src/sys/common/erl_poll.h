@@ -96,7 +96,7 @@
 #  endif
 #endif
 
-typedef Uint32 ErtsPollEvents;
+typedef uint32_t ErtsPollEvents;
 #undef ERTS_POLL_EV_E2N
 
 #if defined(__WIN32__) || defined(__OSE__)	/* --- win32 or ose -------- */

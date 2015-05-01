@@ -1591,7 +1591,7 @@ erts_trace_exception(Process* p, BeamInstr mfa[3], Eterm class_, Eterm value,
  * the process tracer, if it is NIL no trace message is generated, 
  * if it is a pid or port we do a meta trace.
  */
-Uint32
+uint32_t
 erts_call_trace(Process* p, BeamInstr mfa[3], Binary *match_spec,
 		Eterm* args, int local, Eterm *tracer_pid)
 {
@@ -1599,7 +1599,7 @@ erts_call_trace(Process* p, BeamInstr mfa[3], Binary *match_spec,
     Eterm mfa_tuple;
     int arity;
     int i;
-    Uint32 return_flags;
+    uint32_t return_flags;
     Eterm pam_result = am_true;
     Eterm mess;
     Uint meta_flags, *tracee_flags;

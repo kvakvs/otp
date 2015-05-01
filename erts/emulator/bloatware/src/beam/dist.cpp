@@ -169,7 +169,7 @@ Uint erts_dist_cache_size(void)
 }
 
 static ErtsProcList *
-get_suspended_on_de(DistEntry *dep, Uint32 unset_qflgs)
+get_suspended_on_de(DistEntry *dep, uint32_t unset_qflgs)
 {
     ERTS_SMP_LC_ASSERT(erts_smp_lc_mtx_is_locked(&dep->qlock));
     dep->qflgs &= ~unset_qflgs;
@@ -524,7 +524,7 @@ int erts_do_net_exits(DistEntry *dep, Eterm reason)
 	ErtsLink *nlinks;
 	ErtsLink *node_links;
 	ErtsMonitor *monitors;
-	Uint32 flags;
+	uint32_t flags;
 
 	erts_smp_atomic_set_mb(&dep->dist_cmd_scheduled, 1);
 	erts_smp_de_rwlock(dep);
@@ -892,7 +892,7 @@ erts_dsig_send_reg_msg(ErtsDSigData *dsdp, Eterm remote_name, Eterm message)
     Sint tok_label = 0;
     Sint tok_lastcnt = 0;
     Sint tok_serial = 0;
-    Uint32 msize = 0;
+    uint32_t msize = 0;
     DTRACE_CHARBUF(node_name, 64);
     DTRACE_CHARBUF(sender_name, 64);
     DTRACE_CHARBUF(receiver_name, 128);
@@ -1699,12 +1699,12 @@ dsig_send(ErtsDSigData *dsdp, Eterm ctl, Eterm msg, int force_busy)
     Eterm cid;
     int suspended = 0;
     int resume = 0;
-    Uint32 pass_through_size;
+    uint32_t pass_through_size;
     Uint data_size, dhdr_ext_size;
     ErtsAtomCacheMap *acmp;
     ErtsDistOutputBuf *obuf;
     DistEntry *dep = dsdp->dep;
-    Uint32 flags = dep->flags;
+    uint32_t flags = dep->flags;
     Process *c_p = dsdp->proc;
 
     if (!c_p || dsdp->no_suspend)
@@ -1994,8 +1994,8 @@ int
 erts_dist_command(Port *prt, int reds_limit)
 {
     Sint reds = ERTS_PORT_REDS_DIST_CMD_START;
-    Uint32 status;
-    Uint32 flags;
+    uint32_t status;
+    uint32_t flags;
     Sint obufsize = 0;
     ErtsDistOutputQueue oq, foq;
     DistEntry *dep = prt->dist_entry;
@@ -2305,7 +2305,7 @@ erts_dist_port_not_busy(Port *prt)
 }
 
 void
-erts_kill_dist_connection(DistEntry *dep, Uint32 connection_id)
+erts_kill_dist_connection(DistEntry *dep, uint32_t connection_id)
 {
     erts_smp_de_rwlock(dep);
     if (is_internal_port(dep->cid)
@@ -2582,7 +2582,7 @@ BIF_RETTYPE setnode_2(BIF_ALIST_2)
     erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_MAIN);
     erts_smp_thr_progress_block();
     inc_no_nodes();
-    erts_set_this_node(BIF_ARG_1, (Uint32) creation);
+    erts_set_this_node(BIF_ARG_1, (uint32_t) creation);
     erts_is_alive = 1;
     send_nodes_mon_msgs(nullptr, am_nodeup, BIF_ARG_1, am_visible, NIL);
     erts_smp_thr_progress_unblock();
@@ -3086,7 +3086,7 @@ BIF_RETTYPE monitor_node_2(BIF_ALIST_2)
 BIF_RETTYPE net_kernel_dflag_unicode_io_1(BIF_ALIST_1)
 {
     DistEntry *de;
-    Uint32 f;
+    uint32_t f;
     if (is_not_pid(BIF_ARG_1)) {
 	BIF_ERROR(BIF_P,BADARG);
     }
@@ -3339,7 +3339,7 @@ send_nodes_mon_msgs(Process *c_p, Eterm what, Eterm node, Eterm type, Eterm reas
 }
 
 static Eterm
-insert_nodes_monitor(Process *c_p, Uint32 opts)
+insert_nodes_monitor(Process *c_p, uint32_t opts)
 {
     Uint16 no = 1;
     Eterm res = am_false;
@@ -3425,7 +3425,7 @@ insert_nodes_monitor(Process *c_p, Uint32 opts)
 }
 
 static Eterm
-remove_nodes_monitors(Process *c_p, Uint32 opts, int all)
+remove_nodes_monitors(Process *c_p, uint32_t opts, int all)
 {
     Eterm res = am_false;
     ErtsNodesMonitor *nmp;

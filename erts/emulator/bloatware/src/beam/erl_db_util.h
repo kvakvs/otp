@@ -214,7 +214,7 @@ typedef struct db_table_common {
     erts_smp_rwmtx_t rwlock;  /* rw lock on table */
     erts_smp_mtx_t fixlock;   /* Protects fixations,megasec,sec,microsec */
     int is_thread_safe;       /* No fine locking inside table needed */
-    Uint32 type;              /* table type, *read only* after creation */
+    uint32_t type;              /* table type, *read only* after creation */
 #endif
     Eterm owner;              /* Pid of the creator */
     Eterm heir;               /* Pid of the heir */
@@ -229,7 +229,7 @@ typedef struct db_table_common {
     DbFixation* fixations;    /* List of processes who have done safe_fixtable,
                                  "local" fixations not included. */ 
     /* All 32-bit fields */
-    Uint32 status;            /* bit masks defined  below */
+    uint32_t status;            /* bit masks defined  below */
     int slot;                 /* slot index in meta_main_tab */
     int keypos;               /* defaults to 1 */
     int compress;
@@ -433,7 +433,7 @@ Eterm db_match_dbterm(DbTableCommon* tb, Process* c_p, Binary* bprog,
 Eterm db_prog_match(Process *p, Binary *prog, Eterm term, Eterm* base,
 		    Eterm *termp, int arity,
 		    enum erts_pam_run_flags in_flags,
-		    Uint32 *return_flags /* Zeroed on enter */);
+		    uint32_t *return_flags /* Zeroed on enter */);
 
 /* returns DB_ERROR_NONE if matches, 1 if not matches and some db error on 
    error. */

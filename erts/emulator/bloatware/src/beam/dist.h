@@ -284,7 +284,7 @@ extern int erts_dsig_send_m_exit(ErtsDSigData *, Eterm, Eterm, Eterm, Eterm);
 
 extern int erts_dist_command(Port *prt, int reds);
 extern void erts_dist_port_not_busy(Port *prt);
-extern void erts_kill_dist_connection(DistEntry *dep, Uint32);
+extern void erts_kill_dist_connection(DistEntry *dep, uint32_t);
 
 extern Uint erts_dist_cache_size(void);
 

@@ -180,7 +180,7 @@ erts_aint32_t erts_alcu_fix_alloc_shrink(Allctr_t *, erts_aint32_t);
 #if defined(GET_ERL_ALLOC_UTIL_IMPL) && !defined(ERL_ALLOC_UTIL_IMPL__)
 #define ERL_ALLOC_UTIL_IMPL__
 
-#define ERTS_ALCU_FLG_FAIL_REALLOC_MOVE		(((Uint32) 1) << 0)
+#define ERTS_ALCU_FLG_FAIL_REALLOC_MOVE		(((uint32_t) 1) << 0)
 
 #ifdef USE_THREADS
 #define ERL_THREADS_EMU_INTERNAL__

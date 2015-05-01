@@ -193,7 +193,7 @@ static Uint chunk_types[] = {
 typedef struct {
     ErlFunEntry* fe;		/* Entry in fun table. */
     unsigned label;		/* Label of function entry. */
-    Uint32 num_free;		/* Number of free variables. */
+    uint32_t num_free;		/* Number of free variables. */
     Eterm function;		/* Name of local function. */
     int arity;			/* Arity (including free variables). */
 } Lambda;
@@ -239,7 +239,7 @@ struct string_patch {
 
 typedef struct {
     int pos;			/* Position in code */
-    Uint32 loc;			/* Location in source code */
+    uint32_t loc;			/* Location in source code */
 } LineInstr;
 
 /*
@@ -1420,8 +1420,8 @@ read_lambda_table(LoaderState* stp)
     }
     for (i = 0; i < stp->num_lambdas; i++) {
 	Uint n;
-	Uint32 Index;
-	Uint32 OldUniq;
+	uint32_t Index;
+	uint32_t OldUniq;
 	ErlFunEntry* fe;
 	Uint arity;
 
@@ -2006,7 +2006,7 @@ load_code(LoaderState* stp)
 	 */
 
 	{
-	    Uint32 mask[3] = {0, 0, 0};
+	    uint32_t mask[3] = {0, 0, 0};
 
 	    tmp_op = stp->genop;
 	    arity = gen_opc[tmp_op->op].arity;
@@ -2014,7 +2014,7 @@ load_code(LoaderState* stp)
 		LoadError0(stp, "no specific operation found (arity > 6)");
 	    }
 	    for (arg = 0; arg < arity; arg++) {
-		mask[arg/2] |= ((Uint32)1 << (tmp_op->a[arg].type)) << ((arg%2)*16);
+		mask[arg/2] |= ((uint32_t)1 << (tmp_op->a[arg].type)) << ((arg%2)*16);
 	    }
 	    specific = gen_opc[tmp_op->op].specific;
 	    num_specific = gen_opc[tmp_op->op].num_specific;
@@ -4243,7 +4243,7 @@ freeze_code(LoaderState* stp)
 	    *locp++ = LINE_INVALID_LOCATION;
 	    str_table = (uint8_t *) locp;
 	} else {
-	    Uint32* locp = (Uint32 *) p;
+	    uint32_t* locp = (uint32_t *) p;
 	    ASSERT(stp->loc_size == 4);
 	    for (i = 0; i < num_instrs; i++) {
 		*locp++ = stp->line_instr[i].loc;

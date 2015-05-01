@@ -186,7 +186,7 @@ public:
 
 
 static ERTS_INLINE Process *
-get_proc(Process *cp, Uint32 cp_locks, Eterm id, Uint32 id_locks)
+get_proc(Process *cp, uint32_t cp_locks, Eterm id, uint32_t id_locks)
 {
     Process *proc = erts_pid2proc(cp, cp_locks, id, id_locks);
     if (!proc && is_atom(id))
@@ -347,7 +347,7 @@ typedef struct dmc_guard_bif {
     void *biff;
     /*    BIF_RETTYPE (*biff)(); */
     int arity;
-    Uint32 flags;
+    uint32_t flags;
 } DMCGuardBif; 
 
 /*
@@ -992,7 +992,7 @@ static void db_free_tmp_uncompressed(DbTerm* obj);
 */
 BIF_RETTYPE db_get_trace_control_word(Process *p)
 {
-    Uint32 tcw = (Uint32) erts_smp_atomic32_read_acqb(&trace_control_word);
+    uint32_t tcw = (uint32_t) erts_smp_atomic32_read_acqb(&trace_control_word);
     BIF_RET(erts_make_integer((Uint) tcw, p));
 }
 
@@ -1004,13 +1004,13 @@ BIF_RETTYPE db_get_trace_control_word_0(BIF_ALIST_0)
 BIF_RETTYPE db_set_trace_control_word(Process *p, Eterm new_)
 {
     Uint val;
-    Uint32 old_tcw;
+    uint32_t old_tcw;
     if (!term_to_Uint(new_, &val))
 	BIF_ERROR(p, BADARG);
-    if (val != ((Uint32)val))
+    if (val != ((uint32_t)val))
 	BIF_ERROR(p, BADARG);
 
-    old_tcw = (Uint32) erts_smp_atomic32_xchg_relb(&trace_control_word,
+    old_tcw = (uint32_t) erts_smp_atomic32_xchg_relb(&trace_control_word,
 						   (erts_aint32_t) val);
     BIF_RET(erts_make_integer((Uint) old_tcw, p));
 }
@@ -1027,7 +1027,7 @@ static Eterm db_set_trace_control_word_fake_1(BIF_ALIST_1)
     Uint val;
     if (!term_to_Uint(new_, &val))
 	BIF_ERROR(p, BADARG);
-    if (val != ((Uint32)val))
+    if (val != ((uint32_t)val))
 	BIF_ERROR(p, BADARG);
     BIF_RET(db_get_trace_control_word(p));
 }
@@ -1284,7 +1284,7 @@ done:
 Eterm erts_match_set_run(Process *p, Binary *mpsp, 
 			 Eterm *args, int num_args,
 			 enum erts_pam_run_flags in_flags,
-			 Uint32 *return_flags) 
+			 uint32_t *return_flags) 
 {
     Eterm ret;
 
@@ -1309,7 +1309,7 @@ Eterm erts_match_set_run(Process *p, Binary *mpsp,
 
 static Eterm erts_match_set_run_ets(Process *p, Binary *mpsp,
 				    Eterm args, int num_args,
-				    Uint32 *return_flags)
+				    uint32_t *return_flags)
 {
     Eterm ret;
 
@@ -1773,7 +1773,7 @@ Eterm db_prog_match(Process *c_p, Binary *bprog,
 		    Eterm *termp,
 		    int arity,
 		    enum erts_pam_run_flags in_flags,
-		    Uint32 *return_flags)
+		    uint32_t *return_flags)
 {
     MatchProg *prog = Binary2MatchProg(bprog);
     Eterm *ep;
@@ -5000,7 +5000,7 @@ static Eterm match_spec_test(Process *p, Eterm against, Eterm spec, int trace)
     Eterm *arr;
     int n;
     Eterm l;
-    Uint32 ret_flags;
+    uint32_t ret_flags;
     Uint sz;
     BeamInstr *save_cp;
 
@@ -5121,7 +5121,7 @@ void db_free_tmp_uncompressed(DbTerm* obj)
 Eterm db_match_dbterm(DbTableCommon* tb, Process* c_p, Binary* bprog,
 			     int all, DbTerm* obj, Eterm** hpp, Uint extra)
 {
-    Uint32 dummy;
+    uint32_t dummy;
     Eterm* base;
     Eterm res;
 

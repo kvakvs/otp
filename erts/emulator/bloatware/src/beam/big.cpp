@@ -2455,7 +2455,7 @@ Eterm big_times_small(Eterm x, Uint y, Eterm *r)
 /*
 ** Expects the big to fit.
 */
-Uint32 big_to_uint32(Eterm b)
+uint32_t big_to_uint32(Eterm b)
 {
     Uint u;
     if (!term_to_Uint(b, &u)) {

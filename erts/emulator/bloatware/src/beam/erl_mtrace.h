@@ -36,7 +36,7 @@ void erts_mtrace_pre_init(void);
 void erts_mtrace_init(char *receiver, char *nodename);
 void erts_mtrace_install_wrapper_functions(void);
 void erts_mtrace_stop(void);
-void erts_mtrace_exit(Uint32 exit_value);
+void erts_mtrace_exit(uint32_t exit_value);
 
 void erts_mtrace_crr_alloc(void*, ErtsAlcType_t, ErtsAlcType_t, Uint);
 void erts_mtrace_crr_realloc(void*, ErtsAlcType_t, ErtsAlcType_t, void*, Uint);

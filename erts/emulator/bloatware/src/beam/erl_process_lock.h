@@ -754,7 +754,7 @@ ERTS_GLB_INLINE int erts_smp_proc_trylock(Process *, ErtsProcLocks);
 
 ERTS_GLB_INLINE void erts_smp_proc_inc_refc(Process *);
 ERTS_GLB_INLINE void erts_smp_proc_dec_refc(Process *);
-ERTS_GLB_INLINE void erts_smp_proc_add_refc(Process *, Sint32);
+ERTS_GLB_INLINE void erts_smp_proc_add_refc(Process *, int32_t);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
@@ -830,7 +830,7 @@ ERTS_GLB_INLINE void erts_smp_proc_dec_refc(Process *p)
 #endif
 }
 
-ERTS_GLB_INLINE void erts_smp_proc_add_refc(Process *p, Sint32 add_refc)
+ERTS_GLB_INLINE void erts_smp_proc_add_refc(Process *p, int32_t add_refc)
 {
 #ifdef ERTS_SMP
     int referred = erts_ptab_add_test_refc(&p->common, add_refc);

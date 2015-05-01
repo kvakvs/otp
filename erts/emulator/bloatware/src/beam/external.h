@@ -102,7 +102,7 @@ typedef struct {
 } ErtsAtomCacheMap;
 
 typedef struct {
-    Uint32 size;
+    uint32_t size;
     Eterm atom[ERTS_ATOM_CACHE_SIZE];
 } ErtsAtomTranslationTable;
 
@@ -115,10 +115,10 @@ typedef struct {
  * overlap any of the bits used for flags, or ERTS will leak flags bits into
  * connection IDs and leak connection ID bits into the flags.
  */
-#define ERTS_DIST_EXT_DFLAG_HDR      ((Uint32) 0x80000000)
-#define ERTS_DIST_EXT_ATOM_TRANS_TAB ((Uint32) 0x40000000)
-#define ERTS_DIST_EXT_BTT_SAFE       ((Uint32) 0x20000000)
-#define ERTS_DIST_EXT_CON_ID_MASK    ((Uint32) 0x1fffffff)
+#define ERTS_DIST_EXT_DFLAG_HDR      ((uint32_t) 0x80000000)
+#define ERTS_DIST_EXT_ATOM_TRANS_TAB ((uint32_t) 0x40000000)
+#define ERTS_DIST_EXT_BTT_SAFE       ((uint32_t) 0x20000000)
+#define ERTS_DIST_EXT_CON_ID_MASK    ((uint32_t) 0x1fffffff)
 
 #define ERTS_DIST_EXT_CON_ID(DIST_EXTP) \
   ((DIST_EXTP)->flags & ERTS_DIST_EXT_CON_ID_MASK)
@@ -127,7 +127,7 @@ typedef struct {
     uint8_t *extp;
     uint8_t *ext_endp;
     Sint heap_size;
-    Uint32 flags;
+    uint32_t flags;
     ErtsAtomTranslationTable attab;
 } ErtsDistExternal;
 
@@ -155,13 +155,13 @@ typedef struct {
 void erts_init_atom_cache_map(ErtsAtomCacheMap *);
 void erts_reset_atom_cache_map(ErtsAtomCacheMap *);
 void erts_destroy_atom_cache_map(ErtsAtomCacheMap *);
-void erts_finalize_atom_cache_map(ErtsAtomCacheMap *, Uint32);
+void erts_finalize_atom_cache_map(ErtsAtomCacheMap *, uint32_t);
 
 Uint erts_encode_ext_dist_header_size(ErtsAtomCacheMap *);
 uint8_t *erts_encode_ext_dist_header_setup(uint8_t *, ErtsAtomCacheMap *);
-uint8_t *erts_encode_ext_dist_header_finalize(uint8_t *, ErtsAtomCache *, Uint32);
-Uint erts_encode_dist_ext_size(Eterm, Uint32, ErtsAtomCacheMap *);
-void erts_encode_dist_ext(Eterm, uint8_t **, Uint32, ErtsAtomCacheMap *);
+uint8_t *erts_encode_ext_dist_header_finalize(uint8_t *, ErtsAtomCache *, uint32_t);
+Uint erts_encode_dist_ext_size(Eterm, uint32_t, ErtsAtomCacheMap *);
+void erts_encode_dist_ext(Eterm, uint8_t **, uint32_t, ErtsAtomCacheMap *);
 
 Uint erts_encode_ext_size(Eterm);
 Uint erts_encode_ext_size_2(Eterm, unsigned);

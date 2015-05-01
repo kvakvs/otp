@@ -565,7 +565,7 @@ typedef struct _return_info {
 typedef struct _restart_context {
     erts_pcre_extra extra;
     void *restart_data;
-    Uint32 flags;
+    uint32_t flags;
     char *subject; /* to be able to free it when done */
     pcre *code; /* Keep a copy */
     int *ovector; /* Keep until done */

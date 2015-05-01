@@ -204,7 +204,7 @@ extern Eterm erts_ddll_monitor_driver(Process *p,
 
 #ifdef ARCH_32
  /* *DO NOT USE* only for alignment. */
-#define ERTS_BINARY_STRUCT_ALIGNMENT Uint32 align__;
+#define ERTS_BINARY_STRUCT_ALIGNMENT uint32_t align__;
 #else
 #define ERTS_BINARY_STRUCT_ALIGNMENT
 #endif
@@ -635,15 +635,15 @@ void erts_bif_info_init(void);
 /* bif.c */
 Eterm erts_make_ref(Process *);
 Eterm erts_make_ref_in_buffer(Eterm buffer[REF_THING_SIZE]);
-void erts_make_ref_in_array(Uint32 ref[ERTS_MAX_REF_NUMBERS]);
+void erts_make_ref_in_array(uint32_t ref[ERTS_MAX_REF_NUMBERS]);
 
 ERTS_GLB_INLINE Eterm
-erts_proc_store_ref(Process *c_p, Uint32 ref[ERTS_MAX_REF_NUMBERS]);
+erts_proc_store_ref(Process *c_p, uint32_t ref[ERTS_MAX_REF_NUMBERS]);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
 ERTS_GLB_INLINE Eterm
-erts_proc_store_ref(Process *c_p, Uint32 ref[ERTS_MAX_REF_NUMBERS])
+erts_proc_store_ref(Process *c_p, uint32_t ref[ERTS_MAX_REF_NUMBERS])
 {
     Eterm *hp = HAlloc(c_p, REF_THING_SIZE);
     write_ref_thing(hp, ref[0], ref[1], ref[2]);
@@ -675,7 +675,7 @@ Eterm erts_check_process_code(Process *c_p, Eterm module, int allow_gc, int *red
 typedef struct {
     BeamInstr* current;		/* Pointer to: Mod, Name, Arity */
     Uint needed;		/* Heap space needed for entire tuple */
-    Uint32 loc;			/* Location in source code */
+    uint32_t loc;			/* Location in source code */
     Eterm* fname_ptr;		/* Pointer to fname table */
 } FunctionInfo;
 
@@ -811,8 +811,8 @@ Eterm erts_preloaded(Process* p);
 /* erl_md5.c */
 
 typedef struct {
-    Uint32 state[4];		/* state (ABCD) */
-    Uint32 count[2];		/* number of bits, modulo 2^64 (lsb first) */
+    uint32_t state[4];		/* state (ABCD) */
+    uint32_t count[2];		/* number of bits, modulo 2^64 (lsb first) */
     uint8_t buffer[64];	/* input buffer */
 } MD5_CTX;
 
@@ -1108,7 +1108,7 @@ enum erts_pam_run_flags {
 extern Eterm erts_match_set_run(Process *p, Binary *mpsp, 
 				Eterm *args, int num_args,
 				enum erts_pam_run_flags in_flags,
-				Uint32 *return_flags);
+				uint32_t *return_flags);
 extern Eterm erts_match_set_get_source(Binary *mpsp);
 extern void erts_match_prog_foreach_offheap(Binary *b,
 					    void (*)(ErlOffHeap *, void *),

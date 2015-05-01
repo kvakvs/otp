@@ -32,11 +32,11 @@
 ** BIF Timer support
 ****************************************************************************/
 
-#define BTM_FLG_SL_TIMER	(((Uint32) 1) << 0)
-#define BTM_FLG_CANCELED	(((Uint32) 1) << 1)
-#define BTM_FLG_HEAD		(((Uint32) 1) << 2)
-#define BTM_FLG_BYNAME		(((Uint32) 1) << 3)
-#define BTM_FLG_WRAP		(((Uint32) 1) << 4)
+#define BTM_FLG_SL_TIMER	(((uint32_t) 1) << 0)
+#define BTM_FLG_CANCELED	(((uint32_t) 1) << 1)
+#define BTM_FLG_HEAD		(((uint32_t) 1) << 2)
+#define BTM_FLG_BYNAME		(((uint32_t) 1) << 3)
+#define BTM_FLG_WRAP		(((uint32_t) 1) << 4)
 
 struct ErtsBifTimer_ {
     struct {
@@ -56,9 +56,9 @@ struct ErtsBifTimer_ {
     } receiver;
     ErlTimer tm;
     ErlHeapFragment* bp;
-    Uint32 flags;
+    uint32_t flags;
     Eterm message;
-    Uint32 ref_numbers[ERTS_REF_NUMBERS];
+    uint32_t ref_numbers[ERTS_REF_NUMBERS];
 };
 
 #ifdef SMALL_MEMORY
@@ -121,9 +121,9 @@ safe_btm_lock(Process *c_p, ErtsProcLocks c_p_locks, int rw_lock)
 ERTS_SCHED_PREF_PALLOC_IMPL(btm_pre, ErtsBifTimer, BTM_PREALC_SZ)
 
 static ERTS_INLINE int
-get_index(Uint32 *ref_numbers, Uint32 len)
+get_index(uint32_t *ref_numbers, uint32_t len)
 {
-    Uint32 hash;
+    uint32_t hash;
     /* len can potentially be larger than ERTS_REF_NUMBERS
        if it has visited another node... */
     if (len > ERTS_REF_NUMBERS)
@@ -140,14 +140,14 @@ get_index(Uint32 *ref_numbers, Uint32 len)
 
     ASSERT(1 <= len && len <= ERTS_REF_NUMBERS);
 
-    hash = block_hash((uint8_t *) ref_numbers, len * sizeof(Uint32), 0x08d12e65);
-    return (int) (hash % ((Uint32) TIMER_HASH_VEC_SZ));
+    hash = block_hash((uint8_t *) ref_numbers, len * sizeof(uint32_t), 0x08d12e65);
+    return (int) (hash % ((uint32_t) TIMER_HASH_VEC_SZ));
 }
 
 static Eterm
-create_ref(Uint *hp, Uint32 *ref_numbers, Uint32 len)
+create_ref(Uint *hp, uint32_t *ref_numbers, uint32_t len)
 {
-    Uint32 *datap;
+    uint32_t *datap;
     int i;
 
 
@@ -158,11 +158,11 @@ create_ref(Uint *hp, Uint32 *ref_numbers, Uint32 len)
 
 #if defined(ARCH_64) && !HALFWORD_HEAP
     hp[0] = make_ref_thing_header(len/2 + 1);
-    datap = (Uint32 *) &hp[1];
+    datap = (uint32_t *) &hp[1];
     *(datap++) = len;
 #else
     hp[0] = make_ref_thing_header(len);
-    datap = (Uint32 *) &hp[1];
+    datap = (uint32_t *) &hp[1];
 #endif
 
     for (i = 0; i < len; i++)
@@ -172,7 +172,7 @@ create_ref(Uint *hp, Uint32 *ref_numbers, Uint32 len)
 }
 
 static int
-eq_non_standard_ref_numbers(Uint32 *rn1, Uint32 len1, Uint32 *rn2, Uint32 len2)
+eq_non_standard_ref_numbers(uint32_t *rn1, uint32_t len1, uint32_t *rn2, uint32_t len2)
 {
 #if defined(ARCH_64) && !HALFWORD_HEAP
 #define MAX_REF_HEAP_SZ (1+(ERTS_MAX_REF_NUMBERS/2+1))
@@ -187,7 +187,7 @@ eq_non_standard_ref_numbers(Uint32 *rn1, Uint32 len1, Uint32 *rn2, Uint32 len2)
 }
 
 static ERTS_INLINE int
-eq_ref_numbers(Uint32 *rn1, Uint32 len1, Uint32 *rn2, Uint32 len2)
+eq_ref_numbers(uint32_t *rn1, uint32_t len1, uint32_t *rn2, uint32_t len2)
 {
     int res;
     if (len1 != ERTS_REF_NUMBERS || len2 != ERTS_REF_NUMBERS) {
@@ -210,8 +210,8 @@ eq_ref_numbers(Uint32 *rn1, Uint32 len1, Uint32 *rn2, Uint32 len2)
 static ERTS_INLINE ErtsBifTimer *
 tab_find(Eterm ref)
 {
-    Uint32 *ref_numbers = internal_ref_numbers(ref);
-    Uint32 ref_numbers_len = internal_ref_no_of_numbers(ref);
+    uint32_t *ref_numbers = internal_ref_numbers(ref);
+    uint32_t ref_numbers_len = internal_ref_no_of_numbers(ref);
     int ix = get_index(ref_numbers, ref_numbers_len);
     ErtsBifTimer* btm;
 
@@ -387,7 +387,7 @@ bif_timer_timeout(ErtsBifTimer* btm)
 }
 
 static Eterm
-setup_bif_timer(Uint32 xflags,
+setup_bif_timer(uint32_t xflags,
 		Process *c_p,
 		Eterm time,
 		Eterm receiver,
@@ -397,7 +397,7 @@ setup_bif_timer(Uint32 xflags,
     ErtsBifTimer* btm;
     Uint timeout;
     Eterm ref;
-    Uint32 *ref_numbers;
+    uint32_t *ref_numbers;
     
     if (!term_to_Uint(time, &timeout))
 	return THE_NON_VALUE;

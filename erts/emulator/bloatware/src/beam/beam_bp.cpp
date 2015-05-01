@@ -693,7 +693,7 @@ erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
     typedef Eterm (*func_t)(Process*, Eterm*, BeamInstr*);
     func_t func;
     Export* ep = bif_export[bif_index];
-    Uint32 flags = 0, flags_meta = 0;
+    uint32_t flags = 0, flags_meta = 0;
     Eterm meta_tracer_pid = NIL;
     int applying = (I == &(ep->code[3])); /* Yup, the apply code for a bif
 					   * is actually in the
@@ -869,7 +869,7 @@ do_call_trace(Process* c_p, BeamInstr* I, Eterm* reg,
     int return_to_trace = 0;
     BeamInstr w;
     BeamInstr *cp_save;
-    Uint32 flags;
+    uint32_t flags;
     Uint need = 0;
     Eterm* E = c_p->stop;
 

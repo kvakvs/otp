@@ -502,9 +502,9 @@ efile_fileinfo(Efile_error* errInfo, Efile_info* pInfo,
 #if SIZEOF_OFF_T == 4
     pInfo->size_high = 0;
 #else
-    pInfo->size_high = (Uint32)(statbuf.st_size >> 32);
+    pInfo->size_high = (uint32_t)(statbuf.st_size >> 32);
 #endif
-    pInfo->size_low = (Uint32)statbuf.st_size;
+    pInfo->size_low = (uint32_t)statbuf.st_size;
 
 #ifdef NO_ACCESS
     /* Just look at read/write access for owner. */

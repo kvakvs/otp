@@ -1070,7 +1070,7 @@ erts_sched_wall_time_request(Process *c_p, int set, int enable)
     erts_smp_atomic32_init_nob(&swtrp->refc,
 			       (erts_aint32_t) erts_no_schedulers);
 
-    erts_smp_proc_add_refc(c_p, (Sint32) erts_no_schedulers);
+    erts_smp_proc_add_refc(c_p, (int32_t) erts_no_schedulers);
 
 #ifdef ERTS_SMP
     if (erts_no_schedulers > 1)
@@ -2433,7 +2433,7 @@ ongoing_multi_scheduling_block(void)
 }
 
 static ERTS_INLINE void
-empty_runq_aux(ErtsRunQueue *rq, Uint32 old_flags)
+empty_runq_aux(ErtsRunQueue *rq, uint32_t old_flags)
 {
     if (!ERTS_RUNQ_IX_IS_DIRTY(rq->ix) && old_flags & ERTS_RUNQ_FLG_NONEMPTY) {
 #ifdef DEBUG
@@ -2457,14 +2457,14 @@ empty_runq_aux(ErtsRunQueue *rq, Uint32 old_flags)
 static ERTS_INLINE void
 empty_runq(ErtsRunQueue *rq)
 {
-    Uint32 old_flags = ERTS_RUNQ_FLGS_UNSET(rq, ERTS_RUNQ_FLG_NONEMPTY|ERTS_RUNQ_FLG_PROTECTED);
+    uint32_t old_flags = ERTS_RUNQ_FLGS_UNSET(rq, ERTS_RUNQ_FLG_NONEMPTY|ERTS_RUNQ_FLG_PROTECTED);
     empty_runq_aux(rq, old_flags);
 }
 
-static ERTS_INLINE Uint32
+static ERTS_INLINE uint32_t
 empty_protected_runq(ErtsRunQueue *rq)
 {
-    Uint32 old_flags = ERTS_RUNQ_FLGS_BSET(rq,
+    uint32_t old_flags = ERTS_RUNQ_FLGS_BSET(rq,
 					   ERTS_RUNQ_FLG_NONEMPTY|ERTS_RUNQ_FLG_PROTECTED,
 					   ERTS_RUNQ_FLG_PROTECTED);
     empty_runq_aux(rq, old_flags);
@@ -2474,7 +2474,7 @@ empty_protected_runq(ErtsRunQueue *rq)
 static ERTS_INLINE void
 non_empty_runq(ErtsRunQueue *rq)
 {
-    Uint32 old_flags = ERTS_RUNQ_FLGS_SET(rq, ERTS_RUNQ_FLG_NONEMPTY);
+    uint32_t old_flags = ERTS_RUNQ_FLGS_SET(rq, ERTS_RUNQ_FLG_NONEMPTY);
     if (!ERTS_RUNQ_IX_IS_DIRTY(rq->ix) && (!(old_flags & ERTS_RUNQ_FLG_NONEMPTY))) {
 #ifdef DEBUG
 	erts_aint32_t empty = erts_smp_atomic32_read_nob(&no_empty_run_queues);
@@ -3193,7 +3193,7 @@ try_inc_no_active_runqs(int active)
 static ERTS_INLINE int
 chk_wake_sched(ErtsRunQueue *crq, int ix, int activate)
 {
-    Uint32 flags;
+    uint32_t flags;
     ErtsRunQueue *wrq;
     if (crq->ix == ix)
 	return 0;
@@ -3393,7 +3393,7 @@ static ErtsRunQueue *
 check_immigration_need(ErtsRunQueue *c_rq, ErtsMigrationPath *mp, int prio)
 {
     int len;
-    Uint32 f_flags, f_rq_flags;
+    uint32_t f_flags, f_rq_flags;
     ErtsRunQueue *f_rq;
 
     f_flags = mp->prio[prio].flags;
@@ -3439,7 +3439,7 @@ check_immigration_need(ErtsRunQueue *c_rq, ErtsMigrationPath *mp, int prio)
 static void
 immigrate(ErtsRunQueue *c_rq, ErtsMigrationPath *mp)
 {
-    Uint32 iflags, iflag;
+    uint32_t iflags, iflag;
     erts_smp_runq_unlock(c_rq);
 
     ASSERT(erts_thr_progress_is_managed_thread());
@@ -3791,9 +3791,9 @@ evacuate_run_queue(ErtsRunQueue *rq,
 }
 
 static int
-try_steal_task_from_victim(ErtsRunQueue *rq, int *rq_lockedp, ErtsRunQueue *vrq, Uint32 flags)
+try_steal_task_from_victim(ErtsRunQueue *rq, int *rq_lockedp, ErtsRunQueue *vrq, uint32_t flags)
 {
-    Uint32 procs_qmask = flags & ERTS_RUNQ_FLGS_PROCS_QMASK;
+    uint32_t procs_qmask = flags & ERTS_RUNQ_FLGS_PROCS_QMASK;
     int max_prio_bit;
     ErtsRunPrioQueue *rpq;
 
@@ -3904,7 +3904,7 @@ static ERTS_INLINE int
 check_possible_steal_victim(ErtsRunQueue *rq, int *rq_lockedp, int vix)
 {
     ErtsRunQueue *vrq = ERTS_RUNQ_IX(vix);
-    Uint32 flags = ERTS_RUNQ_FLGS_GET(vrq);
+    uint32_t flags = ERTS_RUNQ_FLGS_GET(vrq);
     if ((flags & (ERTS_RUNQ_FLG_NONEMPTY
 		  | ERTS_RUNQ_FLG_PROTECTED)) == ERTS_RUNQ_FLG_NONEMPTY)
 	return try_steal_task_from_victim(rq, rq_lockedp, vrq, flags);
@@ -3917,7 +3917,7 @@ static int
 try_steal_task(ErtsRunQueue *rq)
 {
     int res, rq_locked, vix, active_rqs, blnc_rqs;
-    Uint32 flags;
+    uint32_t flags;
 
     /* Protect jobs we steal from getting stolen from us... */
     flags = empty_protected_runq(rq);
@@ -3984,7 +3984,7 @@ try_steal_task(ErtsRunQueue *rq)
 /* Run queue balancing */
 
 typedef struct {
-    Uint32 flags;
+    uint32_t flags;
     struct {
 	int max_len;
 	int avail;
@@ -4627,7 +4627,7 @@ erts_fprintf(stderr, "--------------------------------\n");
 
     for (qix = 0; qix < blnc_no_rqs; qix++) {
 	int mqix;
-	Uint32 flags = run_queue_info[qix].flags;
+	uint32_t flags = run_queue_info[qix].flags;
 	ErtsMigrationPath *mp = &new_mpaths->mpath[qix];
 
 #if ERTS_HAVE_SCHED_UTIL_BALANCING_SUPPORT
@@ -4699,7 +4699,7 @@ erts_fprintf(stderr, "--------------------------------\n");
 
     /* Reset balance statistics in all online queues */
     for (qix = 0; qix < blnc_no_rqs; qix++) {
-	Uint32 flags = run_queue_info[qix].flags;
+	uint32_t flags = run_queue_info[qix].flags;
 	ErtsRunQueue *rq = ERTS_RUNQ_IX(qix);
 
 	erts_smp_runq_lock(rq);
@@ -4867,11 +4867,11 @@ static struct {
     int limit;
     int dec_shift;
     int dec_mask;
-    void (*check)(ErtsRunQueue *rq, Uint32 flags);
+    void (*check)(ErtsRunQueue *rq, uint32_t flags);
 } wakeup_other;
 
 static void
-wakeup_other_check(ErtsRunQueue *rq, Uint32 flags)
+wakeup_other_check(ErtsRunQueue *rq, uint32_t flags)
 {
     int wo_reds = rq->wakeup_other_reds;
     if (wo_reds) {
@@ -4942,7 +4942,7 @@ wakeup_other_set_limit(void)
 }
 
 static void
-wakeup_other_check_legacy(ErtsRunQueue *rq, Uint32 flags)
+wakeup_other_check_legacy(ErtsRunQueue *rq, uint32_t flags)
 {
     int wo_reds = rq->wakeup_other_reds;
     if (wo_reds) {
@@ -5691,9 +5691,9 @@ make_proxy_proc(Process *prev_proxy, Process *proc, erts_aint32_t prio)
 #ifdef DEBUG
 	{
 	    int i;
-	    Uint32 *ui32 = (Uint32 *) (char *) proxy;
-	    for (i = 0; i < sizeof(Process)/sizeof(Uint32); i++)
-		ui32[i] = (Uint32) 0xdeadbeef;
+	    uint32_t *ui32 = (uint32_t *) (char *) proxy;
+	    for (i = 0; i < sizeof(Process)/sizeof(uint32_t); i++)
+		ui32[i] = (uint32_t) 0xdeadbeef;
 	}
 #endif
 	erts_smp_atomic32_init_nob(&proxy->state, state);
@@ -8904,7 +8904,7 @@ Process *schedule(Process *p, int calls)
     int input_reductions;
     int actual_reds;
     int reds;
-    Uint32 flags;
+    uint32_t flags;
     erts_aint32_t state = 0; /* Supress warning... */
 
 #ifdef USE_VM_PROBES
@@ -11330,7 +11330,7 @@ send_exit_signal(Process *c_p,		/* current process if and only
 					   (if exit_tuple != THE_NON_VALUE) */
 		 Eterm token,		/* token */
 		 Process *token_update, /* token updater */
-		 Uint32 flags		/* flags */
+		 uint32_t flags		/* flags */
     )		
 {
     erts_aint32_t state = erts_smp_atomic32_read_nob(&rp->state);
@@ -11475,7 +11475,7 @@ erts_send_exit_signal(Process *c_p,
 		      Eterm reason,
 		      Eterm token,
 		      Process *token_update,
-		      Uint32 flags)
+		      uint32_t flags)
 {
     return send_exit_signal(c_p,
 			    from,

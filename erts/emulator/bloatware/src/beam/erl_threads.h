@@ -423,7 +423,7 @@ typedef int erts_tse_t;
 
 typedef struct { SWord sint[2]; } erts_dw_aint_t;
 typedef SWord erts_aint_t;
-typedef Sint32 erts_aint32_t;
+typedef int32_t erts_aint32_t;
 typedef Sint64 erts_aint64_t;
 
 #define erts_dw_atomic_t erts_dw_aint_t

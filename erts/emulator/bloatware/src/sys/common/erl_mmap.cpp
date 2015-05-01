@@ -1356,12 +1356,12 @@ os_mmap_virtual(char *ptr, UWord size)
 static int reserve_noop(char *ptr, UWord size)
 {
 #ifdef ERTS_MMAP_DEBUG_FILL_AREAS
-    Uint32 *uip, *end = (Uint32 *) (ptr + size);
+    uint32_t *uip, *end = (uint32_t *) (ptr + size);
 
-    for (uip = (Uint32 *) ptr; uip < end; uip++)
-	ERTS_MMAP_ASSERT(*uip == (Uint32) 0xdeadbeef);
-    for (uip = (Uint32 *) ptr; uip < end; uip++)
-	*uip = (Uint32) 0xfeedfeed;
+    for (uip = (uint32_t *) ptr; uip < end; uip++)
+	ERTS_MMAP_ASSERT(*uip == (uint32_t) 0xdeadbeef);
+    for (uip = (uint32_t *) ptr; uip < end; uip++)
+	*uip = (uint32_t) 0xfeedfeed;
 #endif
     return 1;
 }
@@ -1369,10 +1369,10 @@ static int reserve_noop(char *ptr, UWord size)
 static void unreserve_noop(char *ptr, UWord size)
 {
 #ifdef ERTS_MMAP_DEBUG_FILL_AREAS
-    Uint32 *uip, *end = (Uint32 *) (ptr + size);
+    uint32_t *uip, *end = (uint32_t *) (ptr + size);
 
-    for (uip = (Uint32 *) ptr; uip < end; uip++)
-	*uip = (Uint32) 0xdeadbeef;
+    for (uip = (uint32_t *) ptr; uip < end; uip++)
+	*uip = (uint32_t) 0xdeadbeef;
 #endif
 }
 
@@ -1465,7 +1465,7 @@ alloc_desc_insert_free_seg(ErtsFreeSegMap *map, char* start, char* end)
 }
 
 void *
-erts_mmap(Uint32 flags, UWord *sizep)
+erts_mmap(uint32_t flags, UWord *sizep)
 {
     char *seg;
     UWord asize = ERTS_PAGEALIGNED_CEILING(*sizep);
@@ -1474,7 +1474,7 @@ erts_mmap(Uint32 flags, UWord *sizep)
     if (mmap_state.supercarrier && !(ERTS_MMAPFLG_OS_ONLY & flags)) {
 	char *end;
 	ErtsFreeSegDesc *desc;
-	Uint32 superaligned = (ERTS_MMAPFLG_SUPERALIGNED & flags);
+	uint32_t superaligned = (ERTS_MMAPFLG_SUPERALIGNED & flags);
 
 	erts_smp_mtx_lock(&mmap_state.mtx);
 
@@ -1672,7 +1672,7 @@ supercarrier_reserve_failure:
 }
 
 void
-erts_munmap(Uint32 flags, void *ptr, UWord size)
+erts_munmap(uint32_t flags, void *ptr, UWord size)
 {
     ERTS_MMAP_ASSERT(ERTS_IS_PAGEALIGNED(ptr));
     ERTS_MMAP_ASSERT(ERTS_IS_PAGEALIGNED(size));
@@ -1771,7 +1771,7 @@ erts_munmap(Uint32 flags, void *ptr, UWord size)
 }
 
 static void *
-remap_move(Uint32 flags, void *ptr, UWord old_size, UWord *sizep)
+remap_move(uint32_t flags, void *ptr, UWord old_size, UWord *sizep)
 {
     UWord size = *sizep;
     void *new_ptr = erts_mmap(flags, &size);
@@ -1786,10 +1786,10 @@ remap_move(Uint32 flags, void *ptr, UWord old_size, UWord *sizep)
 }
 
 void *
-erts_mremap(Uint32 flags, void *ptr, UWord old_size, UWord *sizep)
+erts_mremap(uint32_t flags, void *ptr, UWord old_size, UWord *sizep)
 {
     void *new_ptr;
-    Uint32 superaligned;
+    uint32_t superaligned;
     UWord asize;
 
     ERTS_MMAP_ASSERT(ERTS_IS_PAGEALIGNED(ptr));
@@ -2198,10 +2198,10 @@ erts_mmap_init(ErtsMMapInit *init)
 	end = start + sz;
 #ifdef ERTS_MMAP_DEBUG_FILL_AREAS
 	if (!virtual_map) {
-	    Uint32 *uip;
+	    uint32_t *uip;
 
-	    for (uip = (Uint32 *) start; uip < (Uint32 *) end; uip++)
-		*uip = (Uint32) 0xdeadbeef;
+	    for (uip = (uint32_t *) start; uip < (uint32_t *) end; uip++)
+		*uip = (uint32_t) 0xdeadbeef;
 	}
 #endif
     }

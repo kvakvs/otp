@@ -306,9 +306,9 @@ int erts_fit_in_bits_int64(Sint64 value)
     return fit_in_bits(value, 5);
 }
 
-int erts_fit_in_bits_int32(Sint32 value)
+int erts_fit_in_bits_int32(int32_t value)
 {
-    return fit_in_bits((Sint64) (Uint32) value, 4);
+    return fit_in_bits((Sint64) (uint32_t) value, 4);
 }
 
 int
@@ -739,8 +739,8 @@ erts_bld_atom_2uint_3tup_list(Uint **hpp, Uint *szp, Sint length,
 #define FUNNY_NUMBER13 268440593
 #define FUNNY_NUMBER14 268440611
 
-static Uint32
-hash_binary_bytes(Eterm bin, Uint sz, Uint32 hash)
+static uint32_t
+hash_binary_bytes(Eterm bin, Uint sz, uint32_t hash)
 {
     uint8_t* ptr;
     Uint bitoffs;
@@ -781,7 +781,7 @@ hash_binary_bytes(Eterm bin, Uint sz, Uint32 hash)
     return hash;
 }
 
-Uint32 make_hash(Eterm term_arg)
+uint32_t make_hash(Eterm term_arg)
 {
     DECLARE_WSTACK(stack);
     Eterm term = term_arg;
@@ -802,7 +802,7 @@ Uint32 make_hash(Eterm term_arg)
     */
 #define UINT32_HASH_STEP(Expr, Prime1)					\
 	do {								\
-	    Uint32 x = (Uint32) (Expr);	                                \
+	    uint32_t x = (uint32_t) (Expr);	                                \
 	    hash =							\
 		(((((hash)*(Prime1) + (x & 0xFF)) * (Prime1) + 	        \
 		((x >> 8) & 0xFF)) * (Prime1) + 			\
@@ -1008,7 +1008,7 @@ tail_recur:
 		goto tail_recur;
 	    }
 	    if (op == MAKE_HASH_TUPLE_OP) {
-		Uint32 arity = (Uint32) WSTACK_POP(stack);
+		uint32_t arity = (uint32_t) WSTACK_POP(stack);
 		hash = hash*FUNNY_NUMBER9 + arity;
 	    }
 	    break;
@@ -1047,10 +1047,10 @@ do {                               \
 
 #define HCONST 0x9e3779b9UL /* the golden ratio; an arbitrary value */
 
-Uint32
-block_hash(uint8_t *k, unsigned length, Uint32 initval)
+uint32_t
+block_hash(uint8_t *k, unsigned length, uint32_t initval)
 {
-   Uint32 a,b,c;
+   uint32_t a,b,c;
    unsigned len;
 
    /* Set up the internal state */
@@ -1060,9 +1060,9 @@ block_hash(uint8_t *k, unsigned length, Uint32 initval)
 
    while (len >= 12)
    {
-      a += (k[0] +((Uint32)k[1]<<8) +((Uint32)k[2]<<16) +((Uint32)k[3]<<24));
-      b += (k[4] +((Uint32)k[5]<<8) +((Uint32)k[6]<<16) +((Uint32)k[7]<<24));
-      c += (k[8] +((Uint32)k[9]<<8) +((Uint32)k[10]<<16)+((Uint32)k[11]<<24));
+      a += (k[0] +((uint32_t)k[1]<<8) +((uint32_t)k[2]<<16) +((uint32_t)k[3]<<24));
+      b += (k[4] +((uint32_t)k[5]<<8) +((uint32_t)k[6]<<16) +((uint32_t)k[7]<<24));
+      c += (k[8] +((uint32_t)k[9]<<8) +((uint32_t)k[10]<<16)+((uint32_t)k[11]<<24));
       MIX(a,b,c);
       k += 12; len -= 12;
    }
@@ -1070,17 +1070,17 @@ block_hash(uint8_t *k, unsigned length, Uint32 initval)
    c += length;
    switch(len)              /* all the case statements fall through */
    {
-   case 11: c+=((Uint32)k[10]<<24);
-   case 10: c+=((Uint32)k[9]<<16);
-   case 9 : c+=((Uint32)k[8]<<8);
+   case 11: c+=((uint32_t)k[10]<<24);
+   case 10: c+=((uint32_t)k[9]<<16);
+   case 9 : c+=((uint32_t)k[8]<<8);
       /* the first byte of c is reserved for the length */
-   case 8 : b+=((Uint32)k[7]<<24);
-   case 7 : b+=((Uint32)k[6]<<16);
-   case 6 : b+=((Uint32)k[5]<<8);
+   case 8 : b+=((uint32_t)k[7]<<24);
+   case 7 : b+=((uint32_t)k[6]<<16);
+   case 6 : b+=((uint32_t)k[5]<<8);
    case 5 : b+=k[4];
-   case 4 : a+=((Uint32)k[3]<<24);
-   case 3 : a+=((Uint32)k[2]<<16);
-   case 2 : a+=((Uint32)k[1]<<8);
+   case 4 : a+=((uint32_t)k[3]<<24);
+   case 3 : a+=((uint32_t)k[2]<<16);
+   case 2 : a+=((uint32_t)k[1]<<8);
    case 1 : a+=k[0];
      /* case 0: nothing left to add */
    }
@@ -1088,12 +1088,12 @@ block_hash(uint8_t *k, unsigned length, Uint32 initval)
    return c;
 }
 
-Uint32
+uint32_t
 make_hash2(Eterm term)
 {
-    Uint32 hash;
-    Uint32 hash_xor_keys   = 0;
-    Uint32 hash_xor_values = 0;
+    uint32_t hash;
+    uint32_t hash_xor_keys   = 0;
+    uint32_t hash_xor_values = 0;
     DeclareTmpHeapNoproc(tmp_big,2);
 
 /* (HCONST * {2, ..., 16}) mod 2^32 */
@@ -1119,9 +1119,9 @@ make_hash2(Eterm term)
 
 #define UINT32_HASH_2(Expr1, Expr2, AConst)       \
          do {                                     \
-	    Uint32 a,b;                           \
-	    a = AConst + (Uint32) (Expr1);        \
-	    b = AConst + (Uint32) (Expr2);        \
+	    uint32_t a,b;                           \
+	    a = AConst + (uint32_t) (Expr1);        \
+	    b = AConst + (uint32_t) (Expr2);        \
 	    MIX(a,b,hash);                        \
 	 } while(0)
 
@@ -1129,7 +1129,7 @@ make_hash2(Eterm term)
 
 #define SINT32_HASH(Expr, AConst)                 \
 	do {					  \
-            Sint32 y = (Sint32) (Expr);           \
+            int32_t y = (int32_t) (Expr);           \
 	    if (y < 0) {			  \
 		UINT32_HASH(-y, AConst);          \
                 /* Negative numbers are unnecessarily mixed twice. */ \
@@ -1173,7 +1173,7 @@ make_hash2(Eterm term)
 	case TAG_PRIMARY_LIST:
 	{
 	    int c = 0;
-	    Uint32 sh = 0;
+	    uint32_t sh = 0;
 	    Eterm* ptr = list_val(term);
 	    while (is_byte(*ptr)) {
 		/* Optimization for strings. */
@@ -1295,7 +1295,7 @@ make_hash2(Eterm term)
 	    {
 		uint8_t* bptr;
 		unsigned sz = binary_size(term);
-		Uint32 con = HCONST_13 + hash;
+		uint32_t con = HCONST_13 + hash;
 		Uint bitoffs;
 		Uint bitsize;
 
@@ -1330,19 +1330,19 @@ make_hash2(Eterm term)
 		Eterm* ptr = big_val(term);
 		Uint i = 0;
 		Uint n = BIG_SIZE(ptr);
-		Uint32 con = BIG_SIGN(ptr) ? HCONST_10 : HCONST_11;
+		uint32_t con = BIG_SIGN(ptr) ? HCONST_10 : HCONST_11;
 #if D_EXP == 16
 		do {
-		    Uint32 x, y;
+		    uint32_t x, y;
 		    x = i < n ? BIG_DIGIT(ptr, i++) : 0;
-		    x += (Uint32)(i < n ? BIG_DIGIT(ptr, i++) : 0) << 16;
+		    x += (uint32_t)(i < n ? BIG_DIGIT(ptr, i++) : 0) << 16;
 		    y = i < n ? BIG_DIGIT(ptr, i++) : 0;
-		    y += (Uint32)(i < n ? BIG_DIGIT(ptr, i++) : 0) << 16;
+		    y += (uint32_t)(i < n ? BIG_DIGIT(ptr, i++) : 0) << 16;
 		    UINT32_HASH_2(x, y, con);
 		} while (i < n);
 #elif D_EXP == 32
 		do {
-		    Uint32 x, y;
+		    uint32_t x, y;
 		    x = i < n ? BIG_DIGIT(ptr, i++) : 0;
 		    y = i < n ? BIG_DIGIT(ptr, i++) : 0;
 		    UINT32_HASH_2(x, y, con);
@@ -1350,7 +1350,7 @@ make_hash2(Eterm term)
 #elif D_EXP == 64
 		do {
 		    Uint t;
-		    Uint32 x, y;
+		    uint32_t x, y;
 		    t = i < n ? BIG_DIGIT(ptr, i++) : 0;
 		    x = t & 0xffffffff;
 		    y = t >> 32;
@@ -1444,7 +1444,7 @@ make_hash2(Eterm term)
 	    erl_exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
 	hash2_common:
 
-	    /* Uint32 hash always has the hash value of the previous term,
+	    /* uint32_t hash always has the hash value of the previous term,
 	     * compounded or otherwise.
 	     */
 
@@ -1458,11 +1458,11 @@ make_hash2(Eterm term)
 
 	    switch (term) {
 		case HASH_MAP_TAIL: {
-		    hash = (Uint32) ESTACK_POP(s);
+		    hash = (uint32_t) ESTACK_POP(s);
 		    UINT32_HASH(hash_xor_keys, HCONST_16);
 		    UINT32_HASH(hash_xor_values, HCONST_16);
-		    hash_xor_keys = (Uint32) ESTACK_POP(s);
-		    hash_xor_values = (Uint32) ESTACK_POP(s);
+		    hash_xor_keys = (uint32_t) ESTACK_POP(s);
+		    hash_xor_values = (uint32_t) ESTACK_POP(s);
 		    goto hash2_common;
 		}
 		case HASH_MAP_KEY:
@@ -1493,9 +1493,9 @@ make_hash2(Eterm term)
 #undef MIX
 
 
-Uint32 make_broken_hash(Eterm term)
+uint32_t make_broken_hash(Eterm term)
 {
-    Uint32 hash = 0;
+    uint32_t hash = 0;
     DECLARE_WSTACK(stack);
     unsigned op;
 tail_recur:
@@ -1514,13 +1514,13 @@ tail_recur:
     {
 	Sint y1 = signed_val(term);
 	Uint y2 = y1 < 0 ? -(Uint)y1 : y1;
-	Uint32 y3 = (Uint32) (y2 >> 32);
+	uint32_t y3 = (uint32_t) (y2 >> 32);
 	int arity = 1;
 
 #if defined(WORDS_BIGENDIAN)
 	if (!IS_SSMALL28(y1))
 	{   /* like a bignum */
-	    Uint32 y4 = (Uint32) y2;
+	    uint32_t y4 = (uint32_t) y2;
 	    hash = hash*FUNNY_NUMBER2 + ((y4 << 16) | (y4 >> 16));
 	    if (y3) 
 	    {
@@ -1534,7 +1534,7 @@ tail_recur:
 #else
 	if  (!IS_SSMALL28(y1))
 	{   /* like a bignum */
-	    hash = hash*FUNNY_NUMBER2 + ((Uint32) y2);
+	    hash = hash*FUNNY_NUMBER2 + ((uint32_t) y2);
 	    if (y3)
 	    {
 		hash = hash*FUNNY_NUMBER2 + y3;
@@ -1667,7 +1667,7 @@ tail_recur:
 
 #elif D_EXP == 64
 	    {
-	      Uint32 h = 0, l;
+	      uint32_t h = 0, l;
 #if defined(WORDS_BIGENDIAN)
 	      while(i--) {
 		  Uint d = *ptr++;
@@ -1735,7 +1735,7 @@ tail_recur:
 		goto tail_recur;
 	    }
 	    if (op == MAKE_HASH_TUPLE_OP) {
-		Uint32 arity = (UWord) WSTACK_POP(stack);
+		uint32_t arity = (UWord) WSTACK_POP(stack);
 		hash = hash*FUNNY_NUMBER9 + arity;
 	    }
 	    break;
@@ -2222,8 +2222,8 @@ tailrecur_ne:
 		 *  When comparing refs we need to compare ref numbers
 		 * (32-bit words) *not* ref data words.
 		 */
-		Uint32 *anum;
-		Uint32 *bnum;
+		uint32_t *anum;
+		uint32_t *bnum;
 		Uint common_len;
 		Uint alen;
 		Uint blen;
@@ -2463,8 +2463,8 @@ Sint erts_cmp(Eterm a, Eterm b, int exact)
     Uint bdata;
     Uint alen;
     Uint blen;
-    Uint32 *anum;
-    Uint32 *bnum;
+    uint32_t *anum;
+    uint32_t *bnum;
 
 #define RETURN_NEQ(cmp) { j=(cmp); ASSERT(j != 0); goto not_equal; }
 #define ON_CMP_GOTO(cmp) if ((j=(cmp)) == 0) goto pop_next; else goto not_equal
@@ -2776,7 +2776,7 @@ tailrecur_ne:
 		ASSERT(alen == blen);
 		for (i = (Sint) alen - 1; i >= 0; i--)
 		    if (anum[i] != bnum[i])
-			RETURN_NEQ((Sint32) (anum[i] - bnum[i]));
+			RETURN_NEQ((int32_t) (anum[i] - bnum[i]));
 		goto pop_next;
 	    case (_TAG_HEADER_EXTERNAL_REF >> _TAG_PRIMARY_SIZE):
 		if (is_internal_ref_rel(b,b_base)) {
@@ -3674,12 +3674,12 @@ ERTS_SCHED_PREF_PRE_ALLOC_IMPL(ptimer_pre, ErtsSmpPTimer, 1000)
 #define ERTS_PTMR_FLGS_ALLCD_SIZE \
   2
 #define ERTS_PTMR_FLGS_ALLCD_MASK \
-  ((((Uint32) 1) << ERTS_PTMR_FLGS_ALLCD_SIZE) - 1)
+  ((((uint32_t) 1) << ERTS_PTMR_FLGS_ALLCD_SIZE) - 1)
 
-#define ERTS_PTMR_FLGS_PREALLCD	((Uint32) 1)
-#define ERTS_PTMR_FLGS_SLALLCD	((Uint32) 2)
-#define ERTS_PTMR_FLGS_LLALLCD	((Uint32) 3)
-#define ERTS_PTMR_FLG_CANCELLED	(((Uint32) 1) << (ERTS_PTMR_FLGS_ALLCD_SIZE+0))
+#define ERTS_PTMR_FLGS_PREALLCD	((uint32_t) 1)
+#define ERTS_PTMR_FLGS_SLALLCD	((uint32_t) 2)
+#define ERTS_PTMR_FLGS_LLALLCD	((uint32_t) 3)
+#define ERTS_PTMR_FLG_CANCELLED	(((uint32_t) 1) << (ERTS_PTMR_FLGS_ALLCD_SIZE+0))
 
 static void
 init_ptimers(void)

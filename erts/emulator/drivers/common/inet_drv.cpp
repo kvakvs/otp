@@ -1126,7 +1126,7 @@ typedef struct {
 #ifdef ARCH_64
     Uint64        recv_oct;     /* number of received octets, 64 bits */
 #else
-    Uint32        recv_oct[2];  /* number of received octets, 64 bits */
+    uint32_t        recv_oct[2];  /* number of received octets, 64 bits */
 #endif
     unsigned long recv_cnt;     /* number of packets received */
     unsigned long recv_max;     /* maximum packet size received */
@@ -1135,7 +1135,7 @@ typedef struct {
 #ifdef ARCH_64
     Uint64        send_oct;     /* number of octets sent, 64 bits */
 #else
-    Uint32        send_oct[2];  /* number of octets sent, 64 bits */
+    uint32_t        send_oct[2];  /* number of octets sent, 64 bits */
 #endif
     unsigned long send_cnt;     /* number of packets sent */
     unsigned long send_max;     /* maximum packet send */
@@ -4549,7 +4549,7 @@ static ErlDrvSSizeT inet_ctl_open(inet_descriptor* desc, int domain, int type,
 
 /* as inet_open but pass in an open socket (MUST BE OF RIGHT TYPE) */
 static ErlDrvSSizeT inet_ctl_fdopen(inet_descriptor* desc, int domain, int type,
-				    SOCKET s, Uint32 bound,
+				    SOCKET s, uint32_t bound,
                                     char** rbuf, ErlDrvSizeT rsize)
 {
     inet_address name;
@@ -7359,9 +7359,9 @@ static ErlDrvSSizeT inet_fill_opts(inet_descriptor* desc,
 	    put_int32(ival, ptr);
 	}
 	else {
-	    put_int32(((Uint32) li_val.l_onoff), ptr);
+	    put_int32(((uint32_t) li_val.l_onoff), ptr);
 	    PLACE_FOR(4,ptr);
-	    put_int32(((Uint32) li_val.l_linger), ptr);
+	    put_int32(((uint32_t) li_val.l_linger), ptr);
 	}
     }
     return (dest_used);
@@ -8562,7 +8562,7 @@ static ErlDrvSSizeT inet_ctl(inet_descriptor* desc, int cmd, char* buf,
 #ifdef HAVE_SCTP
 	if (IS_SCTP(desc) && p_sctp_getpaddrs) {
 	    struct sockaddr *sa;
-	    Uint32 assoc_id;
+	    uint32_t assoc_id;
 	    int n;
 	    ErlDrvSizeT rlen;
 
@@ -8631,7 +8631,7 @@ static ErlDrvSSizeT inet_ctl(inet_descriptor* desc, int cmd, char* buf,
 #ifdef HAVE_SCTP
 	if (IS_SCTP(desc) && p_sctp_getladdrs) {
 	    struct sockaddr *sa;
-	    Uint32 assoc_id;
+	    uint32_t assoc_id;
 	    int n;
 	    ErlDrvSizeT rlen;
 
@@ -8815,7 +8815,7 @@ static void inet_output_count(inet_descriptor* desc, ErlDrvSizeT len)
 {
     unsigned long n = desc->send_cnt + 1;
 #ifndef ARCH_64
-    Uint32 t = desc->send_oct[0] + len;
+    uint32_t t = desc->send_oct[0] + len;
     int c = (t < desc->send_oct[0]);
 #endif
     double avg = desc->send_avg;
@@ -8840,7 +8840,7 @@ static void inet_input_count(inet_descriptor* desc, ErlDrvSizeT len)
 {
     unsigned long n = desc->recv_cnt + 1;
 #ifndef ARCH_64
-    Uint32 t = (desc->recv_oct[0] + len);
+    uint32_t t = (desc->recv_oct[0] + len);
     int c = (t < desc->recv_oct[0]);
 #endif
     double avg = desc->recv_avg;
@@ -11423,7 +11423,7 @@ static ErlDrvSSizeT packet_inet_ctl(ErlDrvData e, unsigned int cmd, char* buf,
 
     case SCTP_REQ_PEELOFF:
 	{
-	    Uint32 assoc_id;
+	    uint32_t assoc_id;
 	    udp_descriptor* new_udesc;
 	    int err;
 	    SOCKET new_socket;

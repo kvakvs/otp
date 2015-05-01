@@ -1781,13 +1781,13 @@ static reset_qnx_spawn()
 /* Control op */
 #define FD_CTRL_OP_GET_WINSIZE 100
 
-static int fd_get_window_size(int fd, Uint32 *width, Uint32 *height)
+static int fd_get_window_size(int fd, uint32_t *width, uint32_t *height)
 {
 #ifdef TIOCGWINSZ 
     struct winsize ws;
     if (ioctl(fd,TIOCGWINSZ,&ws) == 0) {
-	*width = (Uint32) ws.ws_col;
-	*height = (Uint32) ws.ws_row;
+	*width = (uint32_t) ws.ws_col;
+	*height = (uint32_t) ws.ws_row;
 	return 0;
     }
 #endif
@@ -1800,25 +1800,25 @@ static ErlDrvSSizeT fd_control(ErlDrvData drv_data,
 			       char **rbuf, ErlDrvSizeT rlen)
 {
     int fd = (int)(long)drv_data;
-    char resbuff[2*sizeof(Uint32)];
+    char resbuff[2*sizeof(uint32_t)];
     switch (command) {
     case FD_CTRL_OP_GET_WINSIZE:
 	{
-	    Uint32 w,h;
+	    uint32_t w,h;
 	    if (fd_get_window_size(fd,&w,&h)) 
 		return 0;
-	    memcpy(resbuff,&w,sizeof(Uint32));
-	    memcpy(resbuff+sizeof(Uint32),&h,sizeof(Uint32));
+	    memcpy(resbuff,&w,sizeof(uint32_t));
+	    memcpy(resbuff+sizeof(uint32_t),&h,sizeof(uint32_t));
 	}
 	break;
     default:
 	return 0;
     }
-    if (rlen < 2*sizeof(Uint32)) {
-        *rbuf = (char*)driver_alloc(2*sizeof(Uint32));
+    if (rlen < 2*sizeof(uint32_t)) {
+        *rbuf = (char*)driver_alloc(2*sizeof(uint32_t));
     }
-    memcpy(*rbuf,resbuff,2*sizeof(Uint32));
-    return 2*sizeof(Uint32);
+    memcpy(*rbuf,resbuff,2*sizeof(uint32_t));
+    return 2*sizeof(uint32_t);
 }
 
 static ErlDrvData fd_start(ErlDrvPort port_num, char* name,
@@ -2083,7 +2083,7 @@ static void outputv(ErlDrvData e, ErlIOVec* ev)
 	return; /* -1; */
     }
     /* Handles 0 <= pb <= 4 only */
-    put_int32((Uint32) len, lb);
+    put_int32((uint32_t) len, lb);
     lbp = lb + (4-pb);
 
     ev->iov[0].iov_base = lbp;

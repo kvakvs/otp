@@ -48,7 +48,7 @@ typedef Uint16   ErtsHalfDigit;
 #elif (SIZEOF_VOID_P == 8)
 /* Assume 64-bit machine, does it exist 128 bit long long long ? */
 #undef  BIG_HAVE_DOUBLE_DIGIT
-typedef Uint32   ErtsHalfDigit;
+typedef uint32_t   ErtsHalfDigit;
 #else
 #error "can not determine machine size"
 #endif
@@ -160,7 +160,7 @@ int term_to_Uint64(Eterm, Uint64*);
 int term_to_Sint64(Eterm, Sint64*);
 #endif
 
-Uint32 big_to_uint32(Eterm b);
+uint32_t big_to_uint32(Eterm b);
 int term_equals_2pow32(Eterm);
 
 Eterm erts_uint64_to_big(Uint64, Eterm **);

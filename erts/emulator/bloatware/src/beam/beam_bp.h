@@ -94,7 +94,7 @@ enum erts_break_op{
     erts_break_stop
 };
 
-typedef Uint32 ErtsBpIndex;
+typedef uint32_t ErtsBpIndex;
 
 typedef struct {
     BeamInstr* pc;
@@ -152,7 +152,7 @@ void erts_clear_export_break(Module *modp, BeamInstr* pc);
 
 BeamInstr erts_generic_breakpoint(Process* c_p, BeamInstr* I, Eterm* reg);
 BeamInstr erts_trace_break(Process *p, BeamInstr *pc, Eterm *args,
-		      Uint32 *ret_flags, Eterm *tracer_pid);
+		      uint32_t *ret_flags, Eterm *tracer_pid);
 
 int erts_is_trace_break(BeamInstr *pc, Binary **match_spec_ret, int local);
 int erts_is_mtrace_break(BeamInstr *pc, Binary **match_spec_ret,

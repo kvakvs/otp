@@ -25,9 +25,9 @@
 #define ERTS_MMAP_SUPERALIGNED_BITS (18)
 /* Affects hard limits for sbct and lmbcs documented in erts_alloc.xml */
 
-#define ERTS_MMAPFLG_OS_ONLY			(((Uint32) 1) << 0)
-#define ERTS_MMAPFLG_SUPERCARRIER_ONLY		(((Uint32) 1) << 1)
-#define ERTS_MMAPFLG_SUPERALIGNED		(((Uint32) 1) << 2)
+#define ERTS_MMAPFLG_OS_ONLY			(((uint32_t) 1) << 0)
+#define ERTS_MMAPFLG_SUPERCARRIER_ONLY		(((uint32_t) 1) << 1)
+#define ERTS_MMAPFLG_SUPERALIGNED		(((uint32_t) 1) << 2)
 
 #define ERTS_HAVE_ERTS_OS_MMAP			(1 << 0)
 #define ERTS_HAVE_ERTS_SUPERCARRIER_MMAP	(1 << 1)
@@ -52,9 +52,9 @@ typedef struct {
 #define ERTS_MMAP_INIT_DEFAULT_INITER \
     {{nullptr, nullptr}, {nullptr, nullptr}, 0, 1, (1 << 16), 1}
 
-void *erts_mmap(Uint32 flags, UWord *sizep);
-void erts_munmap(Uint32 flags, void *ptr, UWord size);
-void *erts_mremap(Uint32 flags, void *ptr, UWord old_size, UWord *sizep);
+void *erts_mmap(uint32_t flags, UWord *sizep);
+void erts_munmap(uint32_t flags, void *ptr, UWord size);
+void *erts_mremap(uint32_t flags, void *ptr, UWord old_size, UWord *sizep);
 int erts_mmap_in_supercarrier(void *ptr);
 void erts_mmap_init(ErtsMMapInit*);
 struct erts_mmap_info_struct

@@ -240,7 +240,7 @@ struct select_context {
     Binary *mp;
     Eterm end_condition;
     Eterm *lastobj;
-    Sint32 max;
+    int32_t max;
     int keypos;
     int all_objects;
     Sint got;
@@ -255,7 +255,7 @@ struct select_count_context {
     Binary *mp;
     Eterm end_condition;
     Eterm *lastobj;
-    Sint32 max;
+    int32_t max;
     int keypos;
     int all_objects;
     Sint got;
@@ -272,7 +272,7 @@ struct select_delete_context {
     Eterm end_condition;
     int erase_lastterm;
     TreeDbTerm *lastterm;
-    Sint32 max;
+    int32_t max;
     int keypos;
 };
 

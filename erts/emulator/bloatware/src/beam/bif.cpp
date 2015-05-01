@@ -1367,7 +1367,7 @@ BIF_RETTYPE exit_2(BIF_ALIST_2)
 
      if (is_internal_port(BIF_ARG_1)) {
 	 Eterm ref, *refp;
-	 Uint32 invalid_flags;
+	 uint32_t invalid_flags;
 	 Port *prt;
 
 	 if (erts_port_synchronous_ops) {
@@ -3473,15 +3473,15 @@ BIF_RETTYPE self_0(BIF_ALIST_0)
    hash value.
 */
 
-static Uint32 reference0; /* Initialized in erts_init_bif */
-static Uint32 reference1;
-static Uint32 reference2;
+static uint32_t reference0; /* Initialized in erts_init_bif */
+static uint32_t reference1;
+static uint32_t reference2;
 static erts_smp_spinlock_t make_ref_lock;
 static erts_smp_mtx_t ports_snapshot_mtx;
 erts_smp_atomic_t erts_dead_ports_ptr; /* To store dying ports during snapshot */
 
 void
-erts_make_ref_in_array(Uint32 ref[ERTS_MAX_REF_NUMBERS])
+erts_make_ref_in_array(uint32_t ref[ERTS_MAX_REF_NUMBERS])
 {
     erts_smp_spin_lock(&make_ref_lock);
 
@@ -3504,7 +3504,7 @@ erts_make_ref_in_array(Uint32 ref[ERTS_MAX_REF_NUMBERS])
 Eterm erts_make_ref_in_buffer(Eterm buffer[REF_THING_SIZE])
 {
     Eterm* hp = buffer;
-    Uint32 ref[ERTS_MAX_REF_NUMBERS];
+    uint32_t ref[ERTS_MAX_REF_NUMBERS];
 
     erts_make_ref_in_array(ref);
     write_ref_thing(hp, ref[0], ref[1], ref[2]);
@@ -3514,7 +3514,7 @@ Eterm erts_make_ref_in_buffer(Eterm buffer[REF_THING_SIZE])
 Eterm erts_make_ref(Process *p)
 {
     Eterm* hp;
-    Uint32 ref[ERTS_MAX_REF_NUMBERS];
+    uint32_t ref[ERTS_MAX_REF_NUMBERS];
 
     ERTS_SMP_LC_ASSERT(ERTS_PROC_LOCK_MAIN & erts_proc_lc_my_proc_locks(p));
 
@@ -4553,7 +4553,7 @@ BIF_RETTYPE system_flag_2(BIF_ALIST_2)
 
 BIF_RETTYPE hash_2(BIF_ALIST_2)
 {
-    Uint32 hash;
+    uint32_t hash;
     Sint range;
 
     if (is_not_small(BIF_ARG_2)) {
@@ -4572,9 +4572,9 @@ BIF_RETTYPE hash_2(BIF_ALIST_2)
 
 BIF_RETTYPE phash_2(BIF_ALIST_2)
 {
-    Uint32 hash;
-    Uint32 final_hash;
-    Uint32 range;
+    uint32_t hash;
+    uint32_t final_hash;
+    uint32_t range;
 
     /* Check for special case 2^32 */
     if (term_equals_2pow32(BIF_ARG_2)) {
@@ -4584,7 +4584,7 @@ BIF_RETTYPE phash_2(BIF_ALIST_2)
 	if (!term_to_Uint(BIF_ARG_2, &u) || ((u >> 16) >> 16) != 0 || !u) {
 	    BIF_ERROR(BIF_P, BADARG);
 	}
-	range = (Uint32) u;
+	range = (uint32_t) u;
     }
     hash = make_hash(BIF_ARG_1);
     if (range) {
@@ -4603,7 +4603,7 @@ BIF_RETTYPE phash_2(BIF_ALIST_2)
 
 BIF_RETTYPE phash2_1(BIF_ALIST_1)
 {
-    Uint32 hash;
+    uint32_t hash;
 
     hash = make_hash2(BIF_ARG_1);
     BIF_RET(make_small(hash & ((1L << 27) - 1)));
@@ -4611,9 +4611,9 @@ BIF_RETTYPE phash2_1(BIF_ALIST_1)
 
 BIF_RETTYPE phash2_2(BIF_ALIST_2)
 {
-    Uint32 hash;
-    Uint32 final_hash;
-    Uint32 range;
+    uint32_t hash;
+    uint32_t final_hash;
+    uint32_t range;
 
     /* Check for special case 2^32 */
     if (term_equals_2pow32(BIF_ARG_2)) {
@@ -4623,7 +4623,7 @@ BIF_RETTYPE phash2_2(BIF_ALIST_2)
 	if (!term_to_Uint(BIF_ARG_2, &u) || ((u >> 16) >> 16) != 0 || !u) {
 	    BIF_ERROR(BIF_P, BADARG);
 	}
-	range = (Uint32) u;
+	range = (uint32_t) u;
     }
     hash = make_hash2(BIF_ARG_1);
     if (range) {

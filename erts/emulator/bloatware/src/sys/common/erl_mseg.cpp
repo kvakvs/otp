@@ -81,7 +81,7 @@ static const int debruijn[32] = {
     31, 27, 13, 23, 21, 19, 16,  7, 26, 12, 18,  6, 11,  5, 10,  9
 };
 
-#define LOG2(X) (debruijn[((Uint32)(((X) & -(X)) * 0x077CB531U)) >> 27])
+#define LOG2(X) (debruijn[((uint32_t)(((X) & -(X)) * 0x077CB531U)) >> 27])
 
 #define CACHE_AREAS      (32 - MSEG_ALIGN_BITS)
 
@@ -113,8 +113,8 @@ const ErtsMsegOpt_t erts_mseg_default_opt = {
 
 
 typedef struct {
-    Uint32 giga_no;
-    Uint32 no;
+    uint32_t giga_no;
+    uint32_t no;
 } CallCounter;
 
 typedef struct {
@@ -307,7 +307,7 @@ mseg_create(ErtsMsegAllctr_t *ma, Uint flags, MemKind* mk, UWord *sizep)
     UWord req_size = *sizep;
 #endif
     void *seg;
-    Uint32 mmap_flags = 0;
+    uint32_t mmap_flags = 0;
 #if HALFWORD_HEAP
     mmap_flags |= ((mk == &ma->low_mem)
 		   ? ERTS_MMAPFLG_SUPERCARRIER_ONLY
@@ -332,7 +332,7 @@ mseg_create(ErtsMsegAllctr_t *ma, Uint flags, MemKind* mk, UWord *sizep)
 static ERTS_INLINE void
 mseg_destroy(ErtsMsegAllctr_t *ma, Uint flags, MemKind* mk, void *seg_p, UWord size) {
     
-    Uint32 mmap_flags = 0;
+    uint32_t mmap_flags = 0;
 #if HALFWORD_HEAP
     mmap_flags |= ((mk == &ma->low_mem)
 		   ? ERTS_MMAPFLG_SUPERCARRIER_ONLY
@@ -358,7 +358,7 @@ mseg_recreate(ErtsMsegAllctr_t *ma, Uint flags, MemKind* mk, void *old_seg, UWor
     UWord req_size = *sizep;	
 #endif
     void *new_seg;
-    Uint32 mmap_flags = 0;
+    uint32_t mmap_flags = 0;
 #if HALFWORD_HEAP
     mmap_flags |= ((mk == &ma->low_mem)
 		   ? ERTS_MMAPFLG_SUPERCARRIER_ONLY

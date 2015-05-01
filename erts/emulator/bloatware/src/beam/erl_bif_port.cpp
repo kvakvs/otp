@@ -84,7 +84,7 @@ BIF_RETTYPE open_port_2(BIF_ALIST_2)
 }
 
 static ERTS_INLINE Port *
-lookup_port(Process *c_p, Eterm id_or_name, Uint32 invalid_flags)
+lookup_port(Process *c_p, Eterm id_or_name, uint32_t invalid_flags)
 {
     /* TODO: Implement nicer lookup in register... */
     Eterm id;

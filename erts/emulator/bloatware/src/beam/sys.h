@@ -233,8 +233,8 @@ __decl_noreturn void __noreturn erl_assert_error(const char* expr, const char *f
 **          or larger than an Eterm
 ** SWord: A signed integer at least as large as a void * and also as large
 **          or larger than an Eterm
-** Uint32: An unsigned integer of 32 bits exactly
-** Sint32: A signed integer of 32 bits exactly
+** uint32_t: An unsigned integer of 32 bits exactly
+** int32_t: A signed integer of 32 bits exactly
 ** Uint16: An unsigned integer of 16 bits exactly
 ** Sint16: A signed integer of 16 bits exactly.
 */
@@ -373,13 +373,13 @@ typedef long long          Sint64;
 #endif
 
 #if SIZEOF_LONG == 4
-typedef unsigned long Uint32;
-typedef long          Sint32;
+typedef unsigned long uint32_t;
+typedef long          int32_t;
 #elif SIZEOF_INT == 4
-typedef unsigned int Uint32;
-typedef int          Sint32;
+typedef unsigned int uint32_t;
+typedef int          int32_t;
 #else
-#error Found no appropriate type to use for 'Uint32' and 'Sint32'
+#error Found no appropriate type to use for 'uint32_t' and 'int32_t'
 #endif
 
 #if SIZEOF_INT == 2
@@ -412,7 +412,7 @@ typedef short          Sint16;
 #if ERTS_SIZEOF_TERM == 8
 typedef union {
     Uint val;
-    Uint32 hval[2];
+    uint32_t hval[2];
 } HUint;
 #elif ERTS_SIZEOF_TERM == 4
 typedef union {

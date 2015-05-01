@@ -153,7 +153,7 @@
 
 typedef struct op_entry {
    const char* name;			/* Name of instruction. */
-   Uint32 mask[3];		/* Signature mask. */
+   uint32_t mask[3];		/* Signature mask. */
    int sz;			/* Number of loaded words. */
    const char* pack;			/* Instructions for packing engine. */
    const char* sign;			/* Signature string. */

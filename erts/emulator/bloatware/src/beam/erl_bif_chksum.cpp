@@ -363,7 +363,7 @@ crc32_combine_3(BIF_ALIST_3)
 {
     unsigned long chksum1,chksum2;
     z_off_t length;
-    Uint32 res;
+    uint32_t res;
     Eterm res_sum;
     Uint u;
 
@@ -382,7 +382,7 @@ crc32_combine_3(BIF_ALIST_3)
     }
     length = (z_off_t) u;
 
-    res = (Uint32) crc32_combine(chksum1,chksum2,length);
+    res = (uint32_t) crc32_combine(chksum1,chksum2,length);
 
     res_sum = erts_make_integer(res,BIF_P);
     BIF_RET(res_sum);
@@ -443,7 +443,7 @@ adler32_combine_3(BIF_ALIST_3)
 {
     unsigned long chksum1,chksum2;
     z_off_t length;
-    Uint32 res;
+    uint32_t res;
     Eterm res_sum;
     Uint u;
 
@@ -463,9 +463,9 @@ adler32_combine_3(BIF_ALIST_3)
     length = (z_off_t) u;
 
     if (length == 0) { /* Workaround for unexpected behaviour in zlib. */
-	res = (Uint32) chksum1;
+	res = (uint32_t) chksum1;
     } else {
-	res = (Uint32) adler32_combine(chksum1,chksum2,length);
+	res = (uint32_t) adler32_combine(chksum1,chksum2,length);
     }
 
     res_sum = erts_make_integer(res,BIF_P);

@@ -183,7 +183,7 @@ int erts_new_bs_put_float(Process *c_p, Eterm Float, Uint num_bits, int flags);
 void erts_new_bs_put_string(ERL_BITS_PROTO_2(uint8_t* iptr, Uint num_bytes));
 
 Uint erts_bits_bufs_size(void);
-Uint32 erts_bs_get_unaligned_uint32(ErlBinMatchBuffer* mb);
+uint32_t erts_bs_get_unaligned_uint32(ErlBinMatchBuffer* mb);
 void erts_align_utf8_bytes(ErlBinMatchBuffer* mb, uint8_t* buf);
 Eterm erts_bs_get_utf8(ErlBinMatchBuffer* mb);
 Eterm erts_bs_get_utf16(ErlBinMatchBuffer* mb, Uint flags);

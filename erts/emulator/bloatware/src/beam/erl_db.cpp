@@ -1281,7 +1281,7 @@ BIF_RETTYPE ets_new_2(BIF_ALIST_2)
     Eterm ret;
     Eterm heir;
     UWord heir_data;
-    Uint32 status;
+    uint32_t status;
     Sint keypos;
     int is_named, is_compressed;
 #ifdef ERTS_SMP
@@ -1807,7 +1807,7 @@ BIF_RETTYPE ets_setopts_2(BIF_ALIST_2)
     Eterm opt;
     Eterm heir = THE_NON_VALUE;
     UWord heir_data = (UWord) THE_NON_VALUE;
-    Uint32 protection = 0;
+    uint32_t protection = 0;
     DeclareTmpHeap(fakelist,2,BIF_P);
     Eterm tail;
 
@@ -2764,7 +2764,7 @@ BIF_RETTYPE ets_match_spec_run_r_3(BIF_ALIST_3)
     ProcBin *bp;
     Binary *mp;
     Eterm res;
-    Uint32 dummy;
+    uint32_t dummy;
 
     if (!(is_list(BIF_ARG_1) || BIF_ARG_1 == NIL) || !is_binary(BIF_ARG_2)) {
     error:

@@ -49,14 +49,14 @@
  
 #define ERST_INTERNAL_CHANNEL_NO 0
 
-#define ERTS_DE_SFLG_CONNECTED			(((Uint32) 1) <<  0)
-#define ERTS_DE_SFLG_EXITING			(((Uint32) 1) <<  1)
+#define ERTS_DE_SFLG_CONNECTED			(((uint32_t) 1) <<  0)
+#define ERTS_DE_SFLG_EXITING			(((uint32_t) 1) <<  1)
 
 #define ERTS_DE_SFLGS_ALL			(ERTS_DE_SFLG_CONNECTED \
 						 | ERTS_DE_SFLG_EXITING)
 
-#define ERTS_DE_QFLG_BUSY			(((Uint32) 1) <<  0)
-#define ERTS_DE_QFLG_EXIT			(((Uint32) 1) <<  1)
+#define ERTS_DE_QFLG_BUSY			(((uint32_t) 1) <<  0)
+#define ERTS_DE_QFLG_EXIT			(((uint32_t) 1) <<  1)
 
 #define ERTS_DE_QFLGS_ALL			(ERTS_DE_QFLG_BUSY \
 						 | ERTS_DE_QFLG_EXIT)
@@ -105,11 +105,11 @@ typedef struct dist_entry_ {
 
     erts_smp_rwmtx_t rwmtx;     /* Protects all fields below until lck_mtx. */
     Eterm sysname;		/* name@host atom for efficiency */
-    Uint32 creation;		/* creation of connected node */
+    uint32_t creation;		/* creation of connected node */
     Eterm cid;			/* connection handler (pid or port), NIL == free */
-    Uint32 connection_id;	/* Connection id incremented on connect */
-    Uint32 status;		/* Slot status, like exiting reserved etc */
-    Uint32 flags;		/* Distribution flags, like hidden, 
+    uint32_t connection_id;	/* Connection id incremented on connect */
+    uint32_t status;		/* Slot status, like exiting reserved etc */
+    uint32_t flags;		/* Distribution flags, like hidden, 
 				   atom cache etc. */
     unsigned long version;	/* Protocol version */
 
@@ -127,7 +127,7 @@ typedef struct dist_entry_ {
     ErtsMonitor *monitors;      /* Monitor tree */
 
     erts_smp_mtx_t qlock;       /* Protects qflgs and out_queue */
-    Uint32 qflgs;
+    uint32_t qflgs;
     Sint qsize;
     ErtsDistOutputQueue out_queue;
     struct ErtsProcList_ *suspended;
@@ -145,7 +145,7 @@ typedef struct erl_node_ {
   HashBucket hash_bucket;	/* Hash bucket */
   erts_refc_t refc;		/* Reference count */
   Eterm	sysname;		/* name@host atom for efficiency */
-  Uint32 creation;		/* Creation */
+  uint32_t creation;		/* Creation */
   DistEntry *dist_entry;	/* Corresponding dist entry */
 } ErlNode;
 

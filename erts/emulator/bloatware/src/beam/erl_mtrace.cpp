@@ -124,11 +124,11 @@ do {									\
 
 #define PUT_VSZ_UI32(P, M, V)						\
 do {									\
-    Uint32 v__ = (Uint32) (V);						\
-    if (v__ >= (((Uint32) 1) << 16)) {					\
-	if (v__ >= (((Uint32) 1) << 24)) (M) = 3; else (M) = 2;		\
+    uint32_t v__ = (uint32_t) (V);						\
+    if (v__ >= (((uint32_t) 1) << 16)) {					\
+	if (v__ >= (((uint32_t) 1) << 24)) (M) = 3; else (M) = 2;		\
     } else {								\
-	if (v__ >= (((Uint32) 1) << 8)) (M) = 1; else (M) = 0;		\
+	if (v__ >= (((uint32_t) 1) << 8)) (M) = 1; else (M) = 0;		\
     }									\
     switch ((M)) {							\
     case 3: *((P)++) = (uint8_t) ((v__ >> 24) & 0xff);			\
@@ -190,7 +190,7 @@ check_alloc_entry(uint8_t *sp, uint8_t *ep,
 		  Uint16 type, int type_n,
 		  UWord res, int res_n,
 		  Uint size, int size_n,
-		  Uint32 ti,int ti_n);
+		  uint32_t ti,int ti_n);
 void
 check_realloc_entry(uint8_t *sp, uint8_t *ep,
 		    uint8_t tag,
@@ -199,18 +199,18 @@ check_realloc_entry(uint8_t *sp, uint8_t *ep,
 		    UWord res, int res_n,
 		    UWord ptr, int ptr_n,
 		    Uint size, int size_n,
-		    Uint32 ti,int ti_n);
+		    uint32_t ti,int ti_n);
 void
 check_free_entry(uint8_t *sp, uint8_t *ep,
 		 uint8_t tag,
 		 Uint16 ct_no, int ct_no_n,
 		 Uint16 t_no, int t_no_n,
 		 UWord ptr, int ptr_n,
-		 Uint32 ti,int ti_n);
+		 uint32_t ti,int ti_n);
 void
 check_time_inc_entry(uint8_t *sp, uint8_t *ep,
-		     Uint32 secs, int secs_n,
-		     Uint32 usecs, int usecs_n);
+		     uint32_t secs, int secs_n,
+		     uint32_t usecs, int usecs_n);
 #endif
 
 
@@ -232,12 +232,12 @@ char* erl_errno_id(int error);
 
 #define INVALID_TIME_INC (0xffffffff)
 
-static ERTS_INLINE Uint32
+static ERTS_INLINE uint32_t
 get_time_inc(void)
 {
-    Sint32 secs;
-    Sint32 usecs;
-    Uint32 res;
+    int32_t secs;
+    int32_t usecs;
+    uint32_t res;
     SysTimeval tv;
     sys_gettimeofday(&tv);
 
@@ -257,8 +257,8 @@ get_time_inc(void)
 	res = 0;
     }
     else if (secs < ERTS_MT_TIME_INC_SECS_MASK) {
-	res = ((((Uint32) secs) << ERTS_MT_TIME_INC_SECS_SHIFT)
-	       | (((Uint32) usecs) << ERTS_MT_TIME_INC_USECS_SHIFT));
+	res = ((((uint32_t) secs) << ERTS_MT_TIME_INC_SECS_SHIFT)
+	       | (((uint32_t) usecs) << ERTS_MT_TIME_INC_USECS_SHIFT));
     }
     else {
 	/* Increment too large to fit in a 32-bit integer;
@@ -284,8 +284,8 @@ get_time_inc(void)
 	    WRITE_UI16(hdrp, hdr);
 #ifdef DEBUG
 	    check_time_inc_entry(hdrp-1, tracep,
-				 (Uint32) secs, secs_n,
-				 (Uint32) usecs, usecs_n);
+				 (uint32_t) secs, secs_n,
+				 (uint32_t) usecs, usecs_n);
 #endif
 	    res = 0;
 	}
@@ -365,20 +365,20 @@ write_trace_header(const char *nodename, const char *pid, const char *hostname)
     uint8_t *startp;
 #endif
     Uint16 entry_sz;
-    Uint32 flags, n_len, h_len, p_len, hdr_prolog_len;
+    uint32_t flags, n_len, h_len, p_len, hdr_prolog_len;
     int i, no, str_len;
     const char *str;
     struct {
-	Uint32 gsec;
-	Uint32 sec;
-	Uint32 usec;
+	uint32_t gsec;
+	uint32_t sec;
+	uint32_t usec;
     } start_time;
 
     sys_gettimeofday(&last_tv);
 
-    start_time.gsec = (Uint32) (last_tv.tv_sec / 1000000000);
-    start_time.sec  = (Uint32) (last_tv.tv_sec % 1000000000);
-    start_time.usec = (Uint32) last_tv.tv_usec;
+    start_time.gsec = (uint32_t) (last_tv.tv_sec / 1000000000);
+    start_time.sec  = (uint32_t) (last_tv.tv_sec % 1000000000);
+    start_time.usec = (uint32_t) last_tv.tv_usec;
 
     if (!MAKE_TBUF_SZ(3*UI32_SZ))
 	return 0;
@@ -652,7 +652,7 @@ erts_mtrace_stop(void)
     erts_mtx_lock(&mtrace_op_mutex);
     erts_mtx_lock(&mtrace_buf_mutex);
     if (erts_mtrace_enabled) {
-	Uint32 ti = get_time_inc();
+	uint32_t ti = get_time_inc();
     
 	if (ti != INVALID_TIME_INC
 	    && MAKE_TBUF_SZ(UI8_SZ + UI16_SZ + UI32_SZ)) {
@@ -683,13 +683,13 @@ erts_mtrace_stop(void)
 }
 
 void
-erts_mtrace_exit(Uint32 exit_value)
+erts_mtrace_exit(uint32_t exit_value)
 {
     ASSERT(!erts_is_allctr_wrapper_prelocked());
     erts_mtx_lock(&mtrace_op_mutex);
     erts_mtx_lock(&mtrace_buf_mutex);
     if (erts_mtrace_enabled) {
-	Uint32 ti = get_time_inc();
+	uint32_t ti = get_time_inc();
     
 	if (ti != INVALID_TIME_INC
 	    && MAKE_TBUF_SZ(UI8_SZ + UI16_SZ + 2*UI32_SZ)) {
@@ -732,7 +732,7 @@ write_alloc_entry(uint8_t tag,
 {
     erts_mtx_lock(&mtrace_buf_mutex);
     if (erts_mtrace_enabled) {
-	Uint32 ti = get_time_inc();
+	uint32_t ti = get_time_inc();
 
 	if (ti != INVALID_TIME_INC
 	    && MAKE_TBUF_SZ(UI8_SZ + 2*UI16_SZ + 2*UI_SZ + UI32_SZ)) {
@@ -808,7 +808,7 @@ write_realloc_entry(uint8_t tag,
 {
     erts_mtx_lock(&mtrace_buf_mutex);
     if (erts_mtrace_enabled) {
-	Uint32 ti = get_time_inc();
+	uint32_t ti = get_time_inc();
 
 	if (ti != INVALID_TIME_INC
 	    && MAKE_TBUF_SZ(UI8_SZ + 2*UI16_SZ + 3*UI_SZ + UI32_SZ)) {
@@ -885,7 +885,7 @@ write_free_entry(uint8_t tag,
 {
     erts_mtx_lock(&mtrace_buf_mutex);
     if (erts_mtrace_enabled) {
-	Uint32 ti = get_time_inc();
+	uint32_t ti = get_time_inc();
 
 	if (ti != INVALID_TIME_INC
 	    && MAKE_TBUF_SZ(UI8_SZ + 2*UI16_SZ + UI_SZ + UI32_SZ)) {
@@ -1042,7 +1042,7 @@ print_trace_entry(uint8_t tag,
 		  Uint res, int res_n,
 		  Uint ptr, int ptr_n,
 		  Uint size, int size_n,
-		  Uint32 ti,int ti_n)
+		  uint32_t ti,int ti_n)
 {
     switch (tag) {
     case ERTS_MT_ALLOC_BDY_TAG:
@@ -1161,7 +1161,7 @@ check_alloc_entry(uint8_t *sp, uint8_t *ep,
 		  Uint16 t_no, int t_no_n,
 		  UWord res, int res_n,
 		  Uint size, int size_n,
-		  Uint32 ti,int ti_n)
+		  uint32_t ti,int ti_n)
 {
     uint8_t *p = sp;
     Uint16 hdr;
@@ -1190,7 +1190,7 @@ check_realloc_entry(uint8_t *sp, uint8_t *ep,
 		    UWord res, int res_n,
 		    UWord ptr, int ptr_n,
 		    Uint size, int size_n,
-		    Uint32 ti,int ti_n)
+		    uint32_t ti,int ti_n)
 {
     uint8_t *p = sp;
     Uint16 hdr;
@@ -1218,7 +1218,7 @@ check_free_entry(uint8_t *sp, uint8_t *ep,
 		 Uint16 ct_no, int ct_no_n,
 		 Uint16 t_no, int t_no_n,
 		 UWord ptr, int ptr_n,
-		 Uint32 ti,int ti_n)
+		 uint32_t ti,int ti_n)
 {
     uint8_t *p = sp;
     Uint16 hdr;
@@ -1241,8 +1241,8 @@ check_free_entry(uint8_t *sp, uint8_t *ep,
 
 void
 check_time_inc_entry(uint8_t *sp, uint8_t *ep,
-		     Uint32 secs, int secs_n,
-		     Uint32 usecs, int usecs_n)
+		     uint32_t secs, int secs_n,
+		     uint32_t usecs, int usecs_n)
 {
     uint8_t *p = sp;
     Uint16 hdr;

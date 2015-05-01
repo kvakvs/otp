@@ -160,7 +160,7 @@ Uint display_items;	    	/* no of items to display in traces etc */
 int H_MIN_SIZE;			/* The minimum heap grain */
 int BIN_VH_MIN_SIZE;		/* The minimum binary virtual*/
 
-Uint32 erts_debug_flags;	/* Debug flags. */
+uint32_t erts_debug_flags;	/* Debug flags. */
 #ifdef ERTS_OPCODE_COUNTER_SUPPORT
 int count_instructions;
 #endif
@@ -185,7 +185,7 @@ static int no_dirty_io_schedulers;
 #endif
 
 #ifdef DEBUG
-Uint32 verbose;             /* See erl_debug.h for information about verbose */
+uint32_t verbose;             /* See erl_debug.h for information about verbose */
 #endif
 
 int erts_disable_tolerant_timeofday; /* Time correction can be disabled it is
@@ -2103,7 +2103,7 @@ erl_exit_vv(int n, int flush_async, const char *fmt, va_list args1, va_list args
         an = n;
 
     if (erts_mtrace_enabled)
-	erts_mtrace_exit((Uint32) an);
+	erts_mtrace_exit((uint32_t) an);
 
     /* Produce an Erlang core dump if error */
     if (((n > 0 && erts_no_crash_dump == 0) || n == ERTS_DUMP_EXIT)

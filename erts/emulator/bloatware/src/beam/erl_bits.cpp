@@ -1005,13 +1005,13 @@ erts_new_bs_put_float(Process *c_p, Eterm arg, Uint num_bits, int flags)
     ERL_BITS_DEFINE_STATEP(c_p);
 
     if (BIT_OFFSET(erts_bin_offset) == 0) {
-	Uint32 a;
-	Uint32 b;
+	uint32_t a;
+	uint32_t b;
 	
 	if (num_bits == 64) {
 	    union {
 		double f64;
-		Uint32 i32[2];
+		uint32_t i32[2];
 	    } u;
 
 	    if (is_float(arg)) {
@@ -1049,7 +1049,7 @@ erts_new_bs_put_float(Process *c_p, Eterm arg, Uint num_bits, int flags)
 	} else if (num_bits == 32) {
 	    union {
 		float f32;
-		Uint32 i32;
+		uint32_t i32;
 	    } u;
 
 	    b = 0;
@@ -1596,7 +1596,7 @@ erts_emasculate_writable_binary(ProcBin* pb)
     }
 }
 
-Uint32
+uint32_t
 erts_bs_get_unaligned_uint32(ErlBinMatchBuffer* mb)
 {
     Uint bytes;

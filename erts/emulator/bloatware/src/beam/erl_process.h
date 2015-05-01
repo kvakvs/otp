@@ -133,10 +133,10 @@ extern int erts_sched_thread_suggested_stack_size;
 #define ERTS_NO_PRIO_LEVELS (ERTS_NO_PROC_PRIO_LEVELS + 1)
 
 #define ERTS_RUNQ_FLGS_PROCS_QMASK \
-  ((((Uint32) 1) << ERTS_NO_PROC_PRIO_LEVELS) - 1)
+  ((((uint32_t) 1) << ERTS_NO_PROC_PRIO_LEVELS) - 1)
 
 #define ERTS_RUNQ_FLGS_QMASK \
-  ((((Uint32) 1) << ERTS_NO_PRIO_LEVELS) - 1)
+  ((((uint32_t) 1) << ERTS_NO_PRIO_LEVELS) - 1)
 
 #define ERTS_RUNQ_FLGS_EMIGRATE_SHFT \
   ERTS_NO_PRIO_LEVELS
@@ -155,19 +155,19 @@ extern int erts_sched_thread_suggested_stack_size;
   (ERTS_RUNQ_FLGS_EVACUATE_SHFT + ERTS_NO_PRIO_LEVELS)
 
 #define ERTS_RUNQ_FLG_OUT_OF_WORK \
-  (((Uint32) 1) << (ERTS_RUNQ_FLG_BASE2 + 0))
+  (((uint32_t) 1) << (ERTS_RUNQ_FLG_BASE2 + 0))
 #define ERTS_RUNQ_FLG_HALFTIME_OUT_OF_WORK \
-  (((Uint32) 1) << (ERTS_RUNQ_FLG_BASE2 + 1))
+  (((uint32_t) 1) << (ERTS_RUNQ_FLG_BASE2 + 1))
 #define ERTS_RUNQ_FLG_SUSPENDED \
-  (((Uint32) 1) << (ERTS_RUNQ_FLG_BASE2 + 2))
+  (((uint32_t) 1) << (ERTS_RUNQ_FLG_BASE2 + 2))
 #define ERTS_RUNQ_FLG_CHK_CPU_BIND \
-  (((Uint32) 1) << (ERTS_RUNQ_FLG_BASE2 + 3))
+  (((uint32_t) 1) << (ERTS_RUNQ_FLG_BASE2 + 3))
 #define ERTS_RUNQ_FLG_INACTIVE \
-  (((Uint32) 1) << (ERTS_RUNQ_FLG_BASE2 + 4))
+  (((uint32_t) 1) << (ERTS_RUNQ_FLG_BASE2 + 4))
 #define ERTS_RUNQ_FLG_NONEMPTY \
-  (((Uint32) 1) << (ERTS_RUNQ_FLG_BASE2 + 5))
+  (((uint32_t) 1) << (ERTS_RUNQ_FLG_BASE2 + 5))
 #define ERTS_RUNQ_FLG_PROTECTED \
-  (((Uint32) 1) << (ERTS_RUNQ_FLG_BASE2 + 6))
+  (((uint32_t) 1) << (ERTS_RUNQ_FLG_BASE2 + 6))
 
 #define ERTS_RUNQ_FLGS_MIGRATION_QMASKS	\
   (ERTS_RUNQ_FLGS_EMIGRATE_QMASK	\
@@ -180,7 +180,7 @@ extern int erts_sched_thread_suggested_stack_size;
    | ERTS_RUNQ_FLG_HALFTIME_OUT_OF_WORK)
 
 #define ERTS_RUNQ_FLG_EMIGRATE(PRIO) \
-  (((Uint32) 1) << (ERTS_RUNQ_FLGS_EMIGRATE_SHFT + (PRIO)))
+  (((uint32_t) 1) << (ERTS_RUNQ_FLGS_EMIGRATE_SHFT + (PRIO)))
 #define ERTS_CHK_RUNQ_FLG_EMIGRATE(FLGS, PRIO) \
   ((FLGS) & ERTS_RUNQ_FLG_EMIGRATE((PRIO)))
 #define ERTS_SET_RUNQ_FLG_EMIGRATE(FLGS, PRIO) \
@@ -189,7 +189,7 @@ extern int erts_sched_thread_suggested_stack_size;
   ((FLGS) &= ~ERTS_RUNQ_FLG_EMIGRATE((PRIO)))
 
 #define ERTS_RUNQ_FLG_IMMIGRATE(PRIO) \
-  (((Uint32) 1) << (ERTS_RUNQ_FLGS_IMMIGRATE_SHFT + (PRIO)))
+  (((uint32_t) 1) << (ERTS_RUNQ_FLGS_IMMIGRATE_SHFT + (PRIO)))
 #define ERTS_CHK_RUNQ_FLG_IMMIGRATE(FLGS, PRIO) \
   ((FLGS) & ERTS_RUNQ_FLG_IMMIGRATE((PRIO)))
 #define ERTS_SET_RUNQ_FLG_IMMIGRATE(FLGS, PRIO) \
@@ -198,7 +198,7 @@ extern int erts_sched_thread_suggested_stack_size;
   ((FLGS) &= ~ERTS_RUNQ_FLG_IMMIGRATE((PRIO)))
 
 #define ERTS_RUNQ_FLG_EVACUATE(PRIO) \
-  (((Uint32) 1) << (ERTS_RUNQ_FLGS_EVACUATE_SHFT + (PRIO)))
+  (((uint32_t) 1) << (ERTS_RUNQ_FLGS_EVACUATE_SHFT + (PRIO)))
 #define ERTS_CHK_RUNQ_FLG_EVACUATE(FLGS, PRIO) \
   ((FLGS) & ERTS_RUNQ_FLG_EVACUATE((PRIO)))
 #define ERTS_SET_RUNQ_FLG_EVACUATE(FLGS, PRIO) \
@@ -209,23 +209,23 @@ extern int erts_sched_thread_suggested_stack_size;
 #define ERTS_RUNQ_FLGS_INIT(RQ, INIT)					\
     erts_smp_atomic32_init_nob(&(RQ)->flags, (erts_aint32_t) (INIT))
 #define ERTS_RUNQ_FLGS_SET(RQ, FLGS)					\
-    ((Uint32) erts_smp_atomic32_read_bor_relb(&(RQ)->flags,		\
+    ((uint32_t) erts_smp_atomic32_read_bor_relb(&(RQ)->flags,		\
 					      (erts_aint32_t) (FLGS)))
 #define ERTS_RUNQ_FLGS_BSET(RQ, MSK, FLGS)				\
-    ((Uint32) erts_smp_atomic32_read_bset_relb(&(RQ)->flags,		\
+    ((uint32_t) erts_smp_atomic32_read_bset_relb(&(RQ)->flags,		\
 					       (erts_aint32_t) (MSK),	\
 					       (erts_aint32_t) (FLGS)))
 #define ERTS_RUNQ_FLGS_UNSET(RQ, FLGS)					\
-    ((Uint32) erts_smp_atomic32_read_band_relb(&(RQ)->flags,		\
+    ((uint32_t) erts_smp_atomic32_read_band_relb(&(RQ)->flags,		\
 					       (erts_aint32_t) ~(FLGS)))
 #define ERTS_RUNQ_FLGS_GET(RQ)						\
-    ((Uint32) erts_smp_atomic32_read_acqb(&(RQ)->flags))
+    ((uint32_t) erts_smp_atomic32_read_acqb(&(RQ)->flags))
 #define ERTS_RUNQ_FLGS_GET_NOB(RQ)					\
-    ((Uint32) erts_smp_atomic32_read_nob(&(RQ)->flags))
+    ((uint32_t) erts_smp_atomic32_read_nob(&(RQ)->flags))
 #define ERTS_RUNQ_FLGS_GET_MB(RQ)					\
-    ((Uint32) erts_smp_atomic32_read_mb(&(RQ)->flags))
+    ((uint32_t) erts_smp_atomic32_read_mb(&(RQ)->flags))
 #define ERTS_RUNQ_FLGS_READ_BSET(RQ, MSK, FLGS)		  		\
-    ((Uint32) erts_smp_atomic32_read_bset_relb(&(RQ)->flags, 		\
+    ((uint32_t) erts_smp_atomic32_read_bset_relb(&(RQ)->flags, 		\
 					       (erts_aint32_t) (MSK),	\
 					       (erts_aint32_t) (FLGS)))
 
@@ -368,7 +368,7 @@ typedef struct {
 #if ERTS_HAVE_SCHED_UTIL_BALANCING_SUPPORT
     int sched_util;
 #endif
-    Uint32 flags;
+    uint32_t flags;
     ErtsRunQueue *misc_evac_runq;
     struct {
 	struct {
@@ -376,7 +376,7 @@ typedef struct {
 	    int other;
 	} limit;
 	ErtsRunQueue *runq;
-	Uint32 flags;
+	uint32_t flags;
     } prio[ERTS_NO_PRIO_LEVELS];
 } ErtsMigrationPath;
 
@@ -885,7 +885,7 @@ struct process {
 				 * Number of reductions left to execute.
 				 * Only valid for the current process.
 				 */
-    Uint32 rcount;		/* suspend count */
+    uint32_t rcount;		/* suspend count */
     int  schedule_count;	/* Times left to reschedule a low prio process */
     Uint reds;			/* No of reductions for this_ process  */
     Eterm group_leader;		/* Pid in charge
@@ -1274,8 +1274,8 @@ extern struct erts_system_profile_flags_t erts_system_profile_flags;
 #endif
 
 /* Option flags to erts_send_exit_signal() */
-#define ERTS_XSIG_FLG_IGN_KILL		(((Uint32) 1) << 0)
-#define ERTS_XSIG_FLG_NO_IGN_NORMAL	(((Uint32) 1) << 1)
+#define ERTS_XSIG_FLG_IGN_KILL		(((uint32_t) 1) << 0)
+#define ERTS_XSIG_FLG_NO_IGN_NORMAL	(((uint32_t) 1) << 1)
 
 #define CANCEL_TIMER(p) \
     do { \
@@ -1641,7 +1641,7 @@ int erts_send_exit_signal(Process *,
 			  Eterm,
 			  Eterm,
 			  Process *,
-			  Uint32);
+			  uint32_t);
 #ifdef ERTS_SMP
 void erts_handle_pending_exit(Process *, ErtsProcLocks);
 #define ERTS_PROC_PENDING_EXIT(P) \
@@ -1892,7 +1892,7 @@ erts_check_emigration_need(ErtsRunQueue *c_rq, int prio)
 {
     ErtsMigrationPaths *mps = erts_get_migration_paths();
     ErtsMigrationPath *mp;
-    Uint32 flags;
+    uint32_t flags;
 
     if (!mps)
         return nullptr;

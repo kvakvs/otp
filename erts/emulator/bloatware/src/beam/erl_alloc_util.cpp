@@ -2282,7 +2282,7 @@ mbc_free(Allctr_t *allctr, void *p, Carrier_t **busy_pcrr_pp)
 }
 
 static void *
-mbc_realloc(Allctr_t *allctr, void *p, Uint size, Uint32 alcu_flgs,
+mbc_realloc(Allctr_t *allctr, void *p, Uint size, uint32_t alcu_flgs,
 	    Carrier_t **busy_pcrr_pp)
 {
     void *new_p;
@@ -5306,7 +5306,7 @@ do_erts_alcu_realloc(ErtsAlcType_t type,
 		     void *extra,
 		     void *p,
 		     Uint size,
-		     Uint32 alcu_flgs,
+		     uint32_t alcu_flgs,
 		     Carrier_t **busy_pcrr_pp)
 {
     Allctr_t *allctr = (Allctr_t *) extra; 

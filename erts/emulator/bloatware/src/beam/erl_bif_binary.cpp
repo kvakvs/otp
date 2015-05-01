@@ -175,13 +175,13 @@ static void *my_alloc(MyAllocator *my, Uint size)
 
 typedef struct _ac_node {
 #ifdef HARDDEBUG
-    Uint32 id;                        /* To identify h pointer targets when
+    uint32_t id;                        /* To identify h pointer targets when
 					 dumping */
 #endif
-    Uint32 d;                         /* Depth in trie, also represents the
+    uint32_t d;                         /* Depth in trie, also represents the
 					 length (-1) of the matched string if
 					 in final set */
-    Sint32 final;                     /* Members in final set represent
+    int32_t final;                     /* Members in final set represent
 				       * matches.
 				       * The set representation is scattered
 				       * among the nodes in this way:
@@ -197,9 +197,9 @@ typedef struct _ac_node {
 
 typedef struct _ac_trie {
 #ifdef HARDDEBUG
-    Uint32 idc;
+    uint32_t idc;
 #endif
-    Uint32 counter;                    /* Number of added patterns */
+    uint32_t counter;                    /* Number of added patterns */
     ACNode *root;                      /* pointer to the root state */
 } ACTrie;
 
@@ -321,7 +321,7 @@ static BMData *create_bmdata(MyAllocator *my, uint8_t *x, Uint len,
 static void ac_add_one_pattern(MyAllocator *my, ACTrie *act, uint8_t *x, Uint len)
 {
     ACNode *acn = act->root;
-    Uint32 n = ++act->counter; /* Always increase counter, even if it's a
+    uint32_t n = ++act->counter; /* Always increase counter, even if it's a
 				  duplicate as this may identify the pattern
 				  in the final set (not in current interface
 				  though) */

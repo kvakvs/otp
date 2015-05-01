@@ -2150,7 +2150,7 @@ print_events(ErtsPollEvents ev)
 	first = 0;
     }
     if (ev)
-	erts_printf("%s0x%b32x", first ? "" : "|", (Uint32) ev);
+        erts_printf("%s0x%b32x", first ? "" : "|", (uint32_t) ev);
     return ev;
 }
 
@@ -2336,15 +2336,15 @@ static void doit_erts_check_io_debug(void *vstate, void *vcounters)
 		err = 1;		    
 	    }
 	    if (cio_events == ep_events) {
-		erts_printf("ev=0x%b32x", (Uint32) cio_events);
+                erts_printf("ev=0x%b32x", (uint32_t) cio_events);
 	    }
 	    else {
 		err = 1;
-		erts_printf("cio_ev=0x%b32x", (Uint32) cio_events);
-		erts_printf(" ep_ev=0x%b32x", (Uint32) ep_events);
+                erts_printf("cio_ev=0x%b32x", (uint32_t) cio_events);
+                erts_printf(" ep_ev=0x%b32x", (uint32_t) ep_events);
 	    }
 #else
-	    erts_printf("ev=0x%b32x", (Uint32) cio_events);
+            erts_printf("ev=0x%b32x", (uint32_t) cio_events);
 #endif
 	    id = state->driver.event->port;
 	    if (is_nil(id)) {
@@ -2382,14 +2382,14 @@ static void doit_erts_check_io_debug(void *vstate, void *vcounters)
 	    erts_printf("control_type=%d ", (int)state->type);
 #ifdef ERTS_SYS_CONTINOUS_FD_NUMBERS
 	    if (cio_events == ep_events) {
-		erts_printf("ev=0x%b32x", (Uint32) cio_events);
+                erts_printf("ev=0x%b32x", (uint32_t) cio_events);
 	    }
 	    else {
-		erts_printf("cio_ev=0x%b32x", (Uint32) cio_events);
-		erts_printf(" ep_ev=0x%b32x", (Uint32) ep_events);
+                erts_printf("cio_ev=0x%b32x", (uint32_t) cio_events);
+                erts_printf(" ep_ev=0x%b32x", (uint32_t) ep_events);
 	    }
 #else
-	    erts_printf("ev=0x%b32x", (Uint32) cio_events);
+            erts_printf("ev=0x%b32x", (uint32_t) cio_events);
 #endif
 	}
 	

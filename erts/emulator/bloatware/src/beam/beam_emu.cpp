@@ -4431,7 +4431,7 @@ get_map_elements_fail:
  do_bs_get_integer_32:
      {
 	 ErlBinMatchBuffer *_mb;
-	 Uint32 _integer;
+	 uint32_t _integer;
 	 Eterm _result;
 	 _mb = ms_matchbuffer(bs_get_integer_32_context);
 	 if (_mb->size - _mb->offset < 32) { ClauseFail(); }

@@ -272,31 +272,31 @@ extern erts_smp_atomic_t erts_bytes_in;		/* no bytes sent into the system */
 
 /* port status flags */
 
-#define ERTS_PORT_SFLG_CONNECTED	((Uint32) (1 <<  0))
+#define ERTS_PORT_SFLG_CONNECTED	((uint32_t) (1 <<  0))
 /* Port have begun exiting */
-#define ERTS_PORT_SFLG_EXITING		((Uint32) (1 <<  1))
+#define ERTS_PORT_SFLG_EXITING		((uint32_t) (1 <<  1))
 /* Distribution port */
-#define ERTS_PORT_SFLG_DISTRIBUTION	((Uint32) (1 <<  2))
-#define ERTS_PORT_SFLG_BINARY_IO	((Uint32) (1 <<  3))
-#define ERTS_PORT_SFLG_SOFT_EOF		((Uint32) (1 <<  4))
+#define ERTS_PORT_SFLG_DISTRIBUTION	((uint32_t) (1 <<  2))
+#define ERTS_PORT_SFLG_BINARY_IO	((uint32_t) (1 <<  3))
+#define ERTS_PORT_SFLG_SOFT_EOF		((uint32_t) (1 <<  4))
 /* Flow control */
 /* Port is closing (no i/o accepted) */
-#define ERTS_PORT_SFLG_CLOSING		((Uint32) (1 <<  5))
+#define ERTS_PORT_SFLG_CLOSING		((uint32_t) (1 <<  5))
 /* Send a closed message when terminating */
-#define ERTS_PORT_SFLG_SEND_CLOSED	((Uint32) (1 <<  6))
+#define ERTS_PORT_SFLG_SEND_CLOSED	((uint32_t) (1 <<  6))
 /* Line orinted io on port */  
-#define ERTS_PORT_SFLG_LINEBUF_IO	((Uint32) (1 <<  7))
+#define ERTS_PORT_SFLG_LINEBUF_IO	((uint32_t) (1 <<  7))
 /* Immortal port (only certain system ports) */
-#define ERTS_PORT_SFLG_FREE		((Uint32) (1 <<  8))
-#define ERTS_PORT_SFLG_INITIALIZING	((Uint32) (1 <<  9))
+#define ERTS_PORT_SFLG_FREE		((uint32_t) (1 <<  8))
+#define ERTS_PORT_SFLG_INITIALIZING	((uint32_t) (1 <<  9))
 /* Port uses port specific locking (opposed to driver specific locking) */
-#define ERTS_PORT_SFLG_PORT_SPECIFIC_LOCK ((Uint32) (1 << 10))
-#define ERTS_PORT_SFLG_INVALID		((Uint32) (1 << 11))
+#define ERTS_PORT_SFLG_PORT_SPECIFIC_LOCK ((uint32_t) (1 << 10))
+#define ERTS_PORT_SFLG_INVALID		((uint32_t) (1 << 11))
 /* Last port to terminate halts the emulator */
-#define ERTS_PORT_SFLG_HALT		((Uint32) (1 << 12))
+#define ERTS_PORT_SFLG_HALT		((uint32_t) (1 << 12))
 #ifdef DEBUG
 /* Only debug: make sure all flags aren't cleared unintentionally */
-#define ERTS_PORT_SFLG_PORT_DEBUG	((Uint32) (1 << 31))
+#define ERTS_PORT_SFLG_PORT_DEBUG	((uint32_t) (1 << 31))
 #endif
 
 /* Combinations of port status flags */ 
@@ -349,7 +349,7 @@ int erts_lc_is_port_locked(Port *);
 
 ERTS_GLB_INLINE void erts_port_inc_refc(Port *prt);
 ERTS_GLB_INLINE void erts_port_dec_refc(Port *prt);
-ERTS_GLB_INLINE void erts_port_add_refc(Port *prt, Sint32 add_refc);
+ERTS_GLB_INLINE void erts_port_add_refc(Port *prt, int32_t add_refc);
 
 ERTS_GLB_INLINE int erts_smp_port_trylock(Port *prt);
 ERTS_GLB_INLINE void erts_smp_port_lock(Port *prt);
@@ -379,7 +379,7 @@ ERTS_GLB_INLINE void erts_port_dec_refc(Port *prt)
 #endif
 }
 
-ERTS_GLB_INLINE void erts_port_add_refc(Port *prt, Sint32 add_refc)
+ERTS_GLB_INLINE void erts_port_add_refc(Port *prt, int32_t add_refc)
 {
 #ifdef ERTS_SMP
     int referred = erts_ptab_add_test_refc(&prt->common, add_refc);
@@ -458,18 +458,18 @@ Port *erts_de2port(DistEntry *, Process *, ErtsProcLocks);
 
 ERTS_GLB_INLINE Port *erts_pix2port(int);
 ERTS_GLB_INLINE Port *erts_port_lookup_raw(Eterm);
-ERTS_GLB_INLINE Port *erts_port_lookup(Eterm, Uint32);
+ERTS_GLB_INLINE Port *erts_port_lookup(Eterm, uint32_t);
 ERTS_GLB_INLINE Port*erts_id2port(Eterm id);
-ERTS_GLB_INLINE Port *erts_id2port_sflgs(Eterm, Process *, ErtsProcLocks, Uint32);
+ERTS_GLB_INLINE Port *erts_id2port_sflgs(Eterm, Process *, ErtsProcLocks, uint32_t);
 ERTS_GLB_INLINE void erts_port_release(Port *);
 #ifdef ERTS_SMP
-ERTS_GLB_INLINE Port *erts_thr_id2port_sflgs(Eterm id, Uint32 invalid_sflgs);
+ERTS_GLB_INLINE Port *erts_thr_id2port_sflgs(Eterm id, uint32_t invalid_sflgs);
 ERTS_GLB_INLINE void erts_thr_port_release(Port *prt);
 #endif
 ERTS_GLB_INLINE Port *erts_thr_drvport2port(ErlDrvPort, int);
 ERTS_GLB_INLINE Port *erts_drvport2port_state(ErlDrvPort, erts_aint32_t *);
 ERTS_GLB_INLINE Eterm erts_drvport2id(ErlDrvPort);
-ERTS_GLB_INLINE Uint32 erts_portid2status(Eterm);
+ERTS_GLB_INLINE uint32_t erts_portid2status(Eterm);
 ERTS_GLB_INLINE int erts_is_port_alive(Eterm);
 ERTS_GLB_INLINE int erts_is_valid_tracer_port(Eterm);
 ERTS_GLB_INLINE int erts_port_driver_callback_epilogue(Port *, erts_aint32_t *);
@@ -502,7 +502,7 @@ erts_port_lookup_raw(Eterm id)
 }
 
 ERTS_GLB_INLINE Port *
-erts_port_lookup(Eterm id, Uint32 invalid_sflgs)
+erts_port_lookup(Eterm id, uint32_t invalid_sflgs)
 {
     Port *prt = erts_port_lookup_raw(id);
     return (!prt
@@ -545,7 +545,7 @@ erts_id2port(Eterm id)
 ERTS_GLB_INLINE Port*
 erts_id2port_sflgs(Eterm id,
 		   Process *c_p, ErtsProcLocks c_p_locks,
-		   Uint32 invalid_sflgs)
+		   uint32_t invalid_sflgs)
 {
 #ifdef ERTS_SMP
     int no_proc_locks = !c_p || !c_p_locks;
@@ -608,7 +608,7 @@ erts_port_release(Port *prt)
  * be used by unmanaged threads in the SMP case.
  */
 ERTS_GLB_INLINE Port *
-erts_thr_id2port_sflgs(Eterm id, Uint32 invalid_sflgs)
+erts_thr_id2port_sflgs(Eterm id, uint32_t invalid_sflgs)
 {
     Port *prt;
     ErtsThrPrgrDelayHandle dhndl;
@@ -728,12 +728,12 @@ erts_drvport2id(ErlDrvPort drvport)
 	return prt->common.id;
 }
 
-ERTS_GLB_INLINE Uint32
+ERTS_GLB_INLINE uint32_t
 erts_portid2status(Eterm id)
 {
     Port *prt = erts_port_lookup_raw(id);
     if (prt)
-	return (Uint32) erts_atomic32_read_acqb(&prt->state);
+	return (uint32_t) erts_atomic32_read_acqb(&prt->state);
     else
 	return ERTS_PORT_SFLG_INVALID;
 }
@@ -816,7 +816,7 @@ struct binary;
 struct ErtsProc2PortSigData_ {
     int flags;
     Eterm caller;
-    Uint32 ref[ERTS_MAX_REF_NUMBERS];
+    uint32_t ref[ERTS_MAX_REF_NUMBERS];
     union {
 	struct {
 	    Eterm from;

@@ -441,7 +441,7 @@ typedef union float_def
     ieee754_8 fd;
     uint8_t   fb[sizeof(ieee754_8)];
     Uint16 fs[sizeof(ieee754_8) / sizeof(Uint16)];
-    Uint32 fw[sizeof(ieee754_8) / sizeof(Uint32)];
+    uint32_t fw[sizeof(ieee754_8) / sizeof(uint32_t)];
 #if defined(ARCH_64) && !HALFWORD_HEAP
     Uint   fdw;
 #endif
@@ -735,7 +735,7 @@ _ET_DECLARE_CHECKED(struct erl_node_*,internal_port_node,Eterm)
 typedef struct {
     Eterm      header;
     union {
-	Uint32 ui32[ERTS_REF_32BIT_WORDS];
+	uint32_t ui32[ERTS_REF_32BIT_WORDS];
 	Uint   ui[ERTS_REF_WORDS];
     } data;
 } RefThing;
@@ -760,7 +760,7 @@ typedef struct {
  * |  Data 2      | Data 1       |
  * +--------------+--------------+
  *
- * Data is stored as an Uint32 array with 32-bit arity as first number.
+ * Data is stored as an uint32_t array with 32-bit arity as first number.
  */
 
 #define write_ref_thing(Hp, R0, R1, R2)					\
@@ -810,7 +810,7 @@ _ET_DECLARE_CHECKED(Uint,internal_ref_data_words,Wterm)
 
 #define internal_thing_ref_data(thing) ((thing)->data.ui32)
 #define _unchecked_internal_ref_data(x) (internal_thing_ref_data(_unchecked_ref_thing_ptr(x)))
-_ET_DECLARE_CHECKED(Uint32*,internal_ref_data,Wterm)
+_ET_DECLARE_CHECKED(uint32_t*,internal_ref_data,Wterm)
 #define internal_ref_data(x) _ET_APPLY(internal_ref_data,(x))
 
 #define _unchecked_internal_ref_node(x) erts_this_node
@@ -870,7 +870,7 @@ typedef struct external_thing_ {
     struct erl_off_heap_header* next;   /* |                        */
     /*                                 ----+                        */
     union {
-	Uint32              ui32[1];
+	uint32_t              ui32[1];
 	Uint                ui[1];
     } data;
 } ExternalThing;
@@ -982,7 +982,7 @@ _ET_DECLARE_CHECKED(Uint,external_ref_data_words,Wterm)
 #define external_thing_ref_data_words(thing) external_thing_data_words(thing)
 
 #define _unchecked_external_ref_data(x) (_unchecked_external_thing_ptr((x))->data.ui32)
-_ET_DECLARE_CHECKED(Uint32*,external_ref_data,Wterm)
+_ET_DECLARE_CHECKED(uint32_t*,external_ref_data,Wterm)
 #define external_ref_data(x) _ET_APPLY(external_ref_data,(x))
 #define external_thing_ref_data(thing) ((thing)->data.ui32)
 

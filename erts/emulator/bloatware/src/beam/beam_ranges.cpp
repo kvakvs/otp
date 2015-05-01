@@ -323,8 +323,8 @@ lookup_loc(FunctionInfo* fi, BeamInstr* orig_pc, BeamInstr* modp, int idx)
 		    (Uint16 *) (BeamInstr) line[MI_LINE_LOC_TAB];
 		fi->loc = loc_table[index];
 	    } else {
-		Uint32* loc_table =
-		    (Uint32 *) (BeamInstr) line[MI_LINE_LOC_TAB];
+		uint32_t* loc_table =
+		    (uint32_t *) (BeamInstr) line[MI_LINE_LOC_TAB];
 		ASSERT(line[MI_LINE_LOC_SIZE] == 4);
 		fi->loc = loc_table[index];
 	    }
