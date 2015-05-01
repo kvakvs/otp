@@ -1,19 +1,19 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 1996-2012. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  */
 
@@ -31,13 +31,12 @@
 #include "erl_port.h"
 #undef ERL_PORT_GET_PORT_TYPE_ONLY__
 
-typedef struct reg_proc
-{
-    HashBucket bucket;  /* MUST BE LOCATED AT TOP OF STRUCT!!! */
-    Process *p;         /* The process registered (only one of this_ and
-			   'pt' is non-nullptr */
-    Port *pt;		/* The port registered */
-    Eterm name;         /* Atom name */
+typedef struct reg_proc {
+  HashBucket bucket;  /* MUST BE LOCATED AT TOP OF STRUCT!!! */
+  Process *p;         /* The process registered (only one of this_ and
+         'pt' is non-nullptr */
+  Port *pt;   /* The port registered */
+  Eterm name;         /* Atom name */
 } RegProc;
 
 int process_reg_size(void);
@@ -47,13 +46,13 @@ void register_info(int, void *);
 int erts_register_name(Process *, Eterm, Eterm);
 Eterm erts_whereis_name_to_id(Process *, Eterm);
 void erts_whereis_name(Process *, ErtsProcLocks,
-		       Eterm, Process**, ErtsProcLocks, int,
-		       Port**);
+                       Eterm, Process **, ErtsProcLocks, int,
+                       Port **);
 Process *erts_whereis_process(Process *,
-			      ErtsProcLocks,
-			      Eterm,
-			      ErtsProcLocks,
-			      int);
+                              ErtsProcLocks,
+                              Eterm,
+                              ErtsProcLocks,
+                              int);
 int erts_unregister_name(Process *, ErtsProcLocks, Port *, Eterm);
 
 #endif

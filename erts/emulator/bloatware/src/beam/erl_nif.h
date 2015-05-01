@@ -17,7 +17,7 @@
  * %CopyrightEnd%
  */
 
-/* Include file for writers of Native Implemented Functions. 
+/* Include file for writers of Native Implemented Functions.
 */
 
 #ifndef __ERL_NIF_H__
@@ -109,10 +109,10 @@ typedef long long ErlNifSInt64;
 #endif
 
 #ifdef HALFWORD_HEAP_EMULATOR
-#  define ERL_NIF_VM_VARIANT "beam.halfword" 
+#  define ERL_NIF_VM_VARIANT "beam.halfword"
 typedef unsigned int ERL_NIF_TERM;
 #else
-#  define ERL_NIF_VM_VARIANT "beam.vanilla" 
+#  define ERL_NIF_VM_VARIANT "beam.vanilla"
 #  if SIZEOF_LONG == SIZEOF_VOID_P
 typedef unsigned long ERL_NIF_TERM;
 #  elif SIZEOF_LONG_LONG == SIZEOF_VOID_P
@@ -125,61 +125,55 @@ typedef ERL_NIF_TERM ERL_NIF_UINT;
 struct enif_environment_t;
 typedef struct enif_environment_t ErlNifEnv;
 
-typedef struct
-{
-    const char* name;
-    unsigned arity;
-    ERL_NIF_TERM (*fptr)(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-    unsigned flags;
-}ErlNifFunc;
+typedef struct {
+  const char *name;
+  unsigned arity;
+  ERL_NIF_TERM(*fptr)(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+  unsigned flags;
+} ErlNifFunc;
 
 
-typedef struct enif_entry_t
-{
-    int major;
-    int minor;
-    const char* name;
-    int num_of_funcs;
-    ErlNifFunc* funcs;
-    int  (*load)   (ErlNifEnv*, void** priv_data, ERL_NIF_TERM load_info);
-    int  (*reload) (ErlNifEnv*, void** priv_data, ERL_NIF_TERM load_info);
-    int  (*upgrade)(ErlNifEnv*, void** priv_data, void** old_priv_data, ERL_NIF_TERM load_info);
-    void (*unload) (ErlNifEnv*, void* priv_data);
-    const char* vm_variant;
-    unsigned options;
-}ErlNifEntry;
+typedef struct enif_entry_t {
+  int major;
+  int minor;
+  const char *name;
+  int num_of_funcs;
+  ErlNifFunc *funcs;
+  int (*load)(ErlNifEnv *, void **priv_data, ERL_NIF_TERM load_info);
+  int (*reload)(ErlNifEnv *, void **priv_data, ERL_NIF_TERM load_info);
+  int (*upgrade)(ErlNifEnv *, void **priv_data, void **old_priv_data, ERL_NIF_TERM load_info);
+  void (*unload)(ErlNifEnv *, void *priv_data);
+  const char *vm_variant;
+  unsigned options;
+} ErlNifEntry;
 
 /* Field bits for ErlNifEntry options */
 #define ERL_NIF_DIRTY_NIF_OPTION 1
 
 
-typedef struct
-{
-    size_t size;
-    uint8_t* data;
+typedef struct {
+  size_t size;
+  uint8_t *data;
 
-    /* Internals (avert your eyes) */
-    ERL_NIF_TERM bin_term;
-    void* ref_bin;
-}ErlNifBinary;
+  /* Internals (avert your eyes) */
+  ERL_NIF_TERM bin_term;
+  void *ref_bin;
+} ErlNifBinary;
 
 typedef struct enif_resource_type_t ErlNifResourceType;
-typedef void ErlNifResourceDtor(ErlNifEnv*, void*);
-typedef enum
-{
-    ERL_NIF_RT_CREATE = 1,
-    ERL_NIF_RT_TAKEOVER = 2
-}ErlNifResourceFlags;
+typedef void ErlNifResourceDtor(ErlNifEnv *, void *);
+typedef enum {
+  ERL_NIF_RT_CREATE = 1,
+  ERL_NIF_RT_TAKEOVER = 2
+} ErlNifResourceFlags;
 
-typedef enum
-{
-    ERL_NIF_LATIN1 = 1
-}ErlNifCharEncoding;
+typedef enum {
+  ERL_NIF_LATIN1 = 1
+} ErlNifCharEncoding;
 
-typedef struct
-{
-    ERL_NIF_TERM pid;  /* internal, may change */
-}ErlNifPid;
+typedef struct {
+  ERL_NIF_TERM pid;  /* internal, may change */
+} ErlNifPid;
 
 typedef ErlDrvSysInfo ErlNifSysInfo;
 
@@ -192,26 +186,24 @@ typedef int ErlNifTSDKey;
 typedef ErlDrvThreadOpts ErlNifThreadOpts;
 
 #ifdef ERL_NIF_DIRTY_SCHEDULER_SUPPORT
-typedef enum
-{
-    ERL_NIF_DIRTY_JOB_CPU_BOUND = ERL_DRV_DIRTY_JOB_CPU_BOUND,
-    ERL_NIF_DIRTY_JOB_IO_BOUND  = ERL_DRV_DIRTY_JOB_IO_BOUND
-}ErlNifDirtyTaskFlags;
+typedef enum {
+  ERL_NIF_DIRTY_JOB_CPU_BOUND = ERL_DRV_DIRTY_JOB_CPU_BOUND,
+  ERL_NIF_DIRTY_JOB_IO_BOUND  = ERL_DRV_DIRTY_JOB_IO_BOUND
+} ErlNifDirtyTaskFlags;
 #endif
 
-typedef struct /* All fields all internal and may change */
-{
-    ERL_NIF_TERM map;
-    ERL_NIF_UINT t_limit;
-    ERL_NIF_UINT idx;
-    ERL_NIF_TERM *ks;
-    ERL_NIF_TERM *vs;
-    void* __spare__[2]; /* for future additions to be ABI compatible (same struct size) */
+typedef struct { /* All fields all internal and may change */
+  ERL_NIF_TERM map;
+  ERL_NIF_UINT t_limit;
+  ERL_NIF_UINT idx;
+  ERL_NIF_TERM *ks;
+  ERL_NIF_TERM *vs;
+  void *__spare__[2]; /* for future additions to be ABI compatible (same struct size) */
 } ErlNifMapIterator;
 
 typedef enum {
-    ERL_NIF_MAP_ITERATOR_HEAD = 1,
-    ERL_NIF_MAP_ITERATOR_TAIL = 2
+  ERL_NIF_MAP_ITERATOR_HEAD = 1,
+  ERL_NIF_MAP_ITERATOR_TAIL = 2
 } ErlNifMapIteratorEntry;
 
 #if (defined(__WIN32__) || defined(_WIN32) || defined(_WIN32_))
@@ -243,7 +235,7 @@ extern TWinDynNifCallbacks WinDynNifCallbacks;
 #    define ERL_NIF_INIT_DECL(MODNAME) __declspec(dllexport) ErlNifEntry* nif_init(TWinDynNifCallbacks* callbacks)
 #  endif
 #  define ERL_NIF_INIT_BODY memcpy(&WinDynNifCallbacks,callbacks,sizeof(TWinDynNifCallbacks))
-#else 
+#else
 #  define ERL_NIF_INIT_GLOB
 #  define ERL_NIF_INIT_BODY
 #  ifdef STATIC_ERLANG_NIF
@@ -272,22 +264,22 @@ extern TWinDynNifCallbacks WinDynNifCallbacks;
 #define ERL_NIF_INIT(NAME, FUNCS, LOAD, RELOAD, UPGRADE, UNLOAD) \
 ERL_NIF_INIT_PROLOGUE                   \
 ERL_NIF_INIT_GLOB                       \
-ERL_NIF_INIT_DECL(NAME);		\
-ERL_NIF_INIT_DECL(NAME)			\
-{					\
-    static ErlNifEntry entry = 		\
-    {					\
-	ERL_NIF_MAJOR_VERSION,		\
-	ERL_NIF_MINOR_VERSION,		\
-	#NAME,				\
-	sizeof(FUNCS) / sizeof(*FUNCS),	\
-	FUNCS,				\
-	LOAD, RELOAD, UPGRADE, UNLOAD,	\
-	ERL_NIF_VM_VARIANT,		\
-	ERL_NIF_ENTRY_OPTIONS		\
+ERL_NIF_INIT_DECL(NAME);    \
+ERL_NIF_INIT_DECL(NAME)     \
+{         \
+    static ErlNifEntry entry =    \
+    {         \
+  ERL_NIF_MAJOR_VERSION,    \
+  ERL_NIF_MINOR_VERSION,    \
+  #NAME,        \
+  sizeof(FUNCS) / sizeof(*FUNCS), \
+  FUNCS,        \
+  LOAD, RELOAD, UPGRADE, UNLOAD,  \
+  ERL_NIF_VM_VARIANT,   \
+  ERL_NIF_ENTRY_OPTIONS   \
     };                                  \
     ERL_NIF_INIT_BODY;                  \
-    return &entry;			\
+    return &entry;      \
 }                                       \
 ERL_NIF_INIT_EPILOGUE
 
@@ -296,9 +288,9 @@ ERL_NIF_INIT_EPILOGUE
 #endif
 
 #ifdef HAVE_USE_DTRACE
-ERL_NIF_TERM erl_nif_user_trace_s1(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM erl_nif_user_trace_i4s4(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
-ERL_NIF_TERM erl_nif_user_trace_n(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM erl_nif_user_trace_s1(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM erl_nif_user_trace_i4s4(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
+ERL_NIF_TERM erl_nif_user_trace_n(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[]);
 #endif
 
 #endif /* __ERL_NIF_H__ */

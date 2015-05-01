@@ -18,9 +18,9 @@
  */
 
 /*
- * Description:	Process/Port table implementation.
+ * Description: Process/Port table implementation.
  *
- * Author: 	Rickard Green
+ * Author:  Rickard Green
  */
 
 #ifndef ERL_PTAB_H__
@@ -36,11 +36,11 @@
 #include "erl_alloc.h"
 #include "erl_monitors.h"
 
-#define ERTS_TRACER_PROC(P) 	((P)->common.tracer_proc)
-#define ERTS_TRACE_FLAGS(P)	((P)->common.trace_flags)
+#define ERTS_TRACER_PROC(P)   ((P)->common.tracer_proc)
+#define ERTS_TRACE_FLAGS(P) ((P)->common.trace_flags)
 
-#define ERTS_P_LINKS(P)		((P)->common.u.alive.links)
-#define ERTS_P_MONITORS(P)	((P)->common.u.alive.monitors)
+#define ERTS_P_LINKS(P)   ((P)->common.u.alive.links)
+#define ERTS_P_MONITORS(P)  ((P)->common.u.alive.monitors)
 
 #define IS_TRACED(p) \
     (ERTS_TRACER_PROC((p)) != NIL)
@@ -50,98 +50,98 @@
     ( IS_TRACED(p) && ARE_TRACE_FLAGS_ON(p,tf) )
 
 typedef struct {
-    Eterm id;
+  Eterm id;
 #ifdef ERTS_SMP
-    erts_atomic32_t refc;
+  erts_atomic32_t refc;
 #endif
-    Eterm tracer_proc;
-    Uint trace_flags;
-    union {
-	/* --- While being alive --- */
-	struct {
-	    Uint64 started_interval;
-	    struct reg_proc *reg;
-	    ErtsLink *links;
-	    ErtsMonitor *monitors;
+  Eterm tracer_proc;
+  Uint trace_flags;
+  union {
+    /* --- While being alive --- */
+    struct {
+      Uint64 started_interval;
+      struct reg_proc *reg;
+      ErtsLink *links;
+      ErtsMonitor *monitors;
 #ifdef ERTS_SMP
-	    ErtsSmpPTimer *ptimer;
+      ErtsSmpPTimer *ptimer;
 #else
-	    ErlTimer tm;
+      ErlTimer tm;
 #endif
-	} alive;
+    } alive;
 
-	/* --- While being released --- */
-	ErtsThrPrgrLaterOp release;
-    } u;
+    /* --- While being released --- */
+    ErtsThrPrgrLaterOp release;
+  } u;
 } ErtsPTabElementCommon;
 
 typedef struct ErtsPTabDeletedElement_ ErtsPTabDeletedElement;
 
 typedef struct {
-    erts_smp_rwmtx_t rwmtx;
-    erts_interval_t interval;
-    struct {
-	ErtsPTabDeletedElement *start;
-	ErtsPTabDeletedElement *end;
-    } deleted;
-    int chunks;
+  erts_smp_rwmtx_t rwmtx;
+  erts_interval_t interval;
+  struct {
+    ErtsPTabDeletedElement *start;
+    ErtsPTabDeletedElement *end;
+  } deleted;
+  int chunks;
 } ErtsPTabListData;
 
 typedef struct {
-    erts_smp_atomic64_t last_data;
-    erts_smp_atomic32_t count;
-    erts_smp_atomic32_t aid_ix;
-    erts_smp_atomic32_t fid_ix;
+  erts_smp_atomic64_t last_data;
+  erts_smp_atomic32_t count;
+  erts_smp_atomic32_t aid_ix;
+  erts_smp_atomic32_t fid_ix;
 } ErtsPTabVolatileData;
 
 typedef struct {
-    erts_smp_atomic_t *tab;
-    erts_smp_atomic32_t *free_id_data;
-    uint32_t max;
-    uint32_t pix_mask;
-    uint32_t pix_cl_mask;
-    uint32_t pix_cl_shift;
-    uint32_t pix_cli_mask;
-    uint32_t pix_cli_shift;
-    uint32_t dix_cl_mask;
-    uint32_t dix_cl_shift;
-    uint32_t dix_cli_mask;
-    uint32_t dix_cli_shift;
-    ErtsPTabElementCommon *invalid_element;
-    Eterm invalid_data;
-    void (*release_element)(void *);
-    UWord element_size;
+  erts_smp_atomic_t *tab;
+  erts_smp_atomic32_t *free_id_data;
+  uint32_t max;
+  uint32_t pix_mask;
+  uint32_t pix_cl_mask;
+  uint32_t pix_cl_shift;
+  uint32_t pix_cli_mask;
+  uint32_t pix_cli_shift;
+  uint32_t dix_cl_mask;
+  uint32_t dix_cl_shift;
+  uint32_t dix_cli_mask;
+  uint32_t dix_cli_shift;
+  ErtsPTabElementCommon *invalid_element;
+  Eterm invalid_data;
+  void (*release_element)(void *);
+  UWord element_size;
 } ErtsPTabReadOnlyData;
 
 typedef struct {
-    /*
-     * Data mainly modified when someone is listing
-     * the content of the table.
-     */
-    union {
-	ErtsPTabListData data;
-	char algn[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsPTabListData))];
-    } list;
+  /*
+   * Data mainly modified when someone is listing
+   * the content of the table.
+   */
+  union {
+    ErtsPTabListData data;
+    char algn[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsPTabListData))];
+  } list;
 
-    /*
-     * Frequently modified data.
-     */
-    union {
-	ErtsPTabVolatileData tile;
-	char algn[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsPTabVolatileData))];
-    } vola;
+  /*
+   * Frequently modified data.
+   */
+  union {
+    ErtsPTabVolatileData tile;
+    char algn[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsPTabVolatileData))];
+  } vola;
 
-    /*
-     * Read only data.
-     */
-    union {
-	ErtsPTabReadOnlyData o;
-	char algn[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsPTabReadOnlyData))];
-    } r;
+  /*
+   * Read only data.
+   */
+  union {
+    ErtsPTabReadOnlyData o;
+    char algn[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsPTabReadOnlyData))];
+  } r;
 } ErtsPTab;
 
-#define ERTS_PTAB_ID_DATA_SIZE	28
-#define ERTS_PTAB_ID_DATA_SHIFT	(_TAG_IMMED1_SIZE)
+#define ERTS_PTAB_ID_DATA_SIZE  28
+#define ERTS_PTAB_ID_DATA_SHIFT (_TAG_IMMED1_SIZE)
 /* ERTS_PTAB_MAX_SIZE must be a power of 2 */
 #define ERTS_PTAB_MAX_SIZE (SWORD_CONSTANT(1) << 27)
 #if (ERTS_PTAB_MAX_SIZE-1) > MAX_SMALL
@@ -165,29 +165,29 @@ typedef struct {
 # error "Unexpected port tag size"
 #endif
 
-#define ERTS_PTAB_INVALID_ID(TAG)					\
-    ((Eterm)								\
-     ((((1 << ERTS_PTAB_ID_DATA_SIZE) - 1) << ERTS_PTAB_ID_DATA_SHIFT)	\
+#define ERTS_PTAB_INVALID_ID(TAG)         \
+    ((Eterm)                \
+     ((((1 << ERTS_PTAB_ID_DATA_SIZE) - 1) << ERTS_PTAB_ID_DATA_SHIFT)  \
       | (TAG)))
 
-#define erts_ptab_is_valid_id(ID)					\
+#define erts_ptab_is_valid_id(ID)         \
     (is_internal_pid((ID)) || is_internal_port((ID)))
 
 void erts_ptab_init(void);
 void erts_ptab_init_table(ErtsPTab *ptab,
-			  ErtsAlcType_t atype,
-			  void (*release_element)(void *),
-			  ErtsPTabElementCommon *invalid_element,
-			  int size,
-			  UWord element_size,
-			  char *name,
-			  int legacy);
+                          ErtsAlcType_t atype,
+                          void (*release_element)(void *),
+                          ErtsPTabElementCommon *invalid_element,
+                          int size,
+                          UWord element_size,
+                          char *name,
+                          int legacy);
 int erts_ptab_new_element(ErtsPTab *ptab,
-			  ErtsPTabElementCommon *ptab_el,
-			  void *init_arg,
-			  void (*init_ptab_el)(void *, Eterm));
+                          ErtsPTabElementCommon *ptab_el,
+                          void *init_arg,
+                          void (*init_ptab_el)(void *, Eterm));
 void erts_ptab_delete_element(ErtsPTab *ptab,
-			      ErtsPTabElementCommon *ptab_el);
+                              ErtsPTabElementCommon *ptab_el);
 int erts_ptab_initialized(ErtsPTab *ptab);
 UWord erts_ptab_mem_size(ErtsPTab *ptab);
 
@@ -208,7 +208,7 @@ ERTS_GLB_INLINE erts_aint_t erts_ptab_pix2intptr_acqb(ErtsPTab *ptab, int ix);
 ERTS_GLB_INLINE void erts_ptab_inc_refc(ErtsPTabElementCommon *ptab_el);
 ERTS_GLB_INLINE int erts_ptab_dec_test_refc(ErtsPTabElementCommon *ptab_el);
 ERTS_GLB_INLINE int erts_ptab_add_test_refc(ErtsPTabElementCommon *ptab_el,
-					    int32_t add_refc);
+    int32_t add_refc);
 ERTS_GLB_INLINE void erts_ptab_rlock(ErtsPTab *ptab);
 ERTS_GLB_INLINE int erts_ptab_tryrlock(ErtsPTab *ptab);
 ERTS_GLB_INLINE void erts_ptab_runlock(ErtsPTab *ptab);
@@ -223,61 +223,65 @@ ERTS_GLB_INLINE int erts_smp_lc_ptab_is_rwlocked(ErtsPTab *ptab);
 ERTS_GLB_INLINE erts_interval_t *
 erts_ptab_interval(ErtsPTab *ptab)
 {
-    return &ptab->list.data.interval;
+  return &ptab->list.data.interval;
 }
 
 ERTS_GLB_INLINE int
 erts_ptab_max(ErtsPTab *ptab)
 {
-    int max = ptab->r.o.max;
-    return max == ERTS_PTAB_MAX_SIZE ? max - 1 : max;
+  int max = ptab->r.o.max;
+  return max == ERTS_PTAB_MAX_SIZE ? max - 1 : max;
 }
 
 ERTS_GLB_INLINE int
 erts_ptab_count(ErtsPTab *ptab)
 {
-    int max = ptab->r.o.max;
-    erts_aint32_t res = erts_smp_atomic32_read_nob(&ptab->vola.tile.count);
-    if (max == ERTS_PTAB_MAX_SIZE) {
-	max--;
-	res--;
-    }
-    if (res > max)
-	return max;
-    ASSERT(res >= 0);
-    return (int) res;
+  int max = ptab->r.o.max;
+  erts_aint32_t res = erts_smp_atomic32_read_nob(&ptab->vola.tile.count);
+
+  if (max == ERTS_PTAB_MAX_SIZE) {
+    max--;
+    res--;
+  }
+
+  if (res > max) {
+    return max;
+  }
+
+  ASSERT(res >= 0);
+  return (int) res;
 
 }
 
 ERTS_GLB_INLINE Uint erts_ptab_pixdata2data(ErtsPTab *ptab, Eterm pixdata)
 {
-    uint32_t data = ((uint32_t) pixdata) & ~ptab->r.o.pix_mask;
-    data |= (pixdata >> ptab->r.o.pix_cl_shift) & ptab->r.o.pix_cl_mask;
-    data |= (pixdata & ptab->r.o.pix_cli_mask) << ptab->r.o.pix_cli_shift;
-    return data;
+  uint32_t data = ((uint32_t) pixdata) & ~ptab->r.o.pix_mask;
+  data |= (pixdata >> ptab->r.o.pix_cl_shift) & ptab->r.o.pix_cl_mask;
+  data |= (pixdata & ptab->r.o.pix_cli_mask) << ptab->r.o.pix_cli_shift;
+  return data;
 }
 
 ERTS_GLB_INLINE uint32_t erts_ptab_pixdata2pix(ErtsPTab *ptab, Eterm pixdata)
 {
-    return ((uint32_t) pixdata) & ptab->r.o.pix_mask;
+  return ((uint32_t) pixdata) & ptab->r.o.pix_mask;
 }
 
 ERTS_GLB_INLINE uint32_t erts_ptab_data2pix(ErtsPTab *ptab, Eterm data)
 {
-    uint32_t n, pix;
-    n = (uint32_t) data;
-    pix = ((n & ptab->r.o.pix_cl_mask) << ptab->r.o.pix_cl_shift);
-    pix += ((n >> ptab->r.o.pix_cli_shift) & ptab->r.o.pix_cli_mask);
-    ASSERT(0 <= pix && pix < ptab->r.o.max);
-    return pix;
+  uint32_t n, pix;
+  n = (uint32_t) data;
+  pix = ((n & ptab->r.o.pix_cl_mask) << ptab->r.o.pix_cl_shift);
+  pix += ((n >> ptab->r.o.pix_cli_shift) & ptab->r.o.pix_cli_mask);
+  ASSERT(0 <= pix && pix < ptab->r.o.max);
+  return pix;
 }
 
 ERTS_GLB_INLINE Uint erts_ptab_data2pixdata(ErtsPTab *ptab, Eterm data)
 {
-    Uint pixdata = data & ~((Uint) ptab->r.o.pix_mask);
-    pixdata |= (Uint) erts_ptab_data2pix(ptab, data);
-    ASSERT(data == erts_ptab_pixdata2data(ptab, pixdata));
-    return pixdata;
+  Uint pixdata = data & ~((Uint) ptab->r.o.pix_mask);
+  pixdata |= (Uint) erts_ptab_data2pix(ptab, data);
+  ASSERT(data == erts_ptab_pixdata2data(ptab, pixdata));
+  return pixdata;
 }
 
 #if ERTS_SIZEOF_TERM == 8
@@ -285,29 +289,29 @@ ERTS_GLB_INLINE Uint erts_ptab_data2pixdata(ErtsPTab *ptab, Eterm data)
 ERTS_GLB_INLINE Eterm
 erts_ptab_make_id(ErtsPTab *ptab, Eterm data, Eterm tag)
 {
-    HUint huint;
-    uint32_t low_data = (uint32_t) data;
-    low_data &= (1 << ERTS_PTAB_ID_DATA_SIZE) - 1;
-    low_data <<= ERTS_PTAB_ID_DATA_SHIFT;
-    huint.hval[ERTS_HUINT_HVAL_HIGH] = erts_ptab_data2pix(ptab, data);
-    huint.hval[ERTS_HUINT_HVAL_LOW] = low_data | ((uint32_t) tag);
-    return (Eterm) huint.val;
+  HUint huint;
+  uint32_t low_data = (uint32_t) data;
+  low_data &= (1 << ERTS_PTAB_ID_DATA_SIZE) - 1;
+  low_data <<= ERTS_PTAB_ID_DATA_SHIFT;
+  huint.hval[ERTS_HUINT_HVAL_HIGH] = erts_ptab_data2pix(ptab, data);
+  huint.hval[ERTS_HUINT_HVAL_LOW] = low_data | ((uint32_t) tag);
+  return (Eterm) huint.val;
 }
 
 ERTS_GLB_INLINE int
 erts_ptab_id2pix(ErtsPTab *ptab, Eterm id)
 {
-    HUint huint;
-    huint.val = id;
-    return (int) huint.hval[ERTS_HUINT_HVAL_HIGH];
+  HUint huint;
+  huint.val = id;
+  return (int) huint.hval[ERTS_HUINT_HVAL_HIGH];
 }
 
 ERTS_GLB_INLINE Uint
 erts_ptab_id2data(ErtsPTab *ptab, Eterm id)
 {
-    HUint huint;
-    huint.val = id;
-    return (Uint) (huint.hval[ERTS_HUINT_HVAL_LOW] >> ERTS_PTAB_ID_DATA_SHIFT);
+  HUint huint;
+  huint.val = id;
+  return (Uint)(huint.hval[ERTS_HUINT_HVAL_LOW] >> ERTS_PTAB_ID_DATA_SHIFT);
 }
 
 #elif ERTS_SIZEOF_TERM == 4
@@ -315,26 +319,26 @@ erts_ptab_id2data(ErtsPTab *ptab, Eterm id)
 ERTS_GLB_INLINE Eterm
 erts_ptab_make_id(ErtsPTab *ptab, Eterm data, Eterm tag)
 {
-    Eterm id;
-    data &= ((1 << ERTS_PTAB_ID_DATA_SIZE) - 1);
-    id = (Eterm) erts_ptab_data2pixdata(ptab, data);
-    return (id << ERTS_PTAB_ID_DATA_SHIFT) | tag;
+  Eterm id;
+  data &= ((1 << ERTS_PTAB_ID_DATA_SIZE) - 1);
+  id = (Eterm) erts_ptab_data2pixdata(ptab, data);
+  return (id << ERTS_PTAB_ID_DATA_SHIFT) | tag;
 }
 
 ERTS_GLB_INLINE int
 erts_ptab_id2pix(ErtsPTab *ptab, Eterm id)
 {
-    Uint pixdata = (Uint) id;
-    pixdata >>= ERTS_PTAB_ID_DATA_SHIFT;
-    return (int) erts_ptab_pixdata2pix(ptab, pixdata);
+  Uint pixdata = (Uint) id;
+  pixdata >>= ERTS_PTAB_ID_DATA_SHIFT;
+  return (int) erts_ptab_pixdata2pix(ptab, pixdata);
 }
 
 ERTS_GLB_INLINE Uint
 erts_ptab_id2data(ErtsPTab *ptab, Eterm id)
 {
-    Uint pixdata = (Uint) id;
-    pixdata >>= ERTS_PTAB_ID_DATA_SHIFT;
-    return erts_ptab_pixdata2data(ptab, pixdata);
+  Uint pixdata = (Uint) id;
+  pixdata >>= ERTS_PTAB_ID_DATA_SHIFT;
+  return erts_ptab_pixdata2data(ptab, pixdata);
 }
 
 #else
@@ -343,36 +347,36 @@ erts_ptab_id2data(ErtsPTab *ptab, Eterm id)
 
 ERTS_GLB_INLINE erts_aint_t erts_ptab_pix2intptr_nob(ErtsPTab *ptab, int ix)
 {
-    ASSERT(0 <= ix && ix < ptab->r.o.max);
-    return erts_smp_atomic_read_nob(&ptab->r.o.tab[ix]);
+  ASSERT(0 <= ix && ix < ptab->r.o.max);
+  return erts_smp_atomic_read_nob(&ptab->r.o.tab[ix]);
 }
 
 ERTS_GLB_INLINE erts_aint_t erts_ptab_pix2intptr_ddrb(ErtsPTab *ptab, int ix)
 {
-    ASSERT(0 <= ix && ix < ptab->r.o.max);
-    return erts_smp_atomic_read_ddrb(&ptab->r.o.tab[ix]);
+  ASSERT(0 <= ix && ix < ptab->r.o.max);
+  return erts_smp_atomic_read_ddrb(&ptab->r.o.tab[ix]);
 }
 
 ERTS_GLB_INLINE erts_aint_t erts_ptab_pix2intptr_rb(ErtsPTab *ptab, int ix)
 {
-    ASSERT(0 <= ix && ix < ptab->r.o.max);
-    return erts_smp_atomic_read_rb(&ptab->r.o.tab[ix]);
+  ASSERT(0 <= ix && ix < ptab->r.o.max);
+  return erts_smp_atomic_read_rb(&ptab->r.o.tab[ix]);
 }
 
 ERTS_GLB_INLINE erts_aint_t erts_ptab_pix2intptr_acqb(ErtsPTab *ptab, int ix)
 {
-    ASSERT(0 <= ix && ix < ptab->r.o.max);
-    return erts_smp_atomic_read_acqb(&ptab->r.o.tab[ix]);
+  ASSERT(0 <= ix && ix < ptab->r.o.max);
+  return erts_smp_atomic_read_acqb(&ptab->r.o.tab[ix]);
 }
 
 ERTS_GLB_INLINE void erts_ptab_inc_refc(ErtsPTabElementCommon *ptab_el)
 {
 #ifdef ERTS_SMP
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_aint32_t refc = erts_atomic32_inc_read_nob(&ptab_el->refc);
-    ERTS_SMP_LC_ASSERT(refc > 1);
+  erts_aint32_t refc = erts_atomic32_inc_read_nob(&ptab_el->refc);
+  ERTS_SMP_LC_ASSERT(refc > 1);
 #else
-    erts_atomic32_inc_nob(&ptab_el->refc);
+  erts_atomic32_inc_nob(&ptab_el->refc);
 #endif
 #endif
 }
@@ -380,75 +384,77 @@ ERTS_GLB_INLINE void erts_ptab_inc_refc(ErtsPTabElementCommon *ptab_el)
 ERTS_GLB_INLINE int erts_ptab_dec_test_refc(ErtsPTabElementCommon *ptab_el)
 {
 #ifdef ERTS_SMP
-    erts_aint32_t refc = erts_atomic32_dec_read_nob(&ptab_el->refc);
-    ERTS_SMP_LC_ASSERT(refc >= 0);
-    return (int) refc;
+  erts_aint32_t refc = erts_atomic32_dec_read_nob(&ptab_el->refc);
+  ERTS_SMP_LC_ASSERT(refc >= 0);
+  return (int) refc;
 #else
-    return 0;
+  return 0;
 #endif
 }
 
 ERTS_GLB_INLINE int erts_ptab_add_test_refc(ErtsPTabElementCommon *ptab_el,
-					    int32_t add_refc)
+    int32_t add_refc)
 {
 #ifdef ERTS_SMP
-    erts_aint32_t refc;
+  erts_aint32_t refc;
 
 #ifndef ERTS_ENABLE_LOCK_CHECK
-    if (add_refc >= 0) {
-	erts_atomic32_add_nob(&ptab_el->refc,
-			      (erts_aint32_t) add_refc);
-	return 1;
-    }
+
+  if (add_refc >= 0) {
+    erts_atomic32_add_nob(&ptab_el->refc,
+                          (erts_aint32_t) add_refc);
+    return 1;
+  }
+
 #endif
 
-    refc = erts_atomic32_add_read_nob(&ptab_el->refc,
-				      (erts_aint32_t) add_refc);
-    ERTS_SMP_LC_ASSERT(refc >= 0);
-    return (int) refc;
+  refc = erts_atomic32_add_read_nob(&ptab_el->refc,
+                                    (erts_aint32_t) add_refc);
+  ERTS_SMP_LC_ASSERT(refc >= 0);
+  return (int) refc;
 #else
-    return 0;
+  return 0;
 #endif
 }
 
 ERTS_GLB_INLINE void erts_ptab_rlock(ErtsPTab *ptab)
 {
-    erts_smp_rwmtx_rlock(&ptab->list.data.rwmtx);
+  erts_smp_rwmtx_rlock(&ptab->list.data.rwmtx);
 }
 
 ERTS_GLB_INLINE int erts_ptab_tryrlock(ErtsPTab *ptab)
 {
-    return erts_smp_rwmtx_tryrlock(&ptab->list.data.rwmtx);
+  return erts_smp_rwmtx_tryrlock(&ptab->list.data.rwmtx);
 }
 
 ERTS_GLB_INLINE void erts_ptab_runlock(ErtsPTab *ptab)
 {
-    erts_smp_rwmtx_runlock(&ptab->list.data.rwmtx);
+  erts_smp_rwmtx_runlock(&ptab->list.data.rwmtx);
 }
 
 ERTS_GLB_INLINE void erts_ptab_rwlock(ErtsPTab *ptab)
 {
-    erts_smp_rwmtx_rwlock(&ptab->list.data.rwmtx);
+  erts_smp_rwmtx_rwlock(&ptab->list.data.rwmtx);
 }
 
 ERTS_GLB_INLINE int erts_ptab_tryrwlock(ErtsPTab *ptab)
 {
-    return erts_smp_rwmtx_tryrwlock(&ptab->list.data.rwmtx);
+  return erts_smp_rwmtx_tryrwlock(&ptab->list.data.rwmtx);
 }
 
 ERTS_GLB_INLINE void erts_ptab_rwunlock(ErtsPTab *ptab)
 {
-    erts_smp_rwmtx_rwunlock(&ptab->list.data.rwmtx);
+  erts_smp_rwmtx_rwunlock(&ptab->list.data.rwmtx);
 }
 
 ERTS_GLB_INLINE int erts_smp_lc_ptab_is_rlocked(ErtsPTab *ptab)
 {
-    return erts_smp_lc_rwmtx_is_rlocked(&ptab->list.data.rwmtx);
+  return erts_smp_lc_rwmtx_is_rlocked(&ptab->list.data.rwmtx);
 }
 
 ERTS_GLB_INLINE int erts_smp_lc_ptab_is_rwlocked(ErtsPTab *ptab)
 {
-    return erts_smp_lc_rwmtx_is_rwlocked(&ptab->list.data.rwmtx);
+  return erts_smp_lc_rwmtx_is_rwlocked(&ptab->list.data.rwmtx);
 }
 
 #endif

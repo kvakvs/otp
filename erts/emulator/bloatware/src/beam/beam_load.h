@@ -24,32 +24,32 @@
 #include "erl_process.h"
 
 Eterm beam_make_current_old(Process *c_p, ErtsProcLocks c_p_locks,
-			    Eterm module);
+                            Eterm module);
 
 
 typedef struct gen_op_entry {
-   char* name;
-   int arity;
-   int specific;
-   int num_specific;
-   int transform;
-   int min_window;
+  char *name;
+  int arity;
+  int specific;
+  int num_specific;
+  int transform;
+  int min_window;
 } GenOpEntry;
 
 extern GenOpEntry gen_opc[];
 
-#ifdef NO_JUMP_TABLE 
+#ifdef NO_JUMP_TABLE
 #define BeamOp(Op) (Op)
 #else
-extern void** beam_ops;
+extern void **beam_ops;
 #define BeamOp(Op) beam_ops[(Op)]
 #endif
 
 
 extern BeamInstr beam_debug_apply[];
-extern BeamInstr* em_call_error_handler;
-extern BeamInstr* em_apply_bif;
-extern BeamInstr* em_call_nif;
+extern BeamInstr *em_call_error_handler;
+extern BeamInstr *em_apply_bif;
+extern BeamInstr *em_call_nif;
 
 /*
  * The following variables keep a sorted list of address ranges for
@@ -73,7 +73,7 @@ extern Uint erts_total_code_size;
  */
 
 #define MI_ATTR_PTR          1
-#define MI_ATTR_SIZE	     2
+#define MI_ATTR_SIZE       2
 #define MI_ATTR_SIZE_ON_HEAP 3
 
 /*
@@ -87,9 +87,9 @@ extern Uint erts_total_code_size;
 /*
  * Literal area (constant pool).
  */
-#define MI_LITERALS_START	7
-#define MI_LITERALS_END		8
-#define MI_LITERALS_OFF_HEAP	9
+#define MI_LITERALS_START 7
+#define MI_LITERALS_END   8
+#define MI_LITERALS_OFF_HEAP  9
 
 
 /*

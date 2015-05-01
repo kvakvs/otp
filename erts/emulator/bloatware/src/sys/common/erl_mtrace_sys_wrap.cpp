@@ -1,19 +1,19 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 2004-2009. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  */
 
@@ -48,29 +48,34 @@ static volatile char *heap_end = nullptr;
 static void
 init_hook(void)
 {
-    __after_morecore_hook = erts_mtrace_update_heap_size;
-    if (inited)
-	return;
-    heap_end = nullptr;
+  __after_morecore_hook = erts_mtrace_update_heap_size;
+
+  if (inited) {
+    return;
+  }
+
+  heap_end = nullptr;
 #if defined(HAVE_END_SYMBOL)
-    heap_start = &end;
+  heap_start = &end;
 #elif defined(HAVE__END_SYMBOL)
-    heap_start = &_end;
+  heap_start = &_end;
 #else
-    heap_start = SBRK_0;
-    if (heap_start == (SBRK_RET_TYPE) -1) {
-	heap_start = nullptr;
-	return;
-    }
+  heap_start = SBRK_0;
+
+  if (heap_start == (SBRK_RET_TYPE) - 1) {
+    heap_start = nullptr;
+    return;
+  }
+
 #endif
-    inited = 1;
+  inited = 1;
 }
 
 static int
 init(void)
 {
-    init_hook();
-    return inited;
+  init_hook();
+  return inited;
 }
 
 void (*__malloc_initialize_hook)(void) = init_hook;
@@ -92,95 +97,96 @@ void (*__malloc_initialize_hook)(void) = init_hook;
 
 static void update_heap_size(char *new_end);
 
-#define SBRK_IMPL(RET_TYPE, FUNC, ARG_TYPE)			\
-RET_TYPE FUNC (ARG_TYPE);					\
-static RET_TYPE (*real_ ## FUNC)(ARG_TYPE) = nullptr;		\
-RET_TYPE FUNC (ARG_TYPE arg)					\
-{								\
-    RET_TYPE res;						\
-    if (!inited && !init())					\
-	return (RET_TYPE) -1;					\
-    res = (*real_ ## FUNC)(arg);				\
-    if (erts_mtrace_enabled && res != ((RET_TYPE) -1))		\
-	update_heap_size((char *) (*real_ ## FUNC)(0));		\
-    return res;							\
+#define SBRK_IMPL(RET_TYPE, FUNC, ARG_TYPE)     \
+RET_TYPE FUNC (ARG_TYPE);         \
+static RET_TYPE (*real_ ## FUNC)(ARG_TYPE) = nullptr;   \
+RET_TYPE FUNC (ARG_TYPE arg)          \
+{               \
+    RET_TYPE res;           \
+    if (!inited && !init())         \
+  return (RET_TYPE) -1;         \
+    res = (*real_ ## FUNC)(arg);        \
+    if (erts_mtrace_enabled && res != ((RET_TYPE) -1))    \
+  update_heap_size((char *) (*real_ ## FUNC)(0));   \
+    return res;             \
 }
 
-#define BRK_IMPL(RET_TYPE, FUNC, ARG_TYPE)			\
-RET_TYPE FUNC (ARG_TYPE);					\
-static RET_TYPE (*real_ ## FUNC)(ARG_TYPE) = nullptr;		\
-RET_TYPE FUNC (ARG_TYPE arg)					\
-{								\
-    RET_TYPE res;						\
-    if (!inited && !init())					\
-	return (RET_TYPE) -1;					\
-    res = (*real_ ## FUNC)(arg);				\
-    if (erts_mtrace_enabled && res != ((RET_TYPE) -1))		\
-	update_heap_size((char *) arg);				\
-    return res;							\
+#define BRK_IMPL(RET_TYPE, FUNC, ARG_TYPE)      \
+RET_TYPE FUNC (ARG_TYPE);         \
+static RET_TYPE (*real_ ## FUNC)(ARG_TYPE) = nullptr;   \
+RET_TYPE FUNC (ARG_TYPE arg)          \
+{               \
+    RET_TYPE res;           \
+    if (!inited && !init())         \
+  return (RET_TYPE) -1;         \
+    res = (*real_ ## FUNC)(arg);        \
+    if (erts_mtrace_enabled && res != ((RET_TYPE) -1))    \
+  update_heap_size((char *) arg);       \
+    return res;             \
 }
 
 SBRK_IMPL(SBRK_RET_TYPE, sbrk, SBRK_ARG_TYPE)
 #ifdef HAVE_BRK
-   BRK_IMPL(BRK_RET_TYPE, brk, BRK_ARG_TYPE)
+BRK_IMPL(BRK_RET_TYPE, brk, BRK_ARG_TYPE)
 #endif
 
 #ifdef HAVE__SBRK
-   SBRK_IMPL(SBRK_RET_TYPE, _sbrk, SBRK_ARG_TYPE)
+SBRK_IMPL(SBRK_RET_TYPE, _sbrk, SBRK_ARG_TYPE)
 #endif
 #ifdef HAVE__BRK
-   BRK_IMPL(BRK_RET_TYPE, _brk, BRK_ARG_TYPE)
+BRK_IMPL(BRK_RET_TYPE, _brk, BRK_ARG_TYPE)
 #endif
 
 #ifdef HAVE___SBRK
-   SBRK_IMPL(SBRK_RET_TYPE, __sbrk, SBRK_ARG_TYPE)
+SBRK_IMPL(SBRK_RET_TYPE, __sbrk, SBRK_ARG_TYPE)
 #endif
 #ifdef HAVE___BRK
-   BRK_IMPL(BRK_RET_TYPE, __brk, BRK_ARG_TYPE)
+BRK_IMPL(BRK_RET_TYPE, __brk, BRK_ARG_TYPE)
 #endif
 
 static int
 init(void)
 {
-    if (inited)
-	return 1;
+  if (inited) {
+    return 1;
+  }
 
-#define INIT_XBRK_SYM(SYM)			\
-do {						\
-    if (!real_ ## SYM) {			\
-	real_ ## SYM = dlsym(RTLD_NEXT, #SYM);	\
-	if (!real_ ## SYM) {			\
-	    errno = ENOMEM;			\
-	    return 0;				\
-	}					\
-    }						\
+#define INIT_XBRK_SYM(SYM)      \
+do {            \
+    if (!real_ ## SYM) {      \
+  real_ ## SYM = dlsym(RTLD_NEXT, #SYM);  \
+  if (!real_ ## SYM) {      \
+      errno = ENOMEM;     \
+      return 0;       \
+  }         \
+    }           \
 } while (0)
 
-    heap_end = nullptr;
+  heap_end = nullptr;
 #if defined(HAVE_END_SYMBOL)
-    heap_start = &end;
+  heap_start = &end;
 #elif defined(HAVE__END_SYMBOL)
-    heap_start = &_end;
+  heap_start = &_end;
 #endif
 
-    INIT_XBRK_SYM(sbrk);
+  INIT_XBRK_SYM(sbrk);
 #ifdef HAVE_BRK
-    INIT_XBRK_SYM(brk);
+  INIT_XBRK_SYM(brk);
 #endif
 #ifdef HAVE__SBRK
-    INIT_XBRK_SYM(_sbrk);
+  INIT_XBRK_SYM(_sbrk);
 #endif
 #ifdef HAVE__BRK
-    INIT_XBRK_SYM(_brk);
+  INIT_XBRK_SYM(_brk);
 #endif
 #ifdef HAVE___SBRK
-    INIT_XBRK_SYM(__sbrk);
+  INIT_XBRK_SYM(__sbrk);
 #endif
 #ifdef HAVE___BRK
-    INIT_XBRK_SYM(__brk);
+  INIT_XBRK_SYM(__brk);
 #endif
 
-    return inited = 1;
+  return inited = 1;
 #undef INIT_XBRK_SYM
 }
 
@@ -189,47 +195,51 @@ do {						\
 static void
 update_heap_size(char *new_end)
 {
-    volatile char *new_start, *old_start, *old_end;
-    Uint size;
+  volatile char *new_start, *old_start, *old_end;
+  Uint size;
 
-    if (new_end == ((char *) -1))
-	return;
+  if (new_end == ((char *) - 1)) {
+    return;
+  }
 
-    new_start = (old_start = heap_start);
-    old_end = heap_end;
-    heap_end = new_end;
-    if (new_end < old_start || !old_start)
-	heap_start = (new_start = new_end);
+  new_start = (old_start = heap_start);
+  old_end = heap_end;
+  heap_end = new_end;
 
-    size = (Uint) (new_end - new_start);
+  if (new_end < old_start || !old_start) {
+    heap_start = (new_start = new_end);
+  }
 
-    if (!old_end) {
-	if (size)
-	    erts_mtrace_crr_alloc((void *) new_start,
-				  ERTS_ALC_A_SYSTEM,
-				  ERTS_MTRACE_SEGMENT_ID,
-				  size);
-	else
-	    heap_end = nullptr;
-    }
+  size = (Uint)(new_end - new_start);
+
+  if (!old_end) {
+    if (size)
+      erts_mtrace_crr_alloc((void *) new_start,
+                            ERTS_ALC_A_SYSTEM,
+                            ERTS_MTRACE_SEGMENT_ID,
+                            size);
     else {
-	if (old_end != new_end || old_start != new_start) {
-
-	    if (size)
-		erts_mtrace_crr_realloc((void *) new_start,
-					ERTS_ALC_A_SYSTEM,
-					ERTS_MTRACE_SEGMENT_ID,
-					(void *) old_start,
-					size);
-	    else {
-		if (old_start)
-		    erts_mtrace_crr_free(ERTS_ALC_A_SYSTEM,
-					 ERTS_MTRACE_SEGMENT_ID,
-					 (void *) old_start);
-		heap_end = nullptr;
-	    }
-	}
+      heap_end = nullptr;
     }
+  } else {
+    if (old_end != new_end || old_start != new_start) {
+
+      if (size)
+        erts_mtrace_crr_realloc((void *) new_start,
+                                ERTS_ALC_A_SYSTEM,
+                                ERTS_MTRACE_SEGMENT_ID,
+                                (void *) old_start,
+                                size);
+      else {
+        if (old_start)
+          erts_mtrace_crr_free(ERTS_ALC_A_SYSTEM,
+                               ERTS_MTRACE_SEGMENT_ID,
+                               (void *) old_start);
+
+        heap_end = nullptr;
+      }
+    }
+  }
 }
 
 #endif /* #ifdef ERTS_CAN_TRACK_MALLOC */
@@ -238,8 +248,11 @@ void
 erts_mtrace_update_heap_size(void)
 {
 #ifdef ERTS_CAN_TRACK_MALLOC
-    if (erts_mtrace_enabled && (inited || init()))
-	update_heap_size((char *) SBRK_0);
+
+  if (erts_mtrace_enabled && (inited || init())) {
+    update_heap_size((char *) SBRK_0);
+  }
+
 #endif
 }
 

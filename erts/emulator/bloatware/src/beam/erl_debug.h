@@ -50,14 +50,14 @@
 
 extern Uint32 verbose;
 
-void upp(byte*, size_t);
+void upp(byte *, size_t);
 void pat(Eterm);
 void pinfo(void);
-void pp(Process*);
+void pp(Process *);
 void ppi(Eterm);
-void pba(Process*, int);
+void pba(Process *, int);
 void td(Eterm);
-void ps(Process*, Eterm*);
+void ps(Process *, Eterm *);
 
 #undef ERTS_OFFHEAP_DEBUG
 #define ERTS_OFFHEAP_DEBUG

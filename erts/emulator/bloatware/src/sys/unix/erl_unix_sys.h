@@ -1,19 +1,19 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 1997-2011. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  *
  * This file handles differences between different Unix systems.
@@ -211,12 +211,12 @@ int sys_stop_hrvtime(void);
 #define SYS_CLOCK_RESOLUTION 1
 
 /* These are defined in sys.c */
-#if defined(SIG_SIGSET)		/* Old SysV */
-RETSIGTYPE (*sys_sigset())();
-#elif defined(SIG_SIGNAL)	/* Old BSD */
-RETSIGTYPE (*sys_sigset())();
+#if defined(SIG_SIGSET)   /* Old SysV */
+RETSIGTYPE(*sys_sigset())();
+#elif defined(SIG_SIGNAL) /* Old BSD */
+RETSIGTYPE(*sys_sigset())();
 #else
-RETSIGTYPE (*sys_sigset(int, RETSIGTYPE (*func)(int)))(int);
+RETSIGTYPE(*sys_sigset(int, RETSIGTYPE(*func)(int)))(int);
 #endif
 extern void sys_sigrelease(int);
 extern void sys_sigblock(int);
@@ -226,7 +226,7 @@ extern void sys_stop_cat(void);
  * Handling of floating point exceptions.
  */
 
-#ifdef USE_ISINF_ISNAN		/* simulate finite() */
+#ifdef USE_ISINF_ISNAN    /* simulate finite() */
 #  define isfinite(f) (!isinf(f) && !isnan(f))
 #  define HAVE_ISFINITE
 #elif (defined(__GNUC__) && !defined(__llvm__)) && defined(HAVE_FINITE)
@@ -270,19 +270,19 @@ extern void erts_thread_init_fp_exception(void);
 #endif
 #  if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__)
 #    define erts_fwait(fpexnp,f) \
-	__asm__ __volatile__("fwait" : "=m"(*(fpexnp)) : "m"(f))
+  __asm__ __volatile__("fwait" : "=m"(*(fpexnp)) : "m"(f))
 #  elif (defined(__powerpc__) || defined(__ppc__)) && defined(__GNUC__)
 #    define erts_fwait(fpexnp,f) \
-	__asm__ __volatile__("" : "=m"(*(fpexnp)) : "fm"(f))
+  __asm__ __volatile__("" : "=m"(*(fpexnp)) : "fm"(f))
 #  elif defined(__sparc__) && defined(__linux__) && defined(__GNUC__)
 #    define erts_fwait(fpexnp,f) \
-	__asm__ __volatile__("" : "=m"(*(fpexnp)) : "em"(f))
+  __asm__ __volatile__("" : "=m"(*(fpexnp)) : "em"(f))
 #  else
 #    define erts_fwait(fpexnp,f) \
-	__asm__ __volatile__("" : "=m"(*(fpexnp)) : "g"(f))
+  __asm__ __volatile__("" : "=m"(*(fpexnp)) : "g"(f))
 #  endif
 #  if (defined(__i386__) || defined(__x86_64__)) && defined(__GNUC__)
-     extern void erts_restore_fpu(void);
+extern void erts_restore_fpu(void);
 #  else
 #    define erts_restore_fpu() /*empty*/
 #  endif
@@ -294,31 +294,36 @@ extern void erts_thread_init_fp_exception(void);
 #  endif
 static __inline__ int erts_check_fpe(volatile unsigned long *fp_exception, double f)
 {
-    erts_fwait(fp_exception, f);
-    if (__builtin_expect(*fp_exception == 0, 1))
-       return 0;
-    *fp_exception = 0;
-    erts_restore_fpu();
-    return 1;
+  erts_fwait(fp_exception, f);
+
+  if (__builtin_expect(*fp_exception == 0, 1)) {
+    return 0;
+  }
+
+  *fp_exception = 0;
+  erts_restore_fpu();
+  return 1;
 }
 #  undef erts_fwait
 #  undef erts_restore_fpu
 extern void erts_fp_check_init_error(volatile unsigned long *fp_exception);
 static __inline__ void __ERTS_FP_CHECK_INIT(volatile unsigned long *fp_exception)
 {
-    if (__builtin_expect(*fp_exception == 0, 1))
-	return;
-    erts_fp_check_init_error(fp_exception);
+  if (__builtin_expect(*fp_exception == 0, 1)) {
+    return;
+  }
+
+  erts_fp_check_init_error(fp_exception);
 }
 #  define __ERTS_FP_ERROR(fpexnp, f, Action) do { if (erts_check_fpe((fpexnp),(f))) { Action; } } while (0)
 #  define __ERTS_SAVE_FP_EXCEPTION(fpexnp) unsigned long old_erl_fp_exception = *(fpexnp)
 #  define __ERTS_RESTORE_FP_EXCEPTION(fpexnp) \
               do { *(fpexnp) = old_erl_fp_exception; } while (0)
-   /* This is for library calls where we don't trust the external
-      code to always throw floating-point exceptions on errors. */
+/* This is for library calls where we don't trust the external
+   code to always throw floating-point exceptions on errors. */
 static __inline__ int erts_check_fpe_thorough(volatile unsigned long *fp_exception, double f)
 {
-    return erts_check_fpe(fp_exception, f) || !isfinite(f);
+  return erts_check_fpe(fp_exception, f) || !isfinite(f);
 }
 #  define __ERTS_FP_ERROR_THOROUGH(fpexnp, f, Action) \
   do { if (erts_check_fpe_thorough((fpexnp),(f))) { Action; } } while (0)
@@ -328,22 +333,22 @@ void erts_sys_unblock_fpe(int);
 
 #endif /* !NO_FPE_SIGNALS */
 
-#define ERTS_FP_CHECK_INIT(p)		__ERTS_FP_CHECK_INIT(&(p)->fp_exception)
-#define ERTS_FP_ERROR(p, f, A)		__ERTS_FP_ERROR(&(p)->fp_exception, f, A)
-#define ERTS_FP_ERROR_THOROUGH(p, f, A)	__ERTS_FP_ERROR_THOROUGH(&(p)->fp_exception, f, A)
+#define ERTS_FP_CHECK_INIT(p)   __ERTS_FP_CHECK_INIT(&(p)->fp_exception)
+#define ERTS_FP_ERROR(p, f, A)    __ERTS_FP_ERROR(&(p)->fp_exception, f, A)
+#define ERTS_FP_ERROR_THOROUGH(p, f, A) __ERTS_FP_ERROR_THOROUGH(&(p)->fp_exception, f, A)
 
 
 #ifdef NEED_CHILD_SETUP_DEFINES
 /* The child setup argv[] */
-#define CS_ARGV_PROGNAME_IX	0		/* Program name		*/
-#define CS_ARGV_UNBIND_IX	1		/* Unbind from cpu	*/
-#define CS_ARGV_WD_IX		2		/* Working directory	*/
-#define CS_ARGV_CMD_IX		3		/* Command		*/
-#define CS_ARGV_FD_CR_IX	4		/* Fd close range	*/
-#define CS_ARGV_DUP2_OP_IX(N)	((N) + 5)	/* dup2 operations	*/
+#define CS_ARGV_PROGNAME_IX 0   /* Program name   */
+#define CS_ARGV_UNBIND_IX 1   /* Unbind from cpu  */
+#define CS_ARGV_WD_IX   2   /* Working directory  */
+#define CS_ARGV_CMD_IX    3   /* Command    */
+#define CS_ARGV_FD_CR_IX  4   /* Fd close range */
+#define CS_ARGV_DUP2_OP_IX(N) ((N) + 5) /* dup2 operations  */
 
-#define CS_ARGV_NO_OF_DUP2_OPS	3		/* Number of dup2 ops	*/
-#define CS_ARGV_NO_OF_ARGS	8		/* Number of arguments	*/
+#define CS_ARGV_NO_OF_DUP2_OPS  3   /* Number of dup2 ops */
+#define CS_ARGV_NO_OF_ARGS  8   /* Number of arguments  */
 #endif /* #ifdef NEED_CHILD_SETUP_DEFINES */
 
 /* Threads */

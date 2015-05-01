@@ -24,7 +24,7 @@
  *
  *              Usage instructions can be found in ert_thr_progress.c
  *
- * Author: 	Rickard Green
+ * Author:  Rickard Green
  */
 
 #if !defined(ERL_THR_PROGRESS_H__TSD_TYPE__)
@@ -53,49 +53,49 @@ typedef Uint64 ErtsThrPrgrVal;
 #define ERTS_THR_PRGR_WAKEUP_DATA_SIZE 4 /* Need to be an even power of 2. */
 
 typedef struct {
-    ErtsThrPrgrVal next;
-    ErtsThrPrgrVal current;
-    int chk_next_ix;
-    struct {
-	int current;
-	int waiting;
-    } umrefc_ix;
+  ErtsThrPrgrVal next;
+  ErtsThrPrgrVal current;
+  int chk_next_ix;
+  struct {
+    int current;
+    int waiting;
+  } umrefc_ix;
 } ErtsThrPrgrLeaderState;
 
 typedef struct {
-    int id;
-    int is_managed;
-    int is_blocking;
+  int id;
+  int is_managed;
+  int is_blocking;
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    int is_delaying; /* managed is always delaying */
+  int is_delaying; /* managed is always delaying */
 #endif
-    int is_temporary;
+  int is_temporary;
 
-    /* --- Part below only for registered threads --- */
+  /* --- Part below only for registered threads --- */
 
-    ErtsThrPrgrVal wakeup_request[ERTS_THR_PRGR_WAKEUP_DATA_SIZE];
+  ErtsThrPrgrVal wakeup_request[ERTS_THR_PRGR_WAKEUP_DATA_SIZE];
 
-    /* --- Part below only for managed threads --- */
+  /* --- Part below only for managed threads --- */
 
-    int leader; /* Needs to be first in the managed threads part */
-    int active;
-    ErtsThrPrgrVal confirmed;
-    ErtsThrPrgrLeaderState leader_state;
+  int leader; /* Needs to be first in the managed threads part */
+  int active;
+  ErtsThrPrgrVal confirmed;
+  ErtsThrPrgrLeaderState leader_state;
 } ErtsThrPrgrData;
 
 void erts_thr_progress_fatal_error_block(SWord timeout,
-					 ErtsThrPrgrData *tmp_tpd_bufp);
+    ErtsThrPrgrData *tmp_tpd_bufp);
 
 #endif /* ERTS_SMP */
 
 typedef struct ErtsThrPrgrLaterOp_ ErtsThrPrgrLaterOp;
 struct ErtsThrPrgrLaterOp_ {
 #ifdef ERTS_SMP
-    ErtsThrPrgrVal later;
+  ErtsThrPrgrVal later;
 #endif
-    void (*func)(void *);
-    void *data;
-    ErtsThrPrgrLaterOp *next;
+  void (*func)(void *);
+  void *data;
+  ErtsThrPrgrLaterOp *next;
 };
 
 #endif
@@ -118,15 +118,15 @@ extern erts_tsd_key_t erts_thr_prgr_data_key__;
 #define ERTS_THR_PRGR_ATOMIC erts_atomic64_t
 
 typedef struct {
-    void *arg;
-    void (*wakeup)(void *);
-    void (*prepare_wait)(void *);
-    void (*wait)(void *);
-    void (*finalize_wait)(void *);
+  void *arg;
+  void (*wakeup)(void *);
+  void (*prepare_wait)(void *);
+  void (*wait)(void *);
+  void (*finalize_wait)(void *);
 } ErtsThrPrgrCallbacks;
 
 typedef struct {
-    ERTS_THR_PRGR_ATOMIC current;
+  ERTS_THR_PRGR_ATOMIC current;
 } ErtsThrPrgr;
 
 typedef int ErtsThrPrgrDelayHandle;
@@ -139,12 +139,12 @@ extern ErtsThrPrgr erts_thr_prgr__;
 void erts_thr_progress_pre_init(void);
 void erts_thr_progress_init(int no_schedulers, int managed, int unmanaged);
 void erts_thr_progress_register_managed_thread(ErtsSchedulerData *esdp,
-					       ErtsThrPrgrCallbacks *,
-					       int);
+    ErtsThrPrgrCallbacks *,
+    int);
 void erts_thr_progress_register_unmanaged_thread(ErtsThrPrgrCallbacks *);
 void erts_thr_progress_active(ErtsSchedulerData *esdp, int on);
 void erts_thr_progress_wakeup(ErtsSchedulerData *esdp,
-			      ErtsThrPrgrVal value);
+                              ErtsThrPrgrVal value);
 int erts_thr_progress_update(ErtsSchedulerData *esdp);
 int erts_thr_progress_leader_update(ErtsSchedulerData *esdp);
 void erts_thr_progress_prepare_wait(ErtsSchedulerData *esdp);
@@ -170,7 +170,7 @@ ERTS_GLB_INLINE ErtsThrPrgrVal erts_thr_progress_current(void);
 ERTS_GLB_INLINE int erts_thr_progress_has_passed__(ErtsThrPrgrVal val1, ErtsThrPrgrVal val2);
 ERTS_GLB_INLINE int erts_thr_progress_has_reached_this(ErtsThrPrgrVal this_, ErtsThrPrgrVal val);
 ERTS_GLB_INLINE int erts_thr_progress_equal(ErtsThrPrgrVal val1,
-					    ErtsThrPrgrVal val2);
+    ErtsThrPrgrVal val2);
 ERTS_GLB_INLINE int erts_thr_progress_cmp(ErtsThrPrgrVal val1, ErtsThrPrgrVal val2);
 ERTS_GLB_INLINE int erts_thr_progress_has_reached(ErtsThrPrgrVal val);
 
@@ -179,44 +179,47 @@ ERTS_GLB_INLINE int erts_thr_progress_has_reached(ErtsThrPrgrVal val);
 ERTS_GLB_INLINE ErtsThrPrgrVal
 erts_thr_prgr_read_nob__(ERTS_THR_PRGR_ATOMIC *atmc)
 {
-    return (ErtsThrPrgrVal) erts_atomic64_read_nob(atmc);
+  return (ErtsThrPrgrVal) erts_atomic64_read_nob(atmc);
 }
 
 ERTS_GLB_INLINE ErtsThrPrgrVal
 erts_thr_prgr_read_acqb__(ERTS_THR_PRGR_ATOMIC *atmc)
 {
-    return (ErtsThrPrgrVal) erts_atomic64_read_acqb(atmc);
+  return (ErtsThrPrgrVal) erts_atomic64_read_acqb(atmc);
 }
 
 ERTS_GLB_INLINE ErtsThrPrgrVal
 erts_thr_prgr_read_mb__(ERTS_THR_PRGR_ATOMIC *atmc)
 {
-    return (ErtsThrPrgrVal) erts_atomic64_read_mb(atmc);
+  return (ErtsThrPrgrVal) erts_atomic64_read_mb(atmc);
 }
 
 ERTS_GLB_INLINE int
 erts_thr_progress_is_managed_thread(void)
 {
-    auto tpd = (ErtsThrPrgrData *)erts_tsd_get(erts_thr_prgr_data_key__);
-    return tpd && tpd->is_managed;
+  auto tpd = (ErtsThrPrgrData *)erts_tsd_get(erts_thr_prgr_data_key__);
+  return tpd && tpd->is_managed;
 }
 
 ERTS_GLB_INLINE ErtsThrPrgrDelayHandle
 erts_thr_progress_unmanaged_delay(void)
 {
-    if (erts_thr_progress_is_managed_thread())
-	return ERTS_THR_PRGR_DHANDLE_MANAGED; /* Nothing to do */
-    else
-	return erts_thr_progress_unmanaged_delay__();
+  if (erts_thr_progress_is_managed_thread()) {
+    return ERTS_THR_PRGR_DHANDLE_MANAGED;  /* Nothing to do */
+  } else {
+    return erts_thr_progress_unmanaged_delay__();
+  }
 }
 
 ERTS_GLB_INLINE void
 erts_thr_progress_unmanaged_continue(ErtsThrPrgrDelayHandle handle)
 {
-    ASSERT(handle != ERTS_THR_PRGR_DHANDLE_MANAGED
-	   || erts_thr_progress_is_managed_thread());
-    if (handle != ERTS_THR_PRGR_DHANDLE_MANAGED)
-	erts_thr_progress_unmanaged_continue__(handle);
+  ASSERT(handle != ERTS_THR_PRGR_DHANDLE_MANAGED
+         || erts_thr_progress_is_managed_thread());
+
+  if (handle != ERTS_THR_PRGR_DHANDLE_MANAGED) {
+    erts_thr_progress_unmanaged_continue__(handle);
+  }
 }
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
@@ -224,8 +227,8 @@ erts_thr_progress_unmanaged_continue(ErtsThrPrgrDelayHandle handle)
 ERTS_GLB_INLINE int
 erts_thr_progress_lc_is_delaying(void)
 {
-    ErtsThrPrgrData *tpd = erts_tsd_get(erts_thr_prgr_data_key__);
-    return tpd && tpd->is_delaying;
+  ErtsThrPrgrData *tpd = erts_tsd_get(erts_thr_prgr_data_key__);
+  return tpd && tpd->is_delaying;
 }
 
 #endif
@@ -233,92 +236,104 @@ erts_thr_progress_lc_is_delaying(void)
 ERTS_GLB_INLINE ErtsThrPrgrVal
 erts_thr_progress_current_to_later__(ErtsThrPrgrVal val)
 {
-    if (val == (ERTS_THR_PRGR_VAL_WAITING-((ErtsThrPrgrVal)2)))
-	return ((ErtsThrPrgrVal) 0);
-    else if (val == (ERTS_THR_PRGR_VAL_WAITING-((ErtsThrPrgrVal)1)))
-	return ((ErtsThrPrgrVal) 1);
-    else
-	return val + ((ErtsThrPrgrVal) 2);
+  if (val == (ERTS_THR_PRGR_VAL_WAITING - ((ErtsThrPrgrVal)2))) {
+    return ((ErtsThrPrgrVal) 0);
+  } else if (val == (ERTS_THR_PRGR_VAL_WAITING - ((ErtsThrPrgrVal)1))) {
+    return ((ErtsThrPrgrVal) 1);
+  } else {
+    return val + ((ErtsThrPrgrVal) 2);
+  }
 }
 
 ERTS_GLB_INLINE ErtsThrPrgrVal
 erts_thr_progress_later(ErtsSchedulerData *esdp)
 {
-    ErtsThrPrgrData *tpd;
-    ErtsThrPrgrVal val;
-    if (esdp) {
-	tpd = &esdp->thr_progress_data;
-    managed_thread:
-	val = tpd->confirmed;
-	ERTS_THR_MEMORY_BARRIER;
+  ErtsThrPrgrData *tpd;
+  ErtsThrPrgrVal val;
+
+  if (esdp) {
+    tpd = &esdp->thr_progress_data;
+managed_thread:
+    val = tpd->confirmed;
+    ERTS_THR_MEMORY_BARRIER;
+  } else {
+    tpd = (ErtsThrPrgrData *)erts_tsd_get(erts_thr_prgr_data_key__);
+
+    if (tpd && tpd->is_managed) {
+      goto managed_thread;
     }
-    else {
-        tpd = (ErtsThrPrgrData *)erts_tsd_get(erts_thr_prgr_data_key__);
-	if (tpd && tpd->is_managed)
-	    goto managed_thread;
-	val = erts_thr_prgr_read_mb__(&erts_thr_prgr__.current);
-    }
-    ASSERT(val != ERTS_THR_PRGR_VAL_WAITING);
-    return erts_thr_progress_current_to_later__(val);
+
+    val = erts_thr_prgr_read_mb__(&erts_thr_prgr__.current);
+  }
+
+  ASSERT(val != ERTS_THR_PRGR_VAL_WAITING);
+  return erts_thr_progress_current_to_later__(val);
 }
 
 ERTS_GLB_INLINE ErtsThrPrgrVal
 erts_thr_progress_current(void)
 {
-    if (erts_thr_progress_is_managed_thread())
-	return erts_thr_prgr_read_nob__(&erts_thr_prgr__.current);
-    else
-	return erts_thr_prgr_read_acqb__(&erts_thr_prgr__.current);
+  if (erts_thr_progress_is_managed_thread()) {
+    return erts_thr_prgr_read_nob__(&erts_thr_prgr__.current);
+  } else {
+    return erts_thr_prgr_read_acqb__(&erts_thr_prgr__.current);
+  }
 }
 
 ERTS_GLB_INLINE int
 erts_thr_progress_has_passed__(ErtsThrPrgrVal val1, ErtsThrPrgrVal val0)
 {
-    if ((((((ErtsThrPrgrVal) 1) << 63) & val1)
-	 ^ ((((ErtsThrPrgrVal) 1) << 63) & val0)) != 0) {
-	/* May have wrapped... */
-	if (val1 < (((ErtsThrPrgrVal) 1) << 62)
-	    && val0 > (((ErtsThrPrgrVal) 3) << 62)) {
-	    /*
-	     * 'val1' has wrapped but 'val0' has not yet wrapped. While in
-	     * these ranges 'current' is considered later than 'val0'.
-	     */
-	    return 1;
-	}
+  if ((((((ErtsThrPrgrVal) 1) << 63) & val1)
+       ^ ((((ErtsThrPrgrVal) 1) << 63) & val0)) != 0) {
+    /* May have wrapped... */
+    if (val1 < (((ErtsThrPrgrVal) 1) << 62)
+        && val0 > (((ErtsThrPrgrVal) 3) << 62)) {
+      /*
+       * 'val1' has wrapped but 'val0' has not yet wrapped. While in
+       * these ranges 'current' is considered later than 'val0'.
+       */
+      return 1;
     }
-    return val1 > val0;
+  }
+
+  return val1 > val0;
 }
 
 ERTS_GLB_INLINE int
 erts_thr_progress_has_reached_this(ErtsThrPrgrVal this_, ErtsThrPrgrVal val)
 {
-    if (this_ == val)
-	return 1;
-    return erts_thr_progress_has_passed__(this_, val);
+  if (this_ == val) {
+    return 1;
+  }
+
+  return erts_thr_progress_has_passed__(this_, val);
 }
 
 ERTS_GLB_INLINE int
 erts_thr_progress_equal(ErtsThrPrgrVal val1, ErtsThrPrgrVal val2)
 {
-    return val1 == val2 && val1 != ERTS_THR_PRGR_INVALID;
+  return val1 == val2 && val1 != ERTS_THR_PRGR_INVALID;
 }
 
 ERTS_GLB_INLINE int
 erts_thr_progress_cmp(ErtsThrPrgrVal val1, ErtsThrPrgrVal val2)
 {
-    if (val1 == val2)
-	return 0;
-    if (erts_thr_progress_has_passed__(val1, val2))
-	return 1;
-    else
-	return -1;
-}	
+  if (val1 == val2) {
+    return 0;
+  }
+
+  if (erts_thr_progress_has_passed__(val1, val2)) {
+    return 1;
+  } else {
+    return -1;
+  }
+}
 
 ERTS_GLB_INLINE int
 erts_thr_progress_has_reached(ErtsThrPrgrVal val)
 {
-    ErtsThrPrgrVal current = erts_thr_progress_current();
-    return erts_thr_progress_has_reached_this(current, val);
+  ErtsThrPrgrVal current = erts_thr_progress_current();
+  return erts_thr_progress_has_reached_this(current, val);
 }
 
 #endif

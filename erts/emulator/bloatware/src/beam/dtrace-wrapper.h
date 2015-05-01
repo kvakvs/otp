@@ -44,7 +44,7 @@
 
 #define DTRACE_CHARBUF_NAME(name) name##_BUFFER
 
-#if defined(USE_DYNAMIC_TRACE) && defined(USE_VM_PROBES) 
+#if defined(USE_DYNAMIC_TRACE) && defined(USE_VM_PROBES)
 
 #include "erlang_dtrace.h"
 

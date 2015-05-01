@@ -1,19 +1,19 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 1998-2009. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  */
 
@@ -23,29 +23,29 @@
 #include "erl_db_util.h"
 
 typedef struct tree_db_term {
-    struct  tree_db_term *left, *right;  /* left and right child */
-    int  balance;                        /* tree balancing value */
-    DbTerm dbterm;                       /* The actual term */
+  struct  tree_db_term *left, *right;  /* left and right child */
+  int  balance;                        /* tree balancing value */
+  DbTerm dbterm;                       /* The actual term */
 } TreeDbTerm;
 
 typedef struct {
-    Uint pos;          /* Current position on stack */
-    Uint slot;         /* "Slot number" of top element or 0 if not set */
-    TreeDbTerm** array; /* The stack */
+  Uint pos;          /* Current position on stack */
+  Uint slot;         /* "Slot number" of top element or 0 if not set */
+  TreeDbTerm **array; /* The stack */
 } DbTreeStack;
 
 typedef struct db_table_tree {
-    DbTableCommon common;
+  DbTableCommon common;
 
-    /* Tree-specific fields */
-    TreeDbTerm *root;         /* The tree root */
-    Uint deletion;		/* Being deleted */
-    erts_smp_atomic_t is_stack_busy;
-    DbTreeStack static_stack;
+  /* Tree-specific fields */
+  TreeDbTerm *root;         /* The tree root */
+  Uint deletion;    /* Being deleted */
+  erts_smp_atomic_t is_stack_busy;
+  DbTreeStack static_stack;
 } DbTableTree;
 
 /*
-** Function prototypes, looks the same (except the suffix) for all 
+** Function prototypes, looks the same (except the suffix) for all
 ** table types. The process is always an [in out] parameter.
 */
 void db_initialize_tree(void);

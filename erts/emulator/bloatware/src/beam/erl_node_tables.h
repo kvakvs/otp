@@ -46,20 +46,20 @@
 #define ERTS_PORT_TASK_ONLY_BASIC_TYPES__
 #include "erl_port_task.h"
 #undef ERTS_PORT_TASK_ONLY_BASIC_TYPES__
- 
+
 #define ERST_INTERNAL_CHANNEL_NO 0
 
-#define ERTS_DE_SFLG_CONNECTED			(((uint32_t) 1) <<  0)
-#define ERTS_DE_SFLG_EXITING			(((uint32_t) 1) <<  1)
+#define ERTS_DE_SFLG_CONNECTED      (((uint32_t) 1) <<  0)
+#define ERTS_DE_SFLG_EXITING      (((uint32_t) 1) <<  1)
 
-#define ERTS_DE_SFLGS_ALL			(ERTS_DE_SFLG_CONNECTED \
-						 | ERTS_DE_SFLG_EXITING)
+#define ERTS_DE_SFLGS_ALL     (ERTS_DE_SFLG_CONNECTED \
+             | ERTS_DE_SFLG_EXITING)
 
-#define ERTS_DE_QFLG_BUSY			(((uint32_t) 1) <<  0)
-#define ERTS_DE_QFLG_EXIT			(((uint32_t) 1) <<  1)
+#define ERTS_DE_QFLG_BUSY     (((uint32_t) 1) <<  0)
+#define ERTS_DE_QFLG_EXIT     (((uint32_t) 1) <<  1)
 
-#define ERTS_DE_QFLGS_ALL			(ERTS_DE_QFLG_BUSY \
-						 | ERTS_DE_QFLG_EXIT)
+#define ERTS_DE_QFLGS_ALL     (ERTS_DE_QFLG_BUSY \
+             | ERTS_DE_QFLG_EXIT)
 
 #if defined(ARCH_64) && !HALFWORD_HEAP
 #define ERTS_DIST_OUTPUT_BUF_DBG_PATTERN ((Uint) 0xf713f713f713f713UL)
@@ -70,17 +70,17 @@
 typedef struct ErtsDistOutputBuf_ ErtsDistOutputBuf;
 struct ErtsDistOutputBuf_ {
 #ifdef DEBUG
-    Uint dbg_pattern;
+  Uint dbg_pattern;
 #endif
-    ErtsDistOutputBuf *next;
-    uint8_t *extp;
-    uint8_t *ext_endp;
-    uint8_t data[1];
+  ErtsDistOutputBuf *next;
+  uint8_t *extp;
+  uint8_t *ext_endp;
+  uint8_t data[1];
 };
 
 typedef struct {
-    ErtsDistOutputBuf *first;
-    ErtsDistOutputBuf *last;
+  ErtsDistOutputBuf *first;
+  ErtsDistOutputBuf *last;
 } ErtsDistOutputQueue;
 
 struct ErtsProcList_;
@@ -98,55 +98,55 @@ struct ErtsProcList_;
 struct erl_link;
 
 typedef struct dist_entry_ {
-    HashBucket hash_bucket;     /* Hash bucket */
-    struct dist_entry_ *next;	/* Next entry in dist_table (not sorted) */
-    struct dist_entry_ *prev;	/* Previous entry in dist_table (not sorted) */
-    erts_refc_t refc;		/* Reference count */
+  HashBucket hash_bucket;     /* Hash bucket */
+  struct dist_entry_ *next; /* Next entry in dist_table (not sorted) */
+  struct dist_entry_ *prev; /* Previous entry in dist_table (not sorted) */
+  erts_refc_t refc;   /* Reference count */
 
-    erts_smp_rwmtx_t rwmtx;     /* Protects all fields below until lck_mtx. */
-    Eterm sysname;		/* name@host atom for efficiency */
-    uint32_t creation;		/* creation of connected node */
-    Eterm cid;			/* connection handler (pid or port), NIL == free */
-    uint32_t connection_id;	/* Connection id incremented on connect */
-    uint32_t status;		/* Slot status, like exiting reserved etc */
-    uint32_t flags;		/* Distribution flags, like hidden, 
-				   atom cache etc. */
-    unsigned long version;	/* Protocol version */
+  erts_smp_rwmtx_t rwmtx;     /* Protects all fields below until lck_mtx. */
+  Eterm sysname;    /* name@host atom for efficiency */
+  uint32_t creation;    /* creation of connected node */
+  Eterm cid;      /* connection handler (pid or port), NIL == free */
+  uint32_t connection_id; /* Connection id incremented on connect */
+  uint32_t status;    /* Slot status, like exiting reserved etc */
+  uint32_t flags;   /* Distribution flags, like hidden,
+           atom cache etc. */
+  unsigned long version;  /* Protocol version */
 
 
-    erts_smp_mtx_t lnk_mtx;     /* Protects node_links, nlinks, and
-				   monitors. */
-    ErtsLink *node_links;       /* In a dist entry, node links are kept 
-				   in a separate tree, while they are 
-				   colocted with the ordinary link tree
-				   for processes. It's not due to confusion,
-				   it's because the link tree for the dist 
-				   entry is in two levels, see erl_monitors.h 
-				*/
-    ErtsLink *nlinks;           /* Link tree with subtrees */
-    ErtsMonitor *monitors;      /* Monitor tree */
+  erts_smp_mtx_t lnk_mtx;     /* Protects node_links, nlinks, and
+           monitors. */
+  ErtsLink *node_links;       /* In a dist entry, node links are kept
+           in a separate tree, while they are
+           colocted with the ordinary link tree
+           for processes. It's not due to confusion,
+           it's because the link tree for the dist
+           entry is in two levels, see erl_monitors.h
+        */
+  ErtsLink *nlinks;           /* Link tree with subtrees */
+  ErtsMonitor *monitors;      /* Monitor tree */
 
-    erts_smp_mtx_t qlock;       /* Protects qflgs and out_queue */
-    uint32_t qflgs;
-    Sint qsize;
-    ErtsDistOutputQueue out_queue;
-    struct ErtsProcList_ *suspended;
+  erts_smp_mtx_t qlock;       /* Protects qflgs and out_queue */
+  uint32_t qflgs;
+  Sint qsize;
+  ErtsDistOutputQueue out_queue;
+  struct ErtsProcList_ *suspended;
 
-    ErtsDistOutputQueue finalized_out_queue;
-    erts_smp_atomic_t dist_cmd_scheduled;
-    ErtsPortTaskHandle dist_cmd;
+  ErtsDistOutputQueue finalized_out_queue;
+  erts_smp_atomic_t dist_cmd_scheduled;
+  ErtsPortTaskHandle dist_cmd;
 
-    Uint (*send)(Port *prt, ErtsDistOutputBuf *obuf);
+  Uint(*send)(Port *prt, ErtsDistOutputBuf *obuf);
 
-    struct cache* cache;	/* The atom cache */
+  struct cache *cache;  /* The atom cache */
 } DistEntry;
 
 typedef struct erl_node_ {
-  HashBucket hash_bucket;	/* Hash bucket */
-  erts_refc_t refc;		/* Reference count */
-  Eterm	sysname;		/* name@host atom for efficiency */
-  uint32_t creation;		/* Creation */
-  DistEntry *dist_entry;	/* Corresponding dist entry */
+  HashBucket hash_bucket; /* Hash bucket */
+  erts_refc_t refc;   /* Reference count */
+  Eterm sysname;    /* name@host atom for efficiency */
+  uint32_t creation;    /* Creation */
+  DistEntry *dist_entry;  /* Corresponding dist entry */
 } ErlNode;
 
 
@@ -181,7 +181,7 @@ void erts_set_this_node(Eterm, Uint);
 Uint erts_node_table_size(void);
 void erts_init_node_tables(void);
 void erts_node_table_info(int, void *);
-void erts_print_node_info(int, void *, Eterm, int*, int*);
+void erts_print_node_info(int, void *, Eterm, int *, int *);
 Eterm erts_get_node_and_dist_references(struct process *);
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_CHECK)
 int erts_lc_is_de_rwlocked(DistEntry *);
@@ -202,53 +202,57 @@ ERTS_GLB_INLINE void erts_smp_de_links_unlock(DistEntry *dep);
 ERTS_GLB_INLINE void
 erts_deref_dist_entry(DistEntry *dep)
 {
-    ASSERT(dep);
-    if (erts_refc_dectest(&dep->refc, 0) == 0)
-	erts_delete_dist_entry(dep);
+  ASSERT(dep);
+
+  if (erts_refc_dectest(&dep->refc, 0) == 0) {
+    erts_delete_dist_entry(dep);
+  }
 }
 
 ERTS_GLB_INLINE void
 erts_deref_node_entry(ErlNode *np)
 {
-    ASSERT(np);
-    if (erts_refc_dectest(&np->refc, 0) == 0)
-	erts_delete_node(np);
+  ASSERT(np);
+
+  if (erts_refc_dectest(&np->refc, 0) == 0) {
+    erts_delete_node(np);
+  }
 }
 
 ERTS_GLB_INLINE void
 erts_smp_de_rlock(DistEntry *dep)
 {
-    erts_smp_rwmtx_rlock(&dep->rwmtx);
+  erts_smp_rwmtx_rlock(&dep->rwmtx);
 }
 
 ERTS_GLB_INLINE void
 erts_smp_de_runlock(DistEntry *dep)
 {
-    erts_smp_rwmtx_runlock(&dep->rwmtx);
+  erts_smp_rwmtx_runlock(&dep->rwmtx);
 }
 
 ERTS_GLB_INLINE void
 erts_smp_de_rwlock(DistEntry *dep)
 {
-    erts_smp_rwmtx_rwlock(&dep->rwmtx);
+  erts_smp_rwmtx_rwlock(&dep->rwmtx);
 }
 
 ERTS_GLB_INLINE void
 erts_smp_de_rwunlock(DistEntry *dep)
 {
-    erts_smp_rwmtx_rwunlock(&dep->rwmtx);
+  erts_smp_rwmtx_rwunlock(&dep->rwmtx);
 }
 
 ERTS_GLB_INLINE void
 erts_smp_de_links_lock(DistEntry *dep)
 {
-    erts_smp_mtx_lock(&dep->lnk_mtx);
+  erts_smp_mtx_lock(&dep->lnk_mtx);
 }
 
 ERTS_GLB_INLINE void
 erts_smp_de_links_unlock(DistEntry *dep)
 {
-    erts_smp_mtx_unlock(&dep->lnk_mtx);
+  erts_smp_mtx_unlock(&dep->lnk_mtx);
 }
 
 #endif /* #if ERTS_GLB_INLINE_INCL_FUNC_DEF */

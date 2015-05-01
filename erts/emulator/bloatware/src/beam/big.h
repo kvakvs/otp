@@ -53,10 +53,10 @@ typedef uint32_t   ErtsHalfDigit;
 #error "can not determine machine size"
 #endif
 
-#define D_DECIMAL_EXP	9
-#define D_DECIMAL_BASE	1000000000
+#define D_DECIMAL_EXP 9
+#define D_DECIMAL_BASE  1000000000
 
-typedef Uint  dsize_t;	 /* Vector size type */
+typedef Uint  dsize_t;   /* Vector size type */
 
 #define D_EXP (ERTS_SIZEOF_ETERM*8)
 #define D_MASK     ((ErtsDigit)(-1))      /* D_BASE-1 */
@@ -86,7 +86,7 @@ typedef Uint  dsize_t;	 /* Vector size type */
 /* The heap size needed for a bignum */
 #define BIG_NEED_SIZE(x)  ((x) + 1)
 
-#define BIG_UINT_HEAP_SIZE (1 + 1)	/* always, since sizeof(Uint) <= sizeof(Eterm) */
+#define BIG_UINT_HEAP_SIZE (1 + 1)  /* always, since sizeof(Uint) <= sizeof(Eterm) */
 
 #if HALFWORD_HEAP
 #define BIG_UWORD_HEAP_SIZE(UW) (((UW) >> (sizeof(Uint) * 8)) ? 3 : 2)
@@ -98,66 +98,66 @@ typedef Uint  dsize_t;	 /* Vector size type */
 
 #define ERTS_UINT64_BIG_HEAP_SIZE__(X) \
   ((X) >= (((Uint64) 1) << 32) ? (1 + 2) : (1 + 1))
-#define ERTS_SINT64_HEAP_SIZE(X)				\
-  (IS_SSMALL((X))						\
-   ? 0								\
+#define ERTS_SINT64_HEAP_SIZE(X)        \
+  (IS_SSMALL((X))           \
+   ? 0                \
    : ERTS_UINT64_BIG_HEAP_SIZE__((X) >= 0 ? (X) : -(Uint64)(X)))
-#define ERTS_UINT64_HEAP_SIZE(X)				\
+#define ERTS_UINT64_HEAP_SIZE(X)        \
   (IS_USMALL(0, (X)) ? 0 : ERTS_UINT64_BIG_HEAP_SIZE__((X)))
 
 #else
 
-#define ERTS_SINT64_HEAP_SIZE(X)				\
+#define ERTS_SINT64_HEAP_SIZE(X)        \
   (IS_SSMALL((X)) ? 0 : (1 + 1))
-#define ERTS_UINT64_HEAP_SIZE(X)				\
+#define ERTS_UINT64_HEAP_SIZE(X)        \
   (IS_USMALL(0, (X)) ? 0 : (1 + 1))
 
 #endif
 
 int big_decimal_estimate(Wterm);
-Eterm erts_big_to_list(Eterm, Eterm**);
+Eterm erts_big_to_list(Eterm, Eterm **);
 char *erts_big_to_string(Wterm x, char *buf, Uint buf_sz);
 Uint erts_big_to_binary_bytes(Eterm x, char *buf, Uint buf_sz);
 
-Eterm small_times(Sint, Sint, Eterm*);
+Eterm small_times(Sint, Sint, Eterm *);
 
-Eterm big_plus(Wterm, Wterm, Eterm*);
-Eterm big_minus(Eterm, Eterm, Eterm*);
-Eterm big_times(Eterm, Eterm, Eterm*);
-Eterm big_div(Eterm, Eterm, Eterm*);
-Eterm big_rem(Eterm, Eterm, Eterm*);
-Eterm big_neg(Eterm, Eterm*);
+Eterm big_plus(Wterm, Wterm, Eterm *);
+Eterm big_minus(Eterm, Eterm, Eterm *);
+Eterm big_times(Eterm, Eterm, Eterm *);
+Eterm big_div(Eterm, Eterm, Eterm *);
+Eterm big_rem(Eterm, Eterm, Eterm *);
+Eterm big_neg(Eterm, Eterm *);
 
-Eterm big_minus_small(Eterm, Uint, Eterm*);
-Eterm big_plus_small(Eterm, Uint, Eterm*);
-Eterm big_times_small(Eterm, Uint, Eterm*);
+Eterm big_minus_small(Eterm, Uint, Eterm *);
+Eterm big_plus_small(Eterm, Uint, Eterm *);
+Eterm big_times_small(Eterm, Uint, Eterm *);
 
-Eterm big_band(Eterm, Eterm, Eterm*);
-Eterm big_bor(Eterm, Eterm, Eterm*);
-Eterm big_bxor(Eterm, Eterm, Eterm*);
-Eterm big_bnot(Eterm, Eterm*);
+Eterm big_band(Eterm, Eterm, Eterm *);
+Eterm big_bor(Eterm, Eterm, Eterm *);
+Eterm big_bxor(Eterm, Eterm, Eterm *);
+Eterm big_bnot(Eterm, Eterm *);
 
-Eterm big_lshift(Eterm, Sint, Eterm*);
-int big_comp (Wterm, Wterm);
-int big_ucomp (Eterm, Eterm);
-int big_to_double(Wterm x, double* resp);
-Eterm double_to_big(double, Eterm*, Uint hsz);
-Eterm small_to_big(Sint, Eterm*);
-Eterm uint_to_big(Uint, Eterm*);
-Eterm uword_to_big(UWord, Eterm*);
+Eterm big_lshift(Eterm, Sint, Eterm *);
+int big_comp(Wterm, Wterm);
+int big_ucomp(Eterm, Eterm);
+int big_to_double(Wterm x, double *resp);
+Eterm double_to_big(double, Eterm *, Uint hsz);
+Eterm small_to_big(Sint, Eterm *);
+Eterm uint_to_big(Uint, Eterm *);
+Eterm uword_to_big(UWord, Eterm *);
 Eterm erts_make_integer(Uint, Process *);
 Eterm erts_make_integer_from_uword(UWord x, Process *p);
 
 dsize_t big_bytes(Eterm);
-Eterm bytes_to_big(uint8_t*, dsize_t, int, Eterm*);
-uint8_t* big_to_bytes(Eterm, uint8_t*);
+Eterm bytes_to_big(uint8_t *, dsize_t, int, Eterm *);
+uint8_t *big_to_bytes(Eterm, uint8_t *);
 
-int term_to_Uint(Eterm, Uint*);
-int term_to_UWord(Eterm, UWord*);
-int term_to_Sint(Eterm, Sint*);
+int term_to_Uint(Eterm, Uint *);
+int term_to_UWord(Eterm, UWord *);
+int term_to_Sint(Eterm, Sint *);
 #if HAVE_INT64
-int term_to_Uint64(Eterm, Uint64*);
-int term_to_Sint64(Eterm, Sint64*);
+int term_to_Uint64(Eterm, Uint64 *);
+int term_to_Sint64(Eterm, Sint64 *);
 #endif
 
 uint32_t big_to_uint32(Eterm b);
@@ -166,7 +166,7 @@ int term_equals_2pow32(Eterm);
 Eterm erts_uint64_to_big(Uint64, Eterm **);
 Eterm erts_sint64_to_big(Sint64, Eterm **);
 
-Eterm erts_chars_to_integer(Process *, char*, Uint, const int);
+Eterm erts_chars_to_integer(Process *, char *, Uint, const int);
 
 #endif
 

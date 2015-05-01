@@ -22,8 +22,8 @@
 
 #define ERTS_MAX_NO_OF_ASYNC_THREADS 1024
 extern int erts_async_max_threads;
-#define ERTS_ASYNC_THREAD_MIN_STACK_SIZE 16	/* Kilo words */
-#define ERTS_ASYNC_THREAD_MAX_STACK_SIZE 8192	/* Kilo words */
+#define ERTS_ASYNC_THREAD_MIN_STACK_SIZE 16 /* Kilo words */
+#define ERTS_ASYNC_THREAD_MAX_STACK_SIZE 8192 /* Kilo words */
 extern int erts_async_thread_suggested_stack_size;
 
 #ifdef USE_THREADS

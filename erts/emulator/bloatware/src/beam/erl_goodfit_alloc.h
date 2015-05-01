@@ -28,11 +28,11 @@
 typedef struct GFAllctr_t_ GFAllctr_t;
 
 typedef struct {
-    UWord mbsd;
+  UWord mbsd;
 } GFAllctrInit_t;
 
 #define ERTS_DEFAULT_GF_ALLCTR_INIT {                                      \
-    3,			/* (amount) mbsd:   max (mbc) block search depth */\
+    3,      /* (amount) mbsd:   max (mbc) block search depth */\
 }
 
 void erts_gfalc_init(void);
@@ -58,31 +58,31 @@ Allctr_t *erts_gfalc_start(GFAllctr_t *, GFAllctrInit_t *, AllctrInit_t *);
 #define NO_OF_SUB_MASKS (NO_OF_BKTS/(((UWord) 1) << SUB_MASK_IX_SHIFT))
 
 typedef struct {
-    UWord main;
-    UWord sub[NO_OF_SUB_MASKS];
+  UWord main;
+  UWord sub[NO_OF_SUB_MASKS];
 } BucketMask_t;
 
 typedef struct GFFreeBlock_t_ GFFreeBlock_t;
 struct GFFreeBlock_t_ {
-    Block_t block_head;
-    GFFreeBlock_t *prev;
-    GFFreeBlock_t *next;
+  Block_t block_head;
+  GFFreeBlock_t *prev;
+  GFFreeBlock_t *next;
 };
 
 struct GFAllctr_t_ {
-    Allctr_t		allctr; /* Has to be first! */
+  Allctr_t    allctr; /* Has to be first! */
 
-    char *		last_aux_mbc_start;
-    char *		last_aux_mbc_end;
-    UWord		bkt_max_size_d;
-    UWord		bkt_intrvl_d;
-    BucketMask_t	bucket_mask;
-    GFFreeBlock_t *	buckets[NO_OF_BKTS];
-    UWord 		max_blk_search;
+  char     *last_aux_mbc_start;
+  char     *last_aux_mbc_end;
+  UWord   bkt_max_size_d;
+  UWord   bkt_intrvl_d;
+  BucketMask_t  bucket_mask;
+  GFFreeBlock_t  *buckets[NO_OF_BKTS];
+  UWord     max_blk_search;
 
 };
 
 UWord erts_gfalc_test(UWord, UWord, UWord);
 
 #endif /* #if defined(GET_ERL_GF_ALLOC_IMPL)
-	      && !defined(ERL_GF_ALLOC_IMPL__) */
+        && !defined(ERL_GF_ALLOC_IMPL__) */

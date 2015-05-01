@@ -28,20 +28,20 @@
 #  define HARDDEBUG 1
 #endif
 
-#define IS_MOVED_BOXED(x)	(!is_header((x)))
-#define IS_MOVED_CONS(x)	(is_non_value((x)))
+#define IS_MOVED_BOXED(x) (!is_header((x)))
+#define IS_MOVED_CONS(x)  (is_non_value((x)))
 
-#define MOVE_CONS(PTR,CAR,HTOP,ORIG)					\
-do {									\
-    Eterm gval;								\
-									\
-    HTOP[0] = CAR;		/* copy car */				\
-    HTOP[1] = PTR[1];		/* copy cdr */				\
-    gval = make_list(HTOP);	/* new_ location */			\
-    *ORIG = gval;		/* redirect original reference */	\
-    PTR[0] = THE_NON_VALUE;	/* store forwarding indicator */	\
-    PTR[1] = gval;		/* store forwarding address */		\
-    HTOP += 2;			/* update tospace htop */		\
+#define MOVE_CONS(PTR,CAR,HTOP,ORIG)          \
+do {                  \
+    Eterm gval;               \
+                  \
+    HTOP[0] = CAR;    /* copy car */        \
+    HTOP[1] = PTR[1];   /* copy cdr */        \
+    gval = make_list(HTOP); /* new_ location */     \
+    *ORIG = gval;   /* redirect original reference */ \
+    PTR[0] = THE_NON_VALUE; /* store forwarding indicator */  \
+    PTR[1] = gval;    /* store forwarding address */    \
+    HTOP += 2;      /* update tospace htop */   \
 } while(0)
 
 #define MOVE_BOXED(PTR,HDR,HTOP,ORIG)                                   \
@@ -78,22 +78,35 @@ ERTS_GLB_INLINE Eterm follow_moved(Eterm term);
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 ERTS_GLB_INLINE Eterm follow_moved(Eterm term)
 {
-    Eterm* ptr;
-    switch (primary_tag(term)) {
-    case TAG_PRIMARY_IMMED1:
-	break;
-    case TAG_PRIMARY_BOXED:
-	ptr = boxed_val(term);
-	if (IS_MOVED_BOXED(*ptr)) term = *ptr;
-	break;
-    case TAG_PRIMARY_LIST:
-	ptr = list_val(term);
-	if (IS_MOVED_CONS(ptr[0])) term = ptr[1];
-	break;
-    default:
-	ASSERT(!"strange tag in follow_moved");
+  Eterm *ptr;
+
+  switch (primary_tag(term)) {
+  case TAG_PRIMARY_IMMED1:
+    break;
+
+  case TAG_PRIMARY_BOXED:
+    ptr = boxed_val(term);
+
+    if (IS_MOVED_BOXED(*ptr)) {
+      term = *ptr;
     }
-    return term;
+
+    break;
+
+  case TAG_PRIMARY_LIST:
+    ptr = list_val(term);
+
+    if (IS_MOVED_CONS(ptr[0])) {
+      term = ptr[1];
+    }
+
+    break;
+
+  default:
+    ASSERT(!"strange tag in follow_moved");
+  }
+
+  return term;
 }
 #endif
 

@@ -1,27 +1,27 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 2007-2012. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  */
 
 
 /*
- * Description:	Impementation of Erlang process locks.
+ * Description: Impementation of Erlang process locks.
  *
- * Author: 	Rickard Green
+ * Author:  Rickard Green
  */
 
 #ifndef ERTS_PROC_LOCK_TYPE__
@@ -72,28 +72,28 @@ typedef erts_aint32_t ErtsProcLocks;
 typedef struct erts_proc_lock_t_ {
 #if ERTS_PROC_LOCK_OWN_IMPL
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-    erts_smp_atomic32_t flags;
+  erts_smp_atomic32_t flags;
 #else
-    ErtsProcLocks flags;
+  ErtsProcLocks flags;
 #endif
-    erts_tse_t *queue[ERTS_PROC_LOCK_MAX_BIT+1];
+  erts_tse_t *queue[ERTS_PROC_LOCK_MAX_BIT + 1];
 #ifdef ERTS_ENABLE_LOCK_COUNT
-    erts_lcnt_lock_t lcnt_main;
-    erts_lcnt_lock_t lcnt_link;
-    erts_lcnt_lock_t lcnt_msgq;
-    erts_lcnt_lock_t lcnt_status;
+  erts_lcnt_lock_t lcnt_main;
+  erts_lcnt_lock_t lcnt_link;
+  erts_lcnt_lock_t lcnt_msgq;
+  erts_lcnt_lock_t lcnt_status;
 #endif
 #elif ERTS_PROC_LOCK_RAW_MUTEX_IMPL
-    erts_mtx_t main;
-    erts_mtx_t link;
-    erts_mtx_t msgq;
-    erts_mtx_t status;
+  erts_mtx_t main;
+  erts_mtx_t link;
+  erts_mtx_t msgq;
+  erts_mtx_t status;
 #else
 #  error "no implementation"
 #endif
-    erts_atomic32_t refc;
+  erts_atomic32_t refc;
 #ifdef ERTS_PROC_LOCK_DEBUG
-    erts_smp_atomic32_t locked[ERTS_PROC_LOCK_MAX_BIT+1];
+  erts_smp_atomic32_t locked[ERTS_PROC_LOCK_MAX_BIT + 1];
 #endif
 } erts_proc_lock_t;
 
@@ -105,7 +105,7 @@ typedef struct erts_proc_lock_t_ {
  *   is used to protect all fields in the process structure except
  *   for those fields protected by other process locks (follows).
  */
-#define ERTS_PROC_LOCK_MAIN		(((ErtsProcLocks) 1) << 0)
+#define ERTS_PROC_LOCK_MAIN   (((ErtsProcLocks) 1) << 0)
 
 /*
  * Link lock:
@@ -114,7 +114,7 @@ typedef struct erts_proc_lock_t_ {
  *   * monitors
  *   * suspend_monitors
  */
-#define ERTS_PROC_LOCK_LINK		(((ErtsProcLocks) 1) << 1)
+#define ERTS_PROC_LOCK_LINK   (((ErtsProcLocks) 1) << 1)
 
 /*
  * Message queue lock:
@@ -122,7 +122,7 @@ typedef struct erts_proc_lock_t_ {
  *   * msg_inq
  *   * bif_timers
  */
-#define ERTS_PROC_LOCK_MSGQ		(((ErtsProcLocks) 1) << 2)
+#define ERTS_PROC_LOCK_MSGQ   (((ErtsProcLocks) 1) << 2)
 
 /*
  * Status lock:
@@ -131,7 +131,7 @@ typedef struct erts_proc_lock_t_ {
  *   * suspendee
  *   * ...
  */
-#define ERTS_PROC_LOCK_STATUS		(((ErtsProcLocks) 1) << ERTS_PROC_LOCK_MAX_BIT)
+#define ERTS_PROC_LOCK_STATUS   (((ErtsProcLocks) 1) << ERTS_PROC_LOCK_MAX_BIT)
 
 /*
  * Special fields:
@@ -190,21 +190,21 @@ typedef struct erts_proc_lock_t_ {
 
 /* ERTS_PROC_LOCKS_* are combinations of process locks */
 
-#define ERTS_PROC_LOCKS_MSG_RECEIVE	(ERTS_PROC_LOCK_MSGQ		\
-					 | ERTS_PROC_LOCK_STATUS)
-#define ERTS_PROC_LOCKS_MSG_SEND	(ERTS_PROC_LOCK_MSGQ		\
-					 | ERTS_PROC_LOCK_STATUS)
-#define ERTS_PROC_LOCKS_XSIG_SEND	ERTS_PROC_LOCK_STATUS
+#define ERTS_PROC_LOCKS_MSG_RECEIVE (ERTS_PROC_LOCK_MSGQ    \
+           | ERTS_PROC_LOCK_STATUS)
+#define ERTS_PROC_LOCKS_MSG_SEND  (ERTS_PROC_LOCK_MSGQ    \
+           | ERTS_PROC_LOCK_STATUS)
+#define ERTS_PROC_LOCKS_XSIG_SEND ERTS_PROC_LOCK_STATUS
 
 #define ERTS_PROC_LOCKS_ALL \
   ((((ErtsProcLocks) 1) << (ERTS_PROC_LOCK_MAX_BIT + 1)) - 1)
 
-#define ERTS_PROC_LOCKS_ALL_MINOR	(ERTS_PROC_LOCKS_ALL \
-					 & ~ERTS_PROC_LOCK_MAIN)
+#define ERTS_PROC_LOCKS_ALL_MINOR (ERTS_PROC_LOCKS_ALL \
+           & ~ERTS_PROC_LOCK_MAIN)
 
 
-#define ERTS_PIX_LOCKS_BITS		10
-#define ERTS_NO_OF_PIX_LOCKS		(1 << ERTS_PIX_LOCKS_BITS)
+#define ERTS_PIX_LOCKS_BITS   10
+#define ERTS_NO_OF_PIX_LOCKS    (1 << ERTS_PIX_LOCKS_BITS)
 
 
 #endif /* #ifndef ERTS_PROC_LOCK_TYPE__ */
@@ -225,7 +225,8 @@ typedef struct erts_proc_lock_t_ {
 void erts_lcnt_proc_lock_init(Process *p);
 void erts_lcnt_proc_lock_destroy(Process *p);
 void erts_lcnt_proc_lock(erts_proc_lock_t *lock, ErtsProcLocks locks);
-void erts_lcnt_proc_lock_post_x(erts_proc_lock_t *lock, ErtsProcLocks locks, char *file, unsigned int line);
+void erts_lcnt_proc_lock_post_x(erts_proc_lock_t *lock, ErtsProcLocks locks, char *file,
+                                unsigned int line);
 void erts_lcnt_proc_lock_unaquire(erts_proc_lock_t *lock, ErtsProcLocks locks);
 void erts_lcnt_proc_unlock(erts_proc_lock_t *lock, ErtsProcLocks locks);
 void erts_lcnt_proc_trylock(erts_proc_lock_t *lock, ErtsProcLocks locks, int res);
@@ -244,9 +245,9 @@ void erts_lcnt_enable_proc_lock_count(int enable);
 #define ERTS_SMP_CHK_HAVE_ONLY_MAIN_PROC_LOCK(P) \
   erts_proc_lc_chk_only_proc_main((P))
 void erts_proc_lc_lock(Process *p, ErtsProcLocks locks,
-		       char *file, unsigned int line);
+                       char *file, unsigned int line);
 void erts_proc_lc_trylock(Process *p, ErtsProcLocks locks, int locked,
-			  char *file, unsigned int line);
+                          char *file, unsigned int line);
 void erts_proc_lc_unlock(Process *p, ErtsProcLocks locks);
 void erts_proc_lc_might_unlock(Process *p, ErtsProcLocks locks);
 void erts_proc_lc_chk_have_proc_locks(Process *p, ErtsProcLocks locks);
@@ -256,7 +257,7 @@ void erts_proc_lc_chk_no_proc_locks(char *file, int line);
 ErtsProcLocks erts_proc_lc_my_proc_locks(Process *p);
 int erts_proc_lc_trylock_force_busy(Process *p, ErtsProcLocks locks);
 void erts_proc_lc_require_lock(Process *p, ErtsProcLocks locks,
-			       char* file, unsigned int line);
+                               char *file, unsigned int line);
 void erts_proc_lc_unrequire_lock(Process *p, ErtsProcLocks locks);
 #else
 #define ERTS_SMP_CHK_NO_PROC_LOCKS
@@ -274,10 +275,10 @@ void erts_proc_lc_unrequire_lock(Process *p, ErtsProcLocks locks);
 #ifdef ERTS_SMP
 
 typedef struct {
-    union {
-	erts_mtx_t mtx;
-	char buf[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(erts_mtx_t))];
-    } u;
+  union {
+    erts_mtx_t mtx;
+    char buf[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(erts_mtx_t))];
+  } u;
 } erts_pix_lock_t;
 
 #define ERTS_PID2PIXLOCK(PID) \
@@ -289,57 +290,60 @@ typedef struct {
 
 #define ERTS_PROC_LOCK_FLGS_BAND_(L, MSK) \
   ((ErtsProcLocks) erts_smp_atomic32_read_band_nob(&(L)->flags, \
-						   (erts_aint32_t) (MSK)))
+               (erts_aint32_t) (MSK)))
 #define ERTS_PROC_LOCK_FLGS_BOR_ACQB_(L, MSK) \
   ((ErtsProcLocks) erts_smp_atomic32_read_bor_acqb(&(L)->flags, \
-						   (erts_aint32_t) (MSK)))
+               (erts_aint32_t) (MSK)))
 #define ERTS_PROC_LOCK_FLGS_CMPXCHG_ACQB_(L, NEW, EXPECTED) \
   ((ErtsProcLocks) erts_smp_atomic32_cmpxchg_acqb(&(L)->flags, \
-						  (erts_aint32_t) (NEW), \
-						  (erts_aint32_t) (EXPECTED)))
+              (erts_aint32_t) (NEW), \
+              (erts_aint32_t) (EXPECTED)))
 #define ERTS_PROC_LOCK_FLGS_CMPXCHG_RELB_(L, NEW, EXPECTED) \
   ((ErtsProcLocks) erts_smp_atomic32_cmpxchg_relb(&(L)->flags, \
-						  (erts_aint32_t) (NEW), \
-						  (erts_aint32_t) (EXPECTED)))
+              (erts_aint32_t) (NEW), \
+              (erts_aint32_t) (EXPECTED)))
 #define ERTS_PROC_LOCK_FLGS_READ_(L) \
   ((ErtsProcLocks) erts_smp_atomic32_read_nob(&(L)->flags))
 
 #else /* no opt atomic ops */
 
 ERTS_GLB_INLINE ErtsProcLocks erts_proc_lock_flags_band(erts_proc_lock_t *,
-							ErtsProcLocks);
+    ErtsProcLocks);
 ERTS_GLB_INLINE ErtsProcLocks erts_proc_lock_flags_bor(erts_proc_lock_t *,
-						       ErtsProcLocks);
+    ErtsProcLocks);
 ERTS_GLB_INLINE ErtsProcLocks erts_proc_lock_flags_cmpxchg(erts_proc_lock_t *,
-							   ErtsProcLocks,
-							   ErtsProcLocks);
+    ErtsProcLocks,
+    ErtsProcLocks);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
 ERTS_GLB_INLINE ErtsProcLocks
 erts_proc_lock_flags_band(erts_proc_lock_t *lck, ErtsProcLocks mask)
 {
-    ErtsProcLocks res = lck->flags;
-    lck->flags &= mask;
-    return res;
+  ErtsProcLocks res = lck->flags;
+  lck->flags &= mask;
+  return res;
 }
 
 ERTS_GLB_INLINE ErtsProcLocks
 erts_proc_lock_flags_bor(erts_proc_lock_t *lck, ErtsProcLocks mask)
 {
-    ErtsProcLocks res = lck->flags;
-    lck->flags |= mask;
-    return res;
+  ErtsProcLocks res = lck->flags;
+  lck->flags |= mask;
+  return res;
 }
 
 ERTS_GLB_INLINE ErtsProcLocks
 erts_proc_lock_flags_cmpxchg(erts_proc_lock_t *lck, ErtsProcLocks new_,
                              ErtsProcLocks expected)
 {
-    ErtsProcLocks res = lck->flags;
-    if (res == expected)
-        lck->flags = new_;
-    return res;
+  ErtsProcLocks res = lck->flags;
+
+  if (res == expected) {
+    lck->flags = new_;
+  }
+
+  return res;
 }
 
 #endif
@@ -361,12 +365,12 @@ void erts_init_proc_lock(int cpus);
 void erts_proc_lock_prepare_proc_lock_waiter(void);
 #if ERTS_PROC_LOCK_OWN_IMPL
 void erts_proc_lock_failed(Process *,
-			   erts_pix_lock_t *,
-			   ErtsProcLocks,
-			   ErtsProcLocks);
+                           erts_pix_lock_t *,
+                           ErtsProcLocks,
+                           ErtsProcLocks);
 void erts_proc_unlock_failed(Process *,
-			     erts_pix_lock_t *,
-			     ErtsProcLocks);
+                             erts_pix_lock_t *,
+                             ErtsProcLocks);
 #endif
 
 ERTS_GLB_INLINE void erts_pix_lock(erts_pix_lock_t *);
@@ -374,23 +378,23 @@ ERTS_GLB_INLINE void erts_pix_unlock(erts_pix_lock_t *);
 ERTS_GLB_INLINE int erts_lc_pix_lock_is_locked(erts_pix_lock_t *);
 
 ERTS_GLB_INLINE ErtsProcLocks erts_smp_proc_raw_trylock__(Process *p,
-							  ErtsProcLocks locks);
+    ErtsProcLocks locks);
 #ifdef ERTS_ENABLE_LOCK_POSITION
 ERTS_GLB_INLINE void erts_smp_proc_lock_x__(Process *,
-					    erts_pix_lock_t *,
-					    ErtsProcLocks,
-					    char *file, unsigned int line);
+    erts_pix_lock_t *,
+    ErtsProcLocks,
+    char *file, unsigned int line);
 #else
 ERTS_GLB_INLINE void erts_smp_proc_lock__(Process *,
-					  erts_pix_lock_t *,
-					  ErtsProcLocks);
+    erts_pix_lock_t *,
+    ErtsProcLocks);
 #endif
 ERTS_GLB_INLINE void erts_smp_proc_unlock__(Process *,
-					    erts_pix_lock_t *,
-					    ErtsProcLocks);
+    erts_pix_lock_t *,
+    ErtsProcLocks);
 ERTS_GLB_INLINE int erts_smp_proc_trylock__(Process *,
-					    erts_pix_lock_t *,
-					    ErtsProcLocks);
+    erts_pix_lock_t *,
+    ErtsProcLocks);
 
 #ifdef ERTS_PROC_LOCK_DEBUG
 ERTS_GLB_INLINE void erts_proc_lock_op_debug(Process *, ErtsProcLocks, int);
@@ -400,19 +404,19 @@ ERTS_GLB_INLINE void erts_proc_lock_op_debug(Process *, ErtsProcLocks, int);
 
 ERTS_GLB_INLINE void erts_pix_lock(erts_pix_lock_t *pixlck)
 {
-    ERTS_LC_ASSERT(pixlck);
-    erts_mtx_lock(&pixlck->u.mtx);
+  ERTS_LC_ASSERT(pixlck);
+  erts_mtx_lock(&pixlck->u.mtx);
 }
 
 ERTS_GLB_INLINE void erts_pix_unlock(erts_pix_lock_t *pixlck)
 {
-    ERTS_LC_ASSERT(pixlck);
-    erts_mtx_unlock(&pixlck->u.mtx);
+  ERTS_LC_ASSERT(pixlck);
+  erts_mtx_unlock(&pixlck->u.mtx);
 }
 
 ERTS_GLB_INLINE int erts_lc_pix_lock_is_locked(erts_pix_lock_t *pixlck)
 {
-    return erts_lc_mtx_is_locked(&pixlck->u.mtx);
+  return erts_lc_mtx_is_locked(&pixlck->u.mtx);
 }
 
 /*
@@ -432,128 +436,154 @@ ERTS_GLB_INLINE ErtsProcLocks
 erts_smp_proc_raw_trylock__(Process *p, ErtsProcLocks locks)
 {
 #if ERTS_PROC_LOCK_OWN_IMPL
-    ErtsProcLocks expct_lflgs = 0;
+  ErtsProcLocks expct_lflgs = 0;
 
-    while (1) {
-        ErtsProcLocks lflgs = ERTS_PROC_LOCK_FLGS_CMPXCHG_ACQB_(&p->lock,
-								expct_lflgs | locks,
-								expct_lflgs);
-        if (ERTS_LIKELY(lflgs == expct_lflgs)) {
-            /* We successfully grabbed all locks. */
-            return 0;
-        }
+  while (1) {
+    ErtsProcLocks lflgs = ERTS_PROC_LOCK_FLGS_CMPXCHG_ACQB_(&p->lock,
+                          expct_lflgs | locks,
+                          expct_lflgs);
 
-        if (lflgs & locks) {
-            /* Some locks we need are locked, give up. */
-            return lflgs;
-        }
-
-        /* cmpxchg failed, try again (should be rare). */
-        expct_lflgs = lflgs;
+    if (ERTS_LIKELY(lflgs == expct_lflgs)) {
+      /* We successfully grabbed all locks. */
+      return 0;
     }
+
+    if (lflgs & locks) {
+      /* Some locks we need are locked, give up. */
+      return lflgs;
+    }
+
+    /* cmpxchg failed, try again (should be rare). */
+    expct_lflgs = lflgs;
+  }
 
 #elif ERTS_PROC_LOCK_RAW_MUTEX_IMPL
 
-    if (locks & ERTS_PROC_LOCK_MAIN)
-	if (erts_mtx_trylock(&p->lock.main) == EBUSY)
-	    goto busy_main;
-    if (locks & ERTS_PROC_LOCK_LINK)
-	if (erts_mtx_trylock(&p->lock.link) == EBUSY)
-	    goto busy_link;
-    if (locks & ERTS_PROC_LOCK_MSGQ)
-	if (erts_mtx_trylock(&p->lock.msgq) == EBUSY)
-	    goto busy_msgq;
-    if (locks & ERTS_PROC_LOCK_STATUS)
-	if (erts_mtx_trylock(&p->lock.status) == EBUSY)
-	    goto busy_status;
+  if (locks & ERTS_PROC_LOCK_MAIN)
+    if (erts_mtx_trylock(&p->lock.main) == EBUSY) {
+      goto busy_main;
+    }
 
-    return 0;
+  if (locks & ERTS_PROC_LOCK_LINK)
+    if (erts_mtx_trylock(&p->lock.link) == EBUSY) {
+      goto busy_link;
+    }
+
+  if (locks & ERTS_PROC_LOCK_MSGQ)
+    if (erts_mtx_trylock(&p->lock.msgq) == EBUSY) {
+      goto busy_msgq;
+    }
+
+  if (locks & ERTS_PROC_LOCK_STATUS)
+    if (erts_mtx_trylock(&p->lock.status) == EBUSY) {
+      goto busy_status;
+    }
+
+  return 0;
 
 busy_status:
-    if (locks & ERTS_PROC_LOCK_MSGQ)
-	erts_mtx_unlock(&p->lock.msgq);
+
+  if (locks & ERTS_PROC_LOCK_MSGQ) {
+    erts_mtx_unlock(&p->lock.msgq);
+  }
+
 busy_msgq:
-    if (locks & ERTS_PROC_LOCK_LINK)
-	erts_mtx_unlock(&p->lock.link);
+
+  if (locks & ERTS_PROC_LOCK_LINK) {
+    erts_mtx_unlock(&p->lock.link);
+  }
+
 busy_link:
-    if (locks & ERTS_PROC_LOCK_MAIN)
-	erts_mtx_unlock(&p->lock.main);
+
+  if (locks & ERTS_PROC_LOCK_MAIN) {
+    erts_mtx_unlock(&p->lock.main);
+  }
+
 busy_main:
 
-    return EBUSY;
+  return EBUSY;
 #endif
 }
 
 ERTS_GLB_INLINE void
 #ifdef ERTS_ENABLE_LOCK_POSITION
 erts_smp_proc_lock_x__(Process *p,
-		     erts_pix_lock_t *pix_lck,
-		     ErtsProcLocks locks,
-		     char *file, unsigned int line)
+                       erts_pix_lock_t *pix_lck,
+                       ErtsProcLocks locks,
+                       char *file, unsigned int line)
 #else
 erts_smp_proc_lock__(Process *p,
-		     erts_pix_lock_t *pix_lck,
-		     ErtsProcLocks locks)
+                     erts_pix_lock_t *pix_lck,
+                     ErtsProcLocks locks)
 #endif
 {
 #if ERTS_PROC_LOCK_OWN_IMPL
 
-    ErtsProcLocks old_lflgs;
+  ErtsProcLocks old_lflgs;
 #if !ERTS_PROC_LOCK_ATOMIC_IMPL
-    erts_pix_lock(pix_lck);
+  erts_pix_lock(pix_lck);
 #endif
 
 #ifdef ERTS_ENABLE_LOCK_COUNT
-    erts_lcnt_proc_lock(&(p->lock), locks);
+  erts_lcnt_proc_lock(&(p->lock), locks);
 #endif
 
-    ERTS_LC_ASSERT((locks & ~ERTS_PROC_LOCKS_ALL) == 0);
+  ERTS_LC_ASSERT((locks & ~ERTS_PROC_LOCKS_ALL) == 0);
 
-    old_lflgs = erts_smp_proc_raw_trylock__(p, locks);
+  old_lflgs = erts_smp_proc_raw_trylock__(p, locks);
 
-    if (old_lflgs != 0) {
-	/*
-         * There is lock contention, so let erts_proc_lock_failed() deal
-         * with it. Note that erts_proc_lock_failed() returns with
-         * pix_lck unlocked.
-         */
-	erts_proc_lock_failed(p, pix_lck, locks, old_lflgs);
-    }
+  if (old_lflgs != 0) {
+    /*
+           * There is lock contention, so let erts_proc_lock_failed() deal
+           * with it. Note that erts_proc_lock_failed() returns with
+           * pix_lck unlocked.
+           */
+    erts_proc_lock_failed(p, pix_lck, locks, old_lflgs);
+  }
 
 #if !ERTS_PROC_LOCK_ATOMIC_IMPL
-    else {
-	ERTS_LC_ASSERT(locks == (ERTS_PROC_LOCK_FLGS_READ_(&p->lock) & locks));
-	erts_pix_unlock(pix_lck);
-    }
+  else {
+    ERTS_LC_ASSERT(locks == (ERTS_PROC_LOCK_FLGS_READ_(&p->lock) & locks));
+    erts_pix_unlock(pix_lck);
+  }
+
 #endif
 
 #ifdef ERTS_ENABLE_LOCK_COUNT
-    erts_lcnt_proc_lock_post_x(&(p->lock), locks, file, line);
+  erts_lcnt_proc_lock_post_x(&(p->lock), locks, file, line);
 #endif
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_proc_lc_lock(p, locks, file, line);
+  erts_proc_lc_lock(p, locks, file, line);
 #endif
 
 #ifdef ERTS_PROC_LOCK_DEBUG
-    erts_proc_lock_op_debug(p, locks, 1);
+  erts_proc_lock_op_debug(p, locks, 1);
 #endif
 
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-    ETHR_COMPILER_BARRIER;
+  ETHR_COMPILER_BARRIER;
 #endif
 
 #elif ERTS_PROC_LOCK_RAW_MUTEX_IMPL
-    if (locks & ERTS_PROC_LOCK_MAIN)
-	erts_mtx_lock(&p->lock.main);
-    if (locks & ERTS_PROC_LOCK_LINK)
-	erts_mtx_lock(&p->lock.link);
-    if (locks & ERTS_PROC_LOCK_MSGQ)
-	erts_mtx_lock(&p->lock.msgq);
-    if (locks & ERTS_PROC_LOCK_STATUS)
-	erts_mtx_lock(&p->lock.status);
+
+  if (locks & ERTS_PROC_LOCK_MAIN) {
+    erts_mtx_lock(&p->lock.main);
+  }
+
+  if (locks & ERTS_PROC_LOCK_LINK) {
+    erts_mtx_lock(&p->lock.link);
+  }
+
+  if (locks & ERTS_PROC_LOCK_MSGQ) {
+    erts_mtx_lock(&p->lock.msgq);
+  }
+
+  if (locks & ERTS_PROC_LOCK_STATUS) {
+    erts_mtx_lock(&p->lock.status);
+  }
 
 #ifdef ERTS_PROC_LOCK_DEBUG
-    erts_proc_lock_op_debug(p, locks, 1);
+  erts_proc_lock_op_debug(p, locks, 1);
 #endif
 
 #endif
@@ -561,182 +591,193 @@ erts_smp_proc_lock__(Process *p,
 
 ERTS_GLB_INLINE void
 erts_smp_proc_unlock__(Process *p,
-		       erts_pix_lock_t *pix_lck,
-		       ErtsProcLocks locks)
+                       erts_pix_lock_t *pix_lck,
+                       ErtsProcLocks locks)
 {
 #if ERTS_PROC_LOCK_OWN_IMPL
-    ErtsProcLocks old_lflgs;
+  ErtsProcLocks old_lflgs;
 
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-    ETHR_COMPILER_BARRIER;
+  ETHR_COMPILER_BARRIER;
 #endif
 
 #ifdef ERTS_ENABLE_LOCK_COUNT
-    erts_lcnt_proc_unlock(&(p->lock), locks);
+  erts_lcnt_proc_unlock(&(p->lock), locks);
 #endif
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_proc_lc_unlock(p, locks);
+  erts_proc_lc_unlock(p, locks);
 #endif
 #ifdef ERTS_PROC_LOCK_DEBUG
-    erts_proc_lock_op_debug(p, locks, 0);
+  erts_proc_lock_op_debug(p, locks, 0);
 #endif
 
 #if !ERTS_PROC_LOCK_ATOMIC_IMPL
-    erts_pix_lock(pix_lck);
+  erts_pix_lock(pix_lck);
 #endif
 
-    old_lflgs = ERTS_PROC_LOCK_FLGS_READ_(&p->lock);
+  old_lflgs = ERTS_PROC_LOCK_FLGS_READ_(&p->lock);
 
-    ERTS_LC_ASSERT((locks & ~ERTS_PROC_LOCKS_ALL) == 0);
-    ERTS_LC_ASSERT(locks == (old_lflgs & locks));
+  ERTS_LC_ASSERT((locks & ~ERTS_PROC_LOCKS_ALL) == 0);
+  ERTS_LC_ASSERT(locks == (old_lflgs & locks));
 
-    while (1) {
-        /*
-         * We'll atomically unlock every lock that has no waiter.
-         * If any locks with waiters remain we'll let
-         * erts_proc_unlock_failed() deal with them.
-         */
-        ErtsProcLocks wait_locks =
-            (old_lflgs >> ERTS_PROC_LOCK_WAITER_SHIFT) & locks;
+  while (1) {
+    /*
+     * We'll atomically unlock every lock that has no waiter.
+     * If any locks with waiters remain we'll let
+     * erts_proc_unlock_failed() deal with them.
+     */
+    ErtsProcLocks wait_locks =
+      (old_lflgs >> ERTS_PROC_LOCK_WAITER_SHIFT) & locks;
 
-        /* What p->lock will look like with all non-waited locks released. */
-        ErtsProcLocks want_lflgs = old_lflgs & (wait_locks | ~locks);
+    /* What p->lock will look like with all non-waited locks released. */
+    ErtsProcLocks want_lflgs = old_lflgs & (wait_locks | ~locks);
 
-        if (want_lflgs != old_lflgs) {
-            ErtsProcLocks new_lflgs =
-                ERTS_PROC_LOCK_FLGS_CMPXCHG_RELB_(&p->lock, want_lflgs, old_lflgs);
+    if (want_lflgs != old_lflgs) {
+      ErtsProcLocks new_lflgs =
+        ERTS_PROC_LOCK_FLGS_CMPXCHG_RELB_(&p->lock, want_lflgs, old_lflgs);
 
-            if (new_lflgs != old_lflgs) {
-                /* cmpxchg failed, try again. */
-                old_lflgs = new_lflgs;
-                continue;
-            }
-        }
-
-        /* We have successfully unlocked every lock with no waiter. */
-
-        if (want_lflgs & locks) {
-            /* Locks with waiters remain. */
-            /* erts_proc_unlock_failed() returns with pix_lck unlocked. */
-            erts_proc_unlock_failed(p, pix_lck, want_lflgs & locks);
-        }
-        else {
-#if !ERTS_PROC_LOCK_ATOMIC_IMPL
-            erts_pix_unlock(pix_lck);
-#endif
-        }
-
-        break;
+      if (new_lflgs != old_lflgs) {
+        /* cmpxchg failed, try again. */
+        old_lflgs = new_lflgs;
+        continue;
+      }
     }
+
+    /* We have successfully unlocked every lock with no waiter. */
+
+    if (want_lflgs & locks) {
+      /* Locks with waiters remain. */
+      /* erts_proc_unlock_failed() returns with pix_lck unlocked. */
+      erts_proc_unlock_failed(p, pix_lck, want_lflgs & locks);
+    } else {
+#if !ERTS_PROC_LOCK_ATOMIC_IMPL
+      erts_pix_unlock(pix_lck);
+#endif
+    }
+
+    break;
+  }
 
 #elif ERTS_PROC_LOCK_RAW_MUTEX_IMPL
 
 #ifdef ERTS_PROC_LOCK_DEBUG
-    erts_proc_lock_op_debug(p, locks, 0);
+  erts_proc_lock_op_debug(p, locks, 0);
 #endif
 
-    if (locks & ERTS_PROC_LOCK_STATUS)
-	erts_mtx_unlock(&p->lock.status);
-    if (locks & ERTS_PROC_LOCK_MSGQ)
-	erts_mtx_unlock(&p->lock.msgq);
-    if (locks & ERTS_PROC_LOCK_LINK)
-	erts_mtx_unlock(&p->lock.link);
-    if (locks & ERTS_PROC_LOCK_MAIN)
-	erts_mtx_unlock(&p->lock.main);
+  if (locks & ERTS_PROC_LOCK_STATUS) {
+    erts_mtx_unlock(&p->lock.status);
+  }
+
+  if (locks & ERTS_PROC_LOCK_MSGQ) {
+    erts_mtx_unlock(&p->lock.msgq);
+  }
+
+  if (locks & ERTS_PROC_LOCK_LINK) {
+    erts_mtx_unlock(&p->lock.link);
+  }
+
+  if (locks & ERTS_PROC_LOCK_MAIN) {
+    erts_mtx_unlock(&p->lock.main);
+  }
+
 #endif
 
 }
 
 ERTS_GLB_INLINE int
 erts_smp_proc_trylock__(Process *p,
-			erts_pix_lock_t *pix_lck,
-			ErtsProcLocks locks)
+                        erts_pix_lock_t *pix_lck,
+                        ErtsProcLocks locks)
 {
 #if ERTS_PROC_LOCK_OWN_IMPL
-    int res;
+  int res;
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    ERTS_LC_ASSERT((locks & ~ERTS_PROC_LOCKS_ALL) == 0);
-    if (erts_proc_lc_trylock_force_busy(p, locks)) {
-	res = EBUSY; /* Make sure caller can handle the situation without
-			causing a lock order violation to occur */
-    }
-    else
+  ERTS_LC_ASSERT((locks & ~ERTS_PROC_LOCKS_ALL) == 0);
+
+  if (erts_proc_lc_trylock_force_busy(p, locks)) {
+    res = EBUSY; /* Make sure caller can handle the situation without
+      causing a lock order violation to occur */
+  } else
 #endif
-    {
+  {
 
 #if !ERTS_PROC_LOCK_ATOMIC_IMPL
-	erts_pix_lock(pix_lck);
+    erts_pix_lock(pix_lck);
 #endif
 
-	if (erts_smp_proc_raw_trylock__(p, locks) != 0) {
-	    /* Didn't get all locks... */
-	    res = EBUSY;
+    if (erts_smp_proc_raw_trylock__(p, locks) != 0) {
+      /* Didn't get all locks... */
+      res = EBUSY;
 
 #if !ERTS_PROC_LOCK_ATOMIC_IMPL
-	    erts_pix_unlock(pix_lck);
+      erts_pix_unlock(pix_lck);
 #endif
-	}
-	else {
-	    res = 0;
+    } else {
+      res = 0;
 
-	    ERTS_LC_ASSERT(locks
-			   == (ERTS_PROC_LOCK_FLGS_READ_(&p->lock) & locks));
+      ERTS_LC_ASSERT(locks
+                     == (ERTS_PROC_LOCK_FLGS_READ_(&p->lock) & locks));
 
 #if !ERTS_PROC_LOCK_ATOMIC_IMPL
-	    erts_pix_unlock(pix_lck);
+      erts_pix_unlock(pix_lck);
 #endif
 
 #ifdef ERTS_PROC_LOCK_DEBUG
-	    erts_proc_lock_op_debug(p, locks, 1);
+      erts_proc_lock_op_debug(p, locks, 1);
 #endif
-	}
     }
+  }
+
 #ifdef ERTS_ENABLE_LOCK_COUNT
-    erts_lcnt_proc_trylock(&(p->lock), locks, res);
+  erts_lcnt_proc_trylock(&(p->lock), locks, res);
 #endif
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_proc_lc_trylock(p, locks, res == 0, __FILE__, __LINE__);
+  erts_proc_lc_trylock(p, locks, res == 0, __FILE__, __LINE__);
 #endif
 
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-    ETHR_COMPILER_BARRIER;
+  ETHR_COMPILER_BARRIER;
 #endif
-    return res;
+  return res;
 
 #elif ERTS_PROC_LOCK_RAW_MUTEX_IMPL
-    if (erts_smp_proc_raw_trylock__(p, locks) != 0)
-	return EBUSY;
-    else {
+
+  if (erts_smp_proc_raw_trylock__(p, locks) != 0) {
+    return EBUSY;
+  } else {
 #ifdef ERTS_PROC_LOCK_DEBUG
-	erts_proc_lock_op_debug(p, locks, 1);
+    erts_proc_lock_op_debug(p, locks, 1);
 #endif
-	return 0;
-    }
+    return 0;
+  }
+
 #endif
 }
 
 #ifdef ERTS_PROC_LOCK_DEBUG
-ERTS_GLB_INLINE void 
+ERTS_GLB_INLINE void
 erts_proc_lock_op_debug(Process *p, ErtsProcLocks locks, int locked)
 {
-    int i;
-    for (i = 0; i <= ERTS_PROC_LOCK_MAX_BIT; i++) {
-	ErtsProcLocks lock = ((ErtsProcLocks) 1) << i;
-	if (locks & lock) {
-	    erts_aint32_t lock_count;
-	    if (locked) {
-		lock_count = erts_smp_atomic32_inc_read_nob(&p->lock.locked[i]);
-		ERTS_LC_ASSERT(lock_count == 1);
-	    }
-	    else {
-		lock_count = erts_smp_atomic32_dec_read_nob(&p->lock.locked[i]);
-		ERTS_LC_ASSERT(lock_count == 0);
-	    }
-	}
+  int i;
+
+  for (i = 0; i <= ERTS_PROC_LOCK_MAX_BIT; i++) {
+    ErtsProcLocks lock = ((ErtsProcLocks) 1) << i;
+
+    if (locks & lock) {
+      erts_aint32_t lock_count;
+
+      if (locked) {
+        lock_count = erts_smp_atomic32_inc_read_nob(&p->lock.locked[i]);
+        ERTS_LC_ASSERT(lock_count == 1);
+      } else {
+        lock_count = erts_smp_atomic32_dec_read_nob(&p->lock.locked[i]);
+        ERTS_LC_ASSERT(lock_count == 0);
+      }
     }
+  }
 }
 #endif
 
@@ -763,24 +804,24 @@ ERTS_GLB_INLINE void
 erts_smp_proc_lock_x(Process *p, ErtsProcLocks locks, char *file, unsigned int line)
 #else
 erts_smp_proc_lock(Process *p, ErtsProcLocks locks)
-#endif 
+#endif
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_POSITION)
-    erts_smp_proc_lock_x__(p,
+  erts_smp_proc_lock_x__(p,
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-			 nullptr,
+                         nullptr,
 #else
-			 ERTS_PID2PIXLOCK(p->common.id),
+                         ERTS_PID2PIXLOCK(p->common.id),
 #endif /*ERTS_PROC_LOCK_ATOMIC_IMPL*/
-			 locks, file, line);
+                         locks, file, line);
 #elif defined(ERTS_SMP)
-    erts_smp_proc_lock__(p,
+  erts_smp_proc_lock__(p,
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-			 nullptr,
+                       nullptr,
 #else
-			 ERTS_PID2PIXLOCK(p->common.id),
+                       ERTS_PID2PIXLOCK(p->common.id),
 #endif /*ERTS_PROC_LOCK_ATOMIC_IMPL*/
-			 locks);
+                       locks);
 #endif /*ERTS_SMP*/
 }
 
@@ -788,13 +829,13 @@ ERTS_GLB_INLINE void
 erts_smp_proc_unlock(Process *p, ErtsProcLocks locks)
 {
 #ifdef ERTS_SMP
-    erts_smp_proc_unlock__(p,
+  erts_smp_proc_unlock__(p,
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-			   nullptr,
+                         nullptr,
 #else
-			   ERTS_PID2PIXLOCK(p->common.id),
+                         ERTS_PID2PIXLOCK(p->common.id),
 #endif
-			   locks);
+                         locks);
 #endif
 }
 
@@ -802,40 +843,46 @@ ERTS_GLB_INLINE int
 erts_smp_proc_trylock(Process *p, ErtsProcLocks locks)
 {
 #ifndef ERTS_SMP
-    return 0;
+  return 0;
 #else
-    return erts_smp_proc_trylock__(p,
+  return erts_smp_proc_trylock__(p,
 #if ERTS_PROC_LOCK_ATOMIC_IMPL
-				   nullptr,
+                                 nullptr,
 #else
-				   ERTS_PID2PIXLOCK(p->common.id),
+                                 ERTS_PID2PIXLOCK(p->common.id),
 #endif
-				   locks);
+                                 locks);
 #endif
 }
 
 ERTS_GLB_INLINE void erts_smp_proc_inc_refc(Process *p)
 {
 #ifdef ERTS_SMP
-    erts_ptab_inc_refc(&p->common);
+  erts_ptab_inc_refc(&p->common);
 #endif
 }
 
 ERTS_GLB_INLINE void erts_smp_proc_dec_refc(Process *p)
 {
 #ifdef ERTS_SMP
-    int referred = erts_ptab_dec_test_refc(&p->common);
-    if (!referred)
-	erts_free_proc(p);
+  int referred = erts_ptab_dec_test_refc(&p->common);
+
+  if (!referred) {
+    erts_free_proc(p);
+  }
+
 #endif
 }
 
 ERTS_GLB_INLINE void erts_smp_proc_add_refc(Process *p, int32_t add_refc)
 {
 #ifdef ERTS_SMP
-    int referred = erts_ptab_add_test_refc(&p->common, add_refc);
-    if (!referred)
-	erts_free_proc(p);
+  int referred = erts_ptab_add_test_refc(&p->common, add_refc);
+
+  if (!referred) {
+    erts_free_proc(p);
+  }
+
 #endif
 }
 
@@ -845,11 +892,11 @@ ERTS_GLB_INLINE void erts_smp_proc_add_refc(Process *p, int32_t add_refc)
 void erts_proc_lock_init(Process *);
 void erts_proc_lock_fin(Process *);
 void erts_proc_safelock(Process *a_proc,
-			ErtsProcLocks a_have_locks,
-			ErtsProcLocks a_need_locks,
-			Process *b_proc,
-			ErtsProcLocks b_have_locks,
-			ErtsProcLocks b_need_locks);
+                        ErtsProcLocks a_have_locks,
+                        ErtsProcLocks a_need_locks,
+                        Process *b_proc,
+                        ErtsProcLocks b_have_locks,
+                        ErtsProcLocks b_need_locks);
 #endif
 
 /*
@@ -866,9 +913,9 @@ void erts_proc_safelock(Process *a_proc,
  *                                 is exiting.
  */
 
-#define ERTS_P2P_FLG_ALLOW_OTHER_X	(1 <<  0)
-#define ERTS_P2P_FLG_TRY_LOCK		(1 <<  1)
-#define ERTS_P2P_FLG_SMP_INC_REFC	(1 <<  2)
+#define ERTS_P2P_FLG_ALLOW_OTHER_X  (1 <<  0)
+#define ERTS_P2P_FLG_TRY_LOCK   (1 <<  1)
+#define ERTS_P2P_FLG_SMP_INC_REFC (1 <<  2)
 
 #define ERTS_PROC_LOCK_BUSY ((Process *) &erts_invalid_process)
 
@@ -889,50 +936,57 @@ Process *erts_pid2proc_opt(Process *, ErtsProcLocks, Eterm, ErtsProcLocks, int);
 
 ERTS_GLB_INLINE Process *erts_pix2proc(int ix)
 {
-    Process *proc;
-    ASSERT(0 <= ix && ix < erts_ptab_max(&erts_proc));
-    proc = (Process *) erts_ptab_pix2intptr_nob(&erts_proc, ix);
-    return proc == ERTS_PROC_LOCK_BUSY ? nullptr : proc;
+  Process *proc;
+  ASSERT(0 <= ix && ix < erts_ptab_max(&erts_proc));
+  proc = (Process *) erts_ptab_pix2intptr_nob(&erts_proc, ix);
+  return proc == ERTS_PROC_LOCK_BUSY ? nullptr : proc;
 }
 
 ERTS_GLB_INLINE Process *erts_proc_lookup_raw(Eterm pid)
 {
-    Process *proc;
+  Process *proc;
 
-    ERTS_SMP_LC_ASSERT(erts_thr_progress_lc_is_delaying());
+  ERTS_SMP_LC_ASSERT(erts_thr_progress_lc_is_delaying());
 
-    if (is_not_internal_pid(pid))
-	return nullptr;
+  if (is_not_internal_pid(pid)) {
+    return nullptr;
+  }
 
-    proc = (Process *) erts_ptab_pix2intptr_ddrb(&erts_proc,
-						 internal_pid_index(pid));
-    if (proc && proc->common.id != pid)
-	return nullptr;
-    return proc;
+  proc = (Process *) erts_ptab_pix2intptr_ddrb(&erts_proc,
+         internal_pid_index(pid));
+
+  if (proc && proc->common.id != pid) {
+    return nullptr;
+  }
+
+  return proc;
 }
 
 ERTS_GLB_INLINE Process *erts_proc_lookup(Eterm pid)
 {
-    Process *proc = erts_proc_lookup_raw(pid);
-    if (proc && ERTS_PROC_IS_EXITING(proc))
-	return nullptr;
-    return proc;
+  Process *proc = erts_proc_lookup_raw(pid);
+
+  if (proc && ERTS_PROC_IS_EXITING(proc)) {
+    return nullptr;
+  }
+
+  return proc;
 }
 
 #ifndef ERTS_SMP
 ERTS_GLB_INLINE Process *
 erts_pid2proc_opt(Process *c_p_unused,
-		  ErtsProcLocks c_p_have_locks_unused,
-		  Eterm pid,
-		  ErtsProcLocks pid_need_locks_unused,
-		  int flags)
+                  ErtsProcLocks c_p_have_locks_unused,
+                  Eterm pid,
+                  ErtsProcLocks pid_need_locks_unused,
+                  int flags)
 {
-    Process *proc = erts_proc_lookup_raw(pid);
-    return ((!(flags & ERTS_P2P_FLG_ALLOW_OTHER_X)
-	     && proc
-	     && ERTS_PROC_IS_EXITING(proc))
-	    ? nullptr
-	    : proc);
+  Process *proc = erts_proc_lookup_raw(pid);
+  return ((!(flags & ERTS_P2P_FLG_ALLOW_OTHER_X)
+           && proc
+           && ERTS_PROC_IS_EXITING(proc))
+          ? nullptr
+          : proc);
 }
 #endif /* !ERTS_SMP */
 
@@ -940,4 +994,4 @@ erts_pid2proc_opt(Process *c_p_unused,
 
 #endif /* #ifndef ERTS_PROCESS_LOCK_H__ */
 #endif /* #if !defined(ERTS_PROCESS_LOCK_ONLY_PROC_LOCK_TYPE__) 
-	  && !defined(ERTS_PROCESS_LOCK_ONLY_LOCK_CHECK_PROTO__) */
+    && !defined(ERTS_PROCESS_LOCK_ONLY_LOCK_CHECK_PROTO__) */

@@ -64,30 +64,30 @@
 #define ERTS_MSEG_VSN_STR "0.9"
 
 typedef struct {
-    Uint amcbf;
-    Uint rmcbf;
-    Uint mcs;
-    Uint nos;
-    ErtsMMapInit mmap;
+  Uint amcbf;
+  Uint rmcbf;
+  Uint mcs;
+  Uint nos;
+  ErtsMMapInit mmap;
 } ErtsMsegInit_t;
 
-#define ERTS_MSEG_INIT_DEFAULT_INITIALIZER				\
-{									\
-    4*1024*1024,	/* amcbf: Absolute max cache bad fit	*/	\
-    20,			/* rmcbf: Relative max cache bad fit	*/	\
-    10,			/* mcs:   Max cache size		*/	\
-    1000,		/* cci:   Cache check interval		*/	\
-    ERTS_MMAP_INIT_DEFAULT_INITER					\
+#define ERTS_MSEG_INIT_DEFAULT_INITIALIZER        \
+{                 \
+    4*1024*1024,  /* amcbf: Absolute max cache bad fit  */  \
+    20,     /* rmcbf: Relative max cache bad fit  */  \
+    10,     /* mcs:   Max cache size    */  \
+    1000,   /* cci:   Cache check interval    */  \
+    ERTS_MMAP_INIT_DEFAULT_INITER         \
 }
 
 typedef struct {
-    int  cache;
-    int  preserv;
-    UWord abs_shrink_th;
-    UWord rel_shrink_th;
-    int sched_spec;
+  int  cache;
+  int  preserv;
+  UWord abs_shrink_th;
+  UWord rel_shrink_th;
+  int sched_spec;
 #if HALFWORD_HEAP
-    int low_mem;
+  int low_mem;
 #endif
 } ErtsMsegOpt_t;
 
@@ -101,13 +101,13 @@ void *erts_mseg_realloc(ErtsAlcType_t, void *, UWord, UWord *, Uint);
 void *erts_mseg_realloc_opt(ErtsAlcType_t, void *, UWord, UWord *, Uint, const ErtsMsegOpt_t *);
 void  erts_mseg_clear_cache(void);
 void  erts_mseg_cache_check(void);
-Uint  erts_mseg_no( const ErtsMsegOpt_t *);
+Uint  erts_mseg_no(const ErtsMsegOpt_t *);
 Uint  erts_mseg_unit_size(void);
 void  erts_mseg_init(ErtsMsegInit_t *init);
 void  erts_mseg_late_init(void); /* Have to be called after all allocators,
-				   threads and timers have been initialized. */
-Eterm erts_mseg_info_options(int, int *, void*, Uint **, Uint *);
-Eterm erts_mseg_info(int, int *, void*, int, Uint **, Uint *);
+           threads and timers have been initialized. */
+Eterm erts_mseg_info_options(int, int *, void *, Uint **, Uint *);
+Eterm erts_mseg_info(int, int *, void *, int, Uint **, Uint *);
 
 #endif /* #if HAVE_ERTS_MSEG */
 

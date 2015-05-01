@@ -37,15 +37,15 @@
 #define EMULATOR "BEAM"
 #define SEQ_TRACE 1
 
-#define CONTEXT_REDS 2000	/* Swap process out after this number */
-#define MAX_ARG 255	        /* Max number of arguments allowed */
+#define CONTEXT_REDS 2000 /* Swap process out after this number */
+#define MAX_ARG 255         /* Max number of arguments allowed */
 #define MAX_REG 1024            /* Max number of x(N) registers used */
 
 /* Scheduler stores data for temporary heaps if
    !HEAP_ON_C_STACK. Macros (*TmpHeap*) in global.h selects if we put temporary
    heap data on the C stack or if we use the buffers in the scheduler data. */
 #define TMP_HEAP_SIZE 128            /* Number of Eterm in the schedulers
-				        small heap for transient heap data */
+                small heap for transient heap data */
 #define ERL_ARITH_TMP_HEAP_SIZE 4    /* as does erl_arith... */
 #define BEAM_EMU_TMP_HEAP_SIZE  2    /* and beam_emu... */
 
@@ -96,23 +96,23 @@
  * Allocate heap memory, first on the ordinary heap;
  * failing that, in a heap fragment.
  */
-#define HAllocX(p, sz, xtra)		                              \
-  (ASSERT((sz) >= 0),					              \
-     ErtsHAllocLockCheck(p),					      \
+#define HAllocX(p, sz, xtra)                                  \
+  (ASSERT((sz) >= 0),                       \
+     ErtsHAllocLockCheck(p),                \
      (IS_FORCE_HEAP_FRAGS || (((HEAP_LIMIT(p) - HEAP_TOP(p)) < (sz))) \
       ? erts_heap_alloc((p),(sz),(xtra))                              \
-      : (INIT_HEAP_MEM(p,sz),		                              \
+      : (INIT_HEAP_MEM(p,sz),                                 \
          HEAP_TOP(p) = HEAP_TOP(p) + (sz), HEAP_TOP(p) - (sz))))
 
 #define HAlloc(P, SZ) HAllocX(P,SZ,0)
 
-#define HRelease(p, endp, ptr)					\
-  if ((ptr) == (endp)) {					\
-     ;								\
-  } else if (HEAP_START(p) <= (ptr) && (ptr) < HEAP_TOP(p)) {	\
-     HEAP_TOP(p) = (ptr);					\
-  } else {							\
-     erts_heap_frag_shrink(p, ptr);					\
+#define HRelease(p, endp, ptr)          \
+  if ((ptr) == (endp)) {          \
+     ;                \
+  } else if (HEAP_START(p) <= (ptr) && (ptr) < HEAP_TOP(p)) { \
+     HEAP_TOP(p) = (ptr);         \
+  } else {              \
+     erts_heap_frag_shrink(p, ptr);         \
   }
 
 #define HeapWordsLeft(p) (HEAP_LIMIT(p) - HEAP_TOP(p))
@@ -133,15 +133,15 @@
  * if not enough).
  */
 #ifdef CHECK_FOR_HOLES
-# define HeapOnlyAlloc(p, sz)					\
-    (ASSERT((sz) >= 0),					        \
-     (ASSERT(((HEAP_LIMIT(p) - HEAP_TOP(p)) >= (sz))),	        \
-      (erts_set_hole_marker(HEAP_TOP(p), (sz)),			\
+# define HeapOnlyAlloc(p, sz)         \
+    (ASSERT((sz) >= 0),                 \
+     (ASSERT(((HEAP_LIMIT(p) - HEAP_TOP(p)) >= (sz))),          \
+      (erts_set_hole_marker(HEAP_TOP(p), (sz)),     \
        (HEAP_TOP(p) = HEAP_TOP(p) + (sz), HEAP_TOP(p) - (sz)))))
 #else
-# define HeapOnlyAlloc(p, sz)					\
-    (ASSERT((sz) >= 0),					        \
-     (ASSERT(((HEAP_LIMIT(p) - HEAP_TOP(p)) >= (sz))),	        \
+# define HeapOnlyAlloc(p, sz)         \
+    (ASSERT((sz) >= 0),                 \
+     (ASSERT(((HEAP_LIMIT(p) - HEAP_TOP(p)) >= (sz))),          \
       (HEAP_TOP(p) = HEAP_TOP(p) + (sz), HEAP_TOP(p) - (sz))))
 #endif
 
@@ -152,26 +152,26 @@
  */
 
 typedef struct op_entry {
-   const char* name;			/* Name of instruction. */
-   uint32_t mask[3];		/* Signature mask. */
-   int sz;			/* Number of loaded words. */
-   const char* pack;			/* Instructions for packing engine. */
-   const char* sign;			/* Signature string. */
-   unsigned count;		/* Number of times executed. */
+  const char *name;      /* Name of instruction. */
+  uint32_t mask[3];    /* Signature mask. */
+  int sz;      /* Number of loaded words. */
+  const char *pack;      /* Instructions for packing engine. */
+  const char *sign;      /* Signature string. */
+  unsigned count;    /* Number of times executed. */
 } OpEntry;
 
-extern OpEntry opc[];		/* Description of all instructions. */
-extern int num_instructions;	/* Number of instruction in opc[]. */
+extern OpEntry opc[];   /* Description of all instructions. */
+extern int num_instructions;  /* Number of instruction in opc[]. */
 
 /* some constants for various table sizes etc */
 
-#define ATOM_TEXT_SIZE  32768	/* Increment for allocating atom text space */
+#define ATOM_TEXT_SIZE  32768 /* Increment for allocating atom text space */
 
-#define ITIME 100		/* Number of milliseconds per clock tick    */
-#define MAX_PORT_LINK 8		/* Maximum number of links to a port        */
+#define ITIME 100   /* Number of milliseconds per clock tick    */
+#define MAX_PORT_LINK 8   /* Maximum number of links to a port        */
 
-extern int H_MIN_SIZE;		/* minimum (heap + stack) */
-extern int BIN_VH_MIN_SIZE;	/* minimum virtual (bin) heap */
+extern int H_MIN_SIZE;    /* minimum (heap + stack) */
+extern int BIN_VH_MIN_SIZE; /* minimum virtual (bin) heap */
 
 extern int erts_atom_table_size;/* Atom table size */
 extern int erts_pd_initial_size;/* Initial Process dictionary table size */
@@ -181,8 +181,8 @@ extern int erts_pd_initial_size;/* Initial Process dictionary table size */
 
 /* macros for extracting bytes from uint16's */
 
-#define hi_byte(a) ((a) >> 8) 
-#define lo_byte(a) ((a) & 255) 
+#define hi_byte(a) ((a) >> 8)
+#define lo_byte(a) ((a) & 255)
 
 /* macros for combining bytes */
 
@@ -195,4 +195,4 @@ extern int erts_pd_initial_size;/* Initial Process dictionary table size */
 
 #include "erl_term.h"
 
-#endif	/* __ERL_VM_H__ */
+#endif  /* __ERL_VM_H__ */

@@ -1,19 +1,19 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 2003-2013. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  */
 
@@ -28,19 +28,19 @@
 typedef struct AOFFAllctr_t_ AOFFAllctr_t;
 
 enum AOFF_Flavor {
-    AOFF_AOFF = 0,
-    AOFF_AOBF = 1,
-    AOFF_BF   = 2
+  AOFF_AOFF = 0,
+  AOFF_AOBF = 1,
+  AOFF_BF   = 2
 };
 
 typedef struct {
-    enum AOFF_Flavor flavor;
+  enum AOFF_Flavor flavor;
 } AOFFAllctrInit_t;
 
 #define ERTS_DEFAULT_AOFF_ALLCTR_INIT {(AOFF_Flavor)0/*dummy*/}
 
 void erts_aoffalc_init(void);
-Allctr_t *erts_aoffalc_start(AOFFAllctr_t *, AOFFAllctrInit_t*, AllctrInit_t *);
+Allctr_t *erts_aoffalc_start(AOFFAllctr_t *, AOFFAllctrInit_t *, AllctrInit_t *);
 
 #endif /* #ifndef ERL_AO_FIRSTFIT_ALLOC__ */
 
@@ -54,13 +54,13 @@ Allctr_t *erts_aoffalc_start(AOFFAllctr_t *, AOFFAllctrInit_t*, AllctrInit_t *);
 
 
 struct AOFFAllctr_t_ {
-    Allctr_t		allctr; /* Has to be first! */
+  Allctr_t    allctr; /* Has to be first! */
 
-    struct AOFF_RBTree_t_* mbc_root;
-    enum AOFF_Flavor flavor;
+  struct AOFF_RBTree_t_ *mbc_root;
+  enum AOFF_Flavor flavor;
 };
 
 UWord erts_aoffalc_test(UWord, UWord, UWord);
 
 #endif /* #if defined(GET_ERL_AOFF_ALLOC_IMPL)
-	      && !defined(ERL_AOFF_ALLOC_IMPL__) */
+        && !defined(ERL_AOFF_ALLOC_IMPL__) */

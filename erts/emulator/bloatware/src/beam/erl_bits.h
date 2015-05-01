@@ -25,44 +25,44 @@
  */
 
 typedef struct erl_bin_match_buffer {
-    Eterm orig;			/* Original binary term. */
-    uint8_t* base;			/* Current position in binary. */
-    Uint offset;		/* Offset in bits. */
-    size_t size;		/* Size of binary in bits. */
+  Eterm orig;     /* Original binary term. */
+  uint8_t *base;      /* Current position in binary. */
+  Uint offset;    /* Offset in bits. */
+  size_t size;    /* Size of binary in bits. */
 } ErlBinMatchBuffer;
 
 struct erl_bits_state {
-    /*
-     * Used for building binaries.
-     */
-    uint8_t *byte_buf_;
-    int byte_buf_len_;
-    /*
-     * Used for building binaries using the new_ instruction set.
-     */
-    uint8_t* erts_current_bin_;	/* Pointer to beginning of current binary. */
-    /*
-     * Offset in bits into the current binary (new_ instruction set) or
-     * buffer (old instruction set).
-     */
-    Uint erts_bin_offset_;
-    /*
-     * Whether the current binary is writable.
-     */
-     unsigned erts_writable_bin_;
+  /*
+   * Used for building binaries.
+   */
+  uint8_t *byte_buf_;
+  int byte_buf_len_;
+  /*
+   * Used for building binaries using the new_ instruction set.
+   */
+  uint8_t *erts_current_bin_; /* Pointer to beginning of current binary. */
+  /*
+   * Offset in bits into the current binary (new_ instruction set) or
+   * buffer (old instruction set).
+   */
+  Uint erts_bin_offset_;
+  /*
+   * Whether the current binary is writable.
+   */
+  unsigned erts_writable_bin_;
 };
 
-typedef struct erl_bin_match_struct{
+typedef struct erl_bin_match_struct {
   Eterm thing_word;
-  ErlBinMatchBuffer mb;		/* Present match buffer */
-  Eterm save_offset[1];		/* Saved offsets */
+  ErlBinMatchBuffer mb;   /* Present match buffer */
+  Eterm save_offset[1];   /* Saved offsets */
 } ErlBinMatchState;
 
-#define ERL_BIN_MATCHSTATE_SIZE(_Max) ((sizeof(ErlBinMatchState) + (_Max)*sizeof(Eterm))/sizeof(Eterm)) 
+#define ERL_BIN_MATCHSTATE_SIZE(_Max) ((sizeof(ErlBinMatchState) + (_Max)*sizeof(Eterm))/sizeof(Eterm))
 #define HEADER_BIN_MATCHSTATE(_Max) _make_header(ERL_BIN_MATCHSTATE_SIZE((_Max))-1, _TAG_HEADER_BIN_MATCHSTATE)
 #define HEADER_NUM_SLOTS(hdr) (header_arity(hdr)-sizeof(ErlBinMatchState)/sizeof(Eterm)+1)
 
-#define make_matchstate(_Ms) make_boxed((Eterm*)(_Ms))  
+#define make_matchstate(_Ms) make_boxed((Eterm*)(_Ms))
 #define ms_matchbuffer(_Ms) &(((ErlBinMatchState*) boxed_val(_Ms))->mb)
 
 
@@ -81,65 +81,65 @@ typedef struct erl_bin_match_struct{
  */
 #ifdef ERTS_SMP
 /* the state resides in the current process' scheduler data */
-#define ERL_BITS_DECLARE_STATEP			struct erl_bits_state *EBS
-#define ERL_BITS_RELOAD_STATEP(P)		do{EBS = &(P)->scheduler_data->erl_bits_state;}while(0)
-#define ERL_BITS_DEFINE_STATEP(P)		struct erl_bits_state *EBS = &(P)->scheduler_data->erl_bits_state
+#define ERL_BITS_DECLARE_STATEP     struct erl_bits_state *EBS
+#define ERL_BITS_RELOAD_STATEP(P)   do{EBS = &(P)->scheduler_data->erl_bits_state;}while(0)
+#define ERL_BITS_DEFINE_STATEP(P)   struct erl_bits_state *EBS = &(P)->scheduler_data->erl_bits_state
 #else
 /* reentrant API but with a hidden single global state, for testing only */
 extern struct erl_bits_state ErlBitsState_;
-#define ERL_BITS_DECLARE_STATEP			struct erl_bits_state *EBS = &ErlBitsState_
-#define ERL_BITS_RELOAD_STATEP(P)		do{}while(0)
-#define ERL_BITS_DEFINE_STATEP(P)		ERL_BITS_DECLARE_STATEP
+#define ERL_BITS_DECLARE_STATEP     struct erl_bits_state *EBS = &ErlBitsState_
+#define ERL_BITS_RELOAD_STATEP(P)   do{}while(0)
+#define ERL_BITS_DEFINE_STATEP(P)   ERL_BITS_DECLARE_STATEP
 #endif
-#define ErlBitsState				(*EBS)
+#define ErlBitsState        (*EBS)
 
-#define ERL_BITS_PROTO_0			struct erl_bits_state *EBS
-#define ERL_BITS_PROTO_1(PARM1)			struct erl_bits_state *EBS, PARM1
-#define ERL_BITS_PROTO_2(PARM1,PARM2)		struct erl_bits_state *EBS, PARM1, PARM2
-#define ERL_BITS_PROTO_3(PARM1,PARM2,PARM3)	struct erl_bits_state *EBS, PARM1, PARM2, PARM3
-#define ERL_BITS_ARGS_0				EBS
-#define ERL_BITS_ARGS_1(ARG1)			EBS, ARG1
-#define ERL_BITS_ARGS_2(ARG1,ARG2)		EBS, ARG1, ARG2
-#define ERL_BITS_ARGS_3(ARG1,ARG2,ARG3)		EBS, ARG1, ARG2, ARG3
+#define ERL_BITS_PROTO_0      struct erl_bits_state *EBS
+#define ERL_BITS_PROTO_1(PARM1)     struct erl_bits_state *EBS, PARM1
+#define ERL_BITS_PROTO_2(PARM1,PARM2)   struct erl_bits_state *EBS, PARM1, PARM2
+#define ERL_BITS_PROTO_3(PARM1,PARM2,PARM3) struct erl_bits_state *EBS, PARM1, PARM2, PARM3
+#define ERL_BITS_ARGS_0       EBS
+#define ERL_BITS_ARGS_1(ARG1)     EBS, ARG1
+#define ERL_BITS_ARGS_2(ARG1,ARG2)    EBS, ARG1, ARG2
+#define ERL_BITS_ARGS_3(ARG1,ARG2,ARG3)   EBS, ARG1, ARG2, ARG3
 
-#else	/* ERL_BITS_REENTRANT */
+#else /* ERL_BITS_REENTRANT */
 
 /*
  * Non-reentrant API with a single global state.
  */
 extern struct erl_bits_state ErlBitsState;
-#define ERL_BITS_DECLARE_STATEP			/*empty*/
-#define ERL_BITS_RELOAD_STATEP(P)		do{}while(0)
-#define ERL_BITS_DEFINE_STATEP(P)		/*empty*/
+#define ERL_BITS_DECLARE_STATEP     /*empty*/
+#define ERL_BITS_RELOAD_STATEP(P)   do{}while(0)
+#define ERL_BITS_DEFINE_STATEP(P)   /*empty*/
 
-#define ERL_BITS_PROTO_0			void
-#define ERL_BITS_PROTO_1(PARM1)			PARM1
-#define ERL_BITS_PROTO_2(PARM1,PARM2)		PARM1, PARM2
-#define ERL_BITS_PROTO_3(PARM1,PARM2,PARM3)	PARM1, PARM2, PARM3
-#define ERL_BITS_ARGS_0				/*empty*/
-#define ERL_BITS_ARGS_1(ARG1)			ARG1
-#define ERL_BITS_ARGS_2(ARG1,ARG2)		ARG1, ARG2
-#define ERL_BITS_ARGS_3(ARG1,ARG2,ARG3)		ARG1, ARG2, ARG3
+#define ERL_BITS_PROTO_0      void
+#define ERL_BITS_PROTO_1(PARM1)     PARM1
+#define ERL_BITS_PROTO_2(PARM1,PARM2)   PARM1, PARM2
+#define ERL_BITS_PROTO_3(PARM1,PARM2,PARM3) PARM1, PARM2, PARM3
+#define ERL_BITS_ARGS_0       /*empty*/
+#define ERL_BITS_ARGS_1(ARG1)     ARG1
+#define ERL_BITS_ARGS_2(ARG1,ARG2)    ARG1, ARG2
+#define ERL_BITS_ARGS_3(ARG1,ARG2,ARG3)   ARG1, ARG2, ARG3
 
-#endif	/* ERL_BITS_REENTRANT */
+#endif  /* ERL_BITS_REENTRANT */
 
-#define erts_bin_offset		(ErlBitsState.erts_bin_offset_)
-#define erts_current_bin	(ErlBitsState.erts_current_bin_)
+#define erts_bin_offset   (ErlBitsState.erts_bin_offset_)
+#define erts_current_bin  (ErlBitsState.erts_current_bin_)
 #define erts_writable_bin       (ErlBitsState.erts_writable_bin_)
 
 #define copy_binary_to_buffer(DstBuffer, DstBufOffset, SrcBuffer, SrcBufferOffset, NumBits) \
-  do {											    \
-    if (BIT_OFFSET(DstBufOffset) == 0 && (SrcBufferOffset == 0) &&			    \
-        (BIT_OFFSET(NumBits)==0)) {							    \
-      sys_memcpy(DstBuffer+BYTE_OFFSET(DstBufOffset),					    \
-		 SrcBuffer, NBYTES(NumBits));						    \
-    } else {										    \
-      erts_copy_bits(SrcBuffer, SrcBufferOffset, 1,					    \
-        (uint8_t*)DstBuffer, DstBufOffset, 1, NumBits);					    \
-    }											    \
+  do {                          \
+    if (BIT_OFFSET(DstBufOffset) == 0 && (SrcBufferOffset == 0) &&          \
+        (BIT_OFFSET(NumBits)==0)) {                 \
+      sys_memcpy(DstBuffer+BYTE_OFFSET(DstBufOffset),             \
+     SrcBuffer, NBYTES(NumBits));               \
+    } else {                        \
+      erts_copy_bits(SrcBuffer, SrcBufferOffset, 1,             \
+        (uint8_t*)DstBuffer, DstBufOffset, 1, NumBits);             \
+    }                         \
   }  while (0)
 
-void erts_init_bits(void);	/* Initialization once. */
+void erts_init_bits(void);  /* Initialization once. */
 #ifdef ERTS_SMP
 void erts_bits_init_state(ERL_BITS_PROTO_0);
 void erts_bits_destroy_state(ERL_BITS_PROTO_0);
@@ -150,7 +150,7 @@ void erts_bits_destroy_state(ERL_BITS_PROTO_0);
  * NBYTES(x) returns the number of bytes needed to store x bits.
  */
 
-#define NBYTES(x)  (((Uint64)(x) + (Uint64) 7) >> 3) 
+#define NBYTES(x)  (((Uint64)(x) + (Uint64) 7) >> 3)
 #define BYTE_OFFSET(ofs) ((Uint) (ofs) >> 3)
 #define BIT_OFFSET(ofs) ((ofs) & 7)
 
@@ -165,10 +165,10 @@ void erts_bits_destroy_state(ERL_BITS_PROTO_0);
  */
 
 Eterm erts_bs_start_match_2(Process *p, Eterm Bin, Uint Max);
-Eterm erts_bs_get_integer_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatchBuffer* mb);
-Eterm erts_bs_get_binary_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatchBuffer* mb);
-Eterm erts_bs_get_float_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatchBuffer* mb);
-Eterm erts_bs_get_binary_all_2(Process *p, ErlBinMatchBuffer* mb);
+Eterm erts_bs_get_integer_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatchBuffer *mb);
+Eterm erts_bs_get_binary_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatchBuffer *mb);
+Eterm erts_bs_get_float_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatchBuffer *mb);
+Eterm erts_bs_get_binary_all_2(Process *p, ErlBinMatchBuffer *mb);
 
 /*
  * Binary construction, new_ instruction set.
@@ -180,33 +180,33 @@ int erts_bs_put_utf16(ERL_BITS_PROTO_2(Eterm Integer, Uint flags));
 int erts_new_bs_put_binary(ERL_BITS_PROTO_2(Eterm Bin, Uint num_bits));
 int erts_new_bs_put_binary_all(ERL_BITS_PROTO_2(Eterm Bin, Uint unit));
 int erts_new_bs_put_float(Process *c_p, Eterm Float, Uint num_bits, int flags);
-void erts_new_bs_put_string(ERL_BITS_PROTO_2(uint8_t* iptr, Uint num_bytes));
+void erts_new_bs_put_string(ERL_BITS_PROTO_2(uint8_t *iptr, Uint num_bytes));
 
 Uint erts_bits_bufs_size(void);
-uint32_t erts_bs_get_unaligned_uint32(ErlBinMatchBuffer* mb);
-void erts_align_utf8_bytes(ErlBinMatchBuffer* mb, uint8_t* buf);
-Eterm erts_bs_get_utf8(ErlBinMatchBuffer* mb);
-Eterm erts_bs_get_utf16(ErlBinMatchBuffer* mb, Uint flags);
-Eterm erts_bs_append(Process* p, Eterm* reg, Uint live, Eterm build_size_term,
-		     Uint extra_words, Uint unit);
-Eterm erts_bs_private_append(Process* p, Eterm bin, Eterm sz, Uint unit);
-Eterm erts_bs_init_writable(Process* p, Eterm sz);
+uint32_t erts_bs_get_unaligned_uint32(ErlBinMatchBuffer *mb);
+void erts_align_utf8_bytes(ErlBinMatchBuffer *mb, uint8_t *buf);
+Eterm erts_bs_get_utf8(ErlBinMatchBuffer *mb);
+Eterm erts_bs_get_utf16(ErlBinMatchBuffer *mb, Uint flags);
+Eterm erts_bs_append(Process *p, Eterm *reg, Uint live, Eterm build_size_term,
+                     Uint extra_words, Uint unit);
+Eterm erts_bs_private_append(Process *p, Eterm bin, Eterm sz, Uint unit);
+Eterm erts_bs_init_writable(Process *p, Eterm sz);
 
 /*
  * Common utilities.
  */
-void erts_copy_bits(uint8_t* src, size_t soffs, int sdir,
-		    uint8_t* dst, size_t doffs,int ddir, size_t n);        
-int erts_cmp_bits(uint8_t* a_ptr, size_t a_offs, uint8_t* b_ptr, size_t b_offs, size_t size); 
+void erts_copy_bits(uint8_t *src, size_t soffs, int sdir,
+                    uint8_t *dst, size_t doffs, int ddir, size_t n);
+int erts_cmp_bits(uint8_t *a_ptr, size_t a_offs, uint8_t *b_ptr, size_t b_offs, size_t size);
 
 /*
  * Flags for bs_get_* / bs_put_* / bs_init* instructions.
  */
 
-#define BSF_ALIGNED 1		/* Field is guaranteed to be byte-aligned. */
-#define BSF_LITTLE 2		/* Field is little-endian (otherwise big-endian). */
-#define BSF_SIGNED 4		/* Field is signed (otherwise unsigned). */
-#define BSF_EXACT 8		/* Size in bs_init is exact. */
-#define BSF_NATIVE 16		/* Native endian. */
+#define BSF_ALIGNED 1   /* Field is guaranteed to be byte-aligned. */
+#define BSF_LITTLE 2    /* Field is little-endian (otherwise big-endian). */
+#define BSF_SIGNED 4    /* Field is signed (otherwise unsigned). */
+#define BSF_EXACT 8   /* Size in bs_init is exact. */
+#define BSF_NATIVE 16   /* Native endian. */
 
 #endif /* __ERL_BITS_H__ */

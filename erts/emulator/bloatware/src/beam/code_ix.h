@@ -18,7 +18,7 @@
  */
 
 /* Description:
- *	This is the interface that facilitates changing the beam code
+ *  This is the interface that facilitates changing the beam code
  *      (load,upgrade,delete) while allowing executing Erlang processes to
  *      access the code without any locks or other expensive memory barriers.
  *
@@ -85,9 +85,9 @@ ErtsCodeIndex erts_staging_code_ix(void);
  * Main process lock (only) must be held.
  * System thread progress must not be blocked.
  * Caller must not already hold the code write permission.
- * Caller is suspended and *must* yield if 0 is returned. 
+ * Caller is suspended and *must* yield if 0 is returned.
  */
-int erts_try_seize_code_write_permission(struct process* c_p);
+int erts_try_seize_code_write_permission(struct process *c_p);
 
 /* Release code write permission.
  * Will resume any suspended waiters.
@@ -129,11 +129,11 @@ extern erts_smp_atomic32_t the_staging_code_index;
 
 ERTS_GLB_INLINE ErtsCodeIndex erts_active_code_ix(void)
 {
-    return erts_smp_atomic32_read_nob(&the_active_code_index);
+  return erts_smp_atomic32_read_nob(&the_active_code_index);
 }
 ERTS_GLB_INLINE ErtsCodeIndex erts_staging_code_ix(void)
 {
-    return erts_smp_atomic32_read_nob(&the_staging_code_index);
+  return erts_smp_atomic32_read_nob(&the_staging_code_index);
 }
 
 #endif /* ERTS_GLB_INLINE_INCL_FUNC_DEF */

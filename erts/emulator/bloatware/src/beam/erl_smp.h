@@ -86,10 +86,10 @@ typedef int erts_smp_cnd_t;
 #define ERTS_SMP_RWMTX_SHORT_LIVED 0
 #define ERTS_SMP_RWMTX_UNKNOWN_LIVED 0
 typedef struct {
-    char type;
-    char lived;
-    int main_spincount;
-    int aux_spincount;
+  char type;
+  char lived;
+  int main_spincount;
+  int aux_spincount;
 } erts_smp_rwmtx_opt_t;
 typedef int erts_smp_rwmtx_t;
 typedef int erts_smp_tsd_key_t;
@@ -101,8 +101,12 @@ typedef int erts_smp_tsd_key_t;
 typedef struct { } erts_smp_spinlock_t;
 typedef struct { } erts_smp_rwlock_t;
 #else
-typedef struct { int gcc_is_buggy; } erts_smp_spinlock_t;
-typedef struct { int gcc_is_buggy; } erts_smp_rwlock_t;
+typedef struct {
+  int gcc_is_buggy;
+} erts_smp_spinlock_t;
+typedef struct {
+  int gcc_is_buggy;
+} erts_smp_rwlock_t;
 #endif
 
 #define ERTS_SMP_MEMORY_BARRIER
@@ -114,9 +118,9 @@ typedef struct { int gcc_is_buggy; } erts_smp_rwlock_t;
 
 ERTS_GLB_INLINE void erts_smp_thr_init(erts_smp_thr_init_data_t *id);
 ERTS_GLB_INLINE void erts_smp_thr_create(erts_smp_tid_t *tid,
-					 void * (*func)(void *),
-					 void *arg,
-					 erts_smp_thr_opts_t *opts);
+    void *(*func)(void *),
+    void *arg,
+    erts_smp_thr_opts_t *opts);
 ERTS_GLB_INLINE void erts_smp_thr_join(erts_smp_tid_t tid, void **thr_res);
 ERTS_GLB_INLINE void erts_smp_thr_detach(erts_smp_tid_t tid);
 ERTS_GLB_INLINE void erts_smp_thr_exit(void *res);
@@ -128,11 +132,11 @@ ERTS_GLB_INLINE int erts_smp_equal_tids(erts_smp_tid_t x, erts_smp_tid_t y);
 ERTS_GLB_INLINE void erts_smp_rec_mtx_init(erts_smp_mtx_t *mtx);
 #endif
 ERTS_GLB_INLINE void erts_smp_mtx_init_x(erts_smp_mtx_t *mtx,
-					 char *name,
-					 Eterm extra);
+    char *name,
+    Eterm extra);
 ERTS_GLB_INLINE void erts_smp_mtx_init_locked_x(erts_smp_mtx_t *mtx,
-						char *name,
-						Eterm extra);
+    char *name,
+    Eterm extra);
 ERTS_GLB_INLINE void erts_smp_mtx_init(erts_smp_mtx_t *mtx, char *name);
 ERTS_GLB_INLINE void erts_smp_mtx_init_locked(erts_smp_mtx_t *mtx, char *name);
 ERTS_GLB_INLINE void erts_smp_mtx_destroy(erts_smp_mtx_t *mtx);
@@ -148,28 +152,31 @@ ERTS_GLB_INLINE int erts_smp_lc_mtx_is_locked(erts_smp_mtx_t *mtx);
 ERTS_GLB_INLINE void erts_smp_cnd_init(erts_smp_cnd_t *cnd);
 ERTS_GLB_INLINE void erts_smp_cnd_destroy(erts_smp_cnd_t *cnd);
 ERTS_GLB_INLINE void erts_smp_cnd_wait(erts_smp_cnd_t *cnd,
-					   erts_smp_mtx_t *mtx);
+                                       erts_smp_mtx_t *mtx);
 ERTS_GLB_INLINE void erts_smp_cnd_signal(erts_smp_cnd_t *cnd);
 ERTS_GLB_INLINE void erts_smp_cnd_broadcast(erts_smp_cnd_t *cnd);
 ERTS_GLB_INLINE void erts_smp_rwmtx_set_reader_group(int no);
 ERTS_GLB_INLINE void erts_smp_rwmtx_init_opt_x(erts_smp_rwmtx_t *rwmtx,
-					       erts_smp_rwmtx_opt_t *opt,
-                                               const char *name,
-					       Eterm extra);
+    erts_smp_rwmtx_opt_t *opt,
+    const char *name,
+    Eterm extra);
 ERTS_GLB_INLINE void erts_smp_rwmtx_init_x(erts_smp_rwmtx_t *rwmtx,
-                                           const char *name,
-					   Eterm extra);
+    const char *name,
+    Eterm extra);
 ERTS_GLB_INLINE void erts_smp_rwmtx_init_opt(erts_smp_rwmtx_t *rwmtx,
-					     erts_smp_rwmtx_opt_t *opt,
-                                             const char *name);
+    erts_smp_rwmtx_opt_t *opt,
+    const char *name);
 ERTS_GLB_INLINE void erts_smp_rwmtx_init(erts_smp_rwmtx_t *rwmtx,
-                                         const char *name);
+    const char *name);
 ERTS_GLB_INLINE void erts_smp_rwmtx_destroy(erts_smp_rwmtx_t *rwmtx);
 #ifdef ERTS_ENABLE_LOCK_POSITION
-ERTS_GLB_INLINE int erts_smp_rwmtx_tryrlock_x(erts_smp_rwmtx_t *rwmtx, char *file, unsigned int line);
+ERTS_GLB_INLINE int erts_smp_rwmtx_tryrlock_x(erts_smp_rwmtx_t *rwmtx, char *file,
+    unsigned int line);
 ERTS_GLB_INLINE void erts_smp_rwmtx_rlock_x(erts_smp_rwmtx_t *rwmtx, char *file, unsigned int line);
-ERTS_GLB_INLINE void erts_smp_rwmtx_rwlock_x(erts_smp_rwmtx_t *rwmtx, char *file, unsigned int line);
-ERTS_GLB_INLINE int erts_smp_rwmtx_tryrwlock_x(erts_smp_rwmtx_t *rwmtx, char *file, unsigned int line);
+ERTS_GLB_INLINE void erts_smp_rwmtx_rwlock_x(erts_smp_rwmtx_t *rwmtx, char *file,
+    unsigned int line);
+ERTS_GLB_INLINE int erts_smp_rwmtx_tryrwlock_x(erts_smp_rwmtx_t *rwmtx, char *file,
+    unsigned int line);
 #else
 ERTS_GLB_INLINE int erts_smp_rwmtx_tryrlock(erts_smp_rwmtx_t *rwmtx);
 ERTS_GLB_INLINE void erts_smp_rwmtx_rlock(erts_smp_rwmtx_t *rwmtx);
@@ -181,10 +188,10 @@ ERTS_GLB_INLINE void erts_smp_rwmtx_rwunlock(erts_smp_rwmtx_t *rwmtx);
 ERTS_GLB_INLINE int erts_smp_lc_rwmtx_is_rlocked(erts_smp_rwmtx_t *mtx);
 ERTS_GLB_INLINE int erts_smp_lc_rwmtx_is_rwlocked(erts_smp_rwmtx_t *mtx);
 ERTS_GLB_INLINE void erts_smp_spinlock_init_x(erts_smp_spinlock_t *lock,
-					      char *name,
-					      Eterm extra);
+    char *name,
+    Eterm extra);
 ERTS_GLB_INLINE void erts_smp_spinlock_init(erts_smp_spinlock_t *lock,
-					    char *name);
+    char *name);
 ERTS_GLB_INLINE void erts_smp_spinlock_destroy(erts_smp_spinlock_t *lock);
 ERTS_GLB_INLINE void erts_smp_spin_unlock(erts_smp_spinlock_t *lock);
 #ifdef ERTS_ENABLE_LOCK_POSITION
@@ -194,10 +201,10 @@ ERTS_GLB_INLINE void erts_smp_spin_lock(erts_smp_spinlock_t *lock);
 #endif
 ERTS_GLB_INLINE int erts_smp_lc_spinlock_is_locked(erts_smp_spinlock_t *lock);
 ERTS_GLB_INLINE void erts_smp_rwlock_init_x(erts_smp_rwlock_t *lock,
-					    char *name,
-					    Eterm extra);
+    char *name,
+    Eterm extra);
 ERTS_GLB_INLINE void erts_smp_rwlock_init(erts_smp_rwlock_t *lock,
-					  char *name);
+    char *name);
 ERTS_GLB_INLINE void erts_smp_rwlock_destroy(erts_smp_rwlock_t *lock);
 ERTS_GLB_INLINE void erts_smp_read_unlock(erts_smp_rwlock_t *lock);
 #ifdef ERTS_ENABLE_LOCK_POSITION
@@ -211,16 +218,16 @@ ERTS_GLB_INLINE void erts_smp_write_unlock(erts_smp_rwlock_t *lock);
 ERTS_GLB_INLINE int erts_smp_lc_rwlock_is_rlocked(erts_smp_rwlock_t *lock);
 ERTS_GLB_INLINE int erts_smp_lc_rwlock_is_rwlocked(erts_smp_rwlock_t *lock);
 ERTS_GLB_INLINE void erts_smp_tsd_key_create(erts_smp_tsd_key_t *keyp,
-					     char *keyname);
+    char *keyname);
 ERTS_GLB_INLINE void erts_smp_tsd_key_delete(erts_smp_tsd_key_t key);
 ERTS_GLB_INLINE void erts_smp_tsd_set(erts_smp_tsd_key_t key, void *value);
-ERTS_GLB_INLINE void * erts_smp_tsd_get(erts_smp_tsd_key_t key);
+ERTS_GLB_INLINE void *erts_smp_tsd_get(erts_smp_tsd_key_t key);
 
 #ifdef ERTS_THR_HAVE_SIG_FUNCS
 #define ERTS_SMP_THR_HAVE_SIG_FUNCS 1
 ERTS_GLB_INLINE void erts_smp_thr_sigmask(int how,
-					  const sigset_t *set,
-					  sigset_t *oset);
+    const sigset_t *set,
+    sigset_t *oset);
 ERTS_GLB_INLINE void erts_smp_thr_sigwait(const sigset_t *set, int *sig);
 #endif /* #ifdef ERTS_THR_HAVE_SIG_FUNCS */
 
@@ -981,16 +988,16 @@ ERTS_GLB_INLINE void
 erts_smp_thr_init(erts_smp_thr_init_data_t *id)
 {
 #ifdef ERTS_SMP
-    erts_thr_init(id);
+  erts_thr_init(id);
 #endif
 }
 
 ERTS_GLB_INLINE void
-erts_smp_thr_create(erts_smp_tid_t *tid, void * (*func)(void *), void *arg,
-		    erts_smp_thr_opts_t *opts)
+erts_smp_thr_create(erts_smp_tid_t *tid, void *(*func)(void *), void *arg,
+                    erts_smp_thr_opts_t *opts)
 {
 #ifdef ERTS_SMP
-    erts_thr_create(tid, func, arg, opts);
+  erts_thr_create(tid, func, arg, opts);
 #endif
 }
 
@@ -998,7 +1005,7 @@ ERTS_GLB_INLINE void
 erts_smp_thr_join(erts_smp_tid_t tid, void **thr_res)
 {
 #ifdef ERTS_SMP
-    erts_thr_join(tid, thr_res);
+  erts_thr_join(tid, thr_res);
 #endif
 }
 
@@ -1007,7 +1014,7 @@ ERTS_GLB_INLINE void
 erts_smp_thr_detach(erts_smp_tid_t tid)
 {
 #ifdef ERTS_SMP
-    erts_thr_detach(tid);
+  erts_thr_detach(tid);
 #endif
 }
 
@@ -1016,7 +1023,7 @@ ERTS_GLB_INLINE void
 erts_smp_thr_exit(void *res)
 {
 #ifdef ERTS_SMP
-    erts_thr_exit(res);
+  erts_thr_exit(res);
 #endif
 }
 
@@ -1024,7 +1031,7 @@ ERTS_GLB_INLINE void
 erts_smp_install_exit_handler(void (*exit_handler)(void))
 {
 #ifdef ERTS_SMP
-    erts_thr_install_exit_handler(exit_handler);
+  erts_thr_install_exit_handler(exit_handler);
 #endif
 }
 
@@ -1032,9 +1039,9 @@ ERTS_GLB_INLINE erts_smp_tid_t
 erts_smp_thr_self(void)
 {
 #ifdef ERTS_SMP
-    return erts_thr_self();
+  return erts_thr_self();
 #else
-    return 0;
+  return 0;
 #endif
 }
 
@@ -1043,9 +1050,9 @@ ERTS_GLB_INLINE int
 erts_smp_equal_tids(erts_smp_tid_t x, erts_smp_tid_t y)
 {
 #ifdef ERTS_SMP
-    return erts_equal_tids(x, y);
+  return erts_equal_tids(x, y);
 #else
-    return 1;
+  return 1;
 #endif
 }
 
@@ -1055,7 +1062,7 @@ ERTS_GLB_INLINE void
 erts_smp_rec_mtx_init(erts_smp_mtx_t *mtx)
 {
 #ifdef ERTS_SMP
-    erts_rec_mtx_init(mtx);
+  erts_rec_mtx_init(mtx);
 #endif
 }
 #endif
@@ -1064,7 +1071,7 @@ ERTS_GLB_INLINE void
 erts_smp_mtx_init_x(erts_smp_mtx_t *mtx, char *name, Eterm extra)
 {
 #ifdef ERTS_SMP
-    erts_mtx_init_x(mtx, name, extra, 1);
+  erts_mtx_init_x(mtx, name, extra, 1);
 #endif
 }
 
@@ -1072,7 +1079,7 @@ ERTS_GLB_INLINE void
 erts_smp_mtx_init_locked_x(erts_smp_mtx_t *mtx, char *name, Eterm extra)
 {
 #ifdef ERTS_SMP
-    erts_mtx_init_locked_x(mtx, name, extra, 1);
+  erts_mtx_init_locked_x(mtx, name, extra, 1);
 #endif
 }
 
@@ -1080,7 +1087,7 @@ ERTS_GLB_INLINE void
 erts_smp_mtx_init(erts_smp_mtx_t *mtx, char *name)
 {
 #ifdef ERTS_SMP
-    erts_mtx_init(mtx, name);
+  erts_mtx_init(mtx, name);
 #endif
 }
 
@@ -1088,7 +1095,7 @@ ERTS_GLB_INLINE void
 erts_smp_mtx_init_locked(erts_smp_mtx_t *mtx, char *name)
 {
 #ifdef ERTS_SMP
-    erts_mtx_init_locked(mtx, name);
+  erts_mtx_init_locked(mtx, name);
 #endif
 }
 
@@ -1096,7 +1103,7 @@ ERTS_GLB_INLINE void
 erts_smp_mtx_destroy(erts_smp_mtx_t *mtx)
 {
 #ifdef ERTS_SMP
-    erts_mtx_destroy(mtx);
+  erts_mtx_destroy(mtx);
 #endif
 }
 
@@ -1108,11 +1115,11 @@ erts_smp_mtx_trylock(erts_smp_mtx_t *mtx)
 #endif
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_POSITION)
-    return erts_mtx_trylock_x(mtx,file,line);
+  return erts_mtx_trylock_x(mtx, file, line);
 #elif defined(ERTS_SMP)
-    return erts_mtx_trylock(mtx);
+  return erts_mtx_trylock(mtx);
 #else
-    return 0;
+  return 0;
 #endif
 
 }
@@ -1126,9 +1133,9 @@ erts_smp_mtx_lock(erts_smp_mtx_t *mtx)
 #endif
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_POSITION)
-    erts_mtx_lock_x(mtx, file, line);
+  erts_mtx_lock_x(mtx, file, line);
 #elif defined(ERTS_SMP)
-    erts_mtx_lock(mtx);
+  erts_mtx_lock(mtx);
 #endif
 }
 
@@ -1136,7 +1143,7 @@ ERTS_GLB_INLINE void
 erts_smp_mtx_unlock(erts_smp_mtx_t *mtx)
 {
 #ifdef ERTS_SMP
-    erts_mtx_unlock(mtx);
+  erts_mtx_unlock(mtx);
 #endif
 }
 
@@ -1144,9 +1151,9 @@ ERTS_GLB_INLINE int
 erts_smp_lc_mtx_is_locked(erts_smp_mtx_t *mtx)
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_CHECK)
-    return erts_lc_mtx_is_locked(mtx);
+  return erts_lc_mtx_is_locked(mtx);
 #else
-    return 0;
+  return 0;
 #endif
 }
 
@@ -1154,7 +1161,7 @@ ERTS_GLB_INLINE void
 erts_smp_cnd_init(erts_smp_cnd_t *cnd)
 {
 #ifdef ERTS_SMP
-    erts_cnd_init(cnd);
+  erts_cnd_init(cnd);
 #endif
 }
 
@@ -1162,7 +1169,7 @@ ERTS_GLB_INLINE void
 erts_smp_cnd_destroy(erts_smp_cnd_t *cnd)
 {
 #ifdef ERTS_SMP
-    erts_cnd_destroy(cnd);
+  erts_cnd_destroy(cnd);
 #endif
 }
 
@@ -1170,7 +1177,7 @@ ERTS_GLB_INLINE void
 erts_smp_cnd_wait(erts_smp_cnd_t *cnd, erts_smp_mtx_t *mtx)
 {
 #ifdef ERTS_SMP
-    erts_cnd_wait(cnd, mtx);
+  erts_cnd_wait(cnd, mtx);
 #endif
 }
 
@@ -1188,7 +1195,7 @@ ERTS_GLB_INLINE void
 erts_smp_cnd_signal(erts_smp_cnd_t *cnd)
 {
 #ifdef ERTS_SMP
-    erts_cnd_signal(cnd);
+  erts_cnd_signal(cnd);
 #endif
 }
 
@@ -1197,7 +1204,7 @@ ERTS_GLB_INLINE void
 erts_smp_cnd_broadcast(erts_smp_cnd_t *cnd)
 {
 #ifdef ERTS_SMP
-    erts_cnd_broadcast(cnd);
+  erts_cnd_broadcast(cnd);
 #endif
 }
 
@@ -1205,18 +1212,18 @@ ERTS_GLB_INLINE void
 erts_smp_rwmtx_set_reader_group(int no)
 {
 #ifdef ERTS_SMP
-    erts_rwmtx_set_reader_group(no);
+  erts_rwmtx_set_reader_group(no);
 #endif
 }
 
 ERTS_GLB_INLINE void
 erts_smp_rwmtx_init_opt_x(erts_smp_rwmtx_t *rwmtx,
-			  erts_smp_rwmtx_opt_t *opt,
+                          erts_smp_rwmtx_opt_t *opt,
                           const char *name,
-			  Eterm extra)
+                          Eterm extra)
 {
 #ifdef ERTS_SMP
-    erts_rwmtx_init_opt_x(rwmtx, opt, name, extra);
+  erts_rwmtx_init_opt_x(rwmtx, opt, name, extra);
 #endif
 }
 
@@ -1224,17 +1231,17 @@ ERTS_GLB_INLINE void
 erts_smp_rwmtx_init_x(erts_smp_rwmtx_t *rwmtx, const char *name, Eterm extra)
 {
 #ifdef ERTS_SMP
-    erts_rwmtx_init_x(rwmtx, name, extra);
+  erts_rwmtx_init_x(rwmtx, name, extra);
 #endif
 }
 
 ERTS_GLB_INLINE void
 erts_smp_rwmtx_init_opt(erts_smp_rwmtx_t *rwmtx,
-			erts_smp_rwmtx_opt_t *opt,
+                        erts_smp_rwmtx_opt_t *opt,
                         const char *name)
 {
 #ifdef ERTS_SMP
-    erts_rwmtx_init_opt(rwmtx, opt, name);
+  erts_rwmtx_init_opt(rwmtx, opt, name);
 #endif
 }
 
@@ -1242,7 +1249,7 @@ ERTS_GLB_INLINE void
 erts_smp_rwmtx_init(erts_smp_rwmtx_t *rwmtx, const char *name)
 {
 #ifdef ERTS_SMP
-    erts_rwmtx_init(rwmtx, name);
+  erts_rwmtx_init(rwmtx, name);
 #endif
 }
 
@@ -1250,7 +1257,7 @@ ERTS_GLB_INLINE void
 erts_smp_rwmtx_destroy(erts_smp_rwmtx_t *rwmtx)
 {
 #ifdef ERTS_SMP
-    erts_rwmtx_destroy(rwmtx);
+  erts_rwmtx_destroy(rwmtx);
 #endif
 }
 
@@ -1262,11 +1269,11 @@ erts_smp_rwmtx_tryrlock(erts_smp_rwmtx_t *rwmtx)
 #endif
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_POSITION)
-    return erts_rwmtx_tryrlock_x(rwmtx, file, line);
+  return erts_rwmtx_tryrlock_x(rwmtx, file, line);
 #elif defined(ERTS_SMP)
-    return erts_rwmtx_tryrlock(rwmtx);
+  return erts_rwmtx_tryrlock(rwmtx);
 #else
-    return 0;
+  return 0;
 #endif
 }
 
@@ -1278,9 +1285,9 @@ erts_smp_rwmtx_rlock(erts_smp_rwmtx_t *rwmtx)
 #endif
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_POSITION)
-    erts_rwmtx_rlock_x(rwmtx, file, line);
+  erts_rwmtx_rlock_x(rwmtx, file, line);
 #elif defined(ERTS_SMP)
-    erts_rwmtx_rlock(rwmtx);
+  erts_rwmtx_rlock(rwmtx);
 #endif
 }
 
@@ -1288,7 +1295,7 @@ ERTS_GLB_INLINE void
 erts_smp_rwmtx_runlock(erts_smp_rwmtx_t *rwmtx)
 {
 #ifdef ERTS_SMP
-    erts_rwmtx_runlock(rwmtx);
+  erts_rwmtx_runlock(rwmtx);
 #endif
 }
 
@@ -1301,11 +1308,11 @@ erts_smp_rwmtx_tryrwlock(erts_smp_rwmtx_t *rwmtx)
 #endif
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_POSITION)
-    return erts_rwmtx_tryrwlock_x(rwmtx, file, line);
+  return erts_rwmtx_tryrwlock_x(rwmtx, file, line);
 #elif defined(ERTS_SMP)
-    return erts_rwmtx_tryrwlock(rwmtx);
+  return erts_rwmtx_tryrwlock(rwmtx);
 #else
-    return 0;
+  return 0;
 #endif
 }
 
@@ -1317,9 +1324,9 @@ erts_smp_rwmtx_rwlock(erts_smp_rwmtx_t *rwmtx)
 #endif
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_POSITION)
-    erts_rwmtx_rwlock_x(rwmtx, file, line);
+  erts_rwmtx_rwlock_x(rwmtx, file, line);
 #elif defined(ERTS_SMP)
-    erts_rwmtx_rwlock(rwmtx);
+  erts_rwmtx_rwlock(rwmtx);
 #endif
 }
 
@@ -1327,18 +1334,18 @@ ERTS_GLB_INLINE void
 erts_smp_rwmtx_rwunlock(erts_smp_rwmtx_t *rwmtx)
 {
 #ifdef ERTS_SMP
-    erts_rwmtx_rwunlock(rwmtx);
+  erts_rwmtx_rwunlock(rwmtx);
 #endif
 }
 
 #if 0 /* The following rwmtx function names are
-	 reserved for potential future use. */ 
+   reserved for potential future use. */
 
 /* Try upgrade from r-locked state to rw-locked state */
 ERTS_GLB_INLINE int
 erts_smp_rwmtx_trywlock(erts_smp_rwmtx_t *rwmtx)
 {
-    return 0;
+  return 0;
 }
 
 /* Upgrade from r-locked state to rw-locked state */
@@ -1361,9 +1368,9 @@ ERTS_GLB_INLINE int
 erts_smp_lc_rwmtx_is_rlocked(erts_smp_rwmtx_t *mtx)
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_CHECK)
-    return erts_lc_rwmtx_is_rlocked(mtx);
+  return erts_lc_rwmtx_is_rlocked(mtx);
 #else
-    return 0;
+  return 0;
 #endif
 }
 
@@ -1371,9 +1378,9 @@ ERTS_GLB_INLINE int
 erts_smp_lc_rwmtx_is_rwlocked(erts_smp_rwmtx_t *mtx)
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_CHECK)
-    return erts_lc_rwmtx_is_rwlocked(mtx);
+  return erts_lc_rwmtx_is_rwlocked(mtx);
 #else
-    return 0;
+  return 0;
 #endif
 }
 
@@ -1381,9 +1388,9 @@ ERTS_GLB_INLINE void
 erts_smp_spinlock_init_x(erts_smp_spinlock_t *lock, char *name, Eterm extra)
 {
 #ifdef ERTS_SMP
-    erts_spinlock_init_x(lock, name, extra);
+  erts_spinlock_init_x(lock, name, extra);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1391,9 +1398,9 @@ ERTS_GLB_INLINE void
 erts_smp_spinlock_init(erts_smp_spinlock_t *lock, char *name)
 {
 #ifdef ERTS_SMP
-    erts_spinlock_init(lock, name);
+  erts_spinlock_init(lock, name);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1401,9 +1408,9 @@ ERTS_GLB_INLINE void
 erts_smp_spinlock_destroy(erts_smp_spinlock_t *lock)
 {
 #ifdef ERTS_SMP
-    erts_spinlock_destroy(lock);
+  erts_spinlock_destroy(lock);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1411,9 +1418,9 @@ ERTS_GLB_INLINE void
 erts_smp_spin_unlock(erts_smp_spinlock_t *lock)
 {
 #ifdef ERTS_SMP
-    erts_spin_unlock(lock);
+  erts_spin_unlock(lock);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1425,11 +1432,11 @@ erts_smp_spin_lock(erts_smp_spinlock_t *lock)
 #endif
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_POSITION)
-    erts_spin_lock_x(lock, file, line);
+  erts_spin_lock_x(lock, file, line);
 #elif defined(ERTS_SMP)
-    erts_spin_lock(lock);
+  erts_spin_lock(lock);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1437,9 +1444,9 @@ ERTS_GLB_INLINE int
 erts_smp_lc_spinlock_is_locked(erts_smp_spinlock_t *lock)
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_CHECK)
-    return erts_lc_spinlock_is_locked(lock);
+  return erts_lc_spinlock_is_locked(lock);
 #else
-    return 0;
+  return 0;
 #endif
 }
 
@@ -1447,9 +1454,9 @@ ERTS_GLB_INLINE void
 erts_smp_rwlock_init_x(erts_smp_rwlock_t *lock, char *name, Eterm extra)
 {
 #ifdef ERTS_SMP
-    erts_rwlock_init_x(lock, name, extra);
+  erts_rwlock_init_x(lock, name, extra);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1457,9 +1464,9 @@ ERTS_GLB_INLINE void
 erts_smp_rwlock_init(erts_smp_rwlock_t *lock, char *name)
 {
 #ifdef ERTS_SMP
-    erts_rwlock_init(lock, name);
+  erts_rwlock_init(lock, name);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1467,9 +1474,9 @@ ERTS_GLB_INLINE void
 erts_smp_rwlock_destroy(erts_smp_rwlock_t *lock)
 {
 #ifdef ERTS_SMP
-    erts_rwlock_destroy(lock);
+  erts_rwlock_destroy(lock);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1477,9 +1484,9 @@ ERTS_GLB_INLINE void
 erts_smp_read_unlock(erts_smp_rwlock_t *lock)
 {
 #ifdef ERTS_SMP
-    erts_read_unlock(lock);
+  erts_read_unlock(lock);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1488,14 +1495,14 @@ ERTS_GLB_INLINE void
 erts_smp_read_lock_x(erts_smp_rwlock_t *lock, char *file, unsigned int line)
 #else
 erts_smp_read_lock(erts_smp_rwlock_t *lock)
-#endif 
+#endif
 {
 #if defined(ERTS_ENABLE_LOCK_POSITION) && defined(ERTS_SMP)
-    erts_read_lock_x(lock, file, line);
+  erts_read_lock_x(lock, file, line);
 #elif defined(ERTS_SMP)
-    erts_read_lock(lock);
+  erts_read_lock(lock);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1503,9 +1510,9 @@ ERTS_GLB_INLINE void
 erts_smp_write_unlock(erts_smp_rwlock_t *lock)
 {
 #ifdef ERTS_SMP
-    erts_write_unlock(lock);
+  erts_write_unlock(lock);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1514,14 +1521,14 @@ ERTS_GLB_INLINE void
 erts_smp_write_lock_x(erts_smp_rwlock_t *lock, char *file, unsigned int line)
 #else
 erts_smp_write_lock(erts_smp_rwlock_t *lock)
-#endif 
+#endif
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_POSITION)
-    erts_write_lock_x(lock, file, line);
+  erts_write_lock_x(lock, file, line);
 #elif defined(ERTS_SMP)
-    erts_write_lock(lock);
+  erts_write_lock(lock);
 #else
-    (void)lock;
+  (void)lock;
 #endif
 }
 
@@ -1529,9 +1536,9 @@ ERTS_GLB_INLINE int
 erts_smp_lc_rwlock_is_rlocked(erts_smp_rwlock_t *lock)
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_CHECK)
-    return erts_lc_rwlock_is_rlocked(lock);
+  return erts_lc_rwlock_is_rlocked(lock);
 #else
-    return 0;
+  return 0;
 #endif
 }
 
@@ -1539,17 +1546,17 @@ ERTS_GLB_INLINE int
 erts_smp_lc_rwlock_is_rwlocked(erts_smp_rwlock_t *lock)
 {
 #if defined(ERTS_SMP) && defined(ERTS_ENABLE_LOCK_CHECK)
-    return erts_lc_rwlock_is_rwlocked(lock);
+  return erts_lc_rwlock_is_rwlocked(lock);
 #else
-    return 0;
+  return 0;
 #endif
 }
 
 ERTS_GLB_INLINE void
-erts_smp_tsd_key_create(erts_smp_tsd_key_t *keyp, char* keyname)
+erts_smp_tsd_key_create(erts_smp_tsd_key_t *keyp, char *keyname)
 {
 #ifdef ERTS_SMP
-    erts_tsd_key_create(keyp,keyname);
+  erts_tsd_key_create(keyp, keyname);
 #endif
 }
 
@@ -1557,7 +1564,7 @@ ERTS_GLB_INLINE void
 erts_smp_tsd_key_delete(erts_smp_tsd_key_t key)
 {
 #ifdef ERTS_SMP
-    erts_tsd_key_delete(key);
+  erts_tsd_key_delete(key);
 #endif
 }
 
@@ -1565,7 +1572,7 @@ ERTS_GLB_INLINE void
 erts_smp_tsd_set(erts_smp_tsd_key_t key, void *value)
 {
 #ifdef ERTS_SMP
-    erts_tsd_set(key, value);
+  erts_tsd_set(key, value);
 #endif
 }
 
@@ -1573,9 +1580,9 @@ ERTS_GLB_INLINE void *
 erts_smp_tsd_get(erts_smp_tsd_key_t key)
 {
 #ifdef ERTS_SMP
-    return erts_tsd_get(key);
+  return erts_tsd_get(key);
 #else
-    return nullptr;
+  return nullptr;
 #endif
 }
 
@@ -1586,7 +1593,7 @@ ERTS_GLB_INLINE void
 erts_smp_thr_sigmask(int how, const sigset_t *set, sigset_t *oset)
 {
 #ifdef ERTS_SMP
-    erts_thr_sigmask(how, set, oset);
+  erts_thr_sigmask(how, set, oset);
 #endif
 }
 
@@ -1594,7 +1601,7 @@ ERTS_GLB_INLINE void
 erts_smp_thr_sigwait(const sigset_t *set, int *sig)
 {
 #ifdef ERTS_SMP
-    erts_thr_sigwait(set, sig);
+  erts_thr_sigwait(set, sig);
 #endif
 }
 

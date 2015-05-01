@@ -27,22 +27,22 @@
  */
 
 typedef struct erl_fun_entry {
-    HashBucket bucket;		/* MUST BE LOCATED AT TOP OF STRUCT!!! */
+  HashBucket bucket;    /* MUST BE LOCATED AT TOP OF STRUCT!!! */
 
-    uint8_t uniq[16];		/* MD5 for module. */
-    int index;			/* New style index. */
-    int old_uniq;		/* Unique number (old_style) */
-    int old_index;		/* Old style index */
-    BeamInstr* address;		/* Pointer to code for fun */
+  uint8_t uniq[16];   /* MD5 for module. */
+  int index;      /* New style index. */
+  int old_uniq;   /* Unique number (old_style) */
+  int old_index;    /* Old style index */
+  BeamInstr *address;   /* Pointer to code for fun */
 
 #ifdef HIPE
-    UWord* native_address;	/* Native entry code for fun. */
+  UWord *native_address;  /* Native entry code for fun. */
 #endif
 
-    Uint arity;			/* The arity of the fun. */
-    Eterm module;		/* Tagged atom for module. */
-    erts_refc_t refc;		/* Reference count: One for code + one for each
-				   fun object in each process. */
+  Uint arity;     /* The arity of the fun. */
+  Eterm module;   /* Tagged atom for module. */
+  erts_refc_t refc;   /* Reference count: One for code + one for each
+           fun object in each process. */
 } ErlFunEntry;
 
 /*
@@ -52,17 +52,17 @@ typedef struct erl_fun_entry {
  */
 
 typedef struct erl_fun_thing {
-    Eterm thing_word;		/* Subtag FUN_SUBTAG. */
-    ErlFunEntry* fe;		/* Pointer to fun entry. */
-    struct erl_off_heap_header* next;
+  Eterm thing_word;   /* Subtag FUN_SUBTAG. */
+  ErlFunEntry *fe;    /* Pointer to fun entry. */
+  struct erl_off_heap_header *next;
 #ifdef HIPE
-    UWord* native_address;	/* Native code for the fun. */
+  UWord *native_address;  /* Native code for the fun. */
 #endif
-    Uint arity;			/* The arity of the fun. */
-    Uint num_free;		/* Number of free variables (in env). */
+  Uint arity;     /* The arity of the fun. */
+  Uint num_free;    /* Number of free variables (in env). */
   /* -- The following may be compound Erlang terms ---------------------- */
-    Eterm creator;		/* Pid of creator process (contains node). */
-    Eterm env[1];		/* Environment (free variables). */
+  Eterm creator;    /* Pid of creator process (contains node). */
+  Eterm env[1];   /* Environment (free variables). */
 } ErlFunThing;
 
 /* ERL_FUN_SIZE does _not_ include space for the environment */
@@ -72,15 +72,15 @@ void erts_init_fun_table(void);
 void erts_fun_info(int, void *);
 int erts_fun_table_sz(void);
 
-ErlFunEntry* erts_put_fun_entry(Eterm mod, int uniq, int index);
-ErlFunEntry* erts_get_fun_entry(Eterm mod, int uniq, int index);
+ErlFunEntry *erts_put_fun_entry(Eterm mod, int uniq, int index);
+ErlFunEntry *erts_get_fun_entry(Eterm mod, int uniq, int index);
 
-ErlFunEntry* erts_put_fun_entry2(Eterm mod, int old_uniq, int old_index,
-				uint8_t* uniq, int index, int arity);
+ErlFunEntry *erts_put_fun_entry2(Eterm mod, int old_uniq, int old_index,
+                                 uint8_t *uniq, int index, int arity);
 
-void erts_erase_fun_entry(ErlFunEntry* fe);
-void erts_cleanup_funs(ErlFunThing* funp);
-void erts_cleanup_funs_on_purge(BeamInstr* start, BeamInstr* end);
+void erts_erase_fun_entry(ErlFunEntry *fe);
+void erts_cleanup_funs(ErlFunThing *funp);
+void erts_cleanup_funs_on_purge(BeamInstr *start, BeamInstr *end);
 void erts_dump_fun_entries(int, void *);
 
 #endif

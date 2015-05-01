@@ -1,26 +1,26 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 2006-2011. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  */
 
 /*
- * Description:	Check I/O
+ * Description: Check I/O
  *
- * Author: 	Rickard Green
+ * Author:  Rickard Green
  */
 
 #ifndef ERL_CHECK_IO_H__
@@ -74,8 +74,8 @@ void erts_init_check_io(void);
 extern erts_smp_atomic_t erts_check_io_time;
 
 typedef struct {
-    ErtsPortTaskHandle task;
-    erts_smp_atomic_t executed_time;
+  ErtsPortTaskHandle task;
+  erts_smp_atomic_t executed_time;
 } ErtsIoTask;
 
 ERTS_GLB_INLINE void erts_io_notify_port_task_executed(ErtsPortTaskHandle *pthp);
@@ -85,9 +85,9 @@ ERTS_GLB_INLINE void erts_io_notify_port_task_executed(ErtsPortTaskHandle *pthp)
 ERTS_GLB_INLINE void
 erts_io_notify_port_task_executed(ErtsPortTaskHandle *pthp)
 {
-    ErtsIoTask *itp = (ErtsIoTask *) (((char *) pthp) - offsetof(ErtsIoTask, task));
-    erts_aint_t ci_time = erts_smp_atomic_read_acqb(&erts_check_io_time);
-    erts_smp_atomic_set_relb(&itp->executed_time, ci_time);
+  ErtsIoTask *itp = (ErtsIoTask *)(((char *) pthp) - offsetof(ErtsIoTask, task));
+  erts_aint_t ci_time = erts_smp_atomic_read_acqb(&erts_check_io_time);
+  erts_smp_atomic_set_relb(&itp->executed_time, ci_time);
 }
 
 #endif
@@ -120,19 +120,19 @@ erts_io_notify_port_task_executed(ErtsPortTaskHandle *pthp)
  * information.
  */
 typedef struct {
-    Eterm port;
-    ErlDrvEventData data;
-    ErtsPollEvents removed_events;
+  Eterm port;
+  ErlDrvEventData data;
+  ErtsPollEvents removed_events;
 #if ERTS_CIO_DEFER_ACTIVE_EVENTS
-    ErtsPollEvents deferred_events;
+  ErtsPollEvents deferred_events;
 #endif
-    ErtsIoTask iotask;
+  ErtsIoTask iotask;
 } ErtsDrvEventDataState;
 
 typedef struct {
-    Eterm inport;
-    Eterm outport;
-    ErtsIoTask iniotask;
-    ErtsIoTask outiotask;
+  Eterm inport;
+  Eterm outport;
+  ErtsIoTask iniotask;
+  ErtsIoTask outiotask;
 } ErtsDrvSelectDataState;
 #endif /* #ifndef ERL_CHECK_IO_INTERNAL__ */

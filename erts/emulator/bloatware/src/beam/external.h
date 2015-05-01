@@ -71,9 +71,9 @@
 
 
 #define VERSION_MAGIC 131   /* 130 in erlang 4.2 */
-                /* Increment this_ when changing the external format. */
-                /* ON the other hand, don't change the external format */
-                /* since that breaks other people's code! */
+/* Increment this_ when changing the external format. */
+/* ON the other hand, don't change the external format */
+/* since that breaks other people's code! */
 
 #endif /* ERTS_EXTERNAL_TAGS */
 #endif /* ERTS_WANT_EXTERNAL_TAGS */
@@ -86,24 +86,24 @@
 #define ERTS_ATOM_CACHE_SIZE 2048
 
 typedef struct cache {
-    Eterm in_arr[ERTS_ATOM_CACHE_SIZE];
-    Eterm out_arr[ERTS_ATOM_CACHE_SIZE];
+  Eterm in_arr[ERTS_ATOM_CACHE_SIZE];
+  Eterm out_arr[ERTS_ATOM_CACHE_SIZE];
 } ErtsAtomCache;
 
 typedef struct {
-    int hdr_sz;
-    int sz;
-    int long_atoms;
-    int cix[ERTS_ATOM_CACHE_SIZE];
-    struct {
-	Eterm atom;
-	int iix;
-    } cache[ERTS_ATOM_CACHE_SIZE];
+  int hdr_sz;
+  int sz;
+  int long_atoms;
+  int cix[ERTS_ATOM_CACHE_SIZE];
+  struct {
+    Eterm atom;
+    int iix;
+  } cache[ERTS_ATOM_CACHE_SIZE];
 } ErtsAtomCacheMap;
 
 typedef struct {
-    uint32_t size;
-    Eterm atom[ERTS_ATOM_CACHE_SIZE];
+  uint32_t size;
+  Eterm atom[ERTS_ATOM_CACHE_SIZE];
 } ErtsAtomTranslationTable;
 
 /*
@@ -123,31 +123,31 @@ typedef struct {
 #define ERTS_DIST_EXT_CON_ID(DIST_EXTP) \
   ((DIST_EXTP)->flags & ERTS_DIST_EXT_CON_ID_MASK)
 typedef struct {
-    DistEntry *dep;
-    uint8_t *extp;
-    uint8_t *ext_endp;
-    Sint heap_size;
-    uint32_t flags;
-    ErtsAtomTranslationTable attab;
+  DistEntry *dep;
+  uint8_t *extp;
+  uint8_t *ext_endp;
+  Sint heap_size;
+  uint32_t flags;
+  ErtsAtomTranslationTable attab;
 } ErtsDistExternal;
 
 typedef struct {
-    int have_header;
-    int cache_entries;
+  int have_header;
+  int cache_entries;
 } ErtsDistHeaderPeek;
 
 #define ERTS_DIST_EXT_SIZE(EDEP) \
   (sizeof(ErtsDistExternal) \
    - (((EDEP)->flags & ERTS_DIST_EXT_ATOM_TRANS_TAB) \
       ? (ASSERT(0 <= (EDEP)->attab.size \
-		&& (EDEP)->attab.size <= ERTS_ATOM_CACHE_SIZE), \
-	 sizeof(Eterm)*(ERTS_ATOM_CACHE_SIZE - (EDEP)->attab.size)) \
+    && (EDEP)->attab.size <= ERTS_ATOM_CACHE_SIZE), \
+   sizeof(Eterm)*(ERTS_ATOM_CACHE_SIZE - (EDEP)->attab.size)) \
       : sizeof(ErtsAtomTranslationTable)))
 
 typedef struct {
-    uint8_t *extp;
-    int exttmp;
-    Uint extsize;
+  uint8_t *extp;
+  int exttmp;
+  Uint extsize;
 } ErtsBinary2TermState;
 
 /* -------------------------------------------------------------------------- */
@@ -167,7 +167,7 @@ Uint erts_encode_ext_size(Eterm);
 Uint erts_encode_ext_size_2(Eterm, unsigned);
 Uint erts_encode_ext_size_ets(Eterm);
 void erts_encode_ext(Eterm, uint8_t **);
-uint8_t* erts_encode_ext_ets(Eterm, uint8_t *, struct erl_off_heap_header** ext_off_heap);
+uint8_t *erts_encode_ext_ets(Eterm, uint8_t *, struct erl_off_heap_header **ext_off_heap);
 
 #ifdef ERTS_WANT_EXTERNAL_TAGS
 ERTS_GLB_INLINE void erts_peek_dist_header(ErtsDistHeaderPeek *, uint8_t *, Uint);
@@ -178,16 +178,16 @@ ErtsDistExternal *erts_make_dist_ext_copy(ErtsDistExternal *, Uint);
 void *erts_dist_ext_trailer(ErtsDistExternal *);
 void erts_destroy_dist_ext_copy(ErtsDistExternal *);
 int erts_prepare_dist_ext(ErtsDistExternal *, uint8_t *, Uint,
-			  DistEntry *, ErtsAtomCache *);
+                          DistEntry *, ErtsAtomCache *);
 Sint erts_decode_dist_ext_size(ErtsDistExternal *);
 Eterm erts_decode_dist_ext(Eterm **, ErlOffHeap *, ErtsDistExternal *);
 
-Sint erts_decode_ext_size(uint8_t*, Uint);
-Sint erts_decode_ext_size_ets(uint8_t*, Uint);
-Eterm erts_decode_ext(Eterm **, ErlOffHeap *, uint8_t**);
-Eterm erts_decode_ext_ets(Eterm **, ErlOffHeap *, uint8_t*);
+Sint erts_decode_ext_size(uint8_t *, Uint);
+Sint erts_decode_ext_size_ets(uint8_t *, Uint);
+Eterm erts_decode_ext(Eterm **, ErlOffHeap *, uint8_t **);
+Eterm erts_decode_ext_ets(Eterm **, ErlOffHeap *, uint8_t *);
 
-Eterm erts_term_to_binary(Process* p, Eterm Term, int level, Uint flags);
+Eterm erts_term_to_binary(Process *p, Eterm Term, int level, Uint flags);
 
 Sint erts_binary2term_prepare(ErtsBinary2TermState *, uint8_t *, Sint);
 void erts_binary2term_abort(ErtsBinary2TermState *);
@@ -201,32 +201,34 @@ int erts_debug_atom_to_out_cache_index(Eterm);
 ERTS_GLB_INLINE void
 erts_peek_dist_header(ErtsDistHeaderPeek *dhpp, uint8_t *ext, Uint sz)
 {
-    if (ext[0] == VERSION_MAGIC
-	|| ext[1] != DIST_HEADER
-	|| sz < (1+1+1))
-	dhpp->have_header = 0;
-    else {
-	dhpp->have_header = 1;
-	dhpp->cache_entries = (int) get_int8(&ext[2]);
-    }
+  if (ext[0] == VERSION_MAGIC
+      || ext[1] != DIST_HEADER
+      || sz < (1 + 1 + 1)) {
+    dhpp->have_header = 0;
+  } else {
+    dhpp->have_header = 1;
+    dhpp->cache_entries = (int) get_int8(&ext[2]);
+  }
 }
 #endif
 
 ERTS_GLB_INLINE void
 erts_free_dist_ext_copy(ErtsDistExternal *edep)
 {
-    if (edep->dep)
-	erts_deref_dist_entry(edep->dep);
-    erts_free(ERTS_ALC_T_EXT_TERM_DATA, edep);
+  if (edep->dep) {
+    erts_deref_dist_entry(edep->dep);
+  }
+
+  erts_free(ERTS_ALC_T_EXT_TERM_DATA, edep);
 }
 
 ERTS_GLB_INLINE void *
 erts_dist_ext_trailer(ErtsDistExternal *edep)
 {
-    void *res = (void *) (edep->ext_endp
-			  + ERTS_EXTRA_DATA_ALIGN_SZ(edep->ext_endp));
-    ASSERT((((UWord) res) % sizeof(Uint)) == 0);
-    return res;
+  void *res = (void *)(edep->ext_endp
+                       + ERTS_EXTRA_DATA_ALIGN_SZ(edep->ext_endp));
+  ASSERT((((UWord) res) % sizeof(Uint)) == 0);
+  return res;
 }
 
 #endif

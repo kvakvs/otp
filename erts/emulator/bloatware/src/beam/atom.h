@@ -46,78 +46,87 @@
  * Atom entry.
  */
 typedef struct atom {
-    IndexSlot slot;  /* MUST BE LOCATED AT TOP OF STRUCT!!! */
-    int16_t len;      /* length of atom name (UTF-8 encoded) */
-    int16_t latin1_chars; /* 0-255 if atom can be encoded in latin1; otherwise, -1 */
-    int ord0;        /* ordinal value of first 3 bytes + 7 bits */
-    uint8_t* name;      /* name of atom */
+  IndexSlot slot;  /* MUST BE LOCATED AT TOP OF STRUCT!!! */
+  int16_t len;      /* length of atom name (UTF-8 encoded) */
+  int16_t latin1_chars; /* 0-255 if atom can be encoded in latin1; otherwise, -1 */
+  int ord0;        /* ordinal value of first 3 bytes + 7 bits */
+  uint8_t *name;      /* name of atom */
 } Atom;
 
 extern IndexTable erts_atom_table;
 
-ERTS_GLB_INLINE Atom* atom_tab(Uint i);
+ERTS_GLB_INLINE Atom *atom_tab(Uint i);
 ERTS_GLB_INLINE int erts_is_atom_utf8_bytes(uint8_t *text, size_t len, Eterm term);
 ERTS_GLB_INLINE int erts_is_atom_str(const char *str, Eterm term, int is_latin1);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
-ERTS_GLB_INLINE Atom*
+ERTS_GLB_INLINE Atom *
 atom_tab(Uint i)
 {
-    return (Atom *) erts_index_lookup(&erts_atom_table, i);
+  return (Atom *) erts_index_lookup(&erts_atom_table, i);
 }
 
 ERTS_GLB_INLINE int erts_is_atom_utf8_bytes(uint8_t *text, size_t len, Eterm term)
 {
-    Atom *a;
-    if (!is_atom(term))
-	return 0;
-    a = atom_tab(atom_val(term));
-    return (len == (size_t) a->len
-	    && sys_memcmp((void *) a->name, (void *) text, len) == 0);
+  Atom *a;
+
+  if (!is_atom(term)) {
+    return 0;
+  }
+
+  a = atom_tab(atom_val(term));
+  return (len == (size_t) a->len
+          && sys_memcmp((void *) a->name, (void *) text, len) == 0);
 }
 
 ERTS_GLB_INLINE int erts_is_atom_str(const char *str, Eterm term, int is_latin1)
 {
-    Atom *a;
-    int i, len;
-    const uint8_t* aname;
-    const uint8_t* s = (const uint8_t*) str;
+  Atom *a;
+  int i, len;
+  const uint8_t *aname;
+  const uint8_t *s = (const uint8_t *) str;
 
-    if (!is_atom(term))
-	return 0;
-    a = atom_tab(atom_val(term));
-    len = a->len;
-    aname = a->name;
-    if (is_latin1) {
-	for (i = 0; i < len; s++) {
-	    if (aname[i] < 0x80) {
-		if (aname[i] != *s || *s == '\0')
-		    return 0;
-		i++;
-	    }
-	    else {
-		if (aname[i]   != (0xC0 | (*s >> 6)) || 
-		    aname[i+1] != (0x80 | (*s & 0x3F))) {
-		    return 0;
-		}
-		i += 2;
-	    }
-	}
+  if (!is_atom(term)) {
+    return 0;
+  }
+
+  a = atom_tab(atom_val(term));
+  len = a->len;
+  aname = a->name;
+
+  if (is_latin1) {
+    for (i = 0; i < len; s++) {
+      if (aname[i] < 0x80) {
+        if (aname[i] != *s || *s == '\0') {
+          return 0;
+        }
+
+        i++;
+      } else {
+        if (aname[i]   != (0xC0 | (*s >> 6)) ||
+            aname[i + 1] != (0x80 | (*s & 0x3F))) {
+          return 0;
+        }
+
+        i += 2;
+      }
     }
-    else {
-	for (i = 0; i < len; i++, s++)
-	    if (aname[i] != *s || *s == '\0')
-		return 0;
-    }
-    return *s == '\0';
+  } else {
+    for (i = 0; i < len; i++, s++)
+      if (aname[i] != *s || *s == '\0') {
+        return 0;
+      }
+  }
+
+  return *s == '\0';
 }
 
 #endif
 
 typedef enum {
-    ERTS_ATOM_ENC_7BIT_ASCII,
-    ERTS_ATOM_ENC_LATIN1,
-    ERTS_ATOM_ENC_UTF8
+  ERTS_ATOM_ENC_7BIT_ASCII,
+  ERTS_ATOM_ENC_LATIN1,
+  ERTS_ATOM_ENC_UTF8
 } ErtsAtomEncoding;
 
 /*
@@ -129,17 +138,17 @@ typedef enum {
 #define ERTS_DECL_AM(S) Eterm AM_ ## S = am_atom_put(#S, sizeof(#S) - 1)
 #define ERTS_INIT_AM(S) AM_ ## S = am_atom_put(#S, sizeof(#S) - 1)
 
-int atom_table_size(void);	/* number of elements */
-int atom_table_sz(void);	/* table size in bytes, excluding stored objects */
+int atom_table_size(void);  /* number of elements */
+int atom_table_sz(void);  /* table size in bytes, excluding stored objects */
 
-Eterm am_atom_put(const char*, int); /* ONLY 7-bit ascii! */
+Eterm am_atom_put(const char *, int); /* ONLY 7-bit ascii! */
 Eterm erts_atom_put(const uint8_t *name, int len, ErtsAtomEncoding enc, int trunc);
-int atom_erase(uint8_t*, int);
-int atom_static_put(uint8_t*, int);
+int atom_erase(uint8_t *, int);
+int atom_static_put(uint8_t *, int);
 void init_atom_table(void);
 void atom_info(int, void *);
 void dump_atoms(int, void *);
-int erts_atom_get(const char* name, int len, Eterm* ap, ErtsAtomEncoding enc);
+int erts_atom_get(const char *name, int len, Eterm *ap, ErtsAtomEncoding enc);
 void erts_atom_get_text_space_sizes(Uint *reserved, Uint *used);
 #endif
 

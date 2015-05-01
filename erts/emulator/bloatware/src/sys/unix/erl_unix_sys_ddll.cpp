@@ -1,25 +1,25 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 2006-2013. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  */
 
-/* 
+/*
  * Interface functions to the dynamic linker using dl* functions.
- * (As far as I know it works on SunOS 4, 5, Linux and FreeBSD. /Seb) 
+ * (As far as I know it works on SunOS 4, 5, Linux and FreeBSD. /Seb)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -53,199 +53,223 @@ static int num_errcodes_allocated = 0;
 
 static char *my_strdup_in(ErtsAlcType_t type, char *what)
 {
-    char *res = erts::alloc<char>(type, strlen(what) + 1);
-    strcpy(res, what);
-    return res;
+  char *res = erts::alloc<char>(type, strlen(what) + 1);
+  strcpy(res, what);
+  return res;
 }
 
 
-static int find_errcode(char *string, ErtsSysDdllError* err) 
+static int find_errcode(char *string, ErtsSysDdllError *err)
 {
-    int i;
+  int i;
 
-    if (err != nullptr) {
-	erts_sys_ddll_free_error(err); /* in case we ignored an earlier error */
-	err->str = my_strdup_in(ERTS_ALC_T_DDLL_TMP_BUF, string);
-	return 0;
+  if (err != nullptr) {
+    erts_sys_ddll_free_error(err); /* in case we ignored an earlier error */
+    err->str = my_strdup_in(ERTS_ALC_T_DDLL_TMP_BUF, string);
+    return 0;
+  }
+
+  for (i = 0; i < num_errcodes; ++i) {
+    if (!strcmp(string, errcodes[i])) {
+      return i;
     }
-    for(i=0;i<num_errcodes;++i) {
-	if (!strcmp(string, errcodes[i])) {
-	    return i;
-	}
-    }
-    if (num_errcodes_allocated == num_errcodes) {
-	errcodes = (num_errcodes_allocated == 0) 
-            ? erts::alloc<char*>(ERTS_ALC_T_DDLL_ERRCODES,
-			 (num_errcodes_allocated = 10) * sizeof(char *)) 
-            : erts::realloc<char*>(ERTS_ALC_T_DDLL_ERRCODES, errcodes,
-			   (num_errcodes_allocated += 10) * sizeof(char *));
-    }
-    errcodes[num_errcodes++] = my_strdup(string);
-    return (num_errcodes - 1);
+  }
+
+  if (num_errcodes_allocated == num_errcodes) {
+    errcodes = (num_errcodes_allocated == 0)
+               ? erts::alloc<char *>(ERTS_ALC_T_DDLL_ERRCODES,
+                                     (num_errcodes_allocated = 10) * sizeof(char *))
+               : erts::realloc<char *>(ERTS_ALC_T_DDLL_ERRCODES, errcodes,
+                                       (num_errcodes_allocated += 10) * sizeof(char *));
+  }
+
+  errcodes[num_errcodes++] = my_strdup(string);
+  return (num_errcodes - 1);
 }
 
-void erl_sys_ddll_init(void) {
+void erl_sys_ddll_init(void)
+{
 #if defined(HAVE_DLOPEN) && defined(ERTS_NEED_DLOPEN_BEFORE_DLERROR)
-    /*
-     * dlopen() needs to be called before we make the first call to
-     * dlerror(); otherwise, dlerror() might dump core. At least
-     * some versions of linuxthread suffer from this_ bug.
-     */
-    void *handle = dlopen("/nonexistinglib", RTLD_NOW);
-    if (handle)
-	dlclose(handle);
-#endif    
-    return;
+  /*
+   * dlopen() needs to be called before we make the first call to
+   * dlerror(); otherwise, dlerror() might dump core. At least
+   * some versions of linuxthread suffer from this_ bug.
+   */
+  void *handle = dlopen("/nonexistinglib", RTLD_NOW);
+
+  if (handle) {
+    dlclose(handle);
+  }
+
+#endif
+  return;
 }
 
-/* 
+/*
  * Open a shared object
  */
-int erts_sys_ddll_open(const char *full_name, void **handle, ErtsSysDdllError* err)
+int erts_sys_ddll_open(const char *full_name, void **handle, ErtsSysDdllError *err)
 {
 #if defined(HAVE_DLOPEN)
-    char* dlname; 
-    int len = sys_strlen(full_name);
-    int ret;
-    
-    dlname = erts::alloc<char>(ERTS_ALC_T_TMP, len + EXT_LEN + 1);
-    sys_strcpy(dlname, full_name);
-    sys_strcpy(dlname+len, FILE_EXT);
-    
-    ret = erts_sys_ddll_open_noext(dlname, handle, err);
+  char *dlname;
+  int len = sys_strlen(full_name);
+  int ret;
 
-    erts_free(ERTS_ALC_T_TMP, (void *) dlname);
-    return ret;
+  dlname = erts::alloc<char>(ERTS_ALC_T_TMP, len + EXT_LEN + 1);
+  sys_strcpy(dlname, full_name);
+  sys_strcpy(dlname + len, FILE_EXT);
+
+  ret = erts_sys_ddll_open_noext(dlname, handle, err);
+
+  erts_free(ERTS_ALC_T_TMP, (void *) dlname);
+  return ret;
 #else
-    return ERL_DE_ERROR_NO_DDLL_FUNCTIONALITY;
+  return ERL_DE_ERROR_NO_DDLL_FUNCTIONALITY;
 #endif
 }
 
-int erts_sys_ddll_open_noext(char *dlname, void **handle, ErtsSysDdllError* err)
+int erts_sys_ddll_open_noext(char *dlname, void **handle, ErtsSysDdllError *err)
 {
-#if defined(HAVE_DLOPEN)   
-    int ret = ERL_DE_NO_ERROR;
-    char *str;
-    dlerror();
-    if ((*handle = dlopen(dlname, RTLD_NOW)) == nullptr) {
-	str = dlerror();
+#if defined(HAVE_DLOPEN)
+  int ret = ERL_DE_NO_ERROR;
+  char *str;
+  dlerror();
 
-	if (err == nullptr) {
-	    /*
-	     * Remove prefix filename to avoid exploading number of
-	     * error codes on extreme usage.
-	     */
-	    if (strstr(str,dlname) == str) {
-		char *save_str = str;
-		str += strlen(dlname);
-		while (*str == ':' || *str == ' ') {
-		    ++str;
-		}
-		if (*str == '\0') { /* Better with filename than nothing... */
-		    str = save_str;
-		}
-	    }
-	}
-	ret = ERL_DE_DYNAMIC_ERROR_OFFSET - find_errcode(str, err);
+  if ((*handle = dlopen(dlname, RTLD_NOW)) == nullptr) {
+    str = dlerror();
+
+    if (err == nullptr) {
+      /*
+       * Remove prefix filename to avoid exploading number of
+       * error codes on extreme usage.
+       */
+      if (strstr(str, dlname) == str) {
+        char *save_str = str;
+        str += strlen(dlname);
+
+        while (*str == ':' || *str == ' ') {
+          ++str;
+        }
+
+        if (*str == '\0') { /* Better with filename than nothing... */
+          str = save_str;
+        }
+      }
     }
-    return ret;
+
+    ret = ERL_DE_DYNAMIC_ERROR_OFFSET - find_errcode(str, err);
+  }
+
+  return ret;
 #else
-    return ERL_DE_ERROR_NO_DDLL_FUNCTIONALITY;
+  return ERL_DE_ERROR_NO_DDLL_FUNCTIONALITY;
 #endif
 }
 
-/* 
+/*
  * Find a symbol in the shared object
  */
 int erts_sys_ddll_sym2(void *handle, const char *func_name, void **function,
-		       ErtsSysDdllError* err)
+                       ErtsSysDdllError *err)
 {
 #if defined(HAVE_DLOPEN)
-    void *sym;
-    char *e;
-    int ret;
-    dlerror();
-    sym = dlsym(handle, func_name);
-    if ((e = dlerror()) != nullptr) {
-	ret = ERL_DE_DYNAMIC_ERROR_OFFSET - find_errcode(e, err);
-    } else {
-	*function = sym;
-	ret = ERL_DE_NO_ERROR;
-    }
-    return ret;
+  void *sym;
+  char *e;
+  int ret;
+  dlerror();
+  sym = dlsym(handle, func_name);
+
+  if ((e = dlerror()) != nullptr) {
+    ret = ERL_DE_DYNAMIC_ERROR_OFFSET - find_errcode(e, err);
+  } else {
+    *function = sym;
+    ret = ERL_DE_NO_ERROR;
+  }
+
+  return ret;
 #else
-    return ERL_DE_ERROR_NO_DDLL_FUNCTIONALITY;
+  return ERL_DE_ERROR_NO_DDLL_FUNCTIONALITY;
 #endif
 }
 
 /* XXX:PaN These two will be changed with new_ driver interface! */
 
-/* 
- * Load the driver init function, might appear under different names depending on object arch... 
+/*
+ * Load the driver init function, might appear under different names depending on object arch...
  */
 
 int erts_sys_ddll_load_driver_init(void *handle, void **function)
 {
-    void *fn;
-    int res;
-    if ((res = erts_sys_ddll_sym2(handle, "driver_init", &fn, nullptr)) != ERL_DE_NO_ERROR) {
-	res = erts_sys_ddll_sym2(handle, "_driver_init", &fn, nullptr);
-    }
-    if (res == ERL_DE_NO_ERROR) {
-	*function = fn;
-    }
-    return res;
+  void *fn;
+  int res;
+
+  if ((res = erts_sys_ddll_sym2(handle, "driver_init", &fn, nullptr)) != ERL_DE_NO_ERROR) {
+    res = erts_sys_ddll_sym2(handle, "_driver_init", &fn, nullptr);
+  }
+
+  if (res == ERL_DE_NO_ERROR) {
+    *function = fn;
+  }
+
+  return res;
 }
 
-int erts_sys_ddll_load_nif_init(void *handle, void **function, ErtsSysDdllError* err)
+int erts_sys_ddll_load_nif_init(void *handle, void **function, ErtsSysDdllError *err)
 {
-    void *fn;
-    int res;
-    if ((res = erts_sys_ddll_sym2(handle, "nif_init", &fn, err)) != ERL_DE_NO_ERROR) {
-	res = erts_sys_ddll_sym2(handle, "_nif_init", &fn, err);
-    }
-    if (res == ERL_DE_NO_ERROR) {
-	*function = fn;
-    }
-    return res;
+  void *fn;
+  int res;
+
+  if ((res = erts_sys_ddll_sym2(handle, "nif_init", &fn, err)) != ERL_DE_NO_ERROR) {
+    res = erts_sys_ddll_sym2(handle, "_nif_init", &fn, err);
+  }
+
+  if (res == ERL_DE_NO_ERROR) {
+    *function = fn;
+  }
+
+  return res;
 }
 
-/* 
- * Call the driver_init function, whatever it's really called, simple on unix... 
+/*
+ * Call the driver_init function, whatever it's really called, simple on unix...
 */
-void *erts_sys_ddll_call_init(void *function) {
+void *erts_sys_ddll_call_init(void *function)
+{
   typedef void *(*initfn_t)(void);
   initfn_t initfn = (initfn_t)function;
   return (*initfn)();
 }
-void *erts_sys_ddll_call_nif_init(void *function) {
-    return erts_sys_ddll_call_init(function);
+void *erts_sys_ddll_call_nif_init(void *function)
+{
+  return erts_sys_ddll_call_init(function);
 }
 
 
 
-/* 
+/*
  * Close a chared object
  */
-int erts_sys_ddll_close2(void *handle, ErtsSysDdllError* err)
+int erts_sys_ddll_close2(void *handle, ErtsSysDdllError *err)
 {
 #if defined(HAVE_DLOPEN)
-    int ret;
-    char *s;
-    dlerror();
-    if (dlclose(handle) == 0) {
-	ret = ERL_DE_NO_ERROR;
+  int ret;
+  char *s;
+  dlerror();
+
+  if (dlclose(handle) == 0) {
+    ret = ERL_DE_NO_ERROR;
+  } else {
+    if ((s = dlerror()) == nullptr) {
+      find_errcode("unspecified error", err);
+      ret = ERL_DE_ERROR_UNSPECIFIED;
     } else {
-	if ((s = dlerror()) == nullptr) {
-	    find_errcode("unspecified error", err);
-	    ret = ERL_DE_ERROR_UNSPECIFIED;
-	} else {
-	    ret = ERL_DE_DYNAMIC_ERROR_OFFSET - find_errcode(s, err);
-	}
+      ret = ERL_DE_DYNAMIC_ERROR_OFFSET - find_errcode(s, err);
     }
-    return ret;
+  }
+
+  return ret;
 #else
-    return ERL_DE_ERROR_NO_DDLL_FUNCTIONALITY;
+  return ERL_DE_ERROR_NO_DDLL_FUNCTIONALITY;
 #endif
 }
 
@@ -255,31 +279,33 @@ int erts_sys_ddll_close2(void *handle, ErtsSysDdllError* err)
  */
 char *erts_sys_ddll_error(int code)
 {
-    int actual_code;
+  int actual_code;
 
-    if (code > ERL_DE_DYNAMIC_ERROR_OFFSET) {
-	return "Unspecified error";
-    }
-    actual_code = -1*(code - ERL_DE_DYNAMIC_ERROR_OFFSET);
+  if (code > ERL_DE_DYNAMIC_ERROR_OFFSET) {
+    return "Unspecified error";
+  }
+
+  actual_code = -1 * (code - ERL_DE_DYNAMIC_ERROR_OFFSET);
 #if defined(HAVE_DLOPEN)
-    {
-	char *msg;
+  {
+    char *msg;
 
-	if (actual_code >= num_errcodes) {
-	    msg = "Unknown dlload error";
-	} else {
-	    msg = errcodes[actual_code];
-	}
-	return msg;
+    if (actual_code >= num_errcodes) {
+      msg = "Unknown dlload error";
+    } else {
+      msg = errcodes[actual_code];
     }
+
+    return msg;
+  }
 #endif
-    return "no error";
+  return "no error";
 }
 
-void erts_sys_ddll_free_error(ErtsSysDdllError* err)
-{   
-    if (err->str != nullptr) {
-	erts_free(ERTS_ALC_T_DDLL_TMP_BUF, err->str);
-    }
+void erts_sys_ddll_free_error(ErtsSysDdllError *err)
+{
+  if (err->str != nullptr) {
+    erts_free(ERTS_ALC_T_DDLL_TMP_BUF, err->str);
+  }
 }
 

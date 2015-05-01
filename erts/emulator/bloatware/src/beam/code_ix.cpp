@@ -36,12 +36,12 @@
 erts_smp_atomic32_t the_active_code_index;
 erts_smp_atomic32_t the_staging_code_index;
 
-static Process* code_writing_process = nullptr;
+static Process *code_writing_process = nullptr;
 struct code_write_queue_item {
-    Process *p;
-    struct code_write_queue_item* next;
+  Process *p;
+  struct code_write_queue_item *next;
 };
-static struct code_write_queue_item* code_write_queue = nullptr;
+static struct code_write_queue_item *code_write_queue = nullptr;
 static erts_smp_mtx_t code_write_permission_mtx;
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
@@ -50,120 +50,125 @@ static erts_tsd_key_t has_code_write_permission;
 
 void erts_code_ix_init(void)
 {
-    /* We start emulator by initializing preloaded modules
-     * single threaded with active and staging set both to zero.
-     * Preloading is finished by a commit that will set things straight.
-     */
-    erts_smp_atomic32_init_nob(&the_active_code_index, 0);
-    erts_smp_atomic32_init_nob(&the_staging_code_index, 0);
-    erts_smp_mtx_init(&code_write_permission_mtx, "code_write_permission");
+  /* We start emulator by initializing preloaded modules
+   * single threaded with active and staging set both to zero.
+   * Preloading is finished by a commit that will set things straight.
+   */
+  erts_smp_atomic32_init_nob(&the_active_code_index, 0);
+  erts_smp_atomic32_init_nob(&the_staging_code_index, 0);
+  erts_smp_mtx_init(&code_write_permission_mtx, "code_write_permission");
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_tsd_key_create(&has_code_write_permission,
-			"erts_has_code_write_permission");
+  erts_tsd_key_create(&has_code_write_permission,
+                      "erts_has_code_write_permission");
 #endif
-    CIX_TRACE("init");
+  CIX_TRACE("init");
 }
 
 void erts_start_staging_code_ix(void)
 {
-    beam_catches_start_staging();
-    export_start_staging();
-    module_start_staging();
-    erts_start_staging_ranges();
-    CIX_TRACE("start");
+  beam_catches_start_staging();
+  export_start_staging();
+  module_start_staging();
+  erts_start_staging_ranges();
+  CIX_TRACE("start");
 }
 
 
 void erts_end_staging_code_ix(void)
 {
-    beam_catches_end_staging(1);
-    export_end_staging(1);
-    module_end_staging(1);
-    erts_end_staging_ranges(1);
-    CIX_TRACE("end");
+  beam_catches_end_staging(1);
+  export_end_staging(1);
+  module_end_staging(1);
+  erts_end_staging_ranges(1);
+  CIX_TRACE("end");
 }
 
 void erts_commit_staging_code_ix(void)
 {
-    ErtsCodeIndex ix;
-    /* We need to this_ lock as we are now making the staging export_ table active */
-    export_staging_lock();
-    ix = erts_staging_code_ix();
-    erts_smp_atomic32_set_nob(&the_active_code_index, ix);
-    ix = (ix + 1) % ERTS_NUM_CODE_IX;
-    erts_smp_atomic32_set_nob(&the_staging_code_index, ix);
-    export_staging_unlock();
-    CIX_TRACE("activate");
+  ErtsCodeIndex ix;
+  /* We need to this_ lock as we are now making the staging export_ table active */
+  export_staging_lock();
+  ix = erts_staging_code_ix();
+  erts_smp_atomic32_set_nob(&the_active_code_index, ix);
+  ix = (ix + 1) % ERTS_NUM_CODE_IX;
+  erts_smp_atomic32_set_nob(&the_staging_code_index, ix);
+  export_staging_unlock();
+  CIX_TRACE("activate");
 }
 
 void erts_abort_staging_code_ix(void)
 {
-    beam_catches_end_staging(0);
-    export_end_staging(0);
-    module_end_staging(0);
-    erts_end_staging_ranges(0);
-    CIX_TRACE("abort");
+  beam_catches_end_staging(0);
+  export_end_staging(0);
+  module_end_staging(0);
+  erts_end_staging_ranges(0);
+  CIX_TRACE("abort");
 }
 
 
 /*
  * Calller _must_ yield if we return 0
  */
-int erts_try_seize_code_write_permission(Process* c_p)
+int erts_try_seize_code_write_permission(Process *c_p)
 {
-    int success;
+  int success;
 #ifdef ERTS_SMP
-    ASSERT(!erts_smp_thr_progress_is_blocking()); /* to avoid deadlock */
+  ASSERT(!erts_smp_thr_progress_is_blocking()); /* to avoid deadlock */
 #endif
-    ASSERT(c_p != nullptr);
+  ASSERT(c_p != nullptr);
 
-    erts_smp_mtx_lock(&code_write_permission_mtx);
-    success = (code_writing_process == nullptr);
-    if (success) {
-	code_writing_process = c_p;
+  erts_smp_mtx_lock(&code_write_permission_mtx);
+  success = (code_writing_process == nullptr);
+
+  if (success) {
+    code_writing_process = c_p;
 #ifdef ERTS_ENABLE_LOCK_CHECK
-	erts_tsd_set(has_code_write_permission, (void *) 1);
+    erts_tsd_set(has_code_write_permission, (void *) 1);
 #endif
-    }
-    else { /* Already locked */
-	struct code_write_queue_item* qitem;
-	ASSERT(code_writing_process != c_p);
-        qitem = (code_write_queue_item*)erts_alloc(ERTS_ALC_T_CODE_IX_LOCK_Q, sizeof(*qitem));
-	qitem->p = c_p;
-	erts_smp_proc_inc_refc(c_p);
-	qitem->next = code_write_queue;
-	code_write_queue = qitem;
-        erts_suspend(c_p, ERTS_PROC_LOCK_MAIN, nullptr);
-    }
-   erts_smp_mtx_unlock(&code_write_permission_mtx);
-   return success;
+  } else { /* Already locked */
+    struct code_write_queue_item *qitem;
+    ASSERT(code_writing_process != c_p);
+    qitem = (code_write_queue_item *)erts_alloc(ERTS_ALC_T_CODE_IX_LOCK_Q, sizeof(*qitem));
+    qitem->p = c_p;
+    erts_smp_proc_inc_refc(c_p);
+    qitem->next = code_write_queue;
+    code_write_queue = qitem;
+    erts_suspend(c_p, ERTS_PROC_LOCK_MAIN, nullptr);
+  }
+
+  erts_smp_mtx_unlock(&code_write_permission_mtx);
+  return success;
 }
 
 void erts_release_code_write_permission(void)
 {
-    erts_smp_mtx_lock(&code_write_permission_mtx);
-    ERTS_SMP_LC_ASSERT(erts_has_code_write_permission());
-    while (code_write_queue != nullptr) { /* unleash the entire herd */
-	struct code_write_queue_item* qitem = code_write_queue;
-	erts_smp_proc_lock(qitem->p, ERTS_PROC_LOCK_STATUS);
-	if (!ERTS_PROC_IS_EXITING(qitem->p)) {
-	    erts_resume(qitem->p, ERTS_PROC_LOCK_STATUS);
-	}
-	erts_smp_proc_unlock(qitem->p, ERTS_PROC_LOCK_STATUS);
-	code_write_queue = qitem->next;
-	erts_smp_proc_dec_refc(qitem->p);
-	erts_free(ERTS_ALC_T_CODE_IX_LOCK_Q, qitem);
+  erts_smp_mtx_lock(&code_write_permission_mtx);
+  ERTS_SMP_LC_ASSERT(erts_has_code_write_permission());
+
+  while (code_write_queue != nullptr) { /* unleash the entire herd */
+    struct code_write_queue_item *qitem = code_write_queue;
+    erts_smp_proc_lock(qitem->p, ERTS_PROC_LOCK_STATUS);
+
+    if (!ERTS_PROC_IS_EXITING(qitem->p)) {
+      erts_resume(qitem->p, ERTS_PROC_LOCK_STATUS);
     }
-    code_writing_process = nullptr;
+
+    erts_smp_proc_unlock(qitem->p, ERTS_PROC_LOCK_STATUS);
+    code_write_queue = qitem->next;
+    erts_smp_proc_dec_refc(qitem->p);
+    erts_free(ERTS_ALC_T_CODE_IX_LOCK_Q, qitem);
+  }
+
+  code_writing_process = nullptr;
 #ifdef ERTS_ENABLE_LOCK_CHECK
-    erts_tsd_set(has_code_write_permission, (void *) 0);
+  erts_tsd_set(has_code_write_permission, (void *) 0);
 #endif
-    erts_smp_mtx_unlock(&code_write_permission_mtx);
+  erts_smp_mtx_unlock(&code_write_permission_mtx);
 }
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
 int erts_has_code_write_permission(void)
 {
-    return (code_writing_process != nullptr) && erts_tsd_get(has_code_write_permission);
+  return (code_writing_process != nullptr) && erts_tsd_get(has_code_write_permission);
 }
 #endif

@@ -37,19 +37,19 @@
 #endif
 
 typedef struct _erl_async {
-    DE_Handle*         hndl;   /* The DE_Handle is needed when port is gone */
-    Eterm              port;
-    long               async_id;
-    void*              async_data;
-    ErlDrvPDL          pdl;
-    void (*async_invoke)(void*);
-    void (*async_free)(void*);
+  DE_Handle         *hndl;   /* The DE_Handle is needed when port is gone */
+  Eterm              port;
+  long               async_id;
+  void              *async_data;
+  ErlDrvPDL          pdl;
+  void (*async_invoke)(void *);
+  void (*async_free)(void *);
 #if ERTS_USE_ASYNC_READY_Q
-    Uint               sched_id;
-    union {
-	ErtsThrQPrepEnQ_t *prep_enq;
-	ErtsThrQFinDeQ_t   fin_deq;
-    } q;
+  Uint               sched_id;
+  union {
+    ErtsThrQPrepEnQ_t *prep_enq;
+    ErtsThrQFinDeQ_t   fin_deq;
+  } q;
 #endif
 } ErtsAsync;
 
@@ -69,56 +69,56 @@ typedef struct _erl_async {
 #if ERTS_USE_ASYNC_READY_ENQ_MTX
 
 typedef struct {
-    erts_mtx_t enq_mtx;
+  erts_mtx_t enq_mtx;
 } ErtsAsyncReadyQXData;
 
 #endif
 
 typedef struct {
 #if ERTS_USE_ASYNC_READY_ENQ_MTX
-    union {
-	ErtsAsyncReadyQXData data;
-	char align__[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(
-		sizeof(ErtsAsyncReadyQXData))];
-    } x;
+  union {
+    ErtsAsyncReadyQXData data;
+    char align__[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(
+                   sizeof(ErtsAsyncReadyQXData))];
+  } x;
 #endif
-    ErtsThrQ_t thr_q;
-    ErtsThrQFinDeQ_t fin_deq;
+  ErtsThrQ_t thr_q;
+  ErtsThrQFinDeQ_t fin_deq;
 } ErtsAsyncReadyQ;
 
 
 typedef union {
-    ErtsAsyncReadyQ arq;
-    char align__[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsAsyncReadyQ))];
+  ErtsAsyncReadyQ arq;
+  char align__[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsAsyncReadyQ))];
 } ErtsAlgndAsyncReadyQ;
 
 #endif /* ERTS_USE_ASYNC_READY_Q */
 
 typedef struct {
-    ErtsThrQ_t thr_q;
-    erts_tid_t thr_id;
+  ErtsThrQ_t thr_q;
+  erts_tid_t thr_id;
 } ErtsAsyncQ;
 
 typedef union {
-    ErtsAsyncQ aq;
-    char align__[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsAsyncQ))];
+  ErtsAsyncQ aq;
+  char align__[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsAsyncQ))];
 } ErtsAlgndAsyncQ;
 
 typedef struct {
-    int no_initialized;
-    erts_mtx_t mtx;
-    erts_cnd_t cnd;
-    erts_atomic_t id;
+  int no_initialized;
+  erts_mtx_t mtx;
+  erts_cnd_t cnd;
+  erts_atomic_t id;
 } ErtsAsyncInit;
 
 typedef struct {
-    union {
-	ErtsAsyncInit data;
-	char align__[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsAsyncInit))];
-    } init;
-    ErtsAlgndAsyncQ *queue;
+  union {
+    ErtsAsyncInit data;
+    char align__[ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsAsyncInit))];
+  } init;
+  ErtsAlgndAsyncQ *queue;
 #if ERTS_USE_ASYNC_READY_Q
-    ErtsAlgndAsyncReadyQ *ready_queue;
+  ErtsAlgndAsyncReadyQ *ready_queue;
 #endif
 } ErtsAsyncData;
 
@@ -153,7 +153,7 @@ static void *async_main(void *);
 static ERTS_INLINE ErtsAsyncQ *
 async_q(int i)
 {
-    return &async->queue[i].aq;
+  return &async->queue[i].aq;
 }
 
 #if ERTS_USE_ASYNC_READY_Q
@@ -161,7 +161,7 @@ async_q(int i)
 static ERTS_INLINE ErtsAsyncReadyQ *
 async_ready_q(Uint sched_id)
 {
-    return &async->ready_queue[((int)sched_id)-1].arq;
+  return &async->ready_queue[((int)sched_id) - 1].arq;
 }
 
 #endif
@@ -170,91 +170,95 @@ async_ready_q(Uint sched_id)
 void
 erts_init_async(void)
 {
-    async = nullptr;
-    if (erts_async_max_threads > 0) {
+  async = nullptr;
+
+  if (erts_async_max_threads > 0) {
 #if ERTS_USE_ASYNC_READY_Q
-	ErtsThrQInit_t qinit = ERTS_THR_Q_INIT_DEFAULT;
+    ErtsThrQInit_t qinit = ERTS_THR_Q_INIT_DEFAULT;
 #endif
-	erts_thr_opts_t thr_opts = ERTS_THR_OPTS_DEFAULT_INITER;
-	char *ptr;
-	size_t tot_size = 0;
-	int i;
+    erts_thr_opts_t thr_opts = ERTS_THR_OPTS_DEFAULT_INITER;
+    char *ptr;
+    size_t tot_size = 0;
+    int i;
 
-	tot_size += ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsAsyncData));
-	tot_size += sizeof(ErtsAlgndAsyncQ)*erts_async_max_threads;
+    tot_size += ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsAsyncData));
+    tot_size += sizeof(ErtsAlgndAsyncQ) * erts_async_max_threads;
 #if ERTS_USE_ASYNC_READY_Q
-	tot_size += sizeof(ErtsAlgndAsyncReadyQ)*erts_no_schedulers;
+    tot_size += sizeof(ErtsAlgndAsyncReadyQ) * erts_no_schedulers;
 #endif
 
-        ptr = (char *)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_ASYNC_DATA,
-						 tot_size);
+    ptr = (char *)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_ASYNC_DATA,
+          tot_size);
 
-	async = (ErtsAsyncData *) ptr;
-	ptr += ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsAsyncData));
+    async = (ErtsAsyncData *) ptr;
+    ptr += ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(ErtsAsyncData));
 
-	async->init.data.no_initialized = 0;
-	erts_mtx_init(&async->init.data.mtx, "async_init_mtx");
-	erts_cnd_init(&async->init.data.cnd);
-	erts_atomic_init_nob(&async->init.data.id, 0);
+    async->init.data.no_initialized = 0;
+    erts_mtx_init(&async->init.data.mtx, "async_init_mtx");
+    erts_cnd_init(&async->init.data.cnd);
+    erts_atomic_init_nob(&async->init.data.id, 0);
 
-	async->queue = (ErtsAlgndAsyncQ *) ptr;
-	ptr += sizeof(ErtsAlgndAsyncQ)*erts_async_max_threads;
+    async->queue = (ErtsAlgndAsyncQ *) ptr;
+    ptr += sizeof(ErtsAlgndAsyncQ) * erts_async_max_threads;
 
 #if ERTS_USE_ASYNC_READY_Q
 
-	qinit.live.queue = ERTS_THR_Q_LIVE_LONG;
-	qinit.live.objects = ERTS_THR_Q_LIVE_SHORT;
-	qinit.notify = erts_notify_check_async_ready_queue;
+    qinit.live.queue = ERTS_THR_Q_LIVE_LONG;
+    qinit.live.objects = ERTS_THR_Q_LIVE_SHORT;
+    qinit.notify = erts_notify_check_async_ready_queue;
 
-	async->ready_queue = (ErtsAlgndAsyncReadyQ *) ptr;
-	ptr += sizeof(ErtsAlgndAsyncReadyQ)*erts_no_schedulers;
+    async->ready_queue = (ErtsAlgndAsyncReadyQ *) ptr;
+    ptr += sizeof(ErtsAlgndAsyncReadyQ) * erts_no_schedulers;
 
-	for (i = 1; i <= erts_no_schedulers; i++) {
-	    ErtsAsyncReadyQ *arq = async_ready_q(i);
+    for (i = 1; i <= erts_no_schedulers; i++) {
+      ErtsAsyncReadyQ *arq = async_ready_q(i);
 #if ERTS_USE_ASYNC_READY_ENQ_MTX
-	    erts_mtx_init(&arq->x.data.enq_mtx, "async_enq_mtx");
+      erts_mtx_init(&arq->x.data.enq_mtx, "async_enq_mtx");
 #endif
-	    erts_thr_q_finalize_dequeue_state_init(&arq->fin_deq);
-	    qinit.arg = (void *) (SWord) i;
-	    erts_thr_q_initialize(&arq->thr_q, &qinit);
-	}
-
-#endif
-
-	/* Create async threads... */
-
-	thr_opts.detached = 0;
-	thr_opts.suggested_stack_size
-	    = erts_async_thread_suggested_stack_size;
-
-#ifdef ETHR_HAVE_THREAD_NAMES
-	thr_opts.name = malloc(sizeof(char)*(strlen("async_XXXX")+1));
-#endif
-
-	for (i = 0; i < erts_async_max_threads; i++) {
-	    ErtsAsyncQ *aq = async_q(i);
-
-#ifdef ETHR_HAVE_THREAD_NAMES
-            sprintf(thr_opts.name, "async_%d", i+1);
-#endif
-
-	    erts_thr_create(&aq->thr_id, async_main, (void*) aq, &thr_opts);
-	}
-
-#ifdef ETHR_HAVE_THREAD_NAMES
-	free(thr_opts.name);
-#endif
-	/* Wait for async threads to initialize... */
-
-	erts_mtx_lock(&async->init.data.mtx);
-	while (async->init.data.no_initialized != erts_async_max_threads)
-	    erts_cnd_wait(&async->init.data.cnd, &async->init.data.mtx);
-	erts_mtx_unlock(&async->init.data.mtx);
-
-	erts_mtx_destroy(&async->init.data.mtx);
-	erts_cnd_destroy(&async->init.data.cnd);
-
+      erts_thr_q_finalize_dequeue_state_init(&arq->fin_deq);
+      qinit.arg = (void *)(SWord) i;
+      erts_thr_q_initialize(&arq->thr_q, &qinit);
     }
+
+#endif
+
+    /* Create async threads... */
+
+    thr_opts.detached = 0;
+    thr_opts.suggested_stack_size
+      = erts_async_thread_suggested_stack_size;
+
+#ifdef ETHR_HAVE_THREAD_NAMES
+    thr_opts.name = malloc(sizeof(char) * (strlen("async_XXXX") + 1));
+#endif
+
+    for (i = 0; i < erts_async_max_threads; i++) {
+      ErtsAsyncQ *aq = async_q(i);
+
+#ifdef ETHR_HAVE_THREAD_NAMES
+      sprintf(thr_opts.name, "async_%d", i + 1);
+#endif
+
+      erts_thr_create(&aq->thr_id, async_main, (void *) aq, &thr_opts);
+    }
+
+#ifdef ETHR_HAVE_THREAD_NAMES
+    free(thr_opts.name);
+#endif
+    /* Wait for async threads to initialize... */
+
+    erts_mtx_lock(&async->init.data.mtx);
+
+    while (async->init.data.no_initialized != erts_async_max_threads) {
+      erts_cnd_wait(&async->init.data.cnd, &async->init.data.mtx);
+    }
+
+    erts_mtx_unlock(&async->init.data.mtx);
+
+    erts_mtx_destroy(&async->init.data.mtx);
+    erts_cnd_destroy(&async->init.data.cnd);
+
+  }
 }
 
 #if ERTS_USE_ASYNC_READY_Q
@@ -262,196 +266,221 @@ erts_init_async(void)
 void *
 erts_get_async_ready_queue(Uint sched_id)
 {
-    return (void *) async ? async_ready_q(sched_id) : nullptr;
+  return (void *) async ? async_ready_q(sched_id) : nullptr;
 }
 
 #endif
 
-static ERTS_INLINE void async_add(ErtsAsync *a, ErtsAsyncQ* q)
+static ERTS_INLINE void async_add(ErtsAsync *a, ErtsAsyncQ *q)
 {
 #ifdef USE_VM_PROBES
-    int len;
+  int len;
 #endif
 
-    if (is_internal_port(a->port)) {
+  if (is_internal_port(a->port)) {
 #if ERTS_USE_ASYNC_READY_Q
-	ErtsAsyncReadyQ *arq = async_ready_q(a->sched_id);
-	a->q.prep_enq = erts_thr_q_prepare_enqueue(&arq->thr_q);
+    ErtsAsyncReadyQ *arq = async_ready_q(a->sched_id);
+    a->q.prep_enq = erts_thr_q_prepare_enqueue(&arq->thr_q);
 #endif
-	/* make sure the driver will stay around */
-	if (a->hndl)
-	    erts_ddll_reference_referenced_driver(a->hndl);
+
+    /* make sure the driver will stay around */
+    if (a->hndl) {
+      erts_ddll_reference_referenced_driver(a->hndl);
     }
+  }
 
 #if ERTS_ASYNC_PRINT_JOB
-    erts_fprintf(stderr, "-> %ld\n", a->async_id);
+  erts_fprintf(stderr, "-> %ld\n", a->async_id);
 #endif
 
-    erts_thr_q_enqueue(&q->thr_q, a);
+  erts_thr_q_enqueue(&q->thr_q, a);
 #ifdef USE_VM_PROBES
-    if (DTRACE_ENABLED(aio_pool_add)) {
-        DTRACE_CHARBUF(port_str, 16);
 
-        erts_snprintf(port_str, sizeof(DTRACE_CHARBUF_NAME(port_str)),
-                      "%T", a->port);
-        /* DTRACE TODO: Get the queue length from erts_thr_q_enqueue() ? */
-        len = -1;
-        DTRACE2(aio_pool_add, port_str, len);
-    }
-    gcc_optimizer_hack++;
+  if (DTRACE_ENABLED(aio_pool_add)) {
+    DTRACE_CHARBUF(port_str, 16);
+
+    erts_snprintf(port_str, sizeof(DTRACE_CHARBUF_NAME(port_str)),
+                  "%T", a->port);
+    /* DTRACE TODO: Get the queue length from erts_thr_q_enqueue() ? */
+    len = -1;
+    DTRACE2(aio_pool_add, port_str, len);
+  }
+
+  gcc_optimizer_hack++;
 #endif
 }
 
 static ERTS_INLINE ErtsAsync *async_get(ErtsThrQ_t *q,
-					erts_tse_t *tse,
-					ErtsThrQPrepEnQ_t **prep_enq)
+                                        erts_tse_t *tse,
+                                        ErtsThrQPrepEnQ_t **prep_enq)
 {
 #if ERTS_USE_ASYNC_READY_Q
-    int saved_fin_deq = 0;
-    ErtsThrQFinDeQ_t fin_deq;
+  int saved_fin_deq = 0;
+  ErtsThrQFinDeQ_t fin_deq;
 #endif
 #ifdef USE_VM_PROBES
-    int len;
+  int len;
 #endif
 
-    while (1) {
-	ErtsAsync *a = (ErtsAsync *) erts_thr_q_dequeue(q);
-	if (a) {
+  while (1) {
+    ErtsAsync *a = (ErtsAsync *) erts_thr_q_dequeue(q);
+
+    if (a) {
 
 #if ERTS_USE_ASYNC_READY_Q
-	    *prep_enq = a->q.prep_enq;
-	    erts_thr_q_get_finalize_dequeue_data(q, &a->q.fin_deq);
-	    if (saved_fin_deq)
-		erts_thr_q_append_finalize_dequeue_data(&a->q.fin_deq, &fin_deq);
+      *prep_enq = a->q.prep_enq;
+      erts_thr_q_get_finalize_dequeue_data(q, &a->q.fin_deq);
+
+      if (saved_fin_deq) {
+        erts_thr_q_append_finalize_dequeue_data(&a->q.fin_deq, &fin_deq);
+      }
+
 #endif
 #ifdef USE_VM_PROBES
-            if (DTRACE_ENABLED(aio_pool_get)) {
-                DTRACE_CHARBUF(port_str, 16);
 
-                erts_snprintf(port_str, sizeof(DTRACE_CHARBUF_NAME(port_str)),
-                              "%T", a->port);
-                /* DTRACE TODO: Get the length from erts_thr_q_dequeue() ? */
-                len = -1;
-                DTRACE2(aio_pool_get, port_str, len);
-            }
+      if (DTRACE_ENABLED(aio_pool_get)) {
+        DTRACE_CHARBUF(port_str, 16);
+
+        erts_snprintf(port_str, sizeof(DTRACE_CHARBUF_NAME(port_str)),
+                      "%T", a->port);
+        /* DTRACE TODO: Get the length from erts_thr_q_dequeue() ? */
+        len = -1;
+        DTRACE2(aio_pool_get, port_str, len);
+      }
+
 #endif
-	    return a;
-	}
-
-	if (ERTS_THR_Q_DIRTY != erts_thr_q_clean(q)) {
-	    ErtsThrQFinDeQ_t tmp_fin_deq;
-
-	    erts_tse_reset(tse);
-
-#if ERTS_USE_ASYNC_READY_Q
-	chk_fin_deq:
-	    if (erts_thr_q_get_finalize_dequeue_data(q, &tmp_fin_deq)) {
-		if (!saved_fin_deq) {
-		    erts_thr_q_finalize_dequeue_state_init(&fin_deq);
-		    saved_fin_deq = 1;
-		}
-		erts_thr_q_append_finalize_dequeue_data(&fin_deq,
-							&tmp_fin_deq);
-	    }
-#endif
-
-	    switch (erts_thr_q_inspect(q, 1)) {
-	    case ERTS_THR_Q_DIRTY:
-		break;
-	    case ERTS_THR_Q_NEED_THR_PRGR:
-#ifdef ERTS_SMP
-	    {
-		ErtsThrPrgrVal prgr = erts_thr_q_need_thr_progress(q);
-                erts_thr_progress_wakeup(nullptr, prgr);
-		/*
-		 * We do no dequeue finalizing in hope that a new_ async
-		 * job will arrive before we are woken due to thread
-		 * progress...
-		 */
-		erts_tse_wait(tse);
-		break;
-	    }
-#endif
-	    case ERTS_THR_Q_CLEAN:
-
-#if ERTS_USE_ASYNC_READY_Q
-		if (saved_fin_deq) {
-		    if (erts_thr_q_finalize_dequeue(&fin_deq))
-			goto chk_fin_deq;
-		    else
-			saved_fin_deq = 0;
-		}
-#endif
-
-		erts_tse_wait(tse);
-		break;
-
-	    default:
-		ASSERT(0);
-		break;
-	    }
-
-	}
+      return a;
     }
+
+    if (ERTS_THR_Q_DIRTY != erts_thr_q_clean(q)) {
+      ErtsThrQFinDeQ_t tmp_fin_deq;
+
+      erts_tse_reset(tse);
+
+#if ERTS_USE_ASYNC_READY_Q
+chk_fin_deq:
+
+      if (erts_thr_q_get_finalize_dequeue_data(q, &tmp_fin_deq)) {
+        if (!saved_fin_deq) {
+          erts_thr_q_finalize_dequeue_state_init(&fin_deq);
+          saved_fin_deq = 1;
+        }
+
+        erts_thr_q_append_finalize_dequeue_data(&fin_deq,
+                                                &tmp_fin_deq);
+      }
+
+#endif
+
+      switch (erts_thr_q_inspect(q, 1)) {
+      case ERTS_THR_Q_DIRTY:
+        break;
+
+      case ERTS_THR_Q_NEED_THR_PRGR:
+#ifdef ERTS_SMP
+      {
+        ErtsThrPrgrVal prgr = erts_thr_q_need_thr_progress(q);
+        erts_thr_progress_wakeup(nullptr, prgr);
+        /*
+         * We do no dequeue finalizing in hope that a new_ async
+         * job will arrive before we are woken due to thread
+         * progress...
+         */
+        erts_tse_wait(tse);
+        break;
+      }
+
+#endif
+
+      case ERTS_THR_Q_CLEAN:
+
+#if ERTS_USE_ASYNC_READY_Q
+        if (saved_fin_deq) {
+          if (erts_thr_q_finalize_dequeue(&fin_deq)) {
+            goto chk_fin_deq;
+          } else {
+            saved_fin_deq = 0;
+          }
+        }
+
+#endif
+
+        erts_tse_wait(tse);
+        break;
+
+      default:
+        ASSERT(0);
+        break;
+      }
+
+    }
+  }
 }
 
 static ERTS_INLINE void call_async_ready(ErtsAsync *a)
 {
 #if ERTS_USE_ASYNC_READY_Q
-    Port *p = erts_id2port_sflgs(a->port,
-                                 nullptr,
-				 0,
-				 ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP);
+  Port *p = erts_id2port_sflgs(a->port,
+                               nullptr,
+                               0,
+                               ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP);
 #else
-    Port *p = erts_thr_id2port_sflgs(a->port,
-				     ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP);
+  Port *p = erts_thr_id2port_sflgs(a->port,
+                                   ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP);
 #endif
-    if (!p) {
-	if (a->async_free)
-	    a->async_free(a->async_data);
+
+  if (!p) {
+    if (a->async_free) {
+      a->async_free(a->async_data);
     }
-    else {
-	if (async_ready(p, a->async_data)) {
-	    if (a->async_free)
-		a->async_free(a->async_data);
-	}
+  } else {
+    if (async_ready(p, a->async_data)) {
+      if (a->async_free) {
+        a->async_free(a->async_data);
+      }
+    }
+
 #if ERTS_USE_ASYNC_READY_Q
-	erts_port_release(p);
+    erts_port_release(p);
 #else
-	erts_thr_port_release(p);
+    erts_thr_port_release(p);
 #endif
-    }
-    if (a->pdl)
-	driver_pdl_dec_refc(a->pdl);
-    if (a->hndl)
-	erts_ddll_dereference_driver(a->hndl);
+  }
+
+  if (a->pdl) {
+    driver_pdl_dec_refc(a->pdl);
+  }
+
+  if (a->hndl) {
+    erts_ddll_dereference_driver(a->hndl);
+  }
 }
 
 static ERTS_INLINE void async_reply(ErtsAsync *a, ErtsThrQPrepEnQ_t *prep_enq)
 {
 #if ERTS_USE_ASYNC_READY_Q
-    ErtsAsyncReadyQ *arq;
+  ErtsAsyncReadyQ *arq;
 
 #if ERTS_ASYNC_PRINT_JOB
-    erts_fprintf(stderr, "=>> %ld\n", a->async_id);
+  erts_fprintf(stderr, "=>> %ld\n", a->async_id);
 #endif
 
-    arq = async_ready_q(a->sched_id);
+  arq = async_ready_q(a->sched_id);
 
 #if ERTS_USE_ASYNC_READY_ENQ_MTX
-	erts_mtx_lock(&arq->x.data.enq_mtx);
+  erts_mtx_lock(&arq->x.data.enq_mtx);
 #endif
 
-	erts_thr_q_enqueue_prepared(&arq->thr_q, (void *) a, prep_enq);
+  erts_thr_q_enqueue_prepared(&arq->thr_q, (void *) a, prep_enq);
 
 #if ERTS_USE_ASYNC_READY_ENQ_MTX
-	erts_mtx_unlock(&arq->x.data.enq_mtx);
+  erts_mtx_unlock(&arq->x.data.enq_mtx);
 #endif
 
 #else /* ERTS_USE_ASYNC_READY_Q */
 
-	call_async_ready(a);
-	erts_free(ERTS_ALC_T_ASYNC, (void *) a);
+  call_async_ready(a);
+  erts_free(ERTS_ALC_T_ASYNC, (void *) a);
 
 #endif /* ERTS_USE_ASYNC_READY_Q */
 }
@@ -460,64 +489,66 @@ static ERTS_INLINE void async_reply(ErtsAsync *a, ErtsThrQPrepEnQ_t *prep_enq)
 static void
 async_wakeup(void *vtse)
 {
-    erts_tse_set((erts_tse_t *) vtse);
+  erts_tse_set((erts_tse_t *) vtse);
 }
 
 static erts_tse_t *async_thread_init(ErtsAsyncQ *aq)
 {
-    ErtsThrQInit_t qinit = ERTS_THR_Q_INIT_DEFAULT;
-    erts_tse_t *tse = erts_tse_fetch();
+  ErtsThrQInit_t qinit = ERTS_THR_Q_INIT_DEFAULT;
+  erts_tse_t *tse = erts_tse_fetch();
 #ifdef ERTS_SMP
-    ErtsThrPrgrCallbacks callbacks;
+  ErtsThrPrgrCallbacks callbacks;
 
-    callbacks.arg = (void *) tse;
-    callbacks.wakeup = async_wakeup;
-    callbacks.prepare_wait = nullptr;
-    callbacks.wait = nullptr;
+  callbacks.arg = (void *) tse;
+  callbacks.wakeup = async_wakeup;
+  callbacks.prepare_wait = nullptr;
+  callbacks.wait = nullptr;
 
-    erts_thr_progress_register_unmanaged_thread(&callbacks);
+  erts_thr_progress_register_unmanaged_thread(&callbacks);
 #endif
 
-    qinit.live.queue = ERTS_THR_Q_LIVE_LONG;
-    qinit.live.objects = ERTS_THR_Q_LIVE_SHORT;
-    qinit.arg = (void *) tse;
-    qinit.notify = async_wakeup;
+  qinit.live.queue = ERTS_THR_Q_LIVE_LONG;
+  qinit.live.objects = ERTS_THR_Q_LIVE_SHORT;
+  qinit.arg = (void *) tse;
+  qinit.notify = async_wakeup;
 #if ERTS_USE_ASYNC_READY_Q
-    qinit.auto_finalize_dequeue = 0;
+  qinit.auto_finalize_dequeue = 0;
 #endif
 
-    erts_thr_q_initialize(&aq->thr_q, &qinit);
+  erts_thr_q_initialize(&aq->thr_q, &qinit);
 
-    /* Inform main thread that we are done initializing... */
-    erts_mtx_lock(&async->init.data.mtx);
-    async->init.data.no_initialized++;
-    erts_cnd_signal(&async->init.data.cnd);
-    erts_mtx_unlock(&async->init.data.mtx);
+  /* Inform main thread that we are done initializing... */
+  erts_mtx_lock(&async->init.data.mtx);
+  async->init.data.no_initialized++;
+  erts_cnd_signal(&async->init.data.cnd);
+  erts_mtx_unlock(&async->init.data.mtx);
 
-    return tse;
+  return tse;
 }
 
-static void *async_main(void* arg)
+static void *async_main(void *arg)
 {
-    ErtsAsyncQ *aq = (ErtsAsyncQ *) arg;
-    erts_tse_t *tse = async_thread_init(aq);
+  ErtsAsyncQ *aq = (ErtsAsyncQ *) arg;
+  erts_tse_t *tse = async_thread_init(aq);
 
-    while (1) {
-	ErtsThrQPrepEnQ_t *prep_enq;
-	ErtsAsync *a = async_get(&aq->thr_q, tse, &prep_enq);
-	if (is_nil(a->port))
-	    break; /* Time to die */
+  while (1) {
+    ErtsThrQPrepEnQ_t *prep_enq;
+    ErtsAsync *a = async_get(&aq->thr_q, tse, &prep_enq);
 
-#if ERTS_ASYNC_PRINT_JOB
-	erts_fprintf(stderr, "<- %ld\n", a->async_id);
-#endif
-
-	a->async_invoke(a->async_data);
-
-	async_reply(a, prep_enq);
+    if (is_nil(a->port)) {
+      break;  /* Time to die */
     }
 
-    return nullptr;
+#if ERTS_ASYNC_PRINT_JOB
+    erts_fprintf(stderr, "<- %ld\n", a->async_id);
+#endif
+
+    a->async_invoke(a->async_data);
+
+    async_reply(a, prep_enq);
+  }
+
+  return nullptr;
 }
 
 #endif /* USE_THREADS */
@@ -526,19 +557,24 @@ void
 erts_exit_flush_async(void)
 {
 #ifdef USE_THREADS
-    int i;
-    ErtsAsync a;
-    a.port = NIL;
-    /*
-     * Terminate threads in order to flush queues. We do not
-     * bother to clean everything up since we are about to
-     * terminate the runtime system and a cleanup would only
-     * delay the termination.
-     */
-    for (i = 0; i < erts_async_max_threads; i++)
-	async_add(&a, async_q(i));
-    for (i = 0; i < erts_async_max_threads; i++)
-        erts_thr_join(async->queue[i].aq.thr_id, nullptr);
+  int i;
+  ErtsAsync a;
+  a.port = NIL;
+
+  /*
+   * Terminate threads in order to flush queues. We do not
+   * bother to clean everything up since we are about to
+   * terminate the runtime system and a cleanup would only
+   * delay the termination.
+   */
+  for (i = 0; i < erts_async_max_threads; i++) {
+    async_add(&a, async_q(i));
+  }
+
+  for (i = 0; i < erts_async_max_threads; i++) {
+    erts_thr_join(async->queue[i].aq.thr_id, nullptr);
+  }
+
 #endif
 }
 
@@ -546,53 +582,58 @@ erts_exit_flush_async(void)
 
 int erts_check_async_ready(void *varq)
 {
-    ErtsAsyncReadyQ *arq = (ErtsAsyncReadyQ *) varq;
-    int res = 1;
-    int i;
+  ErtsAsyncReadyQ *arq = (ErtsAsyncReadyQ *) varq;
+  int res = 1;
+  int i;
 
-    for (i = 0; i < ERTS_MAX_ASYNC_READY_CALLS_IN_SEQ; i++) {
-	ErtsAsync *a = (ErtsAsync *) erts_thr_q_dequeue(&arq->thr_q);
-	if (!a) {
-	    res = 0;
-	    break;
-	}
+  for (i = 0; i < ERTS_MAX_ASYNC_READY_CALLS_IN_SEQ; i++) {
+    ErtsAsync *a = (ErtsAsync *) erts_thr_q_dequeue(&arq->thr_q);
 
-#if ERTS_ASYNC_PRINT_JOB
-	erts_fprintf(stderr, "<<= %ld\n", a->async_id);
-#endif
-	erts_thr_q_append_finalize_dequeue_data(&arq->fin_deq, &a->q.fin_deq);
-	call_async_ready(a);
-	erts_free(ERTS_ALC_T_ASYNC, (void *) a);
+    if (!a) {
+      res = 0;
+      break;
     }
 
-    erts_thr_q_finalize_dequeue(&arq->fin_deq);
-    
-    return res;
+#if ERTS_ASYNC_PRINT_JOB
+    erts_fprintf(stderr, "<<= %ld\n", a->async_id);
+#endif
+    erts_thr_q_append_finalize_dequeue_data(&arq->fin_deq, &a->q.fin_deq);
+    call_async_ready(a);
+    erts_free(ERTS_ALC_T_ASYNC, (void *) a);
+  }
+
+  erts_thr_q_finalize_dequeue(&arq->fin_deq);
+
+  return res;
 }
 
 int erts_async_ready_clean(void *varq, void *val)
 {
-    ErtsAsyncReadyQ *arq = (ErtsAsyncReadyQ *) varq;
-    ErtsThrQCleanState_t cstate;
+  ErtsAsyncReadyQ *arq = (ErtsAsyncReadyQ *) varq;
+  ErtsThrQCleanState_t cstate;
 
-    cstate = erts_thr_q_clean(&arq->thr_q);
+  cstate = erts_thr_q_clean(&arq->thr_q);
 
-    if (erts_thr_q_finalize_dequeue(&arq->fin_deq))
-	return ERTS_ASYNC_READY_DIRTY;
+  if (erts_thr_q_finalize_dequeue(&arq->fin_deq)) {
+    return ERTS_ASYNC_READY_DIRTY;
+  }
 
-    switch (cstate) {
-    case ERTS_THR_Q_DIRTY:
-	return ERTS_ASYNC_READY_DIRTY;
-    case ERTS_THR_Q_NEED_THR_PRGR:
+  switch (cstate) {
+  case ERTS_THR_Q_DIRTY:
+    return ERTS_ASYNC_READY_DIRTY;
+
+  case ERTS_THR_Q_NEED_THR_PRGR:
 #ifdef ERTS_SMP
-	*((ErtsThrPrgrVal *) val)
-	    = erts_thr_q_need_thr_progress(&arq->thr_q);
-	return ERTS_ASYNC_READY_NEED_THR_PRGR;
+    *((ErtsThrPrgrVal *) val)
+      = erts_thr_q_need_thr_progress(&arq->thr_q);
+    return ERTS_ASYNC_READY_NEED_THR_PRGR;
 #endif
-    case ERTS_THR_Q_CLEAN:
-	break;
-    }
-    return ERTS_ASYNC_READY_CLEAN;
+
+  case ERTS_THR_Q_CLEAN:
+    break;
+  }
+
+  return ERTS_ASYNC_READY_CLEAN;
 }
 
 #endif
@@ -604,101 +645,116 @@ int erts_async_ready_clean(void *varq, void *val)
 */
 unsigned int driver_async_port_key(ErlDrvPort port)
 {
-    ErlDrvTermData td = driver_mk_port(port);
-    if (td == (ErlDrvTermData) NIL) {
-	return 0;
-    }
-    return (unsigned int) (UWord) internal_port_data(td);
+  ErlDrvTermData td = driver_mk_port(port);
+
+  if (td == (ErlDrvTermData) NIL) {
+    return 0;
+  }
+
+  return (unsigned int)(UWord) internal_port_data(td);
 }
 
 /*
 ** Schedule async_invoke on a worker thread
 ** NOTE will be syncrounous when threads are unsupported
 ** return values:
-**  0  completed 
+**  0  completed
 **  -1 error
 **  N  handle value
 **  arguments:
-**      ix             driver index 
+**      ix             driver index
 **      key            pointer to secedule queue (nullptr means round robin)
 **      async_invoke   function to run in thread
 **      async_data     data to pass to invoke function
 **      async_free     function for relase async_data in case of failure
 */
-long driver_async(ErlDrvPort ix, unsigned int* key,
-		  void (*async_invoke)(void*), void* async_data,
-		  void (*async_free)(void*))
+long driver_async(ErlDrvPort ix, unsigned int *key,
+                  void (*async_invoke)(void *), void *async_data,
+                  void (*async_free)(void *))
 {
-    ErtsAsync* a;
-    Port* prt;
-    long id;
-    unsigned int qix;
+  ErtsAsync *a;
+  Port *prt;
+  long id;
+  unsigned int qix;
 #if ERTS_USE_ASYNC_READY_Q
-    Uint sched_id;
+  Uint sched_id;
 
-    sched_id = erts_get_scheduler_id();
-    if (!sched_id)
-	sched_id = 1;
+  sched_id = erts_get_scheduler_id();
+
+  if (!sched_id) {
+    sched_id = 1;
+  }
+
 #endif
 
-    prt = erts_drvport2port(ix);
-    if (prt == ERTS_INVALID_ERL_DRV_PORT)
-	return -1;
+  prt = erts_drvport2port(ix);
 
-    ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
+  if (prt == ERTS_INVALID_ERL_DRV_PORT) {
+    return -1;
+  }
 
-    a = (ErtsAsync*) erts_alloc(ERTS_ALC_T_ASYNC, sizeof(ErtsAsync));
+  ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
+
+  a = (ErtsAsync *) erts_alloc(ERTS_ALC_T_ASYNC, sizeof(ErtsAsync));
 
 #if ERTS_USE_ASYNC_READY_Q
-    a->sched_id = sched_id;
+  a->sched_id = sched_id;
 #endif
-    a->hndl = (DE_Handle*)prt->drv_ptr->handle;
-    a->port = prt->common.id;
-    a->pdl = nullptr;
-    a->async_data = async_data;
-    a->async_invoke = async_invoke;
-    a->async_free = async_free;
+  a->hndl = (DE_Handle *)prt->drv_ptr->handle;
+  a->port = prt->common.id;
+  a->pdl = nullptr;
+  a->async_data = async_data;
+  a->async_invoke = async_invoke;
+  a->async_free = async_free;
 
-    if (!async)
-	id = 0;
-    else {
-	do {
-	    id = erts_atomic_inc_read_nob(&async->init.data.id);
-	} while (id == 0);
-	if (id < 0)
-	    id *= -1;
-	ASSERT(id > 0);
+  if (!async) {
+    id = 0;
+  } else {
+    do {
+      id = erts_atomic_inc_read_nob(&async->init.data.id);
+    } while (id == 0);
+
+    if (id < 0) {
+      id *= -1;
     }
 
-    a->async_id = id;
+    ASSERT(id > 0);
+  }
 
-    if (key == nullptr) {
-	qix = (erts_async_max_threads > 0)
-	    ? (id % erts_async_max_threads) : 0;
-    }
-    else {
-	qix = (erts_async_max_threads > 0) ? 
-	    (*key % erts_async_max_threads) : 0;
-	*key = qix;
-    }
+  a->async_id = id;
+
+  if (key == nullptr) {
+    qix = (erts_async_max_threads > 0)
+          ? (id % erts_async_max_threads) : 0;
+  } else {
+    qix = (erts_async_max_threads > 0) ?
+          (*key % erts_async_max_threads) : 0;
+    *key = qix;
+  }
+
 #ifdef USE_THREADS
-    if (erts_async_max_threads > 0) {
-	if (prt->port_data_lock) {
-	    driver_pdl_inc_refc(prt->port_data_lock);
-	    a->pdl = prt->port_data_lock;
-	}
-	async_add(a, async_q(qix));
-	return id;
+
+  if (erts_async_max_threads > 0) {
+    if (prt->port_data_lock) {
+      driver_pdl_inc_refc(prt->port_data_lock);
+      a->pdl = prt->port_data_lock;
     }
+
+    async_add(a, async_q(qix));
+    return id;
+  }
+
 #endif
 
-    (*a->async_invoke)(a->async_data);
+  (*a->async_invoke)(a->async_data);
 
-    if (async_ready(prt, a->async_data)) {
-        if (a->async_free != nullptr)
-	    (*a->async_free)(a->async_data);
+  if (async_ready(prt, a->async_data)) {
+    if (a->async_free != nullptr) {
+      (*a->async_free)(a->async_data);
     }
-    erts_free(ERTS_ALC_T_ASYNC, (void *) a);
+  }
 
-    return id;
+  erts_free(ERTS_ALC_T_ASYNC, (void *) a);
+
+  return id;
 }

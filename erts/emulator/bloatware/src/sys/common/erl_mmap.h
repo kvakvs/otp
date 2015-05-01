@@ -25,29 +25,29 @@
 #define ERTS_MMAP_SUPERALIGNED_BITS (18)
 /* Affects hard limits for sbct and lmbcs documented in erts_alloc.xml */
 
-#define ERTS_MMAPFLG_OS_ONLY			(((uint32_t) 1) << 0)
-#define ERTS_MMAPFLG_SUPERCARRIER_ONLY		(((uint32_t) 1) << 1)
-#define ERTS_MMAPFLG_SUPERALIGNED		(((uint32_t) 1) << 2)
+#define ERTS_MMAPFLG_OS_ONLY      (((uint32_t) 1) << 0)
+#define ERTS_MMAPFLG_SUPERCARRIER_ONLY    (((uint32_t) 1) << 1)
+#define ERTS_MMAPFLG_SUPERALIGNED   (((uint32_t) 1) << 2)
 
-#define ERTS_HAVE_ERTS_OS_MMAP			(1 << 0)
-#define ERTS_HAVE_ERTS_SUPERCARRIER_MMAP	(1 << 1)
+#define ERTS_HAVE_ERTS_OS_MMAP      (1 << 0)
+#define ERTS_HAVE_ERTS_SUPERCARRIER_MMAP  (1 << 1)
 extern int erts_have_erts_mmap;
 extern UWord erts_page_inv_mask;
 
 typedef struct {
-    struct {
-	char *start;
-	char *end;
-    } virtual_range;
-    struct {
-	char *start;
-	char *end;
-    } predefined_area;
-    UWord scs;  /* super carrier size */
-    int sco;    /* super carrier only? */
-    UWord scrfsd; /* super carrier reserved free segment descriptors */
-    int scrpm; /* super carrier reserve physical memory */
-}ErtsMMapInit;
+  struct {
+    char *start;
+    char *end;
+  } virtual_range;
+  struct {
+    char *start;
+    char *end;
+  } predefined_area;
+  UWord scs;  /* super carrier size */
+  int sco;    /* super carrier only? */
+  UWord scrfsd; /* super carrier reserved free segment descriptors */
+  int scrpm; /* super carrier reserve physical memory */
+} ErtsMMapInit;
 
 #define ERTS_MMAP_INIT_DEFAULT_INITER \
     {{nullptr, nullptr}, {nullptr, nullptr}, 0, 1, (1 << 16), 1}
@@ -56,19 +56,18 @@ void *erts_mmap(uint32_t flags, UWord *sizep);
 void erts_munmap(uint32_t flags, void *ptr, UWord size);
 void *erts_mremap(uint32_t flags, void *ptr, UWord old_size, UWord *sizep);
 int erts_mmap_in_supercarrier(void *ptr);
-void erts_mmap_init(ErtsMMapInit*);
-struct erts_mmap_info_struct
-{
-    UWord sizes[6];
-    UWord segs[6];
-    UWord os_used;
+void erts_mmap_init(ErtsMMapInit *);
+struct erts_mmap_info_struct {
+  UWord sizes[6];
+  UWord segs[6];
+  UWord os_used;
 };
 Eterm erts_mmap_info(int *print_to_p, void *print_to_arg,
-                     Eterm** hpp, Uint* szp, struct erts_mmap_info_struct*);
+                     Eterm **hpp, Uint *szp, struct erts_mmap_info_struct *);
 Eterm erts_mmap_info_options(char *prefix, int *print_to_p, void *print_to_arg,
                              Uint **hpp, Uint *szp);
 struct process;
-Eterm erts_mmap_debug_info(struct process*);
+Eterm erts_mmap_debug_info(struct process *);
 
 #define ERTS_SUPERALIGNED_SIZE \
     (1 << ERTS_MMAP_SUPERALIGNED_BITS)
@@ -124,8 +123,8 @@ Eterm erts_mmap_debug_info(struct process*);
 #ifdef HARD_DEBUG_MSEG
 #  define HARD_DBG_INSERT_MSEG hard_dbg_insert_mseg
 #  define HARD_DBG_REMOVE_MSEG hard_dbg_remove_mseg
-void hard_dbg_insert_mseg(void* seg, UWord sz);
-void hard_dbg_remove_mseg(void* seg, UWord sz);
+void hard_dbg_insert_mseg(void *seg, UWord sz);
+void hard_dbg_remove_mseg(void *seg, UWord sz);
 #else
 #  define HARD_DBG_INSERT_MSEG(SEG,SZ)
 #  define HARD_DBG_REMOVE_MSEG(SEG,SZ)

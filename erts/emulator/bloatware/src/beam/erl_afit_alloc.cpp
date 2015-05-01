@@ -1,33 +1,33 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 2003-2013. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  */
 
 
 /*
- * Description:	A fast allocator intended for temporary allocation.
+ * Description: A fast allocator intended for temporary allocation.
  *              When allocating, only the first block in the free list
  *              is inspected, if this_ block doesn't fit a new_ carrier
  *              is created. NOTE: this_ allocator can behave really bad
  *              if misused.
- *              
+ *
  *              This module is a callback-module for erl_alloc_util.c
  *
- * Author: 	Rickard Green
+ * Author:  Rickard Green
  */
 
 #ifdef HAVE_CONFIG_H
@@ -38,149 +38,156 @@
 #include "erl_afit_alloc.h"
 
 struct AFFreeBlock_t_ {
-    Block_t block_head;
-    AFFreeBlock_t *prev;
-    AFFreeBlock_t *next;
+  Block_t block_head;
+  AFFreeBlock_t *prev;
+  AFFreeBlock_t *next;
 };
 #define AF_BLK_SZ(B) MBC_FBLK_SZ(&(B)->block_head)
 
-#define MIN_MBC_SZ		(16*1024)
-#define MIN_MBC_FIRST_FREE_SZ	(4*1024)
+#define MIN_MBC_SZ    (16*1024)
+#define MIN_MBC_FIRST_FREE_SZ (4*1024)
 
 /* Prototypes of callback functions */
-static Block_t *	get_free_block		(Allctr_t *, Uint, Block_t *, Uint);
-static void		link_free_block		(Allctr_t *, Block_t *);
-static void		unlink_free_block	(Allctr_t *, Block_t *);
+static Block_t   *get_free_block(Allctr_t *, Uint, Block_t *, Uint);
+static void   link_free_block(Allctr_t *, Block_t *);
+static void   unlink_free_block(Allctr_t *, Block_t *);
 
 
-static Eterm		info_options		(Allctr_t *, char *, int *,
-						 void *arg, Uint **, Uint *);
-static void		init_atoms		(void);
+static Eterm    info_options(Allctr_t *, char *, int *,
+                             void *arg, Uint **, Uint *);
+static void   init_atoms(void);
 
 static int atoms_initialized = 0;
 
 void
 erts_afalc_init(void)
 {
-    atoms_initialized = 0;
+  atoms_initialized = 0;
 }
 
 Allctr_t *
 erts_afalc_start(AFAllctr_t *afallctr,
-		 AFAllctrInit_t *afinit,
-		 AllctrInit_t *init)
+                 AFAllctrInit_t *afinit,
+                 AllctrInit_t *init)
 {
-    struct {
-	int dummy;
-	AFAllctr_t allctr;
-    } zero = {0};
-    /* The struct with a dummy element first is used in order to avoid (an
-       incorrect) gcc warning. gcc warns if {0} is used as initializer of
-       a struct when the first member is a struct (not if, for example,
-       the third member is a struct). */
+  struct {
+    int dummy;
+    AFAllctr_t allctr;
+  } zero = {0};
+  /* The struct with a dummy element first is used in order to avoid (an
+     incorrect) gcc warning. gcc warns if {0} is used as initializer of
+     a struct when the first member is a struct (not if, for example,
+     the third member is a struct). */
 
-    Allctr_t *allctr = (Allctr_t *) afallctr;
+  Allctr_t *allctr = (Allctr_t *) afallctr;
 
-    sys_memcpy((void *) afallctr, (void *) &zero.allctr, sizeof(AFAllctr_t));
+  sys_memcpy((void *) afallctr, (void *) &zero.allctr, sizeof(AFAllctr_t));
 
-    allctr->mbc_header_size		= sizeof(Carrier_t);
-    allctr->min_mbc_size		= MIN_MBC_SZ;
-    allctr->min_mbc_first_free_size	= MIN_MBC_FIRST_FREE_SZ;
-    allctr->min_block_size		= sizeof(AFFreeBlock_t);
-    allctr->vsn_str			= ERTS_ALC_AF_ALLOC_VSN_STR;
+  allctr->mbc_header_size   = sizeof(Carrier_t);
+  allctr->min_mbc_size    = MIN_MBC_SZ;
+  allctr->min_mbc_first_free_size = MIN_MBC_FIRST_FREE_SZ;
+  allctr->min_block_size    = sizeof(AFFreeBlock_t);
+  allctr->vsn_str     = ERTS_ALC_AF_ALLOC_VSN_STR;
 
-    /* Callback functions */
-    allctr->get_free_block		= get_free_block;
-    allctr->link_free_block		= link_free_block;
-    allctr->unlink_free_block		= unlink_free_block;
-    allctr->info_options		= info_options;
+  /* Callback functions */
+  allctr->get_free_block    = get_free_block;
+  allctr->link_free_block   = link_free_block;
+  allctr->unlink_free_block   = unlink_free_block;
+  allctr->info_options    = info_options;
 
-    allctr->get_next_mbc_size		= nullptr;
-    allctr->creating_mbc		= nullptr;
-    allctr->destroying_mbc		= nullptr;
-    allctr->add_mbc                     = nullptr;
-    allctr->remove_mbc                  = nullptr;
-    allctr->largest_fblk_in_mbc         = nullptr;
-    allctr->init_atoms			= init_atoms;
+  allctr->get_next_mbc_size   = nullptr;
+  allctr->creating_mbc    = nullptr;
+  allctr->destroying_mbc    = nullptr;
+  allctr->add_mbc                     = nullptr;
+  allctr->remove_mbc                  = nullptr;
+  allctr->largest_fblk_in_mbc         = nullptr;
+  allctr->init_atoms      = init_atoms;
 
 #ifdef ERTS_ALLOC_UTIL_HARD_DEBUG
-    allctr->check_block			= nullptr;
-    allctr->check_mbc			= nullptr;
+  allctr->check_block     = nullptr;
+  allctr->check_mbc     = nullptr;
 #endif
 
-    allctr->atoms_initialized		= 0;
+  allctr->atoms_initialized   = 0;
 
-    if (!erts_alcu_start(allctr, init))
-	return nullptr;
+  if (!erts_alcu_start(allctr, init)) {
+    return nullptr;
+  }
 
-    return allctr;
+  return allctr;
 }
 
 static Block_t *
 get_free_block(Allctr_t *allctr, Uint size, Block_t *cand_blk, Uint cand_size)
 {
-    AFAllctr_t *afallctr = (AFAllctr_t *) allctr;
+  AFAllctr_t *afallctr = (AFAllctr_t *) allctr;
 
-    ASSERT(!cand_blk || cand_size >= size);
+  ASSERT(!cand_blk || cand_size >= size);
 
-    if (afallctr->free_list && AF_BLK_SZ(afallctr->free_list) >= size) {
-	AFFreeBlock_t *res = afallctr->free_list;	
-	afallctr->free_list = res->next;
-	if (res->next)
-	    res->next->prev = nullptr;
-	return (Block_t *) res;
+  if (afallctr->free_list && AF_BLK_SZ(afallctr->free_list) >= size) {
+    AFFreeBlock_t *res = afallctr->free_list;
+    afallctr->free_list = res->next;
+
+    if (res->next) {
+      res->next->prev = nullptr;
     }
-    else
-	return nullptr;
+
+    return (Block_t *) res;
+  } else {
+    return nullptr;
+  }
 }
 
 static void
 link_free_block(Allctr_t *allctr, Block_t *block)
 {
-    AFFreeBlock_t *blk = (AFFreeBlock_t *) block;
-    AFAllctr_t *afallctr = (AFAllctr_t *) allctr;
+  AFFreeBlock_t *blk = (AFFreeBlock_t *) block;
+  AFAllctr_t *afallctr = (AFAllctr_t *) allctr;
 
-    if (afallctr->free_list && AF_BLK_SZ(afallctr->free_list) > AF_BLK_SZ(blk)) {
-	blk->next = afallctr->free_list->next;
-	blk->prev = afallctr->free_list;
-	afallctr->free_list->next = blk;
-    }
-    else {
-	blk->next = afallctr->free_list;
-	blk->prev = nullptr;
-	afallctr->free_list = blk;
-    }
+  if (afallctr->free_list && AF_BLK_SZ(afallctr->free_list) > AF_BLK_SZ(blk)) {
+    blk->next = afallctr->free_list->next;
+    blk->prev = afallctr->free_list;
+    afallctr->free_list->next = blk;
+  } else {
+    blk->next = afallctr->free_list;
+    blk->prev = nullptr;
+    afallctr->free_list = blk;
+  }
 
-    if (blk->next)
-	blk->next->prev = blk;
+  if (blk->next) {
+    blk->next->prev = blk;
+  }
 }
 
 static void
 unlink_free_block(Allctr_t *allctr, Block_t *block)
 {
-    AFFreeBlock_t *blk = (AFFreeBlock_t *) block;
-    AFAllctr_t *afallctr = (AFAllctr_t *) allctr;
+  AFFreeBlock_t *blk = (AFFreeBlock_t *) block;
+  AFAllctr_t *afallctr = (AFAllctr_t *) allctr;
 
-    if (blk->prev)
-	blk->prev->next = blk->next;
-    else
-	afallctr->free_list = blk->next;
-    if (blk->next)
-	blk->next->prev = blk->prev;
+  if (blk->prev) {
+    blk->prev->next = blk->next;
+  } else {
+    afallctr->free_list = blk->next;
+  }
+
+  if (blk->next) {
+    blk->next->prev = blk->prev;
+  }
 }
 
 
 static struct {
-    Eterm as;
-    Eterm af;
+  Eterm as;
+  Eterm af;
 #ifdef DEBUG
-    Eterm end_of_atoms;
+  Eterm end_of_atoms;
 #endif
 } am;
 
 static void ERTS_INLINE atom_init(Eterm *atom, char *name)
 {
-    *atom = am_atom_put(name, strlen(name));
+  *atom = am_atom_put(name, strlen(name));
 }
 #define AM_INIT(AM) atom_init(&am.AM, #AM)
 
@@ -188,66 +195,71 @@ static void
 init_atoms(void)
 {
 #ifdef DEBUG
-    Eterm *atom;
+  Eterm *atom;
 #endif
 
-    if (atoms_initialized)
-	return;
+  if (atoms_initialized) {
+    return;
+  }
 
 #ifdef DEBUG
-    for (atom = (Eterm *) &am; atom <= &am.end_of_atoms; atom++) {
-	*atom = THE_NON_VALUE;
-    }
+
+  for (atom = (Eterm *) &am; atom <= &am.end_of_atoms; atom++) {
+    *atom = THE_NON_VALUE;
+  }
+
 #endif
 
-    AM_INIT(as);
-    AM_INIT(af);
+  AM_INIT(as);
+  AM_INIT(af);
 
 #ifdef DEBUG
-    for (atom = (Eterm *) &am; atom < &am.end_of_atoms; atom++) {
-	ASSERT(*atom != THE_NON_VALUE);
-    }
+
+  for (atom = (Eterm *) &am; atom < &am.end_of_atoms; atom++) {
+    ASSERT(*atom != THE_NON_VALUE);
+  }
+
 #endif
 
-    atoms_initialized = 1;
+  atoms_initialized = 1;
 }
 
 
-#define bld_uint	erts_bld_uint
-#define bld_cons	erts_bld_cons
-#define bld_tuple	erts_bld_tuple
+#define bld_uint  erts_bld_uint
+#define bld_cons  erts_bld_cons
+#define bld_tuple erts_bld_tuple
 
 static ERTS_INLINE void
 add_2tup(Uint **hpp, Uint *szp, Eterm *lp, Eterm el1, Eterm el2)
 {
-    *lp = bld_cons(hpp, szp, bld_tuple(hpp, szp, 2, el1, el2), *lp);
+  *lp = bld_cons(hpp, szp, bld_tuple(hpp, szp, 2, el1, el2), *lp);
 }
 
 static Eterm
 info_options(Allctr_t *allctr,
-	     char *prefix,
-	     int *print_to_p,
-	     void *print_to_arg,
-	     Uint **hpp,
-	     Uint *szp)
+             char *prefix,
+             int *print_to_p,
+             void *print_to_arg,
+             Uint **hpp,
+             Uint *szp)
 {
-    Eterm res = THE_NON_VALUE;
+  Eterm res = THE_NON_VALUE;
 
-    if (print_to_p) {
-	erts_print(*print_to_p, print_to_arg, "%sas: af\n", prefix);
-    }
+  if (print_to_p) {
+    erts_print(*print_to_p, print_to_arg, "%sas: af\n", prefix);
+  }
 
-    if (hpp || szp) {
-	
-	if (!atoms_initialized)
-	    erl_exit(1, "%s:%d: Internal error: Atoms not initialized",
-		     __FILE__, __LINE__);;
+  if (hpp || szp) {
 
-	res = NIL;
-	add_2tup(hpp, szp, &res, am.as, am.af);
-    }
+    if (!atoms_initialized)
+      erl_exit(1, "%s:%d: Internal error: Atoms not initialized",
+               __FILE__, __LINE__);;
 
-    return res;
+    res = NIL;
+    add_2tup(hpp, szp, &res, am.as, am.af);
+  }
+
+  return res;
 }
 
 
@@ -262,7 +274,9 @@ info_options(Allctr_t *allctr,
 UWord
 erts_afalc_test(UWord op, UWord a1, UWord a2)
 {
-    switch (op) {
-    default:	ASSERT(0); return ~((UWord) 0);
-    }
+  switch (op) {
+  default:
+    ASSERT(0);
+    return ~((UWord) 0);
+  }
 }

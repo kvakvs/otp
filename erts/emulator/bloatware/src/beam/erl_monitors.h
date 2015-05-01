@@ -1,19 +1,19 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 2004-2013. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  */
 
@@ -22,7 +22,7 @@
  * Monitors are kept in an AVL tree and the data structures for
  * the four different types of monitors are like this_:
  **********************************************************************
- * Local monitor by pid/port: 
+ * Local monitor by pid/port:
  * (Ref is always same in all involved data structures)
  **********************************************************************
  *        Process/Port X     Process Y
@@ -50,7 +50,7 @@
  *                    Node A              |           Node B
  *       ---------------------------------+----------------------------------
  *        Process X (@A)   Distentry @A       Distentry @B     Process Y (@B)
- *                         for node B         for node A 
+ *                         for node B         for node A
  *       +-------------+  +-------------+    +-------------+  +-------------+
  * Type: | MON_ORIGIN  |  | MON_TARGET  |    | MON_ORIGIN  |  | MON_TARGET  |
  *       +-------------+  +-------------+    +-------------+  +-------------+
@@ -85,7 +85,7 @@
 
 /* Type tags for links */
 #define LINK_PID 1   /* ...Or port */
-#define LINK_NODE 3  /* "Node monitor" */  
+#define LINK_NODE 3  /* "Node monitor" */
 
 /* Size of a monitor without heap, in words (fixalloc) */
 #define ERTS_MONITOR_SIZE ((sizeof(ErtsMonitor) - sizeof(Uint))/sizeof(Uint))
@@ -93,49 +93,49 @@
 #define ERTS_LINK_SIZE ((sizeof(ErtsLink) - sizeof(Uint))/sizeof(Uint))
 #define ERTS_LINK_SH_SIZE ERTS_LINK_SIZE /* Size of fix-alloced links */
 
-/* ErtsMonitor and ErtsLink *need* to begin in a similar way as 
+/* ErtsMonitor and ErtsLink *need* to begin in a similar way as
    ErtsMonitorOrLink */
 typedef struct erts_monitor_or_link {
-    struct erts_monitor_or_link *left, *right;
-    int16_t balance;    
+  struct erts_monitor_or_link *left, *right;
+  int16_t balance;
 } ErtsMonitorOrLink;
 
 typedef struct erts_monitor {
-    struct erts_monitor *left, *right; 
-    int16_t balance;
-    uint16_t type;  /* MON_ORIGIN | MON_TARGET */
-    Eterm ref;
-    Eterm pid;    /* In case of distributed named monitor, this_ is the
-		     nodename atom in MON_ORIGIN process, otherwise a pid or
-		     , in case of a MON_TARGET, a port */
-    Eterm name;   /* When monitoring a named process: atom() else [] */
-    Uint heap[1]; /* Larger in reality */
+  struct erts_monitor *left, *right;
+  int16_t balance;
+  uint16_t type;  /* MON_ORIGIN | MON_TARGET */
+  Eterm ref;
+  Eterm pid;    /* In case of distributed named monitor, this_ is the
+         nodename atom in MON_ORIGIN process, otherwise a pid or
+         , in case of a MON_TARGET, a port */
+  Eterm name;   /* When monitoring a named process: atom() else [] */
+  Uint heap[1]; /* Larger in reality */
 } ErtsMonitor;
 
 typedef struct erts_link {
-    struct erts_link *left, *right;
-    int16_t balance;
-    uint16_t type;             /* LINK_PID | LINK_NODE */
-    Eterm pid;               /* When node monitor, 
-				the node atom is here instead */
-    union {
-	struct erts_link *root;  /* Used only in dist entries */
-	Uint refc;
-    } shared;
-    Uint heap[1];            /* Larger in reality */
-} ErtsLink;   
+  struct erts_link *left, *right;
+  int16_t balance;
+  uint16_t type;             /* LINK_PID | LINK_NODE */
+  Eterm pid;               /* When node monitor,
+        the node atom is here instead */
+  union {
+    struct erts_link *root;  /* Used only in dist entries */
+    Uint refc;
+  } shared;
+  Uint heap[1];            /* Larger in reality */
+} ErtsLink;
 
 typedef struct erts_suspend_monitor {
-    struct erts_suspend_monitor *left, *right;
-    int16_t balance;
+  struct erts_suspend_monitor *left, *right;
+  int16_t balance;
 
-    int pending;
-    int active;
-    Eterm pid;
+  int pending;
+  int active;
+  Eterm pid;
 } ErtsSuspendMonitor;
 
 #define ERTS_LINK_ROOT(Linkp) ((Linkp)->shared.root)
-#define ERTS_LINK_REFC(Linkp) ((Linkp)->shared.refc) 
+#define ERTS_LINK_REFC(Linkp) ((Linkp)->shared.refc)
 
 Uint erts_tot_link_lh_size(void);
 
@@ -143,12 +143,12 @@ Uint erts_tot_link_lh_size(void);
 /* Prototypes */
 void erts_destroy_monitor(ErtsMonitor *mon);
 void erts_add_monitor(ErtsMonitor **root, Uint type, Eterm ref, Eterm pid,
-		      Eterm name);
+                      Eterm name);
 ErtsMonitor *erts_remove_monitor(ErtsMonitor **root, Eterm ref);
 ErtsMonitor *erts_lookup_monitor(ErtsMonitor *root, Eterm ref);
-void erts_sweep_monitors(ErtsMonitor *root, 
-			 void (*doit)(ErtsMonitor *, void *),
-			 void *context);
+void erts_sweep_monitors(ErtsMonitor *root,
+                         void (*doit)(ErtsMonitor *, void *),
+                         void *context);
 
 void erts_destroy_link(ErtsLink *lnk);
 /* Returns 0 if OK, < 0 if already present */
@@ -156,18 +156,18 @@ int erts_add_link(ErtsLink **root, Uint type, Eterm pid);
 ErtsLink *erts_add_or_lookup_link(ErtsLink **root, Uint type, Eterm pid);
 ErtsLink *erts_remove_link(ErtsLink **root, Eterm pid);
 ErtsLink *erts_lookup_link(ErtsLink *root, Eterm pid);
-void erts_sweep_links(ErtsLink *root, 
-		      void (*doit)(ErtsLink *, void *),
-		      void *context);
+void erts_sweep_links(ErtsLink *root,
+                      void (*doit)(ErtsLink *, void *),
+                      void *context);
 
 void erts_destroy_suspend_monitor(ErtsSuspendMonitor *sproc);
 void erts_sweep_suspend_monitors(ErtsSuspendMonitor *root,
-				 void (*doit)(ErtsSuspendMonitor *, void *),
-				 void *context);
+                                 void (*doit)(ErtsSuspendMonitor *, void *),
+                                 void *context);
 ErtsSuspendMonitor *erts_add_or_lookup_suspend_monitor(ErtsSuspendMonitor **root,
-						       Eterm pid);
+    Eterm pid);
 ErtsSuspendMonitor *erts_lookup_suspend_monitor(ErtsSuspendMonitor *root,
-						Eterm pid);
+    Eterm pid);
 void erts_delete_suspend_monitor(ErtsSuspendMonitor **root, Eterm pid);
 void erts_init_monitors(void);
 void erts_one_link_size(ErtsLink *lnk, void *vpu);

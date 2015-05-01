@@ -28,12 +28,12 @@ struct process;
 
 typedef struct {
 #ifdef DEBUG
-    int smp_api;
+  int smp_api;
 #endif
-    union {
-	Uint64 not_atomic;
-	erts_atomic64_t atomic;
-    } counter;
+  union {
+    Uint64 not_atomic;
+    erts_atomic64_t atomic;
+  } counter;
 } erts_interval_t;
 
 void erts_interval_init(erts_interval_t *);
@@ -58,48 +58,48 @@ ERTS_GLB_INLINE Uint64 erts_smp_current_interval_acqb(erts_interval_t *);
 ERTS_GLB_INLINE Uint64
 erts_current_interval_nob__(erts_interval_t *icp)
 {
-    return (Uint64) erts_atomic64_read_nob(&icp->counter.atomic);
+  return (Uint64) erts_atomic64_read_nob(&icp->counter.atomic);
 }
 
 ERTS_GLB_INLINE Uint64
 erts_current_interval_acqb__(erts_interval_t *icp)
 {
-    return (Uint64) erts_atomic64_read_acqb(&icp->counter.atomic);
+  return (Uint64) erts_atomic64_read_acqb(&icp->counter.atomic);
 }
 
 ERTS_GLB_INLINE Uint64
 erts_current_interval_nob(erts_interval_t *icp)
 {
-    ASSERT(!icp->smp_api);
-    return erts_current_interval_nob__(icp);
+  ASSERT(!icp->smp_api);
+  return erts_current_interval_nob__(icp);
 }
 
 ERTS_GLB_INLINE Uint64
 erts_current_interval_acqb(erts_interval_t *icp)
 {
-    ASSERT(!icp->smp_api);
-    return erts_current_interval_acqb__(icp);
+  ASSERT(!icp->smp_api);
+  return erts_current_interval_acqb__(icp);
 }
 
 ERTS_GLB_INLINE Uint64
 erts_smp_current_interval_nob(erts_interval_t *icp)
 {
-    ASSERT(icp->smp_api);
+  ASSERT(icp->smp_api);
 #ifdef ERTS_SMP
-    return erts_current_interval_nob__(icp);
+  return erts_current_interval_nob__(icp);
 #else
-    return icp->counter.not_atomic;
+  return icp->counter.not_atomic;
 #endif
 }
 
 ERTS_GLB_INLINE Uint64
 erts_smp_current_interval_acqb(erts_interval_t *icp)
 {
-    ASSERT(icp->smp_api);
+  ASSERT(icp->smp_api);
 #ifdef ERTS_SMP
-    return erts_current_interval_acqb__(icp);
+  return erts_current_interval_acqb__(icp);
 #else
-    return icp->counter.not_atomic;
+  return icp->counter.not_atomic;
 #endif
 }
 
@@ -122,7 +122,7 @@ uint32_t make_hash(Eterm);
 
 void erts_save_emu_args(int argc, char **argv);
 Eterm erts_get_emu_args(struct process *c_p);
-Eterm erts_get_ethread_info(struct process * c_p);
+Eterm erts_get_ethread_info(struct process *c_p);
 
 Eterm erts_bld_atom(Uint **hpp, Uint *szp, char *str);
 Eterm erts_bld_uint(Uint **hpp, Uint *szp, Uint ui);
@@ -140,13 +140,13 @@ Eterm erts_bld_string_n(Uint **hpp, Uint *szp, const char *str, Sint len);
 #define erts_bld_string(hpp,szp,str) erts_bld_string_n(hpp,szp,str,strlen(str))
 Eterm erts_bld_list(Uint **hpp, Uint *szp, Sint length, Eterm terms[]);
 Eterm erts_bld_2tup_list(Uint **hpp, Uint *szp,
-			 Sint length, Eterm terms1[], Uint terms2[]);
+                         Sint length, Eterm terms1[], Uint terms2[]);
 Eterm
 erts_bld_atom_uword_2tup_list(Uint **hpp, Uint *szp,
-			     Sint length, Eterm atoms[], UWord uints[]);
+                              Sint length, Eterm atoms[], UWord uints[]);
 Eterm
 erts_bld_atom_2uint_3tup_list(Uint **hpp, Uint *szp, Sint length,
-			      Eterm atoms[], Uint uints1[], Uint uints2[]);
+                              Eterm atoms[], Uint uints1[], Uint uints2[]);
 
 void erts_init_utils(void);
 void erts_init_utils_mem(void);
@@ -155,7 +155,7 @@ erts_dsprintf_buf_t *erts_create_tmp_dsbuf(Uint);
 void erts_destroy_tmp_dsbuf(erts_dsprintf_buf_t *);
 
 #if HALFWORD_HEAP
-int eq_rel(Eterm a, Eterm* a_base, Eterm b, Eterm* b_base);
+int eq_rel(Eterm a, Eterm *a_base, Eterm b, Eterm *b_base);
 #  define eq(A,B) eq_rel(A,nullptr,B,nullptr)
 #else
 int eq(Eterm, Eterm);
@@ -165,7 +165,7 @@ int eq(Eterm, Eterm);
 #define EQ(x,y) (((x) == (y)) || (is_not_both_immed((x),(y)) && eq((x),(y))))
 
 #if HALFWORD_HEAP
-Sint erts_cmp_rel_opt(Eterm, Eterm*, Eterm, Eterm*, int);
+Sint erts_cmp_rel_opt(Eterm, Eterm *, Eterm, Eterm *, int);
 #define cmp_rel(A,A_BASE,B,B_BASE)       erts_cmp_rel_opt(A,A_BASE,B,B_BASE,0)
 #define cmp_rel_term(A,A_BASE,B,B_BASE)  erts_cmp_rel_opt(A,A_BASE,B,B_BASE,1)
 #define CMP(A,B)                         erts_cmp_rel_opt(A,nullptr,B,nullptr,0)

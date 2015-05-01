@@ -34,12 +34,12 @@ typedef struct ErtsProc2PortSigData_ ErtsProc2PortSigData;
 #ifndef __WIN32__
 #define ERTS_DEFAULT_MAX_PORTS (1 << 16)
 #else
-/* 
+/*
  *  Do not default to as many max ports on Windows
  *  as there are no os limits to stop system
  *  from running amok. If allowed to go too high
  *  windows rarely recovers from the errors and
- *  other OS processes can be effected. 
+ *  other OS processes can be effected.
  */
 #define ERTS_DEFAULT_MAX_PORTS (1 << 13)
 #endif /* __WIN32__ */
@@ -61,13 +61,13 @@ typedef struct erts_driver_t_ erts_driver_t;
 #define ERTS_INVALID_ERL_DRV_PORT ((struct _erl_drv_port *) ((SWord) -1))
 #ifdef DEBUG
 /* Make sure we use this_ api, and do not cast directly */
-#define ERTS_ErlDrvPort2Port(PH)	\
-    ((PH) == ERTS_INVALID_ERL_DRV_PORT	\
-     ? ERTS_INVALID_ERL_DRV_PORT	\
+#define ERTS_ErlDrvPort2Port(PH)  \
+    ((PH) == ERTS_INVALID_ERL_DRV_PORT  \
+     ? ERTS_INVALID_ERL_DRV_PORT  \
      : ((Port *) ((PH) - 4711)))
-#define ERTS_Port2ErlDrvPort(PH)	\
-    ((PH) == ERTS_INVALID_ERL_DRV_PORT	\
-     ? ERTS_INVALID_ERL_DRV_PORT	\
+#define ERTS_Port2ErlDrvPort(PH)  \
+    ((PH) == ERTS_INVALID_ERL_DRV_PORT  \
+     ? ERTS_INVALID_ERL_DRV_PORT  \
      : ((ErlDrvPort) ((PH) + 4711)))
 #else
 #define ERTS_ErlDrvPort2Port(PH) ((Port *) (PH))
@@ -77,28 +77,28 @@ typedef struct erts_driver_t_ erts_driver_t;
 #define SMALL_IO_QUEUE 5   /* Number of fixed elements */
 
 typedef struct {
-    ErlDrvSizeT size;       /* total size in bytes */
+  ErlDrvSizeT size;       /* total size in bytes */
 
-    SysIOVec* v_start;
-    SysIOVec* v_end;
-    SysIOVec* v_head;
-    SysIOVec* v_tail;
-    SysIOVec  v_small[SMALL_IO_QUEUE];
+  SysIOVec *v_start;
+  SysIOVec *v_end;
+  SysIOVec *v_head;
+  SysIOVec *v_tail;
+  SysIOVec  v_small[SMALL_IO_QUEUE];
 
-    ErlDrvBinary** b_start;
-    ErlDrvBinary** b_end;
-    ErlDrvBinary** b_head;
-    ErlDrvBinary** b_tail;
-    ErlDrvBinary*  b_small[SMALL_IO_QUEUE];
+  ErlDrvBinary **b_start;
+  ErlDrvBinary **b_end;
+  ErlDrvBinary **b_head;
+  ErlDrvBinary **b_tail;
+  ErlDrvBinary  *b_small[SMALL_IO_QUEUE];
 } ErlIOQueue;
 
 typedef struct line_buf {  /* Buffer used in line oriented I/O */
-    ErlDrvSizeT bufsiz;      /* Size of character buffer */
-    ErlDrvSizeT ovlen;       /* Length of overflow data */
-    ErlDrvSizeT ovsiz;       /* Actual size of overflow buffer */
-    char data[1];            /* Starting point of buffer data,
-			      data[0] is a flag indicating an unprocess CR,
-			      The rest is the overflow buffer. */
+  ErlDrvSizeT bufsiz;      /* Size of character buffer */
+  ErlDrvSizeT ovlen;       /* Length of overflow data */
+  ErlDrvSizeT ovsiz;       /* Actual size of overflow buffer */
+  char data[1];            /* Starting point of buffer data,
+            data[0] is a flag indicating an unprocess CR,
+            The rest is the overflow buffer. */
 } LineBuf;
 
 /*
@@ -106,15 +106,15 @@ typedef struct line_buf {  /* Buffer used in line oriented I/O */
  * *need* to be first.
  */
 
-#define ERTS_PORT_INFO_1_ITEMS				\
-    {	am_registered_name,	/* Needs to be first */	\
-	am_name,					\
-	am_links,					\
-	am_id,						\
-	am_connected,					\
-	am_input,					\
-	am_output,					\
-	am_os_pid }
+#define ERTS_PORT_INFO_1_ITEMS        \
+    { am_registered_name, /* Needs to be first */ \
+  am_name,          \
+  am_links,         \
+  am_id,            \
+  am_connected,         \
+  am_input,         \
+  am_output,          \
+  am_os_pid }
 
 /*
  * Port Specific Data.
@@ -127,7 +127,7 @@ typedef struct line_buf {  /* Buffer used in line oriented I/O */
 #define ERTS_PRTSD_SIZE 1
 
 typedef struct {
-    void *data[ERTS_PRTSD_SIZE];
+  void *data[ERTS_PRTSD_SIZE];
 } ErtsPrtSD;
 
 #ifdef ERTS_SMP
@@ -153,39 +153,39 @@ typedef struct ErtsXPortsList_ ErtsXPortsList;
  */
 
 struct _erl_drv_port {
-    ErtsPTabElementCommon common; /* *Need* to be first in struct */
+  ErtsPTabElementCommon common; /* *Need* to be first in struct */
 
-    ErtsPortTaskSched sched;
-    ErtsPortTaskHandle timeout_task;
+  ErtsPortTaskSched sched;
+  ErtsPortTaskHandle timeout_task;
 #ifdef ERTS_SMP
-    erts_mtx_t *lock;
-    ErtsXPortsList *xports;
-    erts_smp_atomic_t run_queue;
+  erts_mtx_t *lock;
+  ErtsXPortsList *xports;
+  erts_smp_atomic_t run_queue;
 #else
-    erts_atomic32_t refc;
-    int cleanup;
+  erts_atomic32_t refc;
+  int cleanup;
 #endif
-    erts_atomic_t connected;	/* A connected process */
-    Eterm caller;		/* Current caller. */
-    erts_smp_atomic_t data;	/* Data associated with port. */
-    Uint bytes_in;		/* Number of bytes read */
-    Uint bytes_out;		/* Number of bytes written */
+  erts_atomic_t connected;  /* A connected process */
+  Eterm caller;   /* Current caller. */
+  erts_smp_atomic_t data; /* Data associated with port. */
+  Uint bytes_in;    /* Number of bytes read */
+  Uint bytes_out;   /* Number of bytes written */
 
-    ErlIOQueue ioq;              /* driver accessible i/o queue */
-    DistEntry *dist_entry;       /* Dist entry used in DISTRIBUTION */
-    char *name;		         /* String used in the open */
-    erts_driver_t* drv_ptr;
-    UWord drv_data;
-    SWord os_pid;                /* Child process ID */
-    ErtsProcList *suspended;	 /* List of suspended processes. */
-    LineBuf *linebuf;            /* Buffer to hold data not ready for
-				    process to get (line oriented I/O)*/
-    erts_atomic32_t state;	 /* Status and type flags */
-    int control_flags;		 /* Flags for port_control()  */
-    ErlDrvPDL port_data_lock;
+  ErlIOQueue ioq;              /* driver accessible i/o queue */
+  DistEntry *dist_entry;       /* Dist entry used in DISTRIBUTION */
+  char *name;            /* String used in the open */
+  erts_driver_t *drv_ptr;
+  UWord drv_data;
+  SWord os_pid;                /* Child process ID */
+  ErtsProcList *suspended;   /* List of suspended processes. */
+  LineBuf *linebuf;            /* Buffer to hold data not ready for
+            process to get (line oriented I/O)*/
+  erts_atomic32_t state;   /* Status and type flags */
+  int control_flags;     /* Flags for port_control()  */
+  ErlDrvPDL port_data_lock;
 
-    ErtsPrtSD *psd;		 /* Port specific data */
-    int reds; /* Only used while executing driver callbacks */
+  ErtsPrtSD *psd;    /* Port specific data */
+  int reds; /* Only used while executing driver callbacks */
 };
 
 
@@ -203,9 +203,9 @@ ErlOffHeap *erts_port_data_offheap(Port *);
 
 
 struct erl_drv_port_data_lock {
-    erts_mtx_t mtx;
-    erts_atomic_t refc;
-    Port *prt;
+  erts_mtx_t mtx;
+  erts_atomic_t refc;
+  Port *prt;
 };
 
 ERTS_GLB_INLINE ErtsRunQueue *erts_port_runq(Port *prt);
@@ -216,22 +216,31 @@ ERTS_GLB_INLINE ErtsRunQueue *
 erts_port_runq(Port *prt)
 {
 #ifdef ERTS_SMP
-    ErtsRunQueue *rq1, *rq2;
-    rq1 = (ErtsRunQueue *) erts_smp_atomic_read_nob(&prt->run_queue);
-    if (!rq1)
-        return nullptr;
-    while (1) {
-	erts_smp_runq_lock(rq1);
-	rq2 = (ErtsRunQueue *) erts_smp_atomic_read_nob(&prt->run_queue);
-	if (rq1 == rq2)
-	    return rq1;
-	erts_smp_runq_unlock(rq1);
-	rq1 = rq2;
-	if (!rq1)
-            return nullptr;
+  ErtsRunQueue *rq1, *rq2;
+  rq1 = (ErtsRunQueue *) erts_smp_atomic_read_nob(&prt->run_queue);
+
+  if (!rq1) {
+    return nullptr;
+  }
+
+  while (1) {
+    erts_smp_runq_lock(rq1);
+    rq2 = (ErtsRunQueue *) erts_smp_atomic_read_nob(&prt->run_queue);
+
+    if (rq1 == rq2) {
+      return rq1;
     }
+
+    erts_smp_runq_unlock(rq1);
+    rq1 = rq2;
+
+    if (!rq1) {
+      return nullptr;
+    }
+  }
+
 #else
-    return ERTS_RUNQ_IX(0);
+  return ERTS_RUNQ_IX(0);
 #endif
 }
 
@@ -246,92 +255,91 @@ ERTS_GLB_INLINE void *erts_prtsd_set(Port *p, int ix, void *new_);
 ERTS_GLB_INLINE void *
 erts_prtsd_get(Port *prt, int ix)
 {
-    return prt->psd ? prt->psd->data[ix] : nullptr;
+  return prt->psd ? prt->psd->data[ix] : nullptr;
 }
 
 ERTS_GLB_INLINE void *
 erts_prtsd_set(Port *prt, int ix, void *data)
 {
-    if (prt->psd) {
-	void *old = prt->psd->data[ix];
-	prt->psd->data[ix] = data;
-	return old;
-    }
-    else {
-        prt->psd = (ErtsPrtSD *)erts_alloc(ERTS_ALC_T_PRTSD, sizeof(ErtsPrtSD));
-	prt->psd->data[ix] = data;
-        return nullptr;
-    }
+  if (prt->psd) {
+    void *old = prt->psd->data[ix];
+    prt->psd->data[ix] = data;
+    return old;
+  } else {
+    prt->psd = (ErtsPrtSD *)erts_alloc(ERTS_ALC_T_PRTSD, sizeof(ErtsPrtSD));
+    prt->psd->data[ix] = data;
+    return nullptr;
+  }
 }
 
 #endif
 
-extern erts_smp_atomic_t erts_bytes_out;	/* no bytes written out */
-extern erts_smp_atomic_t erts_bytes_in;		/* no bytes sent into the system */
+extern erts_smp_atomic_t erts_bytes_out;  /* no bytes written out */
+extern erts_smp_atomic_t erts_bytes_in;   /* no bytes sent into the system */
 
 
 /* port status flags */
 
-#define ERTS_PORT_SFLG_CONNECTED	((uint32_t) (1 <<  0))
+#define ERTS_PORT_SFLG_CONNECTED  ((uint32_t) (1 <<  0))
 /* Port have begun exiting */
-#define ERTS_PORT_SFLG_EXITING		((uint32_t) (1 <<  1))
+#define ERTS_PORT_SFLG_EXITING    ((uint32_t) (1 <<  1))
 /* Distribution port */
-#define ERTS_PORT_SFLG_DISTRIBUTION	((uint32_t) (1 <<  2))
-#define ERTS_PORT_SFLG_BINARY_IO	((uint32_t) (1 <<  3))
-#define ERTS_PORT_SFLG_SOFT_EOF		((uint32_t) (1 <<  4))
+#define ERTS_PORT_SFLG_DISTRIBUTION ((uint32_t) (1 <<  2))
+#define ERTS_PORT_SFLG_BINARY_IO  ((uint32_t) (1 <<  3))
+#define ERTS_PORT_SFLG_SOFT_EOF   ((uint32_t) (1 <<  4))
 /* Flow control */
 /* Port is closing (no i/o accepted) */
-#define ERTS_PORT_SFLG_CLOSING		((uint32_t) (1 <<  5))
+#define ERTS_PORT_SFLG_CLOSING    ((uint32_t) (1 <<  5))
 /* Send a closed message when terminating */
-#define ERTS_PORT_SFLG_SEND_CLOSED	((uint32_t) (1 <<  6))
-/* Line orinted io on port */  
-#define ERTS_PORT_SFLG_LINEBUF_IO	((uint32_t) (1 <<  7))
+#define ERTS_PORT_SFLG_SEND_CLOSED  ((uint32_t) (1 <<  6))
+/* Line orinted io on port */
+#define ERTS_PORT_SFLG_LINEBUF_IO ((uint32_t) (1 <<  7))
 /* Immortal port (only certain system ports) */
-#define ERTS_PORT_SFLG_FREE		((uint32_t) (1 <<  8))
-#define ERTS_PORT_SFLG_INITIALIZING	((uint32_t) (1 <<  9))
+#define ERTS_PORT_SFLG_FREE   ((uint32_t) (1 <<  8))
+#define ERTS_PORT_SFLG_INITIALIZING ((uint32_t) (1 <<  9))
 /* Port uses port specific locking (opposed to driver specific locking) */
 #define ERTS_PORT_SFLG_PORT_SPECIFIC_LOCK ((uint32_t) (1 << 10))
-#define ERTS_PORT_SFLG_INVALID		((uint32_t) (1 << 11))
+#define ERTS_PORT_SFLG_INVALID    ((uint32_t) (1 << 11))
 /* Last port to terminate halts the emulator */
-#define ERTS_PORT_SFLG_HALT		((uint32_t) (1 << 12))
+#define ERTS_PORT_SFLG_HALT   ((uint32_t) (1 << 12))
 #ifdef DEBUG
 /* Only debug: make sure all flags aren't cleared unintentionally */
-#define ERTS_PORT_SFLG_PORT_DEBUG	((uint32_t) (1 << 31))
+#define ERTS_PORT_SFLG_PORT_DEBUG ((uint32_t) (1 << 31))
 #endif
 
-/* Combinations of port status flags */ 
-#define ERTS_PORT_SFLGS_DEAD						\
+/* Combinations of port status flags */
+#define ERTS_PORT_SFLGS_DEAD            \
   (ERTS_PORT_SFLG_FREE | ERTS_PORT_SFLG_INITIALIZING)
-#define ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP				\
+#define ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP       \
   (ERTS_PORT_SFLGS_DEAD | ERTS_PORT_SFLG_INVALID)
-#define ERTS_PORT_SFLGS_INVALID_LOOKUP					\
-  (ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP				\
-   | ERTS_PORT_SFLG_EXITING						\
+#define ERTS_PORT_SFLGS_INVALID_LOOKUP          \
+  (ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP        \
+   | ERTS_PORT_SFLG_EXITING           \
    | ERTS_PORT_SFLG_CLOSING)
-#define ERTS_PORT_SFLGS_INVALID_TRACER_LOOKUP				\
-  (ERTS_PORT_SFLGS_INVALID_LOOKUP					\
+#define ERTS_PORT_SFLGS_INVALID_TRACER_LOOKUP       \
+  (ERTS_PORT_SFLGS_INVALID_LOOKUP         \
    | ERTS_PORT_SFLG_DISTRIBUTION)
 
 /*
  * Costs in reductions for some port operations.
  */
-#define ERTS_PORT_REDS_EXECUTE		(CONTEXT_REDS/4)
-#define ERTS_PORT_REDS_FREE		(CONTEXT_REDS/400)
-#define ERTS_PORT_REDS_TIMEOUT		(CONTEXT_REDS/100)
-#define ERTS_PORT_REDS_INPUT		(CONTEXT_REDS/100)
-#define ERTS_PORT_REDS_OUTPUT		(CONTEXT_REDS/100)
-#define ERTS_PORT_REDS_EVENT		(CONTEXT_REDS/100)
-#define ERTS_PORT_REDS_CMD_OUTPUTV	(CONTEXT_REDS/100)
-#define ERTS_PORT_REDS_CMD_OUTPUT	(CONTEXT_REDS/100)
-#define ERTS_PORT_REDS_EXIT		(CONTEXT_REDS/100)
-#define ERTS_PORT_REDS_CONNECT		(CONTEXT_REDS/200)
-#define ERTS_PORT_REDS_UNLINK		(CONTEXT_REDS/200)
-#define ERTS_PORT_REDS_LINK		(CONTEXT_REDS/200)
-#define ERTS_PORT_REDS_BADSIG		(CONTEXT_REDS/200)
-#define ERTS_PORT_REDS_CONTROL		(CONTEXT_REDS/100)
-#define ERTS_PORT_REDS_CALL		(CONTEXT_REDS/50)
-#define ERTS_PORT_REDS_INFO		(CONTEXT_REDS/100)
-#define ERTS_PORT_REDS_TERMINATE	(CONTEXT_REDS/50)
+#define ERTS_PORT_REDS_EXECUTE    (CONTEXT_REDS/4)
+#define ERTS_PORT_REDS_FREE   (CONTEXT_REDS/400)
+#define ERTS_PORT_REDS_TIMEOUT    (CONTEXT_REDS/100)
+#define ERTS_PORT_REDS_INPUT    (CONTEXT_REDS/100)
+#define ERTS_PORT_REDS_OUTPUT   (CONTEXT_REDS/100)
+#define ERTS_PORT_REDS_EVENT    (CONTEXT_REDS/100)
+#define ERTS_PORT_REDS_CMD_OUTPUTV  (CONTEXT_REDS/100)
+#define ERTS_PORT_REDS_CMD_OUTPUT (CONTEXT_REDS/100)
+#define ERTS_PORT_REDS_EXIT   (CONTEXT_REDS/100)
+#define ERTS_PORT_REDS_CONNECT    (CONTEXT_REDS/200)
+#define ERTS_PORT_REDS_UNLINK   (CONTEXT_REDS/200)
+#define ERTS_PORT_REDS_LINK   (CONTEXT_REDS/200)
+#define ERTS_PORT_REDS_BADSIG   (CONTEXT_REDS/200)
+#define ERTS_PORT_REDS_CONTROL    (CONTEXT_REDS/100)
+#define ERTS_PORT_REDS_CALL   (CONTEXT_REDS/50)
+#define ERTS_PORT_REDS_INFO   (CONTEXT_REDS/100)
+#define ERTS_PORT_REDS_TERMINATE  (CONTEXT_REDS/50)
 
 void print_port_info(Port *, int, void *);
 void erts_port_free(Port *);
@@ -360,35 +368,47 @@ ERTS_GLB_INLINE void erts_smp_port_unlock(Port *prt);
 ERTS_GLB_INLINE void erts_port_inc_refc(Port *prt)
 {
 #ifdef ERTS_SMP
-    erts_ptab_inc_refc(&prt->common);
+  erts_ptab_inc_refc(&prt->common);
 #else
-    erts_atomic32_inc_nob(&prt->refc);
+  erts_atomic32_inc_nob(&prt->refc);
 #endif
 }
 
 ERTS_GLB_INLINE void erts_port_dec_refc(Port *prt)
 {
 #ifdef ERTS_SMP
-    int referred = erts_ptab_dec_test_refc(&prt->common);
-    if (!referred)
-	erts_port_free(prt);
+  int referred = erts_ptab_dec_test_refc(&prt->common);
+
+  if (!referred) {
+    erts_port_free(prt);
+  }
+
 #else
-    int refc = erts_atomic32_dec_read_nob(&prt->refc);
-    if (refc == 0)
-	erts_port_free(prt);	
+  int refc = erts_atomic32_dec_read_nob(&prt->refc);
+
+  if (refc == 0) {
+    erts_port_free(prt);
+  }
+
 #endif
 }
 
 ERTS_GLB_INLINE void erts_port_add_refc(Port *prt, int32_t add_refc)
 {
 #ifdef ERTS_SMP
-    int referred = erts_ptab_add_test_refc(&prt->common, add_refc);
-    if (!referred)
-	erts_port_free(prt);
+  int referred = erts_ptab_add_test_refc(&prt->common, add_refc);
+
+  if (!referred) {
+    erts_port_free(prt);
+  }
+
 #else
-    int refc = erts_atomic32_add_read_nob(&prt->refc, add_refc);
-    if (refc == 0)
-	erts_port_free(prt);	
+  int refc = erts_atomic32_add_read_nob(&prt->refc, add_refc);
+
+  if (refc == 0) {
+    erts_port_free(prt);
+  }
+
 #endif
 }
 
@@ -396,11 +416,11 @@ ERTS_GLB_INLINE int
 erts_smp_port_trylock(Port *prt)
 {
 #ifdef ERTS_SMP
-    /* *Need* to be a managed thread */
-    ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
-    return erts_mtx_trylock(prt->lock);
+  /* *Need* to be a managed thread */
+  ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
+  return erts_mtx_trylock(prt->lock);
 #else
-    return 0;
+  return 0;
 #endif
 }
 
@@ -408,9 +428,9 @@ ERTS_GLB_INLINE void
 erts_smp_port_lock(Port *prt)
 {
 #ifdef ERTS_SMP
-    /* *Need* to be a managed thread */
-    ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
-    erts_mtx_lock(prt->lock);
+  /* *Need* to be a managed thread */
+  ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
+  erts_mtx_lock(prt->lock);
 #endif
 }
 
@@ -418,18 +438,18 @@ ERTS_GLB_INLINE void
 erts_smp_port_unlock(Port *prt)
 {
 #ifdef ERTS_SMP
-    /* *Need* to be a managed thread */
-    ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
-    erts_mtx_unlock(prt->lock);
+  /* *Need* to be a managed thread */
+  ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
+  erts_mtx_unlock(prt->lock);
 #endif
 }
 
 #endif /* #if ERTS_GLB_INLINE_INCL_FUNC_DEF */
 
 
-#define ERTS_INVALID_PORT_OPT(PP, ID, FLGS)			\
-    (!(PP)							\
-     || (erts_atomic32_read_nob(&(PP)->state) & (FLGS))	\
+#define ERTS_INVALID_PORT_OPT(PP, ID, FLGS)     \
+    (!(PP)              \
+     || (erts_atomic32_read_nob(&(PP)->state) & (FLGS)) \
      || (PP)->common.id != (ID))
 
 /* port lookup */
@@ -440,7 +460,7 @@ erts_smp_port_unlock(Port *prt)
 /* Invalidate trace port if anything suspicious, for instance
  * that the port is a distribution port or it is busy.
  */
-#define INVALID_TRACER_PORT(PP, ID)					\
+#define INVALID_TRACER_PORT(PP, ID)         \
   ERTS_INVALID_PORT_OPT((PP), (ID), ERTS_PORT_SFLGS_INVALID_TRACER_LOOKUP)
 
 #define ERTS_PORT_SCHED_ID(P, ID) \
@@ -459,7 +479,7 @@ Port *erts_de2port(DistEntry *, Process *, ErtsProcLocks);
 ERTS_GLB_INLINE Port *erts_pix2port(int);
 ERTS_GLB_INLINE Port *erts_port_lookup_raw(Eterm);
 ERTS_GLB_INLINE Port *erts_port_lookup(Eterm, uint32_t);
-ERTS_GLB_INLINE Port*erts_id2port(Eterm id);
+ERTS_GLB_INLINE Port *erts_id2port(Eterm id);
 ERTS_GLB_INLINE Port *erts_id2port_sflgs(Eterm, Process *, ErtsProcLocks, uint32_t);
 ERTS_GLB_INLINE void erts_port_release(Port *);
 #ifdef ERTS_SMP
@@ -480,124 +500,135 @@ ERTS_GLB_INLINE int erts_port_driver_callback_epilogue(Port *, erts_aint32_t *);
 
 ERTS_GLB_INLINE Port *erts_pix2port(int ix)
 {
-    Port *prt;
-    ASSERT(0 <= ix && ix < erts_ptab_max(&erts_port));
-    prt = (Port *) erts_ptab_pix2intptr_nob(&erts_port, ix);
-    return prt == ERTS_PORT_LOCK_BUSY ? nullptr : prt;
+  Port *prt;
+  ASSERT(0 <= ix && ix < erts_ptab_max(&erts_port));
+  prt = (Port *) erts_ptab_pix2intptr_nob(&erts_port, ix);
+  return prt == ERTS_PORT_LOCK_BUSY ? nullptr : prt;
 }
 
 ERTS_GLB_INLINE Port *
 erts_port_lookup_raw(Eterm id)
 {
-    Port *prt;
+  Port *prt;
 
-    ERTS_SMP_LC_ASSERT(erts_thr_progress_lc_is_delaying());
+  ERTS_SMP_LC_ASSERT(erts_thr_progress_lc_is_delaying());
 
-    if (is_not_internal_port(id))
-        return nullptr;
+  if (is_not_internal_port(id)) {
+    return nullptr;
+  }
 
-    prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
-					     internal_port_index(id));
-    return prt && prt->common.id == id ? prt : nullptr;
+  prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
+        internal_port_index(id));
+  return prt && prt->common.id == id ? prt : nullptr;
 }
 
 ERTS_GLB_INLINE Port *
 erts_port_lookup(Eterm id, uint32_t invalid_sflgs)
 {
-    Port *prt = erts_port_lookup_raw(id);
-    return (!prt
-            ? nullptr
-	    : ((invalid_sflgs & erts_atomic32_read_nob(&prt->state))
-               ? nullptr
-	       : prt));
+  Port *prt = erts_port_lookup_raw(id);
+  return (!prt
+          ? nullptr
+          : ((invalid_sflgs & erts_atomic32_read_nob(&prt->state))
+             ? nullptr
+             : prt));
 }
 
 
-ERTS_GLB_INLINE Port*
+ERTS_GLB_INLINE Port *
 erts_id2port(Eterm id)
 {
-    erts_aint32_t state;
-    Port *prt;
+  erts_aint32_t state;
+  Port *prt;
 
-    /* Only allowed to be called from managed threads */
-    ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
+  /* Only allowed to be called from managed threads */
+  ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
 
-    if (is_not_internal_port(id))
-        return nullptr;
+  if (is_not_internal_port(id)) {
+    return nullptr;
+  }
 
-    prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
-					     internal_port_index(id));
+  prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
+        internal_port_index(id));
 
-    if (!prt || prt->common.id != id)
-        return nullptr;
+  if (!prt || prt->common.id != id) {
+    return nullptr;
+  }
 
-    erts_smp_port_lock(prt);
-    state = erts_atomic32_read_nob(&prt->state);
-    if (state & ERTS_PORT_SFLGS_INVALID_LOOKUP) {
-	erts_smp_port_unlock(prt);
-        return nullptr;
-    }
+  erts_smp_port_lock(prt);
+  state = erts_atomic32_read_nob(&prt->state);
 
-    return prt;
+  if (state & ERTS_PORT_SFLGS_INVALID_LOOKUP) {
+    erts_smp_port_unlock(prt);
+    return nullptr;
+  }
+
+  return prt;
 }
 
 
-ERTS_GLB_INLINE Port*
+ERTS_GLB_INLINE Port *
 erts_id2port_sflgs(Eterm id,
-		   Process *c_p, ErtsProcLocks c_p_locks,
-		   uint32_t invalid_sflgs)
+                   Process *c_p, ErtsProcLocks c_p_locks,
+                   uint32_t invalid_sflgs)
 {
 #ifdef ERTS_SMP
-    int no_proc_locks = !c_p || !c_p_locks;
+  int no_proc_locks = !c_p || !c_p_locks;
 #endif
-    erts_aint32_t state;
-    Port *prt;
+  erts_aint32_t state;
+  Port *prt;
 
-    /* Only allowed to be called from managed threads */
-    ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
+  /* Only allowed to be called from managed threads */
+  ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
 
-    if (is_not_internal_port(id))
-        return nullptr;
+  if (is_not_internal_port(id)) {
+    return nullptr;
+  }
 
-    prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
-					     internal_port_index(id));
+  prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
+        internal_port_index(id));
 
-    if (!prt || prt->common.id != id)
-        return nullptr;
+  if (!prt || prt->common.id != id) {
+    return nullptr;
+  }
 
 #ifdef ERTS_SMP
-    if (no_proc_locks)
-	erts_smp_port_lock(prt);
-    else if (erts_smp_port_trylock(prt) == EBUSY) {
-	/* Unlock process locks, and acquire locks in lock order... */
-	erts_smp_proc_unlock(c_p, c_p_locks);
-	erts_smp_port_lock(prt);
-	erts_smp_proc_lock(c_p, c_p_locks);
-    }
-#endif
-    state = erts_atomic32_read_nob(&prt->state);
-    if (state & invalid_sflgs) {
-#ifdef ERTS_SMP
-	erts_smp_port_unlock(prt);
-#endif
-        return nullptr;
-    }
 
-    return prt;
+  if (no_proc_locks) {
+    erts_smp_port_lock(prt);
+  } else if (erts_smp_port_trylock(prt) == EBUSY) {
+    /* Unlock process locks, and acquire locks in lock order... */
+    erts_smp_proc_unlock(c_p, c_p_locks);
+    erts_smp_port_lock(prt);
+    erts_smp_proc_lock(c_p, c_p_locks);
+  }
+
+#endif
+  state = erts_atomic32_read_nob(&prt->state);
+
+  if (state & invalid_sflgs) {
+#ifdef ERTS_SMP
+    erts_smp_port_unlock(prt);
+#endif
+    return nullptr;
+  }
+
+  return prt;
 }
 
 ERTS_GLB_INLINE void
 erts_port_release(Port *prt)
 {
-    /* Only allowed to be called from managed threads */
-    ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
+  /* Only allowed to be called from managed threads */
+  ERTS_SMP_LC_ASSERT(erts_thr_progress_is_managed_thread());
 #ifdef ERTS_SMP
-    erts_smp_port_unlock(prt);
+  erts_smp_port_unlock(prt);
 #else
-    if (prt->cleanup) {
-	prt->cleanup = 0;
-	erts_port_cleanup(prt);
-    }
+
+  if (prt->cleanup) {
+    prt->cleanup = 0;
+    erts_port_cleanup(prt);
+  }
+
 #endif
 }
 
@@ -610,48 +641,56 @@ erts_port_release(Port *prt)
 ERTS_GLB_INLINE Port *
 erts_thr_id2port_sflgs(Eterm id, uint32_t invalid_sflgs)
 {
-    Port *prt;
-    ErtsThrPrgrDelayHandle dhndl;
+  Port *prt;
+  ErtsThrPrgrDelayHandle dhndl;
 
-    if (is_not_internal_port(id))
-        return nullptr;
+  if (is_not_internal_port(id)) {
+    return nullptr;
+  }
 
-    dhndl = erts_thr_progress_unmanaged_delay();
+  dhndl = erts_thr_progress_unmanaged_delay();
 
-    prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
-					     internal_port_index(id));
+  prt = (Port *) erts_ptab_pix2intptr_ddrb(&erts_port,
+        internal_port_index(id));
 
-    if (!prt || prt->common.id != id) {
-	erts_thr_progress_unmanaged_continue(dhndl);
-        prt = nullptr;
-    }
-    else {
-	erts_aint32_t state;
-	if (dhndl != ERTS_THR_PRGR_DHANDLE_MANAGED) {
-	    erts_port_inc_refc(prt);
-	    erts_thr_progress_unmanaged_continue(dhndl);
-	}
+  if (!prt || prt->common.id != id) {
+    erts_thr_progress_unmanaged_continue(dhndl);
+    prt = nullptr;
+  } else {
+    erts_aint32_t state;
 
-	erts_mtx_lock(prt->lock);
-	state = erts_atomic32_read_nob(&prt->state);
-	if (state & invalid_sflgs) {
-	    erts_mtx_unlock(prt->lock);
-	    if (dhndl != ERTS_THR_PRGR_DHANDLE_MANAGED)
-		erts_port_dec_refc(prt);
-            prt = nullptr;
-	}
+    if (dhndl != ERTS_THR_PRGR_DHANDLE_MANAGED) {
+      erts_port_inc_refc(prt);
+      erts_thr_progress_unmanaged_continue(dhndl);
     }
 
-    return prt;
+    erts_mtx_lock(prt->lock);
+    state = erts_atomic32_read_nob(&prt->state);
+
+    if (state & invalid_sflgs) {
+      erts_mtx_unlock(prt->lock);
+
+      if (dhndl != ERTS_THR_PRGR_DHANDLE_MANAGED) {
+        erts_port_dec_refc(prt);
+      }
+
+      prt = nullptr;
+    }
+  }
+
+  return prt;
 }
 
 ERTS_GLB_INLINE void
 erts_thr_port_release(Port *prt)
 {
-    erts_mtx_unlock(prt->lock);
+  erts_mtx_unlock(prt->lock);
 #ifdef ERTS_SMP
-    if (!erts_thr_progress_is_managed_thread())
-	erts_port_dec_refc(prt);
+
+  if (!erts_thr_progress_is_managed_thread()) {
+    erts_port_dec_refc(prt);
+  }
+
 #endif
 }
 
@@ -660,125 +699,148 @@ erts_thr_port_release(Port *prt)
 ERTS_GLB_INLINE Port *
 erts_thr_drvport2port(ErlDrvPort drvport, int lock_pdl)
 {
-    Port *prt = ERTS_ErlDrvPort2Port(drvport);
-    ASSERT(prt != nullptr);
-    if (prt == ERTS_INVALID_ERL_DRV_PORT)
-	return ERTS_INVALID_ERL_DRV_PORT;
+  Port *prt = ERTS_ErlDrvPort2Port(drvport);
+  ASSERT(prt != nullptr);
 
-    if (lock_pdl && prt->port_data_lock)
-	driver_pdl_lock(prt->port_data_lock);
+  if (prt == ERTS_INVALID_ERL_DRV_PORT) {
+    return ERTS_INVALID_ERL_DRV_PORT;
+  }
+
+  if (lock_pdl && prt->port_data_lock) {
+    driver_pdl_lock(prt->port_data_lock);
+  }
 
 #if ERTS_ENABLE_LOCK_CHECK
-    if (!ERTS_IS_CRASH_DUMPING) {
-	if (erts_lc_is_emu_thr()) {
-	    ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
-	    ERTS_LC_ASSERT(!prt->port_data_lock
-			   || erts_lc_mtx_is_locked(&prt->port_data_lock->mtx));
-	}
-	else {
-	    ERTS_LC_ASSERT(prt->port_data_lock);
-	    ERTS_LC_ASSERT(erts_lc_mtx_is_locked(&prt->port_data_lock->mtx));
-	}
+
+  if (!ERTS_IS_CRASH_DUMPING) {
+    if (erts_lc_is_emu_thr()) {
+      ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
+      ERTS_LC_ASSERT(!prt->port_data_lock
+                     || erts_lc_mtx_is_locked(&prt->port_data_lock->mtx));
+    } else {
+      ERTS_LC_ASSERT(prt->port_data_lock);
+      ERTS_LC_ASSERT(erts_lc_mtx_is_locked(&prt->port_data_lock->mtx));
     }
+  }
+
 #endif
 
-    if (erts_atomic32_read_nob(&prt->state)
-	& ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP) {
-	if (lock_pdl && prt->port_data_lock)
-	    driver_pdl_unlock(prt->port_data_lock);
-	return ERTS_INVALID_ERL_DRV_PORT;
+  if (erts_atomic32_read_nob(&prt->state)
+      & ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP) {
+    if (lock_pdl && prt->port_data_lock) {
+      driver_pdl_unlock(prt->port_data_lock);
     }
-    return prt;
+
+    return ERTS_INVALID_ERL_DRV_PORT;
+  }
+
+  return prt;
 }
 
 ERTS_GLB_INLINE Port *
 erts_drvport2port_state(ErlDrvPort drvport, erts_aint32_t *statep)
 {
-    Port *prt = ERTS_ErlDrvPort2Port(drvport);
-    erts_aint32_t state;
-    ASSERT(prt);
-    ERTS_LC_ASSERT(erts_lc_is_emu_thr());
-    if (prt == ERTS_INVALID_ERL_DRV_PORT)
-	return ERTS_INVALID_ERL_DRV_PORT;
-    ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt)
-		       || ERTS_IS_CRASH_DUMPING);
-    /* 
-     * This state check is only needed since a driver callback
-     * might terminate the port, and then call back into the
-     * emulator. Drivers should preferably have been forbidden
-     * to call into the emulator after terminating the port,
-     * but it has been like this_ for ages. Perhaps forbid this_
-     * in some future major release?
-     */
-    state = erts_atomic32_read_nob(&prt->state);
-    if (state & ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP)
-	return ERTS_INVALID_ERL_DRV_PORT;
-    if (statep)
-	*statep = state;
-    return prt;
+  Port *prt = ERTS_ErlDrvPort2Port(drvport);
+  erts_aint32_t state;
+  ASSERT(prt);
+  ERTS_LC_ASSERT(erts_lc_is_emu_thr());
+
+  if (prt == ERTS_INVALID_ERL_DRV_PORT) {
+    return ERTS_INVALID_ERL_DRV_PORT;
+  }
+
+  ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt)
+                     || ERTS_IS_CRASH_DUMPING);
+  /*
+   * This state check is only needed since a driver callback
+   * might terminate the port, and then call back into the
+   * emulator. Drivers should preferably have been forbidden
+   * to call into the emulator after terminating the port,
+   * but it has been like this_ for ages. Perhaps forbid this_
+   * in some future major release?
+   */
+  state = erts_atomic32_read_nob(&prt->state);
+
+  if (state & ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP) {
+    return ERTS_INVALID_ERL_DRV_PORT;
+  }
+
+  if (statep) {
+    *statep = state;
+  }
+
+  return prt;
 }
 
 ERTS_GLB_INLINE Eterm
 erts_drvport2id(ErlDrvPort drvport)
 {
-    Port *prt = erts_drvport2port(drvport);
-    if (prt == ERTS_INVALID_ERL_DRV_PORT)
-	return am_undefined;
-    else
-	return prt->common.id;
+  Port *prt = erts_drvport2port(drvport);
+
+  if (prt == ERTS_INVALID_ERL_DRV_PORT) {
+    return am_undefined;
+  } else {
+    return prt->common.id;
+  }
 }
 
 ERTS_GLB_INLINE uint32_t
 erts_portid2status(Eterm id)
 {
-    Port *prt = erts_port_lookup_raw(id);
-    if (prt)
-	return (uint32_t) erts_atomic32_read_acqb(&prt->state);
-    else
-	return ERTS_PORT_SFLG_INVALID;
+  Port *prt = erts_port_lookup_raw(id);
+
+  if (prt) {
+    return (uint32_t) erts_atomic32_read_acqb(&prt->state);
+  } else {
+    return ERTS_PORT_SFLG_INVALID;
+  }
 }
 
 ERTS_GLB_INLINE int
 erts_is_port_alive(Eterm id)
 {
-    return !(erts_portid2status(id) & (ERTS_PORT_SFLG_INVALID
-				       | ERTS_PORT_SFLGS_DEAD));
+  return !(erts_portid2status(id) & (ERTS_PORT_SFLG_INVALID
+                                     | ERTS_PORT_SFLGS_DEAD));
 }
 
 ERTS_GLB_INLINE int
 erts_is_valid_tracer_port(Eterm id)
 {
-    return !(erts_portid2status(id) & ERTS_PORT_SFLGS_INVALID_TRACER_LOOKUP);
+  return !(erts_portid2status(id) & ERTS_PORT_SFLGS_INVALID_TRACER_LOOKUP);
 }
 
 ERTS_GLB_INLINE int
 erts_port_driver_callback_epilogue(Port *prt, erts_aint32_t *statep)
 {
-    int reds = 0;
-    erts_aint32_t state;
+  int reds = 0;
+  erts_aint32_t state;
 
-    ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
+  ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
 
+  state = erts_atomic32_read_nob(&prt->state);
+
+  if ((state & ERTS_PORT_SFLG_CLOSING) && erts_is_port_ioq_empty(prt)) {
+    reds += ERTS_PORT_REDS_TERMINATE;
+    erts_terminate_port(prt);
     state = erts_atomic32_read_nob(&prt->state);
-    if ((state & ERTS_PORT_SFLG_CLOSING) && erts_is_port_ioq_empty(prt)) {
-	reds += ERTS_PORT_REDS_TERMINATE;
-	erts_terminate_port(prt);
-	state = erts_atomic32_read_nob(&prt->state);
-	ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
-    }
+    ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
+  }
 
 #ifdef ERTS_SMP
-    if (prt->xports) {
-	reds += erts_port_handle_xports(prt);
-	ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
-	ASSERT(!prt->xports);
-    }
+
+  if (prt->xports) {
+    reds += erts_port_handle_xports(prt);
+    ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
+    ASSERT(!prt->xports);
+  }
+
 #endif
 
-    if (statep)
-	*statep = state;
+  if (statep) {
+    *statep = state;
+  }
 
-    return reds;
+  return reds;
 }
 
 #endif /* #if ERTS_GLB_INLINE_INCL_FUNC_DEF */
@@ -787,78 +849,78 @@ void erts_port_resume_procs(Port *);
 
 struct binary;
 
-#define ERTS_P2P_SIG_TYPE_BAD			0
-#define ERTS_P2P_SIG_TYPE_OUTPUT		1
-#define ERTS_P2P_SIG_TYPE_OUTPUTV		2
-#define ERTS_P2P_SIG_TYPE_CONNECT		3
-#define ERTS_P2P_SIG_TYPE_EXIT			4
-#define ERTS_P2P_SIG_TYPE_CONTROL		5
-#define ERTS_P2P_SIG_TYPE_CALL			6
-#define ERTS_P2P_SIG_TYPE_INFO			7
-#define ERTS_P2P_SIG_TYPE_LINK			8
-#define ERTS_P2P_SIG_TYPE_UNLINK		9
+#define ERTS_P2P_SIG_TYPE_BAD     0
+#define ERTS_P2P_SIG_TYPE_OUTPUT    1
+#define ERTS_P2P_SIG_TYPE_OUTPUTV   2
+#define ERTS_P2P_SIG_TYPE_CONNECT   3
+#define ERTS_P2P_SIG_TYPE_EXIT      4
+#define ERTS_P2P_SIG_TYPE_CONTROL   5
+#define ERTS_P2P_SIG_TYPE_CALL      6
+#define ERTS_P2P_SIG_TYPE_INFO      7
+#define ERTS_P2P_SIG_TYPE_LINK      8
+#define ERTS_P2P_SIG_TYPE_UNLINK    9
 
-#define ERTS_P2P_SIG_TYPE_BITS			4
+#define ERTS_P2P_SIG_TYPE_BITS      4
 #define ERTS_P2P_SIG_TYPE_MASK \
     ((1 << ERTS_P2P_SIG_TYPE_BITS) - 1)
 
 #define ERTS_P2P_SIG_DATA_FLG(N) \
     (1 << (ERTS_P2P_SIG_TYPE_BITS + (N)))
-#define ERTS_P2P_SIG_DATA_FLG_BANG_OP		ERTS_P2P_SIG_DATA_FLG(0)
-#define ERTS_P2P_SIG_DATA_FLG_REPLY		ERTS_P2P_SIG_DATA_FLG(1)
-#define ERTS_P2P_SIG_DATA_FLG_NOSUSPEND		ERTS_P2P_SIG_DATA_FLG(2)
-#define ERTS_P2P_SIG_DATA_FLG_FORCE		ERTS_P2P_SIG_DATA_FLG(3)
-#define ERTS_P2P_SIG_DATA_FLG_BAD_OUTPUT	ERTS_P2P_SIG_DATA_FLG(4)
-#define ERTS_P2P_SIG_DATA_FLG_BROKEN_LINK	ERTS_P2P_SIG_DATA_FLG(5)
-#define ERTS_P2P_SIG_DATA_FLG_SCHED		ERTS_P2P_SIG_DATA_FLG(6)
-#define ERTS_P2P_SIG_DATA_FLG_ASYNC		ERTS_P2P_SIG_DATA_FLG(7)
+#define ERTS_P2P_SIG_DATA_FLG_BANG_OP   ERTS_P2P_SIG_DATA_FLG(0)
+#define ERTS_P2P_SIG_DATA_FLG_REPLY   ERTS_P2P_SIG_DATA_FLG(1)
+#define ERTS_P2P_SIG_DATA_FLG_NOSUSPEND   ERTS_P2P_SIG_DATA_FLG(2)
+#define ERTS_P2P_SIG_DATA_FLG_FORCE   ERTS_P2P_SIG_DATA_FLG(3)
+#define ERTS_P2P_SIG_DATA_FLG_BAD_OUTPUT  ERTS_P2P_SIG_DATA_FLG(4)
+#define ERTS_P2P_SIG_DATA_FLG_BROKEN_LINK ERTS_P2P_SIG_DATA_FLG(5)
+#define ERTS_P2P_SIG_DATA_FLG_SCHED   ERTS_P2P_SIG_DATA_FLG(6)
+#define ERTS_P2P_SIG_DATA_FLG_ASYNC   ERTS_P2P_SIG_DATA_FLG(7)
 
 struct ErtsProc2PortSigData_ {
-    int flags;
-    Eterm caller;
-    uint32_t ref[ERTS_MAX_REF_NUMBERS];
-    union {
-	struct {
-	    Eterm from;
-	    ErlIOVec *evp;
-	    ErlDrvBinary *cbinp;
-	} outputv;
-	struct {
-	    Eterm from;
-	    char *bufp;
-	    ErlDrvSizeT size;
-	} output;
-	struct {
-	    Eterm from;
-	    Eterm connected;
-	} connect;
-	struct {
-	    Eterm from;
-	    Eterm reason;
-	    ErlHeapFragment *bp;
-	} exit;
-	struct {
-	    struct binary *binp;
-	    unsigned int command;
-	    char *bufp;
-	    ErlDrvSizeT size;
-	} control;
-	struct {
-	    unsigned int command;
-	    char *bufp;
-	    ErlDrvSizeT size;
-	} call;
-	struct {
-	    Eterm item;
-	} info;
-	struct {
-	    Eterm port;
-	    Eterm to;
-	} link;
-	struct {
-	    Eterm from;
-	} unlink;
-    } u;
+  int flags;
+  Eterm caller;
+  uint32_t ref[ERTS_MAX_REF_NUMBERS];
+  union {
+    struct {
+      Eterm from;
+      ErlIOVec *evp;
+      ErlDrvBinary *cbinp;
+    } outputv;
+    struct {
+      Eterm from;
+      char *bufp;
+      ErlDrvSizeT size;
+    } output;
+    struct {
+      Eterm from;
+      Eterm connected;
+    } connect;
+    struct {
+      Eterm from;
+      Eterm reason;
+      ErlHeapFragment *bp;
+    } exit;
+    struct {
+      struct binary *binp;
+      unsigned int command;
+      char *bufp;
+      ErlDrvSizeT size;
+    } control;
+    struct {
+      unsigned int command;
+      char *bufp;
+      ErlDrvSizeT size;
+    } call;
+    struct {
+      Eterm item;
+    } info;
+    struct {
+      Eterm port;
+      Eterm to;
+    } link;
+    struct {
+      Eterm from;
+    } unlink;
+  } u;
 } ;
 
 ERTS_GLB_INLINE int
@@ -871,69 +933,79 @@ erts_proc2port_sig_command_data_size(ErtsProc2PortSigData *sigdp);
 ERTS_GLB_INLINE int
 erts_proc2port_sig_is_command_op(ErtsProc2PortSigData *sigdp)
 {
-    switch (sigdp->flags & ERTS_P2P_SIG_TYPE_MASK) {
-    case ERTS_P2P_SIG_TYPE_OUTPUT:	return !0;
-    case ERTS_P2P_SIG_TYPE_OUTPUTV:	return !0;
-    default:				return 0;
-    }
+  switch (sigdp->flags & ERTS_P2P_SIG_TYPE_MASK) {
+  case ERTS_P2P_SIG_TYPE_OUTPUT:
+    return !0;
+
+  case ERTS_P2P_SIG_TYPE_OUTPUTV:
+    return !0;
+
+  default:
+    return 0;
+  }
 }
 
 ERTS_GLB_INLINE ErlDrvSizeT
 erts_proc2port_sig_command_data_size(ErtsProc2PortSigData *sigdp)
 {
-    switch (sigdp->flags & ERTS_P2P_SIG_TYPE_MASK) {
-    case ERTS_P2P_SIG_TYPE_OUTPUT:	return sigdp->u.output.size;
-    case ERTS_P2P_SIG_TYPE_OUTPUTV:	return sigdp->u.outputv.evp->size;
-    default:				return (ErlDrvSizeT) 0;
-    }
+  switch (sigdp->flags & ERTS_P2P_SIG_TYPE_MASK) {
+  case ERTS_P2P_SIG_TYPE_OUTPUT:
+    return sigdp->u.output.size;
+
+  case ERTS_P2P_SIG_TYPE_OUTPUTV:
+    return sigdp->u.outputv.evp->size;
+
+  default:
+    return (ErlDrvSizeT) 0;
+  }
 }
 
 #endif
 
-#define ERTS_PROC2PORT_SIG_EXEC			0
-#define ERTS_PROC2PORT_SIG_ABORT		1
-#define ERTS_PROC2PORT_SIG_ABORT_NOSUSPEND	2
-#define ERTS_PROC2PORT_SIG_ABORT_CLOSED		3
+#define ERTS_PROC2PORT_SIG_EXEC     0
+#define ERTS_PROC2PORT_SIG_ABORT    1
+#define ERTS_PROC2PORT_SIG_ABORT_NOSUSPEND  2
+#define ERTS_PROC2PORT_SIG_ABORT_CLOSED   3
 
 typedef int (*ErtsProc2PortSigCallback)(Port *,
-					erts_aint32_t,
-					int,
-					ErtsProc2PortSigData *);
+                                        erts_aint32_t,
+                                        int,
+                                        ErtsProc2PortSigData *);
 
 typedef enum {
-    ERTS_PORT_OP_BADARG,
-    ERTS_PORT_OP_CALLER_EXIT,
-    ERTS_PORT_OP_BUSY,
-    ERTS_PORT_OP_BUSY_SCHEDULED,
-    ERTS_PORT_OP_SCHEDULED,
-    ERTS_PORT_OP_DROPPED,
-    ERTS_PORT_OP_DONE
+  ERTS_PORT_OP_BADARG,
+  ERTS_PORT_OP_CALLER_EXIT,
+  ERTS_PORT_OP_BUSY,
+  ERTS_PORT_OP_BUSY_SCHEDULED,
+  ERTS_PORT_OP_SCHEDULED,
+  ERTS_PORT_OP_DROPPED,
+  ERTS_PORT_OP_DONE
 } ErtsPortOpResult;
 
 ErtsPortOpResult
 erts_schedule_proc2port_signal(Process *,
-			       Port *,
-			       Eterm,
-			       Eterm *,
-			       ErtsProc2PortSigData *,
-			       int,
-			       ErtsPortTaskHandle *,
-			       ErtsProc2PortSigCallback);
+                               Port *,
+                               Eterm,
+                               Eterm *,
+                               ErtsProc2PortSigData *,
+                               int,
+                               ErtsPortTaskHandle *,
+                               ErtsProc2PortSigCallback);
 
 int erts_deliver_port_exit(Port *, Eterm, Eterm, int);
 
 /*
  * Port signal flags
  */
-#define ERTS_PORT_SIG_FLG_BANG_OP		ERTS_P2P_SIG_DATA_FLG_BANG_OP
-#define ERTS_PORT_SIG_FLG_NOSUSPEND		ERTS_P2P_SIG_DATA_FLG_NOSUSPEND
-#define ERTS_PORT_SIG_FLG_FORCE			ERTS_P2P_SIG_DATA_FLG_FORCE
-#define ERTS_PORT_SIG_FLG_BROKEN_LINK		ERTS_P2P_SIG_DATA_FLG_BROKEN_LINK
-#define ERTS_PORT_SIG_FLG_BAD_OUTPUT		ERTS_P2P_SIG_DATA_FLG_BAD_OUTPUT
-#define ERTS_PORT_SIG_FLG_FORCE_SCHED		ERTS_P2P_SIG_DATA_FLG_SCHED
-#define ERTS_PORT_SIG_FLG_ASYNC			ERTS_P2P_SIG_DATA_FLG_ASYNC
+#define ERTS_PORT_SIG_FLG_BANG_OP   ERTS_P2P_SIG_DATA_FLG_BANG_OP
+#define ERTS_PORT_SIG_FLG_NOSUSPEND   ERTS_P2P_SIG_DATA_FLG_NOSUSPEND
+#define ERTS_PORT_SIG_FLG_FORCE     ERTS_P2P_SIG_DATA_FLG_FORCE
+#define ERTS_PORT_SIG_FLG_BROKEN_LINK   ERTS_P2P_SIG_DATA_FLG_BROKEN_LINK
+#define ERTS_PORT_SIG_FLG_BAD_OUTPUT    ERTS_P2P_SIG_DATA_FLG_BAD_OUTPUT
+#define ERTS_PORT_SIG_FLG_FORCE_SCHED   ERTS_P2P_SIG_DATA_FLG_SCHED
+#define ERTS_PORT_SIG_FLG_ASYNC     ERTS_P2P_SIG_DATA_FLG_ASYNC
 /* ERTS_PORT_SIG_FLG_FORCE_IMM_CALL only when crash dumping... */
-#define ERTS_PORT_SIG_FLG_FORCE_IMM_CALL	ERTS_P2P_SIG_DATA_FLG_BAD_OUTPUT
+#define ERTS_PORT_SIG_FLG_FORCE_IMM_CALL  ERTS_P2P_SIG_DATA_FLG_BAD_OUTPUT
 
 /*
  * Port ! {Owner, {command, Data}}

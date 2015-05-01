@@ -36,7 +36,7 @@
 
 #define erts_circleq_pop_head(Q, N)   \
     do {                              \
-	(N) = (Q)->next;              \
+  (N) = (Q)->next;              \
         (N)->next->prev = (N)->prev;  \
         (N)->prev->next = (N)->next;  \
         (N)->next = (N);              \
@@ -45,7 +45,7 @@
 
 #define erts_circleq_pop_tail(Q, N)   \
     do {                              \
-	(N) = (Q)->prev;              \
+  (N) = (Q)->prev;              \
         (N)->next->prev = (N)->prev;  \
         (N)->prev->next = (N)->next;  \
         (N)->next = (N);              \

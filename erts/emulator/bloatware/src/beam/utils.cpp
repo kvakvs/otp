@@ -67,119 +67,129 @@
 /* profile_scheduler mini message queue */
 
 typedef struct {
-    Uint scheduler_id;
-    Uint no_schedulers;
-    Uint Ms;
-    Uint s;
-    Uint us;
-    Eterm state;
+  Uint scheduler_id;
+  Uint no_schedulers;
+  Uint Ms;
+  Uint s;
+  Uint us;
+  Eterm state;
 } profile_sched_msg;
 
 typedef struct {
-    profile_sched_msg msg[2];
-    Uint n;
+  profile_sched_msg msg[2];
+  Uint n;
 } profile_sched_msg_q;
 
 #ifdef ERTS_SMP
 
 #if 0 /* Unused */
-static void 
+static void
 dispatch_profile_msg_q(profile_sched_msg_q *psmq)
 {
-    int i = 0;
-    profile_sched_msg *msg = nullptr;
-    ASSERT(psmq != nullptr);
-    for (i = 0; i < psmq->n; i++) {
-        msg = &(psmq->msg[i]);
-	profile_scheduler_q(make_small(msg->scheduler_id), msg->state, am_undefined, msg->Ms, msg->s, msg->us);
-    }
+  int i = 0;
+  profile_sched_msg *msg = nullptr;
+  ASSERT(psmq != nullptr);
+
+  for (i = 0; i < psmq->n; i++) {
+    msg = &(psmq->msg[i]);
+    profile_scheduler_q(make_small(msg->scheduler_id), msg->state, am_undefined, msg->Ms, msg->s,
+                        msg->us);
+  }
 }
 #endif
 
 #endif
 
 
-Eterm*
-erts_heap_alloc(Process* p, Uint need, Uint xtra)
+Eterm *
+erts_heap_alloc(Process *p, Uint need, Uint xtra)
 {
-    ErlHeapFragment* bp;
-    Eterm* htop;
-    Uint n;
+  ErlHeapFragment *bp;
+  Eterm *htop;
+  Uint n;
 #if defined(DEBUG) || defined(CHECK_FOR_HOLES)
-    Uint i;
+  Uint i;
 #endif
 
 #ifdef FORCE_HEAP_FRAGS
-    if (p->space_verified && p->space_verified_from!=nullptr
-	&& HEAP_TOP(p) >= p->space_verified_from
-	&& HEAP_TOP(p) + need <= p->space_verified_from + p->space_verified
-	&& HEAP_LIMIT(p) - HEAP_TOP(p) >= need) {
-	
-	Uint consumed = need + (HEAP_TOP(p) - p->space_verified_from);
-	ASSERT(consumed <= p->space_verified);
-	p->space_verified -= consumed;
-	p->space_verified_from += consumed;
-	HEAP_TOP(p) = p->space_verified_from;
-	return HEAP_TOP(p) - need;
-    }
-    p->space_verified = 0;
-    p->space_verified_from = nullptr;
+
+  if (p->space_verified && p->space_verified_from != nullptr
+      && HEAP_TOP(p) >= p->space_verified_from
+      && HEAP_TOP(p) + need <= p->space_verified_from + p->space_verified
+      && HEAP_LIMIT(p) - HEAP_TOP(p) >= need) {
+
+    Uint consumed = need + (HEAP_TOP(p) - p->space_verified_from);
+    ASSERT(consumed <= p->space_verified);
+    p->space_verified -= consumed;
+    p->space_verified_from += consumed;
+    HEAP_TOP(p) = p->space_verified_from;
+    return HEAP_TOP(p) - need;
+  }
+
+  p->space_verified = 0;
+  p->space_verified_from = nullptr;
 #endif /* FORCE_HEAP_FRAGS */
 
-    n = need + xtra;
-    bp = MBUF(p);
-    if (bp != nullptr && need <= (bp->alloc_size - bp->used_size)) {
-	Eterm* ret = bp->mem + bp->used_size;
-	bp->used_size += need;
-	return ret;
-    }
+  n = need + xtra;
+  bp = MBUF(p);
+
+  if (bp != nullptr && need <= (bp->alloc_size - bp->used_size)) {
+    Eterm *ret = bp->mem + bp->used_size;
+    bp->used_size += need;
+    return ret;
+  }
+
 #ifdef DEBUG
-    n++;
+  n++;
 #endif
-    bp = (ErlHeapFragment*)
-	ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP_FRAG, ERTS_HEAP_FRAG_SIZE(n));
+  bp = (ErlHeapFragment *)
+       ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP_FRAG, ERTS_HEAP_FRAG_SIZE(n));
 
 #if defined(DEBUG) || defined(CHECK_FOR_HOLES)
-    for (i = 0; i < n; i++) {
-	bp->mem[i] = ERTS_HOLE_MARKER;
-    }
+
+  for (i = 0; i < n; i++) {
+    bp->mem[i] = ERTS_HOLE_MARKER;
+  }
+
 #endif
 
 #ifdef DEBUG
-    n--;
+  n--;
 #endif
 
-    /*
-     * When we have created a heap fragment, we are no longer allowed
-     * to store anything more on the heap. 
-     */
-    htop = HEAP_TOP(p);
-    if (htop < HEAP_LIMIT(p)) {
-	*htop = make_pos_bignum_header(HEAP_LIMIT(p)-htop-1);
-	HEAP_TOP(p) = HEAP_LIMIT(p);
-    }
+  /*
+   * When we have created a heap fragment, we are no longer allowed
+   * to store anything more on the heap.
+   */
+  htop = HEAP_TOP(p);
 
-    bp->next = MBUF(p);
-    MBUF(p) = bp;
-    bp->alloc_size = n;
-    bp->used_size = need;
-    MBUF_SIZE(p) += n;
-    bp->off_heap.first = nullptr;
-    bp->off_heap.overhead = 0;
-    return bp->mem;
+  if (htop < HEAP_LIMIT(p)) {
+    *htop = make_pos_bignum_header(HEAP_LIMIT(p) - htop - 1);
+    HEAP_TOP(p) = HEAP_LIMIT(p);
+  }
+
+  bp->next = MBUF(p);
+  MBUF(p) = bp;
+  bp->alloc_size = n;
+  bp->used_size = need;
+  MBUF_SIZE(p) += n;
+  bp->off_heap.first = nullptr;
+  bp->off_heap.overhead = 0;
+  return bp->mem;
 }
 
 #ifdef CHECK_FOR_HOLES
-Eterm*
-erts_set_hole_marker(Eterm* ptr, Uint sz)
+Eterm *
+erts_set_hole_marker(Eterm *ptr, Uint sz)
 {
-    Eterm* p = ptr;
-    int i;
+  Eterm *p = ptr;
+  int i;
 
-    for (i = 0; i < sz; i++) {
-	*p++ = ERTS_HOLE_MARKER;
-    }
-    return ptr;
+  for (i = 0; i < sz; i++) {
+    *p++ = ERTS_HOLE_MARKER;
+  }
+
+  return ptr;
 }
 #endif
 
@@ -187,41 +197,45 @@ erts_set_hole_marker(Eterm* ptr, Uint sz)
  * Helper function for the ESTACK macros defined in global.h.
  */
 void
-erl_grow_estack(ErtsEStack* s, Eterm* default_estack)
+erl_grow_estack(ErtsEStack *s, Eterm *default_estack)
 {
-    Uint old_size = (s->end - s->start);
-    Uint new_size = old_size * 2;
-    Uint sp_offs = s->sp - s->start;
-    if (s->start != default_estack) {
-        s->start = (Eterm*)erts_realloc(s->alloc_type, s->start,
-				new_size*sizeof(Eterm));
-    } else {
-        Eterm* new_ptr = (Eterm*)erts_alloc(s->alloc_type, new_size*sizeof(Eterm));
-	sys_memcpy(new_ptr, s->start, old_size*sizeof(Eterm));
-	s->start = new_ptr;
-    }
-    s->end = s->start + new_size;
-    s->sp = s->start + sp_offs;
+  Uint old_size = (s->end - s->start);
+  Uint new_size = old_size * 2;
+  Uint sp_offs = s->sp - s->start;
+
+  if (s->start != default_estack) {
+    s->start = (Eterm *)erts_realloc(s->alloc_type, s->start,
+                                     new_size * sizeof(Eterm));
+  } else {
+    Eterm *new_ptr = (Eterm *)erts_alloc(s->alloc_type, new_size * sizeof(Eterm));
+    sys_memcpy(new_ptr, s->start, old_size * sizeof(Eterm));
+    s->start = new_ptr;
+  }
+
+  s->end = s->start + new_size;
+  s->sp = s->start + sp_offs;
 }
 /*
  * Helper function for the WSTACK macros defined in global.h.
  */
 void
-erl_grow_wstack(ErtsWStack* s, UWord* default_wstack)
+erl_grow_wstack(ErtsWStack *s, UWord *default_wstack)
 {
-    Uint old_size = (s->wend - s->wstart);
-    Uint new_size = old_size * 2;
-    Uint sp_offs = s->wsp - s->wstart;
-    if (s->wstart != default_wstack) {
-        s->wstart = (UWord*)erts_realloc(s->alloc_type, s->wstart,
-				 new_size*sizeof(UWord));
-    } else {
-        UWord* new_ptr = (UWord*)erts_alloc(s->alloc_type, new_size*sizeof(UWord));
-	sys_memcpy(new_ptr, s->wstart, old_size*sizeof(UWord));
-	s->wstart = new_ptr;
-    }
-    s->wend = s->wstart + new_size;
-    s->wsp = s->wstart + sp_offs;
+  Uint old_size = (s->wend - s->wstart);
+  Uint new_size = old_size * 2;
+  Uint sp_offs = s->wsp - s->wstart;
+
+  if (s->wstart != default_wstack) {
+    s->wstart = (UWord *)erts_realloc(s->alloc_type, s->wstart,
+                                      new_size * sizeof(UWord));
+  } else {
+    UWord *new_ptr = (UWord *)erts_alloc(s->alloc_type, new_size * sizeof(UWord));
+    sys_memcpy(new_ptr, s->wstart, old_size * sizeof(UWord));
+    s->wstart = new_ptr;
+  }
+
+  s->wend = s->wstart + new_size;
+  s->wsp = s->wstart + sp_offs;
 }
 
 /* CTYPE macros */
@@ -231,9 +245,9 @@ erl_grow_wstack(ErtsWStack* s, UWord* default_wstack)
 #define IS_DIGIT(c)  ((c) >= '0' && (c) <= '9')
 #ifdef LATIN1
 #define IS_LOWER(c)  (((c) >= 'a' && (c) <= 'z') \
-		      || ((c) >= 128+95 && (c) <= 255 && (c) != 247))
+          || ((c) >= 128+95 && (c) <= 255 && (c) != 247))
 #define IS_UPPER(c)  (((c) >= 'A' && (c) <= 'Z') \
-		      || ((c) >= 128+64 && (c) <= 128+94 && (c) != 247-32))
+          || ((c) >= 128+64 && (c) <= 128+94 && (c) != 247-32))
 #else
 #define IS_LOWER(c)  ((c) >= 'a' && (c) <= 'z')
 #define IS_UPPER(c)  ((c) >= 'A' && (c) <= 'Z')
@@ -246,7 +260,7 @@ erl_grow_wstack(ErtsWStack* s, UWord* default_wstack)
 
 #ifdef LATIN1
 #define IS_CNTRL(c)  ((c) < ' ' || (c) == 127 \
-		      || ((c) >= 128 && (c) < 128+32))
+          || ((c) >= 128 && (c) < 128+32))
 #else
 /* Treat all non-ASCII as control characters */
 #define IS_CNTRL(c)  ((c) < ' ' || (c) >= 127)
@@ -261,105 +275,115 @@ erl_grow_wstack(ErtsWStack* s, UWord* default_wstack)
 int
 erts_list_length(Eterm list)
 {
-    int i = 0;
+  int i = 0;
 
-    while(is_list(list)) {
-	i++;
-	list = CDR(list_val(list));
-    }
-    if (is_not_nil(list)) {
-	return -1;
-    }
-    return i;
+  while (is_list(list)) {
+    i++;
+    list = CDR(list_val(list));
+  }
+
+  if (is_not_nil(list)) {
+    return -1;
+  }
+
+  return i;
 }
 
 static const struct {
-    Sint64 mask;
-    int bits;
+  Sint64 mask;
+  int bits;
 } fib_data[] = {{ERTS_I64_LITERAL(0x2), 1},
-		{ERTS_I64_LITERAL(0xc), 2},
-		{ERTS_I64_LITERAL(0xf0), 4},
-		{ERTS_I64_LITERAL(0xff00), 8},
-		{ERTS_I64_LITERAL(0xffff0000), 16},
-                {ERTS_I64_LITERAL((Sint64)0xffffffff00000000), 32}};
+  {ERTS_I64_LITERAL(0xc), 2},
+  {ERTS_I64_LITERAL(0xf0), 4},
+  {ERTS_I64_LITERAL(0xff00), 8},
+  {ERTS_I64_LITERAL(0xffff0000), 16},
+  {ERTS_I64_LITERAL((Sint64)0xffffffff00000000), 32}
+};
 
 static ERTS_INLINE int
 fit_in_bits(Sint64 value, int start)
 {
-    int bits = 0;
-    int i;
+  int bits = 0;
+  int i;
 
-    for (i = start; i >= 0; i--) {
-	if (value & fib_data[i].mask) {
-	    value >>= fib_data[i].bits;
-	    bits |= fib_data[i].bits;
-	}
+  for (i = start; i >= 0; i--) {
+    if (value & fib_data[i].mask) {
+      value >>= fib_data[i].bits;
+      bits |= fib_data[i].bits;
     }
+  }
 
-    bits++;
+  bits++;
 
-    return bits;
+  return bits;
 }
 
 int erts_fit_in_bits_int64(Sint64 value)
 {
-    return fit_in_bits(value, 5);
+  return fit_in_bits(value, 5);
 }
 
 int erts_fit_in_bits_int32(int32_t value)
 {
-    return fit_in_bits((Sint64) (uint32_t) value, 4);
+  return fit_in_bits((Sint64)(uint32_t) value, 4);
 }
 
 int
 erts_print(int to, void *arg, const char *format, ...)
 {
-    int res;
-    va_list arg_list;
-    va_start(arg_list, format);
+  int res;
+  va_list arg_list;
+  va_start(arg_list, format);
 
-    if (to < ERTS_PRINT_MIN)
-	res = -EINVAL;
-    else {
-	switch (to) {
-	case ERTS_PRINT_STDOUT:
-	    res = erts_vprintf(format, arg_list);
-	    break;
-	case ERTS_PRINT_STDERR:
-	    res = erts_vfprintf(stderr, format, arg_list);
-	    break;
-	case ERTS_PRINT_FILE:
-	    res = erts_vfprintf((FILE *) arg, format, arg_list);
-	    break;
-	case ERTS_PRINT_SBUF:
-	    res = erts_vsprintf((char *) arg, format, arg_list);
-	    break;
-	case ERTS_PRINT_SNBUF:
-	    res = erts_vsnprintf(((erts_print_sn_buf *) arg)->buf,
-				 ((erts_print_sn_buf *) arg)->size,
-				 format,
-				 arg_list);
-	    break;
-	case ERTS_PRINT_DSBUF:
-	    res = erts_vdsprintf((erts_dsprintf_buf_t *) arg, format, arg_list);
-	    break;
-	case ERTS_PRINT_INVALID:
-	    res = -EINVAL;
-	    break;
-	default:
-	    res = erts_vfdprintf((int) to, format, arg_list);
-	    break;
-	}
+  if (to < ERTS_PRINT_MIN) {
+    res = -EINVAL;
+  } else {
+    switch (to) {
+    case ERTS_PRINT_STDOUT:
+      res = erts_vprintf(format, arg_list);
+      break;
+
+    case ERTS_PRINT_STDERR:
+      res = erts_vfprintf(stderr, format, arg_list);
+      break;
+
+    case ERTS_PRINT_FILE:
+      res = erts_vfprintf((FILE *) arg, format, arg_list);
+      break;
+
+    case ERTS_PRINT_SBUF:
+      res = erts_vsprintf((char *) arg, format, arg_list);
+      break;
+
+    case ERTS_PRINT_SNBUF:
+      res = erts_vsnprintf(((erts_print_sn_buf *) arg)->buf,
+                           ((erts_print_sn_buf *) arg)->size,
+                           format,
+                           arg_list);
+      break;
+
+    case ERTS_PRINT_DSBUF:
+      res = erts_vdsprintf((erts_dsprintf_buf_t *) arg, format, arg_list);
+      break;
+
+    case ERTS_PRINT_INVALID:
+      res = -EINVAL;
+      break;
+
+    default:
+      res = erts_vfdprintf((int) to, format, arg_list);
+      break;
     }
+  }
 
-    va_end(arg_list);
-    return res;
+  va_end(arg_list);
+  return res;
 }
 
 int
 erts_putc(int to, void *arg, char c)
 {
-    return erts_print(to, arg, "%c", c);
+  return erts_print(to, arg, "%c", c);
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\
@@ -374,29 +398,34 @@ erts_putc(int to, void *arg, char c)
 Eterm
 erts_bld_atom(Uint **hpp, Uint *szp, char *str)
 {
-    if (hpp)
-	return erts_atom_put((uint8_t *) str, sys_strlen(str), ERTS_ATOM_ENC_LATIN1, 1);
-    else
-	return THE_NON_VALUE;
+  if (hpp) {
+    return erts_atom_put((uint8_t *) str, sys_strlen(str), ERTS_ATOM_ENC_LATIN1, 1);
+  } else {
+    return THE_NON_VALUE;
+  }
 }
 
 Eterm
 erts_bld_uint(Uint **hpp, Uint *szp, Uint ui)
 {
-    Eterm res = THE_NON_VALUE;
-    if (IS_USMALL(0, ui)) {
-	if (hpp)
-	    res = make_small(ui);
+  Eterm res = THE_NON_VALUE;
+
+  if (IS_USMALL(0, ui)) {
+    if (hpp) {
+      res = make_small(ui);
     }
-    else {
-	if (szp)
-	    *szp += BIG_UINT_HEAP_SIZE;
-	if (hpp) {
-	    res = uint_to_big(ui, *hpp);
-	    *hpp += BIG_UINT_HEAP_SIZE;
-	}
+  } else {
+    if (szp) {
+      *szp += BIG_UINT_HEAP_SIZE;
     }
-    return res;
+
+    if (hpp) {
+      res = uint_to_big(ui, *hpp);
+      *hpp += BIG_UINT_HEAP_SIZE;
+    }
+  }
+
+  return res;
 }
 
 /*
@@ -407,256 +436,309 @@ erts_bld_uint(Uint **hpp, Uint *szp, Uint ui)
 Eterm
 erts_bld_uword(Uint **hpp, Uint *szp, UWord uw)
 {
-    Eterm res = THE_NON_VALUE;
-    if (IS_USMALL(0, uw)) {
-	if (hpp)
-	    res = make_small((Uint) uw);
+  Eterm res = THE_NON_VALUE;
+
+  if (IS_USMALL(0, uw)) {
+    if (hpp) {
+      res = make_small((Uint) uw);
     }
-    else {
-	if (szp)
-	    *szp += BIG_UWORD_HEAP_SIZE(uw);
-	if (hpp) {
-	    res = uword_to_big(uw, *hpp);
-	    *hpp += BIG_UWORD_HEAP_SIZE(uw);
-	}
+  } else {
+    if (szp) {
+      *szp += BIG_UWORD_HEAP_SIZE(uw);
     }
-    return res;
+
+    if (hpp) {
+      res = uword_to_big(uw, *hpp);
+      *hpp += BIG_UWORD_HEAP_SIZE(uw);
+    }
+  }
+
+  return res;
 }
 
 
 Eterm
 erts_bld_uint64(Uint **hpp, Uint *szp, Uint64 ui64)
 {
-    Eterm res = THE_NON_VALUE;
-    if (IS_USMALL(0, ui64)) {
-	if (hpp)
-	    res = make_small((Uint) ui64);
+  Eterm res = THE_NON_VALUE;
+
+  if (IS_USMALL(0, ui64)) {
+    if (hpp) {
+      res = make_small((Uint) ui64);
     }
-    else {
-	if (szp)
-	    *szp += ERTS_UINT64_HEAP_SIZE(ui64);
-	if (hpp)
-	    res = erts_uint64_to_big(ui64, hpp);
+  } else {
+    if (szp) {
+      *szp += ERTS_UINT64_HEAP_SIZE(ui64);
     }
-    return res;
+
+    if (hpp) {
+      res = erts_uint64_to_big(ui64, hpp);
+    }
+  }
+
+  return res;
 }
 
 Eterm
 erts_bld_sint64(Uint **hpp, Uint *szp, Sint64 si64)
 {
-    Eterm res = THE_NON_VALUE;
-    if (IS_SSMALL(si64)) {
-	if (hpp)
-	    res = make_small((Sint) si64);
+  Eterm res = THE_NON_VALUE;
+
+  if (IS_SSMALL(si64)) {
+    if (hpp) {
+      res = make_small((Sint) si64);
     }
-    else {
-	if (szp)
-	    *szp += ERTS_SINT64_HEAP_SIZE(si64);
-	if (hpp)
-	    res = erts_sint64_to_big(si64, hpp);
+  } else {
+    if (szp) {
+      *szp += ERTS_SINT64_HEAP_SIZE(si64);
     }
-    return res;
+
+    if (hpp) {
+      res = erts_sint64_to_big(si64, hpp);
+    }
+  }
+
+  return res;
 }
 
 
 Eterm
 erts_bld_cons(Uint **hpp, Uint *szp, Eterm car, Eterm cdr)
 {
-    Eterm res = THE_NON_VALUE;
-    if (szp)
-	*szp += 2;
-    if (hpp) {
-	res = CONS(*hpp, car, cdr);
-	*hpp += 2;
-    }
-    return res;
+  Eterm res = THE_NON_VALUE;
+
+  if (szp) {
+    *szp += 2;
+  }
+
+  if (hpp) {
+    res = CONS(*hpp, car, cdr);
+    *hpp += 2;
+  }
+
+  return res;
 }
 
 Eterm
 erts_bld_tuple(Uint **hpp, Uint *szp, Uint arity, ...)
 {
-    Eterm res = THE_NON_VALUE;
+  Eterm res = THE_NON_VALUE;
 
-    ASSERT(arity < (((Uint)1) << (sizeof(Uint)*8 - _HEADER_ARITY_OFFS)));
+  ASSERT(arity < (((Uint)1) << (sizeof(Uint) * 8 - _HEADER_ARITY_OFFS)));
 
-    if (szp)
-	*szp += arity + 1;
-    if (hpp) {
-	res = make_tuple(*hpp);
-	*((*hpp)++) = make_arityval(arity);
+  if (szp) {
+    *szp += arity + 1;
+  }
 
-	if (arity > 0) {
-	    Uint i;
-	    va_list argp;
+  if (hpp) {
+    res = make_tuple(*hpp);
+    *((*hpp)++) = make_arityval(arity);
 
-	    va_start(argp, arity);
-	    for (i = 0; i < arity; i++) {
-                *((*hpp)++) = va_arg(argp, Eterm);
-            }
-	    va_end(argp);
-	}
+    if (arity > 0) {
+      Uint i;
+      va_list argp;
+
+      va_start(argp, arity);
+
+      for (i = 0; i < arity; i++) {
+        *((*hpp)++) = va_arg(argp, Eterm);
+      }
+
+      va_end(argp);
     }
-    return res;
+  }
+
+  return res;
 }
 
 
 Eterm erts_bld_tuplev(Uint **hpp, Uint *szp, Uint arity, Eterm terms[])
 {
-    Eterm res = THE_NON_VALUE;
-    /*
-     * Note callers expect that 'terms' is *not* accessed if hpp == nullptr.
-     */
+  Eterm res = THE_NON_VALUE;
+  /*
+   * Note callers expect that 'terms' is *not* accessed if hpp == nullptr.
+   */
 
-    ASSERT(arity < (((Uint)1) << (sizeof(Uint)*8 - _HEADER_ARITY_OFFS)));
+  ASSERT(arity < (((Uint)1) << (sizeof(Uint) * 8 - _HEADER_ARITY_OFFS)));
 
-    if (szp)
-	*szp += arity + 1;
-    if (hpp) {
+  if (szp) {
+    *szp += arity + 1;
+  }
 
-	res = make_tuple(*hpp);
-	*((*hpp)++) = make_arityval(arity);
+  if (hpp) {
 
-	if (arity > 0) {
-	    Uint i;
-	    for (i = 0; i < arity; i++)
-		*((*hpp)++) = terms[i];
-	}
+    res = make_tuple(*hpp);
+    *((*hpp)++) = make_arityval(arity);
+
+    if (arity > 0) {
+      Uint i;
+
+      for (i = 0; i < arity; i++) {
+        *((*hpp)++) = terms[i];
+      }
     }
-    return res;
+  }
+
+  return res;
 }
 
 Eterm
 erts_bld_string_n(Uint **hpp, Uint *szp, const char *str, Sint len)
 {
-    Eterm res = THE_NON_VALUE;
-    Sint i = len;
-    if (szp)
-	*szp += len*2;
-    if (hpp) {
-	res = NIL;
-	while (--i >= 0) {
-	    res = CONS(*hpp, make_small((uint8_t) str[i]), res);
-	    *hpp += 2;
-	}
+  Eterm res = THE_NON_VALUE;
+  Sint i = len;
+
+  if (szp) {
+    *szp += len * 2;
+  }
+
+  if (hpp) {
+    res = NIL;
+
+    while (--i >= 0) {
+      res = CONS(*hpp, make_small((uint8_t) str[i]), res);
+      *hpp += 2;
     }
-    return res;
+  }
+
+  return res;
 }
 
 Eterm
 erts_bld_list(Uint **hpp, Uint *szp, Sint length, Eterm terms[])
 {
-    Eterm list = THE_NON_VALUE;
-    if (szp)
-	*szp += 2*length;
-    if (hpp) {
-	Sint i = length;
-	list = NIL;
+  Eterm list = THE_NON_VALUE;
 
-	while (--i >= 0) {
-	    list = CONS(*hpp, terms[i], list);
-	    *hpp += 2;
-	}
+  if (szp) {
+    *szp += 2 * length;
+  }
+
+  if (hpp) {
+    Sint i = length;
+    list = NIL;
+
+    while (--i >= 0) {
+      list = CONS(*hpp, terms[i], list);
+      *hpp += 2;
     }
-    return list;
+  }
+
+  return list;
 }
 
 Eterm
 erts_bld_2tup_list(Uint **hpp, Uint *szp,
-		   Sint length, Eterm terms1[], Uint terms2[])
+                   Sint length, Eterm terms1[], Uint terms2[])
 {
-    Eterm res = THE_NON_VALUE;
-    if (szp)
-	*szp += 5*length;
-    if (hpp) {
-	Sint i = length;
-	res = NIL;
+  Eterm res = THE_NON_VALUE;
 
-	while (--i >= 0) {
-	    res = CONS(*hpp+3, TUPLE2(*hpp, terms1[i], terms2[i]), res);
-	    *hpp += 5;
-	}
+  if (szp) {
+    *szp += 5 * length;
+  }
+
+  if (hpp) {
+    Sint i = length;
+    res = NIL;
+
+    while (--i >= 0) {
+      res = CONS(*hpp + 3, TUPLE2(*hpp, terms1[i], terms2[i]), res);
+      *hpp += 5;
     }
-    return res;
+  }
+
+  return res;
 }
 
 Eterm
 erts_bld_atom_uword_2tup_list(Uint **hpp, Uint *szp,
                               Sint length, Eterm atoms[], UWord uints[])
 {
-    Sint i;
-    Eterm res = THE_NON_VALUE;
-    if (szp) {
-	*szp += 5*length;
-	i = length;
-	while (--i >= 0) {
-	    if (!IS_USMALL(0, uints[i]))
-		*szp += BIG_UINT_HEAP_SIZE;
-	}
-    }
-    if (hpp) {
-	i = length;
-	res = NIL;
+  Sint i;
+  Eterm res = THE_NON_VALUE;
 
-	while (--i >= 0) {
-	    Eterm ui;
+  if (szp) {
+    *szp += 5 * length;
+    i = length;
 
-	    if (IS_USMALL(0, uints[i]))
-		ui = make_small(uints[i]);
-	    else {
-		ui = uint_to_big(uints[i], *hpp);
-		*hpp += BIG_UINT_HEAP_SIZE;
-	    }
-	    
-	    res = CONS(*hpp+3, TUPLE2(*hpp, atoms[i], ui), res);
-	    *hpp += 5;
-	}
+    while (--i >= 0) {
+      if (!IS_USMALL(0, uints[i])) {
+        *szp += BIG_UINT_HEAP_SIZE;
+      }
     }
-    return res;
+  }
+
+  if (hpp) {
+    i = length;
+    res = NIL;
+
+    while (--i >= 0) {
+      Eterm ui;
+
+      if (IS_USMALL(0, uints[i])) {
+        ui = make_small(uints[i]);
+      } else {
+        ui = uint_to_big(uints[i], *hpp);
+        *hpp += BIG_UINT_HEAP_SIZE;
+      }
+
+      res = CONS(*hpp + 3, TUPLE2(*hpp, atoms[i], ui), res);
+      *hpp += 5;
+    }
+  }
+
+  return res;
 }
 
 Eterm
 erts_bld_atom_2uint_3tup_list(Uint **hpp, Uint *szp, Sint length,
-			      Eterm atoms[], Uint uints1[], Uint uints2[])
+                              Eterm atoms[], Uint uints1[], Uint uints2[])
 {
-    Sint i;
-    Eterm res = THE_NON_VALUE;
-    if (szp) {
-	*szp += 6*length;
-	i = length;
-	while (--i >= 0) {
-	    if (!IS_USMALL(0, uints1[i]))
-		*szp += BIG_UINT_HEAP_SIZE;
-	    if (!IS_USMALL(0, uints2[i]))
-		*szp += BIG_UINT_HEAP_SIZE;
-	}
-    }
-    if (hpp) {
-	i = length;
-	res = NIL;
+  Sint i;
+  Eterm res = THE_NON_VALUE;
 
-	while (--i >= 0) {
-	    Eterm ui1;
-	    Eterm ui2;
+  if (szp) {
+    *szp += 6 * length;
+    i = length;
 
-	    if (IS_USMALL(0, uints1[i]))
-		ui1 = make_small(uints1[i]);
-	    else {
-		ui1 = uint_to_big(uints1[i], *hpp);
-		*hpp += BIG_UINT_HEAP_SIZE;
-	    }
-	    
-	    if (IS_USMALL(0, uints2[i]))
-		ui2 = make_small(uints2[i]);
-	    else {
-		ui2 = uint_to_big(uints2[i], *hpp);
-		*hpp += BIG_UINT_HEAP_SIZE;
-	    }
-	    
-	    res = CONS(*hpp+4, TUPLE3(*hpp, atoms[i], ui1, ui2), res);
-	    *hpp += 6;
-	}
+    while (--i >= 0) {
+      if (!IS_USMALL(0, uints1[i])) {
+        *szp += BIG_UINT_HEAP_SIZE;
+      }
+
+      if (!IS_USMALL(0, uints2[i])) {
+        *szp += BIG_UINT_HEAP_SIZE;
+      }
     }
-    return res;
+  }
+
+  if (hpp) {
+    i = length;
+    res = NIL;
+
+    while (--i >= 0) {
+      Eterm ui1;
+      Eterm ui2;
+
+      if (IS_USMALL(0, uints1[i])) {
+        ui1 = make_small(uints1[i]);
+      } else {
+        ui1 = uint_to_big(uints1[i], *hpp);
+        *hpp += BIG_UINT_HEAP_SIZE;
+      }
+
+      if (IS_USMALL(0, uints2[i])) {
+        ui2 = make_small(uints2[i]);
+      } else {
+        ui2 = uint_to_big(uints2[i], *hpp);
+        *hpp += BIG_UINT_HEAP_SIZE;
+      }
+
+      res = CONS(*hpp + 4, TUPLE3(*hpp, atoms[i], ui1, ui2), res);
+      *hpp += 6;
+    }
+  }
+
+  return res;
 }
 
 /*                                                                           *\
@@ -670,28 +752,28 @@ erts_bld_atom_2uint_3tup_list(Uint **hpp, Uint *szp, Sint length,
 ** make_broken_hash: the one used for backward compatibility
 ** is called from the bif erlang:hash/2. Should never be used
 ** as it a) hashes only a part of binaries, b) hashes bignums really poorly,
-** c) hashes bignums differently on different endian processors and d) hashes 
+** c) hashes bignums differently on different endian processors and d) hashes
 ** small integers with different weights on different bytes.
 **
 ** make_hash: A hash function that will give the same values for the same
-** terms regardless of the internal representation. Small integers are 
-** hashed using the same algorithm as bignums and bignums are hashed 
-** independent of the CPU endianess. 
-** Make_hash also hashes pids, ports and references like 32 bit numbers 
-** (but with different constants). 
+** terms regardless of the internal representation. Small integers are
+** hashed using the same algorithm as bignums and bignums are hashed
+** independent of the CPU endianess.
+** Make_hash also hashes pids, ports and references like 32 bit numbers
+** (but with different constants).
 ** make_hash() is called from the bif erlang:phash/2
 **
-** The idea behind the hash algorithm is to produce values suitable for 
-** linear dynamic hashing. We cannot choose the range at all while hashing 
+** The idea behind the hash algorithm is to produce values suitable for
+** linear dynamic hashing. We cannot choose the range at all while hashing
 ** (it's not even supplied to the hashing functions). The good old algorithm
 ** [H = H*C+X mod M, where H is the hash value, C is a "random" constant(or M),
-** M is the range, preferably a prime, and X is each byte value] is therefore 
+** M is the range, preferably a prime, and X is each byte value] is therefore
 ** modified to:
-** H = H*C+X mod 2^32, where C is a large prime. This gives acceptable 
+** H = H*C+X mod 2^32, where C is a large prime. This gives acceptable
 ** "spreading" of the hashes, so that later modulo calculations also will give
-** acceptable "spreading" in the range. 
-** We really need to hash on bytes, otherwise the 
-** upper bytes of a word will be less significant than the lower ones. That's 
+** acceptable "spreading" in the range.
+** We really need to hash on bytes, otherwise the
+** upper bytes of a word will be less significant than the lower ones. That's
 ** not acceptable at all. For internal use one could maybe optimize by using
 ** another hash function, that is less strict but faster. That is, however, not
 ** implemented.
@@ -700,26 +782,26 @@ erts_bld_atom_2uint_3tup_list(Uint **hpp, Uint *szp, Sint length,
 **
 ** In make_hash, the number N is treated like this_:
 **  Abs(N) is hashed bytewise with the least significant byte, B(0), first.
-**  The number of bytes (J) to calculate hash on in N is 
-**  (the number of _32_ bit words needed to store the unsigned 
+**  The number of bytes (J) to calculate hash on in N is
+**  (the number of _32_ bit words needed to store the unsigned
 **   value of abs(N)) * 4.
 **  X = FUNNY_NUMBER2
 **  If N < 0, Y = FUNNY_NUMBER4 else Y = FUNNY_NUMBER3.
 **  The hash value is Y*h(J) mod 2^32 where h(J) is calculated like
-**  h(0) = <initial hash> 
+**  h(0) = <initial hash>
 **  h(i) = h(i-1)*X + B(i-1)
 ** The above should hold regardless of internal representation.
 ** Pids are hashed like small numbers but with differrent constants, as are
 ** ports.
 ** References are hashed like ports but only on the least significant byte.
-** Binaries are hashed on all bytes (not on the 15 first as in 
+** Binaries are hashed on all bytes (not on the 15 first as in
 ** make_broken_hash()).
 ** Bytes in lists (possibly text strings) use a simpler multiplication inlined
 ** in the handling of lists, that is an optimization.
 ** Everything else is like in the old hash (make_broken_hash()).
 **
 ** make_hash2() is faster than make_hash, in particular for bignums
-** and binaries, and produces better hash values. 
+** and binaries, and produces better hash values.
 */
 
 /* some prime numbers just above 2 ^ 28 */
@@ -742,287 +824,325 @@ erts_bld_atom_2uint_3tup_list(Uint **hpp, Uint *szp, Sint length,
 static uint32_t
 hash_binary_bytes(Eterm bin, Uint sz, uint32_t hash)
 {
-    uint8_t* ptr;
-    Uint bitoffs;
-    Uint bitsize;
+  uint8_t *ptr;
+  Uint bitoffs;
+  Uint bitsize;
 
-    ERTS_GET_BINARY_BYTES(bin, ptr, bitoffs, bitsize);
-    if (bitoffs == 0) {
-	while (sz--) {
-	    hash = hash*FUNNY_NUMBER1 + *ptr++;
-	}
-	if (bitsize > 0) {
-	    uint8_t b = *ptr;
+  ERTS_GET_BINARY_BYTES(bin, ptr, bitoffs, bitsize);
 
-	    b >>= 8 - bitsize;
-	    hash = (hash*FUNNY_NUMBER1 + b) * FUNNY_NUMBER12 + bitsize;
-	}
-    } else {
-	Uint previous = *ptr++;
-	Uint b;
-	Uint lshift = bitoffs;
-	Uint rshift = 8 - lshift;
-	    
-	while (sz--) {
-	    b = (previous << lshift) & 0xFF;
-	    previous = *ptr++;
-	    b |= previous >> rshift;
-	    hash = hash*FUNNY_NUMBER1 + b;
-	}
-	if (bitsize > 0) {
-	    b = (previous << lshift) & 0xFF;
-	    previous = *ptr++;
-	    b |= previous >> rshift;
-	    
-	    b >>= 8 - bitsize;
-	    hash = (hash*FUNNY_NUMBER1 + b) * FUNNY_NUMBER12 + bitsize;
-	}
+  if (bitoffs == 0) {
+    while (sz--) {
+      hash = hash * FUNNY_NUMBER1 + *ptr++;
     }
-    return hash;
+
+    if (bitsize > 0) {
+      uint8_t b = *ptr;
+
+      b >>= 8 - bitsize;
+      hash = (hash * FUNNY_NUMBER1 + b) * FUNNY_NUMBER12 + bitsize;
+    }
+  } else {
+    Uint previous = *ptr++;
+    Uint b;
+    Uint lshift = bitoffs;
+    Uint rshift = 8 - lshift;
+
+    while (sz--) {
+      b = (previous << lshift) & 0xFF;
+      previous = *ptr++;
+      b |= previous >> rshift;
+      hash = hash * FUNNY_NUMBER1 + b;
+    }
+
+    if (bitsize > 0) {
+      b = (previous << lshift) & 0xFF;
+      previous = *ptr++;
+      b |= previous >> rshift;
+
+      b >>= 8 - bitsize;
+      hash = (hash * FUNNY_NUMBER1 + b) * FUNNY_NUMBER12 + bitsize;
+    }
+  }
+
+  return hash;
 }
 
 uint32_t make_hash(Eterm term_arg)
 {
-    DECLARE_WSTACK(stack);
-    Eterm term = term_arg;
-    Eterm hash = 0;
-    unsigned op;
+  DECLARE_WSTACK(stack);
+  Eterm term = term_arg;
+  Eterm hash = 0;
+  unsigned op;
 
-    /* Must not collide with the real tag_val_def's: */
+  /* Must not collide with the real tag_val_def's: */
 #define MAKE_HASH_TUPLE_OP 0x11
 #define MAKE_HASH_TERM_ARRAY_OP 0x12
 #define MAKE_HASH_CDR_PRE_OP 0x13
-#define	MAKE_HASH_CDR_POST_OP 0x14
+#define MAKE_HASH_CDR_POST_OP 0x14
 
-    /* 
-    ** Convenience macro for calculating a bytewise hash on an unsigned 32 bit 
-    ** integer.
-    ** If the endianess is known, we could be smarter here, 
-    ** but that gives no significant speedup (on a sparc at least) 
-    */
-#define UINT32_HASH_STEP(Expr, Prime1)					\
-	do {								\
-	    uint32_t x = (uint32_t) (Expr);	                                \
-	    hash =							\
-		(((((hash)*(Prime1) + (x & 0xFF)) * (Prime1) + 	        \
-		((x >> 8) & 0xFF)) * (Prime1) + 			\
-		((x >> 16) & 0xFF)) * (Prime1) + 			\
-		 (x >> 24));						\
-	} while(0)
+  /*
+  ** Convenience macro for calculating a bytewise hash on an unsigned 32 bit
+  ** integer.
+  ** If the endianess is known, we could be smarter here,
+  ** but that gives no significant speedup (on a sparc at least)
+  */
+#define UINT32_HASH_STEP(Expr, Prime1)          \
+  do {                \
+      uint32_t x = (uint32_t) (Expr);                                 \
+      hash =              \
+    (((((hash)*(Prime1) + (x & 0xFF)) * (Prime1) +          \
+    ((x >> 8) & 0xFF)) * (Prime1) +       \
+    ((x >> 16) & 0xFF)) * (Prime1) +      \
+     (x >> 24));            \
+  } while(0)
 
-#define UINT32_HASH_RET(Expr, Prime1, Prime2)   	\
-	UINT32_HASH_STEP(Expr, Prime1);			\
-        hash = hash * (Prime2);				\
-        break		 
-		
-	    
-    /* 
-     * Significant additions needed for real 64 bit port with larger fixnums.
-     */	    
+#define UINT32_HASH_RET(Expr, Prime1, Prime2)     \
+  UINT32_HASH_STEP(Expr, Prime1);     \
+        hash = hash * (Prime2);       \
+        break
 
-    /* 
-     * Note, for the simple 64bit port, not utilizing the 
-     * larger word size this_ function will work without modification. 
-     */
+
+  /*
+   * Significant additions needed for real 64 bit port with larger fixnums.
+   */
+
+  /*
+   * Note, for the simple 64bit port, not utilizing the
+   * larger word size this_ function will work without modification.
+   */
 tail_recur:
-    op = tag_val_def(term);
+  op = tag_val_def(term);
 
-    for (;;) {
+  for (;;) {
     switch (op) {
     case NIL_DEF:
-	hash = hash*FUNNY_NUMBER3 + 1;
-	break;
+      hash = hash * FUNNY_NUMBER3 + 1;
+      break;
+
     case ATOM_DEF:
-	hash = hash*FUNNY_NUMBER1 + 
-	    (atom_tab(atom_val(term))->slot.bucket.hvalue);
-	break;
-    case SMALL_DEF:
-	{
-	    Sint y1 = signed_val(term);
-	    Uint y2 = y1 < 0 ? -(Uint)y1 : y1;
+      hash = hash * FUNNY_NUMBER1 +
+             (atom_tab(atom_val(term))->slot.bucket.hvalue);
+      break;
 
-	    UINT32_HASH_STEP(y2, FUNNY_NUMBER2);
+    case SMALL_DEF: {
+      Sint y1 = signed_val(term);
+      Uint y2 = y1 < 0 ? -(Uint)y1 : y1;
+
+      UINT32_HASH_STEP(y2, FUNNY_NUMBER2);
 #if defined(ARCH_64) && !HALFWORD_HEAP
-	    if (y2 >> 32)
-		UINT32_HASH_STEP(y2 >> 32, FUNNY_NUMBER2);
+
+      if (y2 >> 32) {
+        UINT32_HASH_STEP(y2 >> 32, FUNNY_NUMBER2);
+      }
+
 #endif
-	    hash *= (y1 < 0 ? FUNNY_NUMBER4 : FUNNY_NUMBER3);
-	    break;
-	}
-    case BINARY_DEF:
-	{
-	    Uint sz = binary_size(term);
+      hash *= (y1 < 0 ? FUNNY_NUMBER4 : FUNNY_NUMBER3);
+      break;
+    }
 
-	    hash = hash_binary_bytes(term, sz, hash);
-	    hash = hash*FUNNY_NUMBER4 + sz;
-	    break;
-	}
-    case EXPORT_DEF:
-	{
-	    Export* ep = *((Export **) (export_val(term) + 1));
+    case BINARY_DEF: {
+      Uint sz = binary_size(term);
 
-	    hash = hash * FUNNY_NUMBER11 + ep->code[2];
-	    hash = hash*FUNNY_NUMBER1 + 
-		(atom_tab(atom_val(ep->code[0]))->slot.bucket.hvalue);
-	    hash = hash*FUNNY_NUMBER1 + 
-		(atom_tab(atom_val(ep->code[1]))->slot.bucket.hvalue);
-	    break;
-	}
+      hash = hash_binary_bytes(term, sz, hash);
+      hash = hash * FUNNY_NUMBER4 + sz;
+      break;
+    }
 
-    case FUN_DEF:
-	{
-	    ErlFunThing* funp = (ErlFunThing *) fun_val(term);
-	    Uint num_free = funp->num_free;
+    case EXPORT_DEF: {
+      Export *ep = *((Export **)(export_val(term) + 1));
 
-	    hash = hash * FUNNY_NUMBER10 + num_free;
-	    hash = hash*FUNNY_NUMBER1 + 
-		(atom_tab(atom_val(funp->fe->module))->slot.bucket.hvalue);
-	    hash = hash*FUNNY_NUMBER2 + funp->fe->old_index;
-	    hash = hash*FUNNY_NUMBER2 + funp->fe->old_uniq;
-	    if (num_free > 0) {
-		if (num_free > 1) {
-		    WSTACK_PUSH3(stack, (UWord) &funp->env[1], (num_free-1), MAKE_HASH_TERM_ARRAY_OP);
-		}
-		term = funp->env[0];
-		goto tail_recur;
-	    }
-	    break;
-	}
+      hash = hash * FUNNY_NUMBER11 + ep->code[2];
+      hash = hash * FUNNY_NUMBER1 +
+             (atom_tab(atom_val(ep->code[0]))->slot.bucket.hvalue);
+      hash = hash * FUNNY_NUMBER1 +
+             (atom_tab(atom_val(ep->code[1]))->slot.bucket.hvalue);
+      break;
+    }
+
+    case FUN_DEF: {
+      ErlFunThing *funp = (ErlFunThing *) fun_val(term);
+      Uint num_free = funp->num_free;
+
+      hash = hash * FUNNY_NUMBER10 + num_free;
+      hash = hash * FUNNY_NUMBER1 +
+             (atom_tab(atom_val(funp->fe->module))->slot.bucket.hvalue);
+      hash = hash * FUNNY_NUMBER2 + funp->fe->old_index;
+      hash = hash * FUNNY_NUMBER2 + funp->fe->old_uniq;
+
+      if (num_free > 0) {
+        if (num_free > 1) {
+          WSTACK_PUSH3(stack, (UWord) &funp->env[1], (num_free - 1), MAKE_HASH_TERM_ARRAY_OP);
+        }
+
+        term = funp->env[0];
+        goto tail_recur;
+      }
+
+      break;
+    }
+
     case PID_DEF:
-	UINT32_HASH_RET(internal_pid_number(term),FUNNY_NUMBER5,FUNNY_NUMBER6);
+      UINT32_HASH_RET(internal_pid_number(term), FUNNY_NUMBER5, FUNNY_NUMBER6);
+
     case EXTERNAL_PID_DEF:
-	UINT32_HASH_RET(external_pid_number(term),FUNNY_NUMBER5,FUNNY_NUMBER6);
+      UINT32_HASH_RET(external_pid_number(term), FUNNY_NUMBER5, FUNNY_NUMBER6);
+
     case PORT_DEF:
-	UINT32_HASH_RET(internal_port_number(term),FUNNY_NUMBER9,FUNNY_NUMBER10);
+      UINT32_HASH_RET(internal_port_number(term), FUNNY_NUMBER9, FUNNY_NUMBER10);
+
     case EXTERNAL_PORT_DEF:
-	UINT32_HASH_RET(external_port_number(term),FUNNY_NUMBER9,FUNNY_NUMBER10);
+      UINT32_HASH_RET(external_port_number(term), FUNNY_NUMBER9, FUNNY_NUMBER10);
+
     case REF_DEF:
-	UINT32_HASH_RET(internal_ref_numbers(term)[0],FUNNY_NUMBER9,FUNNY_NUMBER10);
+      UINT32_HASH_RET(internal_ref_numbers(term)[0], FUNNY_NUMBER9, FUNNY_NUMBER10);
+
     case EXTERNAL_REF_DEF:
-	UINT32_HASH_RET(external_ref_numbers(term)[0],FUNNY_NUMBER9,FUNNY_NUMBER10);
-    case FLOAT_DEF: 
-	{
-	    FloatDef ff;
-	    GET_DOUBLE(term, ff);
-	    hash = hash*FUNNY_NUMBER6 + (ff.fw[0] ^ ff.fw[1]);
-	    break;
-	}
+      UINT32_HASH_RET(external_ref_numbers(term)[0], FUNNY_NUMBER9, FUNNY_NUMBER10);
+
+    case FLOAT_DEF: {
+      FloatDef ff;
+      GET_DOUBLE(term, ff);
+      hash = hash * FUNNY_NUMBER6 + (ff.fw[0] ^ ff.fw[1]);
+      break;
+    }
 
     case MAKE_HASH_CDR_PRE_OP:
-	term = (Eterm) WSTACK_POP(stack);
-	if (is_not_list(term)) {
-	    WSTACK_PUSH(stack, (UWord) MAKE_HASH_CDR_POST_OP);
-	    goto tail_recur;
-	}
-	/* fall through */
-    case LIST_DEF:
-	{
-	    Eterm* list = list_val(term);
-	    while(is_byte(*list)) {
-		/* Optimization for strings. 
-		** Note that this_ hash is different from a 'small' hash,
-		** as multiplications on a Sparc is so slow.
-		*/
-		hash = hash*FUNNY_NUMBER2 + unsigned_val(*list);
-		
-		if (is_not_list(CDR(list))) {
-		    WSTACK_PUSH(stack, MAKE_HASH_CDR_POST_OP);
-		    term = CDR(list);
-		    goto tail_recur;
-		}		
-		list = list_val(CDR(list));
-	    }
-	    WSTACK_PUSH2(stack, CDR(list), MAKE_HASH_CDR_PRE_OP);
-	    term = CAR(list);
-	    goto tail_recur;
-	}
+      term = (Eterm) WSTACK_POP(stack);
+
+      if (is_not_list(term)) {
+        WSTACK_PUSH(stack, (UWord) MAKE_HASH_CDR_POST_OP);
+        goto tail_recur;
+      }
+
+    /* fall through */
+    case LIST_DEF: {
+      Eterm *list = list_val(term);
+
+      while (is_byte(*list)) {
+        /* Optimization for strings.
+        ** Note that this_ hash is different from a 'small' hash,
+        ** as multiplications on a Sparc is so slow.
+        */
+        hash = hash * FUNNY_NUMBER2 + unsigned_val(*list);
+
+        if (is_not_list(CDR(list))) {
+          WSTACK_PUSH(stack, MAKE_HASH_CDR_POST_OP);
+          term = CDR(list);
+          goto tail_recur;
+        }
+
+        list = list_val(CDR(list));
+      }
+
+      WSTACK_PUSH2(stack, CDR(list), MAKE_HASH_CDR_PRE_OP);
+      term = CAR(list);
+      goto tail_recur;
+    }
+
     case MAKE_HASH_CDR_POST_OP:
-	hash *= FUNNY_NUMBER8;
-	break;
+      hash *= FUNNY_NUMBER8;
+      break;
 
     case BIG_DEF:
-	/* Note that this_ is the exact same thing as the hashing of smalls.*/
-	{
-	    Eterm* ptr  = big_val(term);
-	    Uint n = BIG_SIZE(ptr);
-	    Uint k = n-1;
-	    ErtsDigit d;
-	    int is_neg = BIG_SIGN(ptr);
-	    Uint i;
-	    int j;
+      /* Note that this_ is the exact same thing as the hashing of smalls.*/
+    {
+      Eterm *ptr  = big_val(term);
+      Uint n = BIG_SIZE(ptr);
+      Uint k = n - 1;
+      ErtsDigit d;
+      int is_neg = BIG_SIGN(ptr);
+      Uint i;
+      int j;
 
-	    for (i = 0; i < k; i++)  {
-		d = BIG_DIGIT(ptr, i);
-		for(j = 0; j < sizeof(ErtsDigit); ++j) {
-		    hash = (hash*FUNNY_NUMBER2) + (d & 0xff);
-		    d >>= 8;
-		}
-	    }
-	    d = BIG_DIGIT(ptr, k);
-	    k = sizeof(ErtsDigit);
-#if defined(ARCH_64) && !HALFWORD_HEAP
-	    if (!(d >> 32))
-		k /= 2;
-#endif
-	    for(j = 0; j < (int)k; ++j) {
-		hash = (hash*FUNNY_NUMBER2) + (d & 0xff);
-		d >>= 8;
-	    }
-	    hash *= is_neg ? FUNNY_NUMBER4 : FUNNY_NUMBER3;
-	    break;
-	}	
-    case MAP_DEF:
-	{
-	    map_t *mp = (map_t *)map_val(term);
-	    int size  = map_get_size(mp);
-	    Eterm *ks = map_get_keys(mp);
-	    Eterm *vs = map_get_values(mp);
+      for (i = 0; i < k; i++)  {
+        d = BIG_DIGIT(ptr, i);
 
-	    /* Use a prime with size to remedy some of
-	     * the {} and <<>> hash problems */
-	    hash = hash*FUNNY_NUMBER13 + FUNNY_NUMBER14 + size;
-	    if (size == 0)
-		break;
-
-	    /* push values first */
-	    WSTACK_PUSH3(stack, (UWord)vs, (UWord) size, MAKE_HASH_TERM_ARRAY_OP);
-	    WSTACK_PUSH3(stack, (UWord)ks, (UWord) size, MAKE_HASH_TERM_ARRAY_OP);
-	    break;
-	}
-    case TUPLE_DEF: 
-	{
-	    Eterm* ptr = tuple_val(term);
-	    Uint arity = arityval(*ptr);
-
-	    WSTACK_PUSH3(stack, (UWord) arity, (UWord)(ptr+1), (UWord) arity);
-	    op = MAKE_HASH_TUPLE_OP;	    
-	}/*fall through*/
-    case MAKE_HASH_TUPLE_OP:
-    case MAKE_HASH_TERM_ARRAY_OP:
-	{
-	    Uint i = (Uint) WSTACK_POP(stack);
-	    Eterm* ptr = (Eterm*) WSTACK_POP(stack);
-	    if (i != 0) {
-		term = *ptr;
-		WSTACK_PUSH3(stack, (UWord)(ptr+1), (UWord) i-1, (UWord) op);
-		goto tail_recur;
-	    }
-	    if (op == MAKE_HASH_TUPLE_OP) {
-		uint32_t arity = (uint32_t) WSTACK_POP(stack);
-		hash = hash*FUNNY_NUMBER9 + arity;
-	    }
-	    break;
-	}    
-	
-    default:
-	erl_exit(1, "Invalid tag in make_hash(0x%X,0x%X)\n", term, op);
-	return 0;
+        for (j = 0; j < sizeof(ErtsDigit); ++j) {
+          hash = (hash * FUNNY_NUMBER2) + (d & 0xff);
+          d >>= 8;
+        }
       }
-      if (WSTACK_ISEMPTY(stack)) break;
-      op = WSTACK_POP(stack);
+
+      d = BIG_DIGIT(ptr, k);
+      k = sizeof(ErtsDigit);
+#if defined(ARCH_64) && !HALFWORD_HEAP
+
+      if (!(d >> 32)) {
+        k /= 2;
+      }
+
+#endif
+
+      for (j = 0; j < (int)k; ++j) {
+        hash = (hash * FUNNY_NUMBER2) + (d & 0xff);
+        d >>= 8;
+      }
+
+      hash *= is_neg ? FUNNY_NUMBER4 : FUNNY_NUMBER3;
+      break;
     }
-    DESTROY_WSTACK(stack);
-    return hash;
+
+    case MAP_DEF: {
+      map_t *mp = (map_t *)map_val(term);
+      int size  = map_get_size(mp);
+      Eterm *ks = map_get_keys(mp);
+      Eterm *vs = map_get_values(mp);
+
+      /* Use a prime with size to remedy some of
+       * the {} and <<>> hash problems */
+      hash = hash * FUNNY_NUMBER13 + FUNNY_NUMBER14 + size;
+
+      if (size == 0) {
+        break;
+      }
+
+      /* push values first */
+      WSTACK_PUSH3(stack, (UWord)vs, (UWord) size, MAKE_HASH_TERM_ARRAY_OP);
+      WSTACK_PUSH3(stack, (UWord)ks, (UWord) size, MAKE_HASH_TERM_ARRAY_OP);
+      break;
+    }
+
+    case TUPLE_DEF: {
+      Eterm *ptr = tuple_val(term);
+      Uint arity = arityval(*ptr);
+
+      WSTACK_PUSH3(stack, (UWord) arity, (UWord)(ptr + 1), (UWord) arity);
+      op = MAKE_HASH_TUPLE_OP;
+      }/*fall through*/
+
+    case MAKE_HASH_TUPLE_OP:
+    case MAKE_HASH_TERM_ARRAY_OP: {
+      Uint i = (Uint) WSTACK_POP(stack);
+      Eterm *ptr = (Eterm *) WSTACK_POP(stack);
+
+      if (i != 0) {
+        term = *ptr;
+        WSTACK_PUSH3(stack, (UWord)(ptr + 1), (UWord) i - 1, (UWord) op);
+        goto tail_recur;
+      }
+
+      if (op == MAKE_HASH_TUPLE_OP) {
+        uint32_t arity = (uint32_t) WSTACK_POP(stack);
+        hash = hash * FUNNY_NUMBER9 + arity;
+      }
+
+      break;
+    }
+
+    default:
+      erl_exit(1, "Invalid tag in make_hash(0x%X,0x%X)\n", term, op);
+      return 0;
+    }
+
+    if (WSTACK_ISEMPTY(stack)) {
+      break;
+    }
+
+    op = WSTACK_POP(stack);
+  }
+
+  DESTROY_WSTACK(stack);
+  return hash;
 
 #undef UINT32_HASH_STEP
 #undef UINT32_HASH_RET
@@ -1050,53 +1170,75 @@ do {                               \
 uint32_t
 block_hash(uint8_t *k, unsigned length, uint32_t initval)
 {
-   uint32_t a,b,c;
-   unsigned len;
+  uint32_t a, b, c;
+  unsigned len;
 
-   /* Set up the internal state */
-   len = length;
-   a = b = HCONST;
-   c = initval;           /* the previous hash value */
+  /* Set up the internal state */
+  len = length;
+  a = b = HCONST;
+  c = initval;           /* the previous hash value */
 
-   while (len >= 12)
-   {
-      a += (k[0] +((uint32_t)k[1]<<8) +((uint32_t)k[2]<<16) +((uint32_t)k[3]<<24));
-      b += (k[4] +((uint32_t)k[5]<<8) +((uint32_t)k[6]<<16) +((uint32_t)k[7]<<24));
-      c += (k[8] +((uint32_t)k[9]<<8) +((uint32_t)k[10]<<16)+((uint32_t)k[11]<<24));
-      MIX(a,b,c);
-      k += 12; len -= 12;
-   }
+  while (len >= 12) {
+    a += (k[0] + ((uint32_t)k[1] << 8) + ((uint32_t)k[2] << 16) + ((uint32_t)k[3] << 24));
+    b += (k[4] + ((uint32_t)k[5] << 8) + ((uint32_t)k[6] << 16) + ((uint32_t)k[7] << 24));
+    c += (k[8] + ((uint32_t)k[9] << 8) + ((uint32_t)k[10] << 16) + ((uint32_t)k[11] << 24));
+    MIX(a, b, c);
+    k += 12;
+    len -= 12;
+  }
 
-   c += length;
-   switch(len)              /* all the case statements fall through */
-   {
-   case 11: c+=((uint32_t)k[10]<<24);
-   case 10: c+=((uint32_t)k[9]<<16);
-   case 9 : c+=((uint32_t)k[8]<<8);
-      /* the first byte of c is reserved for the length */
-   case 8 : b+=((uint32_t)k[7]<<24);
-   case 7 : b+=((uint32_t)k[6]<<16);
-   case 6 : b+=((uint32_t)k[5]<<8);
-   case 5 : b+=k[4];
-   case 4 : a+=((uint32_t)k[3]<<24);
-   case 3 : a+=((uint32_t)k[2]<<16);
-   case 2 : a+=((uint32_t)k[1]<<8);
-   case 1 : a+=k[0];
-     /* case 0: nothing left to add */
-   }
-   MIX(a,b,c);
-   return c;
+  c += length;
+
+  switch (len) {           /* all the case statements fall through */
+  case 11:
+    c += ((uint32_t)k[10] << 24);
+
+  case 10:
+    c += ((uint32_t)k[9] << 16);
+
+  case 9 :
+    c += ((uint32_t)k[8] << 8);
+
+  /* the first byte of c is reserved for the length */
+  case 8 :
+    b += ((uint32_t)k[7] << 24);
+
+  case 7 :
+    b += ((uint32_t)k[6] << 16);
+
+  case 6 :
+    b += ((uint32_t)k[5] << 8);
+
+  case 5 :
+    b += k[4];
+
+  case 4 :
+    a += ((uint32_t)k[3] << 24);
+
+  case 3 :
+    a += ((uint32_t)k[2] << 16);
+
+  case 2 :
+    a += ((uint32_t)k[1] << 8);
+
+  case 1 :
+    a += k[0];
+    /* case 0: nothing left to add */
+  }
+
+  MIX(a, b, c);
+  return c;
 }
 
 uint32_t
 make_hash2(Eterm term)
 {
-    uint32_t hash;
-    uint32_t hash_xor_keys   = 0;
-    uint32_t hash_xor_values = 0;
-    DeclareTmpHeapNoproc(tmp_big,2);
+  uint32_t hash;
+  uint32_t hash_xor_keys   = 0;
+  uint32_t hash_xor_values = 0;
+  DeclareTmpHeapNoproc(tmp_big, 2);
 
-/* (HCONST * {2, ..., 16}) mod 2^32 */
+  /* (HCONST * {2, ..., 16}) mod 2^32 */
 #define HCONST_2 0x3c6ef372UL
 #define HCONST_3 0xdaa66d2bUL
 #define HCONST_4 0x78dde6e4UL
@@ -1119,366 +1261,420 @@ make_hash2(Eterm term)
 
 #define UINT32_HASH_2(Expr1, Expr2, AConst)       \
          do {                                     \
-	    uint32_t a,b;                           \
-	    a = AConst + (uint32_t) (Expr1);        \
-	    b = AConst + (uint32_t) (Expr2);        \
-	    MIX(a,b,hash);                        \
-	 } while(0)
+      uint32_t a,b;                           \
+      a = AConst + (uint32_t) (Expr1);        \
+      b = AConst + (uint32_t) (Expr2);        \
+      MIX(a,b,hash);                        \
+   } while(0)
 
 #define UINT32_HASH(Expr, AConst) UINT32_HASH_2(Expr, 0, AConst)
 
 #define SINT32_HASH(Expr, AConst)                 \
-	do {					  \
+  do {            \
             int32_t y = (int32_t) (Expr);           \
-	    if (y < 0) {			  \
-		UINT32_HASH(-y, AConst);          \
+      if (y < 0) {        \
+    UINT32_HASH(-y, AConst);          \
                 /* Negative numbers are unnecessarily mixed twice. */ \
-	    } 					  \
-	    UINT32_HASH(y, AConst);          	  \
-	} while(0)
+      }             \
+      UINT32_HASH(y, AConst);             \
+  } while(0)
 
 #define IS_SSMALL28(x) (((Uint) (((x) >> (28-1)) + 1)) < 2)
-    /* Optimization. Simple cases before declaration of estack. */
-    if (primary_tag(term) == TAG_PRIMARY_IMMED1) {
-	switch (term & _TAG_IMMED1_MASK) {
-	case _TAG_IMMED1_IMMED2:
-	    switch (term & _TAG_IMMED2_MASK) {
-	    case _TAG_IMMED2_ATOM:
-		/* Fast, but the poor hash value should be mixed. */
-		return atom_tab(atom_val(term))->slot.bucket.hvalue;
-	    }
-	    break;
-	case _TAG_IMMED1_SMALL:
-	  {
-	      Sint x = signed_val(term);
 
-	      if (SMALL_BITS > 28 && !IS_SSMALL28(x)) {
-		  term = small_to_big(x, tmp_big);
-		  break;
-	      }
-	      hash = 0;
-	      SINT32_HASH(x, HCONST);
-	      return hash;
-	  }
-	}
-    };
-    {
+  /* Optimization. Simple cases before declaration of estack. */
+  if (primary_tag(term) == TAG_PRIMARY_IMMED1) {
+    switch (term & _TAG_IMMED1_MASK) {
+    case _TAG_IMMED1_IMMED2:
+      switch (term & _TAG_IMMED2_MASK) {
+      case _TAG_IMMED2_ATOM:
+        /* Fast, but the poor hash value should be mixed. */
+        return atom_tab(atom_val(term))->slot.bucket.hvalue;
+      }
+
+      break;
+
+    case _TAG_IMMED1_SMALL: {
+      Sint x = signed_val(term);
+
+      if (SMALL_BITS > 28 && !IS_SSMALL28(x)) {
+        term = small_to_big(x, tmp_big);
+        break;
+      }
+
+      hash = 0;
+      SINT32_HASH(x, HCONST);
+      return hash;
+    }
+    }
+  };
+
+  {
     Eterm tmp;
     DECLARE_ESTACK(s);
 
     UseTmpHeapNoproc(2);
     hash = 0;
+
     for (;;) {
-	switch (primary_tag(term)) {
-	case TAG_PRIMARY_LIST:
-	{
-	    int c = 0;
-	    uint32_t sh = 0;
-	    Eterm* ptr = list_val(term);
-	    while (is_byte(*ptr)) {
-		/* Optimization for strings. */
-		sh = (sh << 8) + unsigned_val(*ptr);
-		if (c == 3) {
-		    UINT32_HASH(sh, HCONST_4);
-		    c = sh = 0;
-		} else {
-		    c++;
-		}
-		term = CDR(ptr);
-		if (is_not_list(term))
-		    break;
-		ptr = list_val(term);
-	    }
-	    if (c > 0)
-		UINT32_HASH(sh, HCONST_4);
-	    if (is_list(term)) {
-		term = *ptr;
-		tmp = *++ptr;
-		ESTACK_PUSH(s, tmp);	    
-	    }
-	}
-	break;
-	case TAG_PRIMARY_BOXED:
-	{
-	    Eterm hdr = *boxed_val(term);
-	    ASSERT(is_header(hdr));
-	    switch (hdr & _TAG_HEADER_MASK) {
-	    case ARITYVAL_SUBTAG:
-	    {
-		int i;
-		int arity = header_arity(hdr);
-		Eterm* elem = tuple_val(term);
-		UINT32_HASH(arity, HCONST_9);
-		if (arity == 0) /* Empty tuple */ 
-		    goto hash2_common;
-		for (i = arity; i >= 1; i--) {
-		    tmp = elem[i];
-		    ESTACK_PUSH(s, tmp);
-		}
-		goto hash2_common;
-	    }
-	    break;
-	    case MAP_SUBTAG:
-	    {
-		map_t *mp = (map_t *)map_val(term);
-		int i;
-		int size  = map_get_size(mp);
-		Eterm *ks = map_get_keys(mp);
-		Eterm *vs = map_get_values(mp);
-		UINT32_HASH(size, HCONST_16);
-		if (size == 0) {
-		    goto hash2_common;
-		}
-		ESTACK_PUSH(s, hash_xor_values);
-		ESTACK_PUSH(s, hash_xor_keys);
-		ESTACK_PUSH(s, hash);
-		ESTACK_PUSH(s, HASH_MAP_TAIL);
-		hash = 0;
-		hash_xor_keys = 0;
-		hash_xor_values = 0;
-		for (i = size - 1; i >= 0; i--) {
-		    tmp = vs[i];
-		    ESTACK_PUSH(s, HASH_MAP_VAL);
-		    ESTACK_PUSH(s, tmp);
-		}
-		/* We do not want to expose the tuple representation.
-		 * Do not push the keys as a tuple.
-		 */
-		for (i = size - 1; i >= 0; i--) {
-		    tmp = ks[i];
-		    ESTACK_PUSH(s, HASH_MAP_KEY);
-		    ESTACK_PUSH(s, tmp);
-		}
-		goto hash2_common;
-	    }
-	    break;
-	    case EXPORT_SUBTAG:
-	    {
-		Export* ep = *((Export **) (export_val(term) + 1));
+      switch (primary_tag(term)) {
+      case TAG_PRIMARY_LIST: {
+        int c = 0;
+        uint32_t sh = 0;
+        Eterm *ptr = list_val(term);
 
-		UINT32_HASH_2
-		    (ep->code[2], 
-		     atom_tab(atom_val(ep->code[0]))->slot.bucket.hvalue,
-		     HCONST);
-		UINT32_HASH
-		    (atom_tab(atom_val(ep->code[1]))->slot.bucket.hvalue,
-		     HCONST_14);
-		goto hash2_common;
-	    }
+        while (is_byte(*ptr)) {
+          /* Optimization for strings. */
+          sh = (sh << 8) + unsigned_val(*ptr);
 
-	    case FUN_SUBTAG:
-	    {
-		ErlFunThing* funp = (ErlFunThing *) fun_val(term);
-		Uint num_free = funp->num_free;
+          if (c == 3) {
+            UINT32_HASH(sh, HCONST_4);
+            c = sh = 0;
+          } else {
+            c++;
+          }
 
-		UINT32_HASH_2
-		    (num_free, 
-		     atom_tab(atom_val(funp->fe->module))->slot.bucket.hvalue,
-		     HCONST);
-		UINT32_HASH_2
-		    (funp->fe->old_index, funp->fe->old_uniq, HCONST);
-		if (num_free == 0) {
-		    goto hash2_common;
-		} else {
-		    Eterm* bptr = funp->env + num_free - 1;
-		    while (num_free-- > 1) {
-			term = *bptr--;
-			ESTACK_PUSH(s, term);
-		    }
-		    term = *bptr;
-		}
-	    }
-	    break;
-	    case REFC_BINARY_SUBTAG:
-	    case HEAP_BINARY_SUBTAG:
-	    case SUB_BINARY_SUBTAG:
-	    {
-		uint8_t* bptr;
-		unsigned sz = binary_size(term);
-		uint32_t con = HCONST_13 + hash;
-		Uint bitoffs;
-		Uint bitsize;
+          term = CDR(ptr);
 
-		ERTS_GET_BINARY_BYTES(term, bptr, bitoffs, bitsize);
-		if (sz == 0 && bitsize == 0) {
-		    hash = con;
-		} else {
-		    if (bitoffs == 0) {
-			hash = block_hash(bptr, sz, con);
-			if (bitsize > 0) {
-			    UINT32_HASH_2(bitsize, (bptr[sz] >> (8 - bitsize)),
-					  HCONST_15);
-			}
-		    } else {
-			uint8_t* buf = (uint8_t *) erts_alloc(ERTS_ALC_T_TMP,
-							sz + (bitsize != 0));
-			erts_copy_bits(bptr, bitoffs, 1, buf, 0, 1, sz*8+bitsize);
-			hash = block_hash(buf, sz, con);
-			if (bitsize > 0) {
-			    UINT32_HASH_2(bitsize, (buf[sz] >> (8 - bitsize)),
-					  HCONST_15);
-			}
-			erts_free(ERTS_ALC_T_TMP, (void *) buf);
-		    }
-		}
-		goto hash2_common;
-	    }
-	    break;
-	    case POS_BIG_SUBTAG:
-	    case NEG_BIG_SUBTAG:
-	    {
-		Eterm* ptr = big_val(term);
-		Uint i = 0;
-		Uint n = BIG_SIZE(ptr);
-		uint32_t con = BIG_SIGN(ptr) ? HCONST_10 : HCONST_11;
+          if (is_not_list(term)) {
+            break;
+          }
+
+          ptr = list_val(term);
+        }
+
+        if (c > 0) {
+          UINT32_HASH(sh, HCONST_4);
+        }
+
+        if (is_list(term)) {
+          term = *ptr;
+          tmp = *++ptr;
+          ESTACK_PUSH(s, tmp);
+        }
+      }
+      break;
+
+      case TAG_PRIMARY_BOXED: {
+        Eterm hdr = *boxed_val(term);
+        ASSERT(is_header(hdr));
+
+        switch (hdr & _TAG_HEADER_MASK) {
+        case ARITYVAL_SUBTAG: {
+          int i;
+          int arity = header_arity(hdr);
+          Eterm *elem = tuple_val(term);
+          UINT32_HASH(arity, HCONST_9);
+
+          if (arity == 0) { /* Empty tuple */
+            goto hash2_common;
+          }
+
+          for (i = arity; i >= 1; i--) {
+            tmp = elem[i];
+            ESTACK_PUSH(s, tmp);
+          }
+
+          goto hash2_common;
+        }
+        break;
+
+        case MAP_SUBTAG: {
+          map_t *mp = (map_t *)map_val(term);
+          int i;
+          int size  = map_get_size(mp);
+          Eterm *ks = map_get_keys(mp);
+          Eterm *vs = map_get_values(mp);
+          UINT32_HASH(size, HCONST_16);
+
+          if (size == 0) {
+            goto hash2_common;
+          }
+
+          ESTACK_PUSH(s, hash_xor_values);
+          ESTACK_PUSH(s, hash_xor_keys);
+          ESTACK_PUSH(s, hash);
+          ESTACK_PUSH(s, HASH_MAP_TAIL);
+          hash = 0;
+          hash_xor_keys = 0;
+          hash_xor_values = 0;
+
+          for (i = size - 1; i >= 0; i--) {
+            tmp = vs[i];
+            ESTACK_PUSH(s, HASH_MAP_VAL);
+            ESTACK_PUSH(s, tmp);
+          }
+
+          /* We do not want to expose the tuple representation.
+           * Do not push the keys as a tuple.
+           */
+          for (i = size - 1; i >= 0; i--) {
+            tmp = ks[i];
+            ESTACK_PUSH(s, HASH_MAP_KEY);
+            ESTACK_PUSH(s, tmp);
+          }
+
+          goto hash2_common;
+        }
+        break;
+
+        case EXPORT_SUBTAG: {
+          Export *ep = *((Export **)(export_val(term) + 1));
+
+          UINT32_HASH_2
+          (ep->code[2],
+           atom_tab(atom_val(ep->code[0]))->slot.bucket.hvalue,
+           HCONST);
+          UINT32_HASH
+          (atom_tab(atom_val(ep->code[1]))->slot.bucket.hvalue,
+           HCONST_14);
+          goto hash2_common;
+        }
+
+        case FUN_SUBTAG: {
+          ErlFunThing *funp = (ErlFunThing *) fun_val(term);
+          Uint num_free = funp->num_free;
+
+          UINT32_HASH_2
+          (num_free,
+           atom_tab(atom_val(funp->fe->module))->slot.bucket.hvalue,
+           HCONST);
+          UINT32_HASH_2
+          (funp->fe->old_index, funp->fe->old_uniq, HCONST);
+
+          if (num_free == 0) {
+            goto hash2_common;
+          } else {
+            Eterm *bptr = funp->env + num_free - 1;
+
+            while (num_free-- > 1) {
+              term = *bptr--;
+              ESTACK_PUSH(s, term);
+            }
+
+            term = *bptr;
+          }
+        }
+        break;
+
+        case REFC_BINARY_SUBTAG:
+        case HEAP_BINARY_SUBTAG:
+        case SUB_BINARY_SUBTAG: {
+          uint8_t *bptr;
+          unsigned sz = binary_size(term);
+          uint32_t con = HCONST_13 + hash;
+          Uint bitoffs;
+          Uint bitsize;
+
+          ERTS_GET_BINARY_BYTES(term, bptr, bitoffs, bitsize);
+
+          if (sz == 0 && bitsize == 0) {
+            hash = con;
+          } else {
+            if (bitoffs == 0) {
+              hash = block_hash(bptr, sz, con);
+
+              if (bitsize > 0) {
+                UINT32_HASH_2(bitsize, (bptr[sz] >> (8 - bitsize)),
+                              HCONST_15);
+              }
+            } else {
+              uint8_t *buf = (uint8_t *) erts_alloc(ERTS_ALC_T_TMP,
+                                                    sz + (bitsize != 0));
+              erts_copy_bits(bptr, bitoffs, 1, buf, 0, 1, sz * 8 + bitsize);
+              hash = block_hash(buf, sz, con);
+
+              if (bitsize > 0) {
+                UINT32_HASH_2(bitsize, (buf[sz] >> (8 - bitsize)),
+                              HCONST_15);
+              }
+
+              erts_free(ERTS_ALC_T_TMP, (void *) buf);
+            }
+          }
+
+          goto hash2_common;
+        }
+        break;
+
+        case POS_BIG_SUBTAG:
+        case NEG_BIG_SUBTAG: {
+          Eterm *ptr = big_val(term);
+          Uint i = 0;
+          Uint n = BIG_SIZE(ptr);
+          uint32_t con = BIG_SIGN(ptr) ? HCONST_10 : HCONST_11;
 #if D_EXP == 16
-		do {
-		    uint32_t x, y;
-		    x = i < n ? BIG_DIGIT(ptr, i++) : 0;
-		    x += (uint32_t)(i < n ? BIG_DIGIT(ptr, i++) : 0) << 16;
-		    y = i < n ? BIG_DIGIT(ptr, i++) : 0;
-		    y += (uint32_t)(i < n ? BIG_DIGIT(ptr, i++) : 0) << 16;
-		    UINT32_HASH_2(x, y, con);
-		} while (i < n);
+
+          do {
+            uint32_t x, y;
+            x = i < n ? BIG_DIGIT(ptr, i++) : 0;
+            x += (uint32_t)(i < n ? BIG_DIGIT(ptr, i++) : 0) << 16;
+            y = i < n ? BIG_DIGIT(ptr, i++) : 0;
+            y += (uint32_t)(i < n ? BIG_DIGIT(ptr, i++) : 0) << 16;
+            UINT32_HASH_2(x, y, con);
+          } while (i < n);
+
 #elif D_EXP == 32
-		do {
-		    uint32_t x, y;
-		    x = i < n ? BIG_DIGIT(ptr, i++) : 0;
-		    y = i < n ? BIG_DIGIT(ptr, i++) : 0;
-		    UINT32_HASH_2(x, y, con);
-		} while (i < n);
+
+          do {
+            uint32_t x, y;
+            x = i < n ? BIG_DIGIT(ptr, i++) : 0;
+            y = i < n ? BIG_DIGIT(ptr, i++) : 0;
+            UINT32_HASH_2(x, y, con);
+          } while (i < n);
+
 #elif D_EXP == 64
-		do {
-		    Uint t;
-		    uint32_t x, y;
-		    t = i < n ? BIG_DIGIT(ptr, i++) : 0;
-		    x = t & 0xffffffff;
-		    y = t >> 32;
-		    UINT32_HASH_2(x, y, con);
-		} while (i < n);
+
+          do {
+            Uint t;
+            uint32_t x, y;
+            t = i < n ? BIG_DIGIT(ptr, i++) : 0;
+            x = t & 0xffffffff;
+            y = t >> 32;
+            UINT32_HASH_2(x, y, con);
+          } while (i < n);
+
 #else
 #error "unsupported D_EXP size"
 #endif
-		goto hash2_common;
-	    }
-	    break;
-	    case REF_SUBTAG:
-		/* All parts of the ref should be hashed. */
-		UINT32_HASH(internal_ref_numbers(term)[0], HCONST_7);
-		goto hash2_common;
-		break;
-	    case EXTERNAL_REF_SUBTAG:
-		/* All parts of the ref should be hashed. */
-		UINT32_HASH(external_ref_numbers(term)[0], HCONST_7);
-		goto hash2_common;
-		break;
-	    case EXTERNAL_PID_SUBTAG:
-		/* Only 15 bits are hashed. */
-		UINT32_HASH(external_pid_number(term), HCONST_5);
-		goto hash2_common;
-	    case EXTERNAL_PORT_SUBTAG:
-		/* Only 15 bits are hashed. */
-		UINT32_HASH(external_port_number(term), HCONST_6);
-		goto hash2_common;
-	    case FLOAT_SUBTAG:
-	    {
-		FloatDef ff;
-		GET_DOUBLE(term, ff);
+          goto hash2_common;
+        }
+        break;
+
+        case REF_SUBTAG:
+          /* All parts of the ref should be hashed. */
+          UINT32_HASH(internal_ref_numbers(term)[0], HCONST_7);
+          goto hash2_common;
+          break;
+
+        case EXTERNAL_REF_SUBTAG:
+          /* All parts of the ref should be hashed. */
+          UINT32_HASH(external_ref_numbers(term)[0], HCONST_7);
+          goto hash2_common;
+          break;
+
+        case EXTERNAL_PID_SUBTAG:
+          /* Only 15 bits are hashed. */
+          UINT32_HASH(external_pid_number(term), HCONST_5);
+          goto hash2_common;
+
+        case EXTERNAL_PORT_SUBTAG:
+          /* Only 15 bits are hashed. */
+          UINT32_HASH(external_port_number(term), HCONST_6);
+          goto hash2_common;
+
+        case FLOAT_SUBTAG: {
+          FloatDef ff;
+          GET_DOUBLE(term, ff);
 #if defined(WORDS_BIGENDIAN) || defined(DOUBLE_MIDDLE_ENDIAN)
-		UINT32_HASH_2(ff.fw[0], ff.fw[1], HCONST_12);
+          UINT32_HASH_2(ff.fw[0], ff.fw[1], HCONST_12);
 #else
-		UINT32_HASH_2(ff.fw[1], ff.fw[0], HCONST_12);
+          UINT32_HASH_2(ff.fw[1], ff.fw[0], HCONST_12);
 #endif
-		goto hash2_common;
-	    }
-	    break;
-		    
-	    default:
-		erl_exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
-	    }
-	}
-	break;
-	case TAG_PRIMARY_IMMED1:
-	    switch (term & _TAG_IMMED1_MASK) {
-	    case _TAG_IMMED1_PID:
-		/* Only 15 bits are hashed. */
-		UINT32_HASH(internal_pid_number(term), HCONST_5);
-		goto hash2_common;
-	    case _TAG_IMMED1_PORT:
-		/* Only 15 bits are hashed. */
-		UINT32_HASH(internal_port_number(term), HCONST_6);
-		goto hash2_common;
-	    case _TAG_IMMED1_IMMED2:
-		switch (term & _TAG_IMMED2_MASK) {
-		case _TAG_IMMED2_ATOM:
-		    if (hash == 0)
-			/* Fast, but the poor hash value should be mixed. */
-			hash = atom_tab(atom_val(term))->slot.bucket.hvalue;
-		    else
-			UINT32_HASH(atom_tab(atom_val(term))->slot.bucket.hvalue,
-				    HCONST_3);
-		    goto hash2_common;
-		case _TAG_IMMED2_NIL:
-		    if (hash == 0)
-			hash = 3468870702UL;
-		    else
-			UINT32_HASH(NIL_DEF, HCONST_2);
-		    goto hash2_common;
-		default:
-		    erl_exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
-		}
-	    case _TAG_IMMED1_SMALL:
-	      {
-		  Sint x = signed_val(term);
+          goto hash2_common;
+        }
+        break;
 
-		  if (SMALL_BITS > 28 && !IS_SSMALL28(x)) {
-		      term = small_to_big(x, tmp_big);
-		      break;
-		  }
-		  SINT32_HASH(x, HCONST);
-		  goto hash2_common;
-	      }
-	    }
-	    break;
-	default:
-	    erl_exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
-	hash2_common:
+        default:
+          erl_exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
+        }
+      }
+      break;
 
-	    /* uint32_t hash always has the hash value of the previous term,
-	     * compounded or otherwise.
-	     */
+      case TAG_PRIMARY_IMMED1:
+        switch (term & _TAG_IMMED1_MASK) {
+        case _TAG_IMMED1_PID:
+          /* Only 15 bits are hashed. */
+          UINT32_HASH(internal_pid_number(term), HCONST_5);
+          goto hash2_common;
 
-	    if (ESTACK_ISEMPTY(s)) {
-		DESTROY_ESTACK(s);
-		UnUseTmpHeapNoproc(2);
-		return hash;
-	    }
+        case _TAG_IMMED1_PORT:
+          /* Only 15 bits are hashed. */
+          UINT32_HASH(internal_port_number(term), HCONST_6);
+          goto hash2_common;
 
-	    term = ESTACK_POP(s);
+        case _TAG_IMMED1_IMMED2:
+          switch (term & _TAG_IMMED2_MASK) {
+          case _TAG_IMMED2_ATOM:
+            if (hash == 0)
+              /* Fast, but the poor hash value should be mixed. */
+            {
+              hash = atom_tab(atom_val(term))->slot.bucket.hvalue;
+            } else
+              UINT32_HASH(atom_tab(atom_val(term))->slot.bucket.hvalue,
+                          HCONST_3);
 
-	    switch (term) {
-		case HASH_MAP_TAIL: {
-		    hash = (uint32_t) ESTACK_POP(s);
-		    UINT32_HASH(hash_xor_keys, HCONST_16);
-		    UINT32_HASH(hash_xor_values, HCONST_16);
-		    hash_xor_keys = (uint32_t) ESTACK_POP(s);
-		    hash_xor_values = (uint32_t) ESTACK_POP(s);
-		    goto hash2_common;
-		}
-		case HASH_MAP_KEY:
-		    hash_xor_keys ^= hash;
-		    hash = 0;
-		    goto hash2_common;
-		case HASH_MAP_VAL:
-		    hash_xor_values ^= hash;
-		    hash = 0;
-		    goto hash2_common;
-		default:
-		    break;
-	    }
-	}
+            goto hash2_common;
+
+          case _TAG_IMMED2_NIL:
+            if (hash == 0) {
+              hash = 3468870702UL;
+            } else {
+              UINT32_HASH(NIL_DEF, HCONST_2);
+            }
+
+            goto hash2_common;
+
+          default:
+            erl_exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
+          }
+
+        case _TAG_IMMED1_SMALL: {
+          Sint x = signed_val(term);
+
+          if (SMALL_BITS > 28 && !IS_SSMALL28(x)) {
+            term = small_to_big(x, tmp_big);
+            break;
+          }
+
+          SINT32_HASH(x, HCONST);
+          goto hash2_common;
+        }
+        }
+
+        break;
+
+      default:
+        erl_exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
+hash2_common:
+
+        /* uint32_t hash always has the hash value of the previous term,
+         * compounded or otherwise.
+         */
+
+        if (ESTACK_ISEMPTY(s)) {
+          DESTROY_ESTACK(s);
+          UnUseTmpHeapNoproc(2);
+          return hash;
+        }
+
+        term = ESTACK_POP(s);
+
+        switch (term) {
+        case HASH_MAP_TAIL: {
+          hash = (uint32_t) ESTACK_POP(s);
+          UINT32_HASH(hash_xor_keys, HCONST_16);
+          UINT32_HASH(hash_xor_values, HCONST_16);
+          hash_xor_keys = (uint32_t) ESTACK_POP(s);
+          hash_xor_values = (uint32_t) ESTACK_POP(s);
+          goto hash2_common;
+        }
+
+        case HASH_MAP_KEY:
+          hash_xor_keys ^= hash;
+          hash = 0;
+          goto hash2_common;
+
+        case HASH_MAP_VAL:
+          hash_xor_values ^= hash;
+          hash = 0;
+          goto hash2_common;
+
+        default:
+          break;
+        }
+      }
     }
-    }
+  }
 
 #undef HASH_MAP_TAIL
 #undef HASH_MAP_KEY
@@ -1495,263 +1691,300 @@ make_hash2(Eterm term)
 
 uint32_t make_broken_hash(Eterm term)
 {
-    uint32_t hash = 0;
-    DECLARE_WSTACK(stack);
-    unsigned op;
+  uint32_t hash = 0;
+  DECLARE_WSTACK(stack);
+  unsigned op;
 tail_recur:
-    op = tag_val_def(term); 
-    for (;;) {	
+  op = tag_val_def(term);
+
+  for (;;) {
     switch (op) {
     case NIL_DEF:
-	hash = hash*FUNNY_NUMBER3 + 1;
-	break;
+      hash = hash * FUNNY_NUMBER3 + 1;
+      break;
+
     case ATOM_DEF:
-	hash = hash*FUNNY_NUMBER1 +
-	    (atom_tab(atom_val(term))->slot.bucket.hvalue);
-	break;
+      hash = hash * FUNNY_NUMBER1 +
+             (atom_tab(atom_val(term))->slot.bucket.hvalue);
+      break;
+
     case SMALL_DEF:
 #if defined(ARCH_64) && !HALFWORD_HEAP
     {
-	Sint y1 = signed_val(term);
-	Uint y2 = y1 < 0 ? -(Uint)y1 : y1;
-	uint32_t y3 = (uint32_t) (y2 >> 32);
-	int arity = 1;
+      Sint y1 = signed_val(term);
+      Uint y2 = y1 < 0 ? -(Uint)y1 : y1;
+      uint32_t y3 = (uint32_t)(y2 >> 32);
+      int arity = 1;
 
 #if defined(WORDS_BIGENDIAN)
-	if (!IS_SSMALL28(y1))
-	{   /* like a bignum */
-	    uint32_t y4 = (uint32_t) y2;
-	    hash = hash*FUNNY_NUMBER2 + ((y4 << 16) | (y4 >> 16));
-	    if (y3) 
-	    {
-		hash = hash*FUNNY_NUMBER2 + ((y3 << 16) | (y3 >> 16));
-		arity++;
-	    }
-	    hash = hash * (y1 < 0 ? FUNNY_NUMBER3 : FUNNY_NUMBER2) + arity;
-	} else {
-	    hash = hash*FUNNY_NUMBER2 + (((Uint) y1) & 0xfffffff);
-	}
+
+      if (!IS_SSMALL28(y1)) {
+        /* like a bignum */
+        uint32_t y4 = (uint32_t) y2;
+        hash = hash * FUNNY_NUMBER2 + ((y4 << 16) | (y4 >> 16));
+
+        if (y3) {
+          hash = hash * FUNNY_NUMBER2 + ((y3 << 16) | (y3 >> 16));
+          arity++;
+        }
+
+        hash = hash * (y1 < 0 ? FUNNY_NUMBER3 : FUNNY_NUMBER2) + arity;
+      } else {
+        hash = hash * FUNNY_NUMBER2 + (((Uint) y1) & 0xfffffff);
+      }
+
 #else
-	if  (!IS_SSMALL28(y1))
-	{   /* like a bignum */
-	    hash = hash*FUNNY_NUMBER2 + ((uint32_t) y2);
-	    if (y3)
-	    {
-		hash = hash*FUNNY_NUMBER2 + y3;
-		arity++;
-	    }
-	    hash = hash * (y1 < 0 ? FUNNY_NUMBER3 : FUNNY_NUMBER2) + arity;
-	} else {
-	    hash = hash*FUNNY_NUMBER2 + (((Uint) y1) & 0xfffffff);
-	}
+
+      if (!IS_SSMALL28(y1)) {
+        /* like a bignum */
+        hash = hash * FUNNY_NUMBER2 + ((uint32_t) y2);
+
+        if (y3) {
+          hash = hash * FUNNY_NUMBER2 + y3;
+          arity++;
+        }
+
+        hash = hash * (y1 < 0 ? FUNNY_NUMBER3 : FUNNY_NUMBER2) + arity;
+      } else {
+        hash = hash * FUNNY_NUMBER2 + (((Uint) y1) & 0xfffffff);
+      }
+
 #endif
     }
+
 #else
-	hash = hash*FUNNY_NUMBER2 + unsigned_val(term);
+    hash = hash * FUNNY_NUMBER2 + unsigned_val(term);
 #endif
-	break;
+    break;
 
-    case BINARY_DEF:
-	{
-	    size_t sz = binary_size(term);
-	    size_t i = (sz < 15) ? sz : 15;
+    case BINARY_DEF: {
+      size_t sz = binary_size(term);
+      size_t i = (sz < 15) ? sz : 15;
 
-	    hash = hash_binary_bytes(term, i, hash);
-	    hash = hash*FUNNY_NUMBER4 + sz;
-	    break;
-	}
+      hash = hash_binary_bytes(term, i, hash);
+      hash = hash * FUNNY_NUMBER4 + sz;
+      break;
+    }
 
-    case EXPORT_DEF:
-	{
-	    Export* ep = *((Export **) (export_val(term) + 1));
+    case EXPORT_DEF: {
+      Export *ep = *((Export **)(export_val(term) + 1));
 
-	    hash = hash * FUNNY_NUMBER11 + ep->code[2];
-	    hash = hash*FUNNY_NUMBER1 + 
-		(atom_tab(atom_val(ep->code[0]))->slot.bucket.hvalue);
-	    hash = hash*FUNNY_NUMBER1 + 
-		(atom_tab(atom_val(ep->code[1]))->slot.bucket.hvalue);
-	    break;
-	}
+      hash = hash * FUNNY_NUMBER11 + ep->code[2];
+      hash = hash * FUNNY_NUMBER1 +
+             (atom_tab(atom_val(ep->code[0]))->slot.bucket.hvalue);
+      hash = hash * FUNNY_NUMBER1 +
+             (atom_tab(atom_val(ep->code[1]))->slot.bucket.hvalue);
+      break;
+    }
 
-    case FUN_DEF:
-	{
-	    ErlFunThing* funp = (ErlFunThing *) fun_val(term);
-	    Uint num_free = funp->num_free;
+    case FUN_DEF: {
+      ErlFunThing *funp = (ErlFunThing *) fun_val(term);
+      Uint num_free = funp->num_free;
 
-	    hash = hash * FUNNY_NUMBER10 + num_free;
-	    hash = hash*FUNNY_NUMBER1 + 
-		(atom_tab(atom_val(funp->fe->module))->slot.bucket.hvalue);
-	    hash = hash*FUNNY_NUMBER2 + funp->fe->old_index;
-	    hash = hash*FUNNY_NUMBER2 + funp->fe->old_uniq;
-	    if (num_free > 0) {
-		if (num_free > 1) {
-		    WSTACK_PUSH3(stack, (UWord) &funp->env[1], (num_free-1), MAKE_HASH_TERM_ARRAY_OP);
-		}
-		term = funp->env[0];
-		goto tail_recur;
-	    }
-	    break;
-	}
+      hash = hash * FUNNY_NUMBER10 + num_free;
+      hash = hash * FUNNY_NUMBER1 +
+             (atom_tab(atom_val(funp->fe->module))->slot.bucket.hvalue);
+      hash = hash * FUNNY_NUMBER2 + funp->fe->old_index;
+      hash = hash * FUNNY_NUMBER2 + funp->fe->old_uniq;
+
+      if (num_free > 0) {
+        if (num_free > 1) {
+          WSTACK_PUSH3(stack, (UWord) &funp->env[1], (num_free - 1), MAKE_HASH_TERM_ARRAY_OP);
+        }
+
+        term = funp->env[0];
+        goto tail_recur;
+      }
+
+      break;
+    }
 
     case PID_DEF:
-	hash = hash*FUNNY_NUMBER5 + internal_pid_number(term);
-	break;
+      hash = hash * FUNNY_NUMBER5 + internal_pid_number(term);
+      break;
+
     case EXTERNAL_PID_DEF:
-	hash = hash*FUNNY_NUMBER5 + external_pid_number(term);
-        break;
+      hash = hash * FUNNY_NUMBER5 + external_pid_number(term);
+      break;
+
     case PORT_DEF:
-	hash = hash*FUNNY_NUMBER9 + internal_port_number(term);
-	break;
+      hash = hash * FUNNY_NUMBER9 + internal_port_number(term);
+      break;
+
     case EXTERNAL_PORT_DEF:
-	hash = hash*FUNNY_NUMBER9 + external_port_number(term);
-	break;
+      hash = hash * FUNNY_NUMBER9 + external_port_number(term);
+      break;
+
     case REF_DEF:
-	hash = hash*FUNNY_NUMBER9 + internal_ref_numbers(term)[0];
-	break;
+      hash = hash * FUNNY_NUMBER9 + internal_ref_numbers(term)[0];
+      break;
+
     case EXTERNAL_REF_DEF:
-	hash = hash*FUNNY_NUMBER9 + external_ref_numbers(term)[0];
-	break;
-    case FLOAT_DEF: 
-	{
-	    FloatDef ff;
-	    GET_DOUBLE(term, ff);
-	    hash = hash*FUNNY_NUMBER6 + (ff.fw[0] ^ ff.fw[1]);
-	}
-	break;
+      hash = hash * FUNNY_NUMBER9 + external_ref_numbers(term)[0];
+      break;
+
+    case FLOAT_DEF: {
+      FloatDef ff;
+      GET_DOUBLE(term, ff);
+      hash = hash * FUNNY_NUMBER6 + (ff.fw[0] ^ ff.fw[1]);
+    }
+    break;
 
     case MAKE_HASH_CDR_PRE_OP:
-	term = (Eterm) WSTACK_POP(stack);
-	if (is_not_list(term)) {
-	    WSTACK_PUSH(stack, (UWord) MAKE_HASH_CDR_POST_OP);
-	    goto tail_recur;
-	}
-	/*fall through*/
-    case LIST_DEF:
-	{
-	    Eterm* list = list_val(term);
-	    WSTACK_PUSH2(stack, (UWord) CDR(list),
-			 (UWord) MAKE_HASH_CDR_PRE_OP);
-	    term = CAR(list);
-	    goto tail_recur;
-	}
+      term = (Eterm) WSTACK_POP(stack);
+
+      if (is_not_list(term)) {
+        WSTACK_PUSH(stack, (UWord) MAKE_HASH_CDR_POST_OP);
+        goto tail_recur;
+      }
+
+    /*fall through*/
+    case LIST_DEF: {
+      Eterm *list = list_val(term);
+      WSTACK_PUSH2(stack, (UWord) CDR(list),
+                   (UWord) MAKE_HASH_CDR_PRE_OP);
+      term = CAR(list);
+      goto tail_recur;
+    }
 
     case MAKE_HASH_CDR_POST_OP:
-	hash *= FUNNY_NUMBER8;
-	break;
+      hash *= FUNNY_NUMBER8;
+      break;
 
-     case BIG_DEF:
-	{
-	    Eterm* ptr  = big_val(term);
-	    int is_neg = BIG_SIGN(ptr);
-	    Uint arity = BIG_ARITY(ptr);
-	    Uint i = arity;
-	    ptr++;
+    case BIG_DEF: {
+      Eterm *ptr  = big_val(term);
+      int is_neg = BIG_SIGN(ptr);
+      Uint arity = BIG_ARITY(ptr);
+      Uint i = arity;
+      ptr++;
 #if D_EXP == 16
-	    /* hash over 32 bit LE */
 
-	    while(i--) {
-		hash = hash*FUNNY_NUMBER2 + *ptr++;
-	    }
+      /* hash over 32 bit LE */
+
+      while (i--) {
+        hash = hash * FUNNY_NUMBER2 + *ptr++;
+      }
+
 #elif D_EXP == 32
 
 #if defined(WORDS_BIGENDIAN)
-	    while(i--) {
-		Uint d = *ptr++;
-		hash = hash*FUNNY_NUMBER2 + ((d << 16) | (d >> 16));
-	    }
+
+      while (i--) {
+        Uint d = *ptr++;
+        hash = hash * FUNNY_NUMBER2 + ((d << 16) | (d >> 16));
+      }
+
 #else
-	    while(i--) {
-		hash = hash*FUNNY_NUMBER2 + *ptr++;
-	    }
+
+      while (i--) {
+        hash = hash * FUNNY_NUMBER2 + *ptr++;
+      }
+
 #endif
 
 #elif D_EXP == 64
-	    {
-	      uint32_t h = 0, l;
+      {
+        uint32_t h = 0, l;
 #if defined(WORDS_BIGENDIAN)
-	      while(i--) {
-		  Uint d = *ptr++;
-		  l = d & 0xffffffff;
-		  h = d >> 32;
-		  hash = hash*FUNNY_NUMBER2 + ((l << 16) | (l >> 16));
-		  if (h || i)
-		      hash = hash*FUNNY_NUMBER2 + ((h << 16) | (h >> 16));
-	      }
-#else
-	      while(i--) {
-		  Uint d = *ptr++;
-		  l = d & 0xffffffff;
-		  h = d >> 32;
-		  hash = hash*FUNNY_NUMBER2 + l;
-		  if (h || i)
-		      hash = hash*FUNNY_NUMBER2 + h;
-	      }
-#endif
-	      /* adjust arity to match 32 bit mode */
-	      arity = (arity << 1) - (h == 0);
-	    }
+
+        while (i--) {
+          Uint d = *ptr++;
+          l = d & 0xffffffff;
+          h = d >> 32;
+          hash = hash * FUNNY_NUMBER2 + ((l << 16) | (l >> 16));
+
+          if (h || i) {
+            hash = hash * FUNNY_NUMBER2 + ((h << 16) | (h >> 16));
+          }
+        }
 
 #else
-#error "unsupported D_EXP size"	
+
+        while (i--) {
+          Uint d = *ptr++;
+          l = d & 0xffffffff;
+          h = d >> 32;
+          hash = hash * FUNNY_NUMBER2 + l;
+
+          if (h || i) {
+            hash = hash * FUNNY_NUMBER2 + h;
+          }
+        }
+
 #endif
-	    hash = hash * (is_neg ? FUNNY_NUMBER3 : FUNNY_NUMBER2) + arity;
-	}
-	break;
-
-    case MAP_DEF:
-	{
-	    map_t *mp = (map_t *)map_val(term);
-	    int size  = map_get_size(mp);
-	    Eterm *ks = map_get_keys(mp);
-	    Eterm *vs = map_get_values(mp);
-
-	    /* Use a prime with size to remedy some of
-	     * the {} and <<>> hash problems */
-	    hash = hash*FUNNY_NUMBER13 + FUNNY_NUMBER14 + size;
-	    if (size == 0)
-		break;
-
-	    /* push values first */
-	    WSTACK_PUSH3(stack, (UWord)vs, (UWord) size, MAKE_HASH_TERM_ARRAY_OP);
-	    WSTACK_PUSH3(stack, (UWord)ks, (UWord) size, MAKE_HASH_TERM_ARRAY_OP);
-	    break;
-	}
-    case TUPLE_DEF: 
-	{
-	    Eterm* ptr = tuple_val(term);
-	    Uint arity = arityval(*ptr);
-
-	    WSTACK_PUSH3(stack, (UWord) arity, (UWord) (ptr+1), (UWord) arity);
-	    op = MAKE_HASH_TUPLE_OP;
-	}/*fall through*/ 
-    case MAKE_HASH_TUPLE_OP:
-    case MAKE_HASH_TERM_ARRAY_OP:
-	{
-	    Uint i = (Uint) WSTACK_POP(stack);
-	    Eterm* ptr = (Eterm*) WSTACK_POP(stack);
-	    if (i != 0) {
-		term = *ptr;
-		WSTACK_PUSH3(stack, (UWord)(ptr+1), (UWord) i-1, (UWord) op);
-		goto tail_recur;
-	    }
-	    if (op == MAKE_HASH_TUPLE_OP) {
-		uint32_t arity = (UWord) WSTACK_POP(stack);
-		hash = hash*FUNNY_NUMBER9 + arity;
-	    }
-	    break;
-	}
-
-    default:
-	erl_exit(1, "Invalid tag in make_broken_hash\n");
-	return 0;
+        /* adjust arity to match 32 bit mode */
+        arity = (arity << 1) - (h == 0);
       }
-      if (WSTACK_ISEMPTY(stack)) break;
-      op = (Uint) WSTACK_POP(stack);
+
+#else
+#error "unsupported D_EXP size"
+#endif
+      hash = hash * (is_neg ? FUNNY_NUMBER3 : FUNNY_NUMBER2) + arity;
+    }
+    break;
+
+    case MAP_DEF: {
+      map_t *mp = (map_t *)map_val(term);
+      int size  = map_get_size(mp);
+      Eterm *ks = map_get_keys(mp);
+      Eterm *vs = map_get_values(mp);
+
+      /* Use a prime with size to remedy some of
+       * the {} and <<>> hash problems */
+      hash = hash * FUNNY_NUMBER13 + FUNNY_NUMBER14 + size;
+
+      if (size == 0) {
+        break;
+      }
+
+      /* push values first */
+      WSTACK_PUSH3(stack, (UWord)vs, (UWord) size, MAKE_HASH_TERM_ARRAY_OP);
+      WSTACK_PUSH3(stack, (UWord)ks, (UWord) size, MAKE_HASH_TERM_ARRAY_OP);
+      break;
     }
 
-    DESTROY_WSTACK(stack);
-    return hash;
-    
+    case TUPLE_DEF: {
+      Eterm *ptr = tuple_val(term);
+      Uint arity = arityval(*ptr);
+
+      WSTACK_PUSH3(stack, (UWord) arity, (UWord)(ptr + 1), (UWord) arity);
+      op = MAKE_HASH_TUPLE_OP;
+      }/*fall through*/
+
+    case MAKE_HASH_TUPLE_OP:
+    case MAKE_HASH_TERM_ARRAY_OP: {
+      Uint i = (Uint) WSTACK_POP(stack);
+      Eterm *ptr = (Eterm *) WSTACK_POP(stack);
+
+      if (i != 0) {
+        term = *ptr;
+        WSTACK_PUSH3(stack, (UWord)(ptr + 1), (UWord) i - 1, (UWord) op);
+        goto tail_recur;
+      }
+
+      if (op == MAKE_HASH_TUPLE_OP) {
+        uint32_t arity = (UWord) WSTACK_POP(stack);
+        hash = hash * FUNNY_NUMBER9 + arity;
+      }
+
+      break;
+    }
+
+    default:
+      erl_exit(1, "Invalid tag in make_broken_hash\n");
+      return 0;
+    }
+
+    if (WSTACK_ISEMPTY(stack)) {
+      break;
+    }
+
+    op = (Uint) WSTACK_POP(stack);
+  }
+
+  DESTROY_WSTACK(stack);
+  return hash;
+
 #undef MAKE_HASH_TUPLE_OP
 #undef MAKE_HASH_TERM_ARRAY_OP
 #undef MAKE_HASH_CDR_PRE_OP
@@ -1760,124 +1993,144 @@ tail_recur:
 
 static int do_send_to_logger(Eterm tag, Eterm gleader, char *buf, int len)
 {
-    /* error_logger ! 
-       {notify,{info_msg,gleader,{emulator,"~s~n",[<message as list>]}}} |
-       {notify,{error,gleader,{emulator,"~s~n",[<message as list>]}}} |
-       {notify,{warning_msg,gleader,{emulator,"~s~n",[<message as list>}]}} */
-    Eterm* hp;
-    Uint sz;
-    Uint gl_sz;
-    Eterm gl;
-    Eterm list,plist,format,tuple1,tuple2,tuple3;
-    ErlOffHeap *ohp;
-    ErlHeapFragment *bp = nullptr;
+  /* error_logger !
+     {notify,{info_msg,gleader,{emulator,"~s~n",[<message as list>]}}} |
+     {notify,{error,gleader,{emulator,"~s~n",[<message as list>]}}} |
+     {notify,{warning_msg,gleader,{emulator,"~s~n",[<message as list>}]}} */
+  Eterm *hp;
+  Uint sz;
+  Uint gl_sz;
+  Eterm gl;
+  Eterm list, plist, format, tuple1, tuple2, tuple3;
+  ErlOffHeap *ohp;
+  ErlHeapFragment *bp = nullptr;
 #if !defined(ERTS_SMP)
-    Process *p;
+  Process *p;
 #endif
 
-    ASSERT(is_atom(tag));
+  ASSERT(is_atom(tag));
 
-    if (len <= 0) {
-	return -1;
-    }
+  if (len <= 0) {
+    return -1;
+  }
 
 #ifndef ERTS_SMP
 #ifdef USE_THREADS
-    p = nullptr;
-    if (erts_get_scheduler_data()) /* Must be scheduler thread */
-#endif
-    {
-        p = erts_whereis_process(nullptr, 0, am_error_logger, 0, 0);
-	if (p) {
-	    erts_aint32_t state = erts_smp_atomic32_read_acqb(&p->state);
-	    if (state & (ERTS_PSFLG_RUNNING|ERTS_PSFLG_RUNNING_SYS))
-                p = nullptr;
-	}
-    }
+  p = nullptr;
 
-    if (!p) {
-	/* buf *always* points to a null terminated string */
-	erts_fprintf(stderr, "(no error logger present) %T: \"%s\"\n",
-		     tag, buf);
-	return 0;
-    }
-    /* So we have an error logger, lets build the message */
+  if (erts_get_scheduler_data()) /* Must be scheduler thread */
 #endif
-    gl_sz = IS_CONST(gleader) ? 0 : size_object(gleader);
-    sz = len * 2 /* message list */+ 2 /* cons surrounding message list */
-	+ gl_sz + 
-	3 /*outer 2-tuple*/ + 4 /* middle 3-tuple */ + 4 /*inner 3-tuple */ +
-	8 /* "~s~n" */;
+  {
+    p = erts_whereis_process(nullptr, 0, am_error_logger, 0, 0);
+
+    if (p) {
+      erts_aint32_t state = erts_smp_atomic32_read_acqb(&p->state);
+
+      if (state & (ERTS_PSFLG_RUNNING | ERTS_PSFLG_RUNNING_SYS)) {
+        p = nullptr;
+      }
+    }
+  }
+
+  if (!p) {
+    /* buf *always* points to a null terminated string */
+    erts_fprintf(stderr, "(no error logger present) %T: \"%s\"\n",
+                 tag, buf);
+    return 0;
+  }
+
+  /* So we have an error logger, lets build the message */
+#endif
+  gl_sz = IS_CONST(gleader) ? 0 : size_object(gleader);
+  sz = len * 2 /* message list */ + 2 /* cons surrounding message list */
+       + gl_sz +
+       3 /*outer 2-tuple*/ + 4 /* middle 3-tuple */ + 4 /*inner 3-tuple */ +
+       8 /* "~s~n" */;
 
 #ifndef ERTS_SMP
-    if (sz <= HeapWordsLeft(p)) {
-	ohp = &MSO(p);
-	hp = HEAP_TOP(p);
-	HEAP_TOP(p) += sz;
-    } else {
+
+  if (sz <= HeapWordsLeft(p)) {
+    ohp = &MSO(p);
+    hp = HEAP_TOP(p);
+    HEAP_TOP(p) += sz;
+  } else {
 #endif
-	bp = new_message_buffer(sz);
-	ohp = &bp->off_heap;
-	hp = bp->mem;
+    bp = new_message_buffer(sz);
+    ohp = &bp->off_heap;
+    hp = bp->mem;
 #ifndef ERTS_SMP
-    }
+  }
+
 #endif
-    gl = (is_nil(gleader)
-	  ? am_noproc
-	  : (IS_CONST(gleader)
-	     ? gleader
-	     : copy_struct(gleader,gl_sz,&hp,ohp)));
-    list = buf_to_intlist(&hp, buf, len, NIL);
-    plist = CONS(hp,list,NIL);
-    hp += 2;
-    format = buf_to_intlist(&hp, "~s~n", 4, NIL);
-    tuple1 = TUPLE3(hp, am_emulator, format, plist);
-    hp += 4;
-    tuple2 = TUPLE3(hp, tag, gl, tuple1);
-    hp += 4;
-    tuple3 = TUPLE2(hp, am_notify, tuple2);
+  gl = (is_nil(gleader)
+        ? am_noproc
+        : (IS_CONST(gleader)
+           ? gleader
+           : copy_struct(gleader, gl_sz, &hp, ohp)));
+  list = buf_to_intlist(&hp, buf, len, NIL);
+  plist = CONS(hp, list, NIL);
+  hp += 2;
+  format = buf_to_intlist(&hp, "~s~n", 4, NIL);
+  tuple1 = TUPLE3(hp, am_emulator, format, plist);
+  hp += 4;
+  tuple2 = TUPLE3(hp, tag, gl, tuple1);
+  hp += 4;
+  tuple3 = TUPLE2(hp, am_notify, tuple2);
 #ifdef HARDDEBUG
-    erts_fprintf(stderr, "%T\n", tuple3);
+  erts_fprintf(stderr, "%T\n", tuple3);
 #endif
 #ifdef ERTS_SMP
-    {
-	Eterm from = erts_get_current_pid();
-	if (is_not_internal_pid(from))
-	    from = NIL;
-	erts_queue_error_logger_message(from, tuple3, bp);
+  {
+    Eterm from = erts_get_current_pid();
+
+    if (is_not_internal_pid(from)) {
+      from = NIL;
     }
+
+    erts_queue_error_logger_message(from, tuple3, bp);
+  }
 #else
-    erts_queue_message(p, nullptr /* only used for smp build */, bp, tuple3, NIL
+  erts_queue_message(p, nullptr /* only used for smp build */, bp, tuple3, NIL
 #ifdef USE_VM_PROBES
-		       , NIL
+                     , NIL
 #endif
-		       );
+                    );
 #endif
-    return 0;
+  return 0;
 }
 
 static ERTS_INLINE int
-send_info_to_logger(Eterm gleader, char *buf, int len) 
+send_info_to_logger(Eterm gleader, char *buf, int len)
 {
-    return do_send_to_logger(am_info_msg, gleader, buf, len);
+  return do_send_to_logger(am_info_msg, gleader, buf, len);
 }
 
 static ERTS_INLINE int
-send_warning_to_logger(Eterm gleader, char *buf, int len) 
+send_warning_to_logger(Eterm gleader, char *buf, int len)
 {
-    Eterm tag;
-    switch (erts_error_logger_warnings) {
-    case am_info:	tag = am_info_msg;	break;
-    case am_warning:	tag = am_warning_msg;	break;
-    default:		tag = am_error;		break;
-    }
-    return do_send_to_logger(tag, gleader, buf, len);
+  Eterm tag;
+
+  switch (erts_error_logger_warnings) {
+  case am_info:
+    tag = am_info_msg;
+    break;
+
+  case am_warning:
+    tag = am_warning_msg;
+    break;
+
+  default:
+    tag = am_error;
+    break;
+  }
+
+  return do_send_to_logger(tag, gleader, buf, len);
 }
 
 static ERTS_INLINE int
-send_error_to_logger(Eterm gleader, char *buf, int len) 
+send_error_to_logger(Eterm gleader, char *buf, int len)
 {
-    return do_send_to_logger(am_error, gleader, buf, len);
+  return do_send_to_logger(am_error, gleader, buf, len);
 }
 
 #define LOGGER_DSBUF_INC_SZ 256
@@ -1885,127 +2138,128 @@ send_error_to_logger(Eterm gleader, char *buf, int len)
 static erts_dsprintf_buf_t *
 grow_logger_dsbuf(erts_dsprintf_buf_t *dsbufp, size_t need)
 {
-    size_t size;
-    size_t free_size = dsbufp->size - dsbufp->str_len;
+  size_t size;
+  size_t free_size = dsbufp->size - dsbufp->str_len;
 
-    ASSERT(dsbufp && dsbufp->str);
+  ASSERT(dsbufp && dsbufp->str);
 
-    if (need <= free_size)
-	return dsbufp;
-
-    size = need - free_size + LOGGER_DSBUF_INC_SZ;
-    size = (((size + LOGGER_DSBUF_INC_SZ - 1) / LOGGER_DSBUF_INC_SZ)
-	    * LOGGER_DSBUF_INC_SZ);
-    size += dsbufp->size;
-    ASSERT(dsbufp->str_len + need <= size);
-    dsbufp->str = (char *) erts_realloc(ERTS_ALC_T_LOGGER_DSBUF,
-					(void *) dsbufp->str,
-					size);
-    dsbufp->size = size;
+  if (need <= free_size) {
     return dsbufp;
+  }
+
+  size = need - free_size + LOGGER_DSBUF_INC_SZ;
+  size = (((size + LOGGER_DSBUF_INC_SZ - 1) / LOGGER_DSBUF_INC_SZ)
+          * LOGGER_DSBUF_INC_SZ);
+  size += dsbufp->size;
+  ASSERT(dsbufp->str_len + need <= size);
+  dsbufp->str = (char *) erts_realloc(ERTS_ALC_T_LOGGER_DSBUF,
+                                      (void *) dsbufp->str,
+                                      size);
+  dsbufp->size = size;
+  return dsbufp;
 }
 
 erts_dsprintf_buf_t *
 erts_create_logger_dsbuf(void)
 {
-    erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_logger_dsbuf);
-    erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
-					     sizeof(erts_dsprintf_buf_t));
-    sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
-    dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
-				      LOGGER_DSBUF_INC_SZ);
-    dsbufp->str[0] = '\0';
-    dsbufp->size = LOGGER_DSBUF_INC_SZ;
-    return dsbufp;
+  erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_logger_dsbuf);
+  erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
+                                sizeof(erts_dsprintf_buf_t));
+  sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
+  dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
+                                    LOGGER_DSBUF_INC_SZ);
+  dsbufp->str[0] = '\0';
+  dsbufp->size = LOGGER_DSBUF_INC_SZ;
+  return dsbufp;
 }
 
 static ERTS_INLINE void
 destroy_logger_dsbuf(erts_dsprintf_buf_t *dsbufp)
 {
-    ASSERT(dsbufp && dsbufp->str);
-    erts_free(ERTS_ALC_T_LOGGER_DSBUF, (void *) dsbufp->str);
-    erts_free(ERTS_ALC_T_LOGGER_DSBUF, (void *) dsbufp);
+  ASSERT(dsbufp && dsbufp->str);
+  erts_free(ERTS_ALC_T_LOGGER_DSBUF, (void *) dsbufp->str);
+  erts_free(ERTS_ALC_T_LOGGER_DSBUF, (void *) dsbufp);
 }
 
 int
 erts_send_info_to_logger(Eterm gleader, erts_dsprintf_buf_t *dsbufp)
 {
-    int res;
-    res = send_info_to_logger(gleader, dsbufp->str, dsbufp->str_len);
-    destroy_logger_dsbuf(dsbufp);
-    return res;
+  int res;
+  res = send_info_to_logger(gleader, dsbufp->str, dsbufp->str_len);
+  destroy_logger_dsbuf(dsbufp);
+  return res;
 }
 
 int
 erts_send_warning_to_logger(Eterm gleader, erts_dsprintf_buf_t *dsbufp)
 {
-    int res;
-    res = send_warning_to_logger(gleader, dsbufp->str, dsbufp->str_len);
-    destroy_logger_dsbuf(dsbufp);
-    return res;
+  int res;
+  res = send_warning_to_logger(gleader, dsbufp->str, dsbufp->str_len);
+  destroy_logger_dsbuf(dsbufp);
+  return res;
 }
 
 int
 erts_send_error_to_logger(Eterm gleader, erts_dsprintf_buf_t *dsbufp)
 {
-    int res;
-    res = send_error_to_logger(gleader, dsbufp->str, dsbufp->str_len);
-    destroy_logger_dsbuf(dsbufp);
-    return res;
+  int res;
+  res = send_error_to_logger(gleader, dsbufp->str, dsbufp->str_len);
+  destroy_logger_dsbuf(dsbufp);
+  return res;
 }
 
 int
 erts_send_info_to_logger_str(Eterm gleader, char *str)
 {
-    return send_info_to_logger(gleader, str, sys_strlen(str));
+  return send_info_to_logger(gleader, str, sys_strlen(str));
 }
 
 int
 erts_send_warning_to_logger_str(Eterm gleader, char *str)
 {
-    return send_warning_to_logger(gleader, str, sys_strlen(str));
+  return send_warning_to_logger(gleader, str, sys_strlen(str));
 }
 
 int
 erts_send_error_to_logger_str(Eterm gleader, char *str)
 {
-    return send_error_to_logger(gleader, str, sys_strlen(str));
+  return send_error_to_logger(gleader, str, sys_strlen(str));
 }
 
 int
 erts_send_info_to_logger_nogl(erts_dsprintf_buf_t *dsbuf)
 {
-    return erts_send_info_to_logger(NIL, dsbuf);
+  return erts_send_info_to_logger(NIL, dsbuf);
 }
 
 int
 erts_send_warning_to_logger_nogl(erts_dsprintf_buf_t *dsbuf)
 {
-    return erts_send_warning_to_logger(NIL, dsbuf);
+  return erts_send_warning_to_logger(NIL, dsbuf);
 }
 
 int
 erts_send_error_to_logger_nogl(erts_dsprintf_buf_t *dsbuf)
 {
-    return erts_send_error_to_logger(NIL, dsbuf);
+  return erts_send_error_to_logger(NIL, dsbuf);
 }
 
 int
 erts_send_info_to_logger_str_nogl(char *str)
 {
-    return erts_send_info_to_logger_str(NIL, str);
+  return erts_send_info_to_logger_str(NIL, str);
 }
 
 int
 erts_send_warning_to_logger_str_nogl(char *str)
 {
-    return erts_send_warning_to_logger_str(NIL, str);
+  return erts_send_warning_to_logger_str(NIL, str);
 }
 
 int
 erts_send_error_to_logger_str_nogl(char *str)
 {
-    return erts_send_error_to_logger_str(NIL, str);
+  return erts_send_error_to_logger_str(NIL, str);
 }
 
 
@@ -2014,44 +2268,48 @@ erts_send_error_to_logger_str_nogl(char *str)
 static erts_dsprintf_buf_t *
 grow_tmp_dsbuf(erts_dsprintf_buf_t *dsbufp, size_t need)
 {
-    size_t size;
-    size_t free_size = dsbufp->size - dsbufp->str_len;
+  size_t size;
+  size_t free_size = dsbufp->size - dsbufp->str_len;
 
-    ASSERT(dsbufp);
+  ASSERT(dsbufp);
 
-    if (need <= free_size)
-	return dsbufp;
-    size = need - free_size + TMP_DSBUF_INC_SZ;
-    size = ((size + TMP_DSBUF_INC_SZ - 1)/TMP_DSBUF_INC_SZ)*TMP_DSBUF_INC_SZ;
-    size += dsbufp->size;
-    ASSERT(dsbufp->str_len + need <= size);
-    dsbufp->str = (char *) erts_realloc(ERTS_ALC_T_TMP_DSBUF,
-					(void *) dsbufp->str,
-					size);
-    dsbufp->size = size;
+  if (need <= free_size) {
     return dsbufp;
+  }
+
+  size = need - free_size + TMP_DSBUF_INC_SZ;
+  size = ((size + TMP_DSBUF_INC_SZ - 1) / TMP_DSBUF_INC_SZ) * TMP_DSBUF_INC_SZ;
+  size += dsbufp->size;
+  ASSERT(dsbufp->str_len + need <= size);
+  dsbufp->str = (char *) erts_realloc(ERTS_ALC_T_TMP_DSBUF,
+                                      (void *) dsbufp->str,
+                                      size);
+  dsbufp->size = size;
+  return dsbufp;
 }
 
 erts_dsprintf_buf_t *
 erts_create_tmp_dsbuf(Uint size)
 {
-    Uint init_size = size ? size : TMP_DSBUF_INC_SZ;
-    erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_tmp_dsbuf);
-    erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)erts_alloc(ERTS_ALC_T_TMP_DSBUF,
-					     sizeof(erts_dsprintf_buf_t));
-    sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
-    dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_TMP_DSBUF, init_size);
-    dsbufp->str[0] = '\0';
-    dsbufp->size = init_size;
-    return dsbufp;
+  Uint init_size = size ? size : TMP_DSBUF_INC_SZ;
+  erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_tmp_dsbuf);
+  erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)erts_alloc(ERTS_ALC_T_TMP_DSBUF,
+                                sizeof(erts_dsprintf_buf_t));
+  sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
+  dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_TMP_DSBUF, init_size);
+  dsbufp->str[0] = '\0';
+  dsbufp->size = init_size;
+  return dsbufp;
 }
 
 void
 erts_destroy_tmp_dsbuf(erts_dsprintf_buf_t *dsbufp)
 {
-    if (dsbufp->str)
-	erts_free(ERTS_ALC_T_TMP_DSBUF, (void *) dsbufp->str);
-    erts_free(ERTS_ALC_T_TMP_DSBUF, (void *) dsbufp);
+  if (dsbufp->str) {
+    erts_free(ERTS_ALC_T_TMP_DSBUF, (void *) dsbufp->str);
+  }
+
+  erts_free(ERTS_ALC_T_TMP_DSBUF, (void *) dsbufp);
 }
 
 /* eq and cmp are written as separate functions a eq is a little faster */
@@ -2061,346 +2319,448 @@ erts_destroy_tmp_dsbuf(erts_dsprintf_buf_t *dsbufp)
  * Returns 0 if not equal, or a non-zero value otherwise.
  */
 #if HALFWORD_HEAP
-int eq_rel(Eterm a, Eterm* a_base, Eterm b, Eterm* b_base)
+int eq_rel(Eterm a, Eterm *a_base, Eterm b, Eterm *b_base)
 #else
 int eq(Eterm a, Eterm b)
 #endif
 {
-    DECLARE_WSTACK(stack);
-    Sint sz;
-    Eterm* aa;
-    Eterm* bb;
+  DECLARE_WSTACK(stack);
+  Sint sz;
+  Eterm *aa;
+  Eterm *bb;
 
 tailrecur:
-    if (is_same(a, a_base, b, b_base)) goto pop_next;
+
+  if (is_same(a, a_base, b, b_base)) {
+    goto pop_next;
+  }
+
 tailrecur_ne:
 
-    switch (primary_tag(a)) {
-    case TAG_PRIMARY_LIST:
-	if (is_list(b)) {
-	    Eterm* aval = list_val_rel(a, a_base);
-	    Eterm* bval = list_val_rel(b, b_base);
-	    while (1) {
-		Eterm atmp = CAR(aval);
-		Eterm btmp = CAR(bval);
-		if (!is_same(atmp,a_base,btmp,b_base)) {
-		    WSTACK_PUSH2(stack,(UWord) CDR(bval),(UWord) CDR(aval));
-		    a = atmp;
-		    b = btmp;
-		    goto tailrecur_ne;
-		}
-		atmp = CDR(aval);
-		btmp = CDR(bval);
-		if (is_same(atmp,a_base,btmp,b_base)) {
-		    goto pop_next;
-		}
-		if (is_not_list(atmp) || is_not_list(btmp)) {
-		    a = atmp;
-		    b = btmp;
-		    goto tailrecur_ne;
-		}
-		aval = list_val_rel(atmp, a_base);
-		bval = list_val_rel(btmp, b_base);
-	    }
-	}
-	break; /* not equal */
+  switch (primary_tag(a)) {
+  case TAG_PRIMARY_LIST:
+    if (is_list(b)) {
+      Eterm *aval = list_val_rel(a, a_base);
+      Eterm *bval = list_val_rel(b, b_base);
 
-    case TAG_PRIMARY_BOXED:
-	{	
-	    Eterm hdr = *boxed_val_rel(a,a_base);
-	    switch (hdr & _TAG_HEADER_MASK) {
-	    case ARITYVAL_SUBTAG:
-		{
-		    aa = tuple_val_rel(a, a_base);
-		    if (!is_boxed(b) || *boxed_val_rel(b,b_base) != *aa)
-			goto not_equal;
-		    bb = tuple_val_rel(b,b_base);
-		    if ((sz = arityval(*aa)) == 0) goto pop_next;
-		    ++aa;
-		    ++bb;
-		    goto term_array;
-		}
-	    case MAP_SUBTAG:
-		{
-		    aa = map_val_rel(a, a_base);
-		    if (!is_boxed(b) || *boxed_val_rel(b,b_base) != *aa)
-			goto not_equal;
-		    bb = map_val_rel(b,b_base);
-		    sz = map_get_size((map_t*)aa);
+      while (1) {
+        Eterm atmp = CAR(aval);
+        Eterm btmp = CAR(bval);
 
-		    if (sz != map_get_size((map_t*)bb)) goto not_equal;
-		    if (sz == 0) goto pop_next;
+        if (!is_same(atmp, a_base, btmp, b_base)) {
+          WSTACK_PUSH2(stack, (UWord) CDR(bval), (UWord) CDR(aval));
+          a = atmp;
+          b = btmp;
+          goto tailrecur_ne;
+        }
 
-		    aa += 2;
-		    bb += 2;
-		    sz += 1; /* increment for tuple-keys */
-		    goto term_array;
-		}
-	    case REFC_BINARY_SUBTAG:
-	    case HEAP_BINARY_SUBTAG:
-	    case SUB_BINARY_SUBTAG:
-		{
-		    uint8_t* a_ptr;
-		    uint8_t* b_ptr;
-		    size_t a_size;
-		    size_t b_size;
-		    Uint a_bitsize;
-		    Uint b_bitsize;
-		    Uint a_bitoffs;
-		    Uint b_bitoffs;
-		    
-		    if (!is_binary_rel(b,b_base)) {
-			goto not_equal;
-		    }
-		    a_size = binary_size_rel(a,a_base);
-		    b_size = binary_size_rel(b,b_base);
-		    if (a_size != b_size) {
-			goto not_equal;
-		    }
-		    ERTS_GET_BINARY_BYTES_REL(a, a_ptr, a_bitoffs, a_bitsize, a_base);
-		    ERTS_GET_BINARY_BYTES_REL(b, b_ptr, b_bitoffs, b_bitsize, b_base);
-		    if ((a_bitsize | b_bitsize | a_bitoffs | b_bitoffs) == 0) {
-			if (sys_memcmp(a_ptr, b_ptr, a_size) == 0) goto pop_next;
-		    } else if (a_bitsize == b_bitsize) {
-			if (erts_cmp_bits(a_ptr, a_bitoffs, b_ptr, b_bitoffs,
-					  (a_size << 3) + a_bitsize) == 0) goto pop_next;
-		    }
-		    break; /* not equal */
-		}
-	    case EXPORT_SUBTAG:
-		{
-		    if (is_export_rel(b,b_base)) {
-			Export* a_exp = *((Export **) (export_val_rel(a,a_base) + 1));
-			Export* b_exp = *((Export **) (export_val_rel(b,b_base) + 1));
-			if (a_exp == b_exp) goto pop_next;
-		    }
-		    break; /* not equal */
-		}
-	    case FUN_SUBTAG:
-		{
-		    ErlFunThing* f1;
-		    ErlFunThing* f2;
-  
-		    if (!is_fun_rel(b,b_base))
-			goto not_equal;
-		    f1 = (ErlFunThing *) fun_val_rel(a,a_base);
-		    f2 = (ErlFunThing *) fun_val_rel(b,b_base);
-		    if (f1->fe->module != f2->fe->module ||
-			f1->fe->old_index != f2->fe->old_index ||
-			f1->fe->old_uniq != f2->fe->old_uniq ||
-			f1->num_free != f2->num_free) {
-			goto not_equal;
-		    }
-		    if ((sz = f1->num_free) == 0) goto pop_next;
-		    aa = f1->env;
-		    bb = f2->env;
-		    goto term_array;
-		}
+        atmp = CDR(aval);
+        btmp = CDR(bval);
 
-	    case EXTERNAL_PID_SUBTAG:
-	    case EXTERNAL_PORT_SUBTAG: {
-		ExternalThing *ap;
-		ExternalThing *bp;
+        if (is_same(atmp, a_base, btmp, b_base)) {
+          goto pop_next;
+        }
 
-		if(!is_external_rel(b,b_base))
-		    goto not_equal;
+        if (is_not_list(atmp) || is_not_list(btmp)) {
+          a = atmp;
+          b = btmp;
+          goto tailrecur_ne;
+        }
 
-		ap = external_thing_ptr_rel(a,a_base);
-		bp = external_thing_ptr_rel(b,b_base);
-
-		if(ap->header == bp->header && ap->node == bp->node) {
-		    ASSERT(1 == external_data_words_rel(a,a_base));
-		    ASSERT(1 == external_data_words_rel(b,b_base));
-		    
-		    if (ap->data.ui[0] == bp->data.ui[0]) goto pop_next;
-		}
-		break; /* not equal */
-	    }
-	    case EXTERNAL_REF_SUBTAG: {
-		/*
-		 * Observe!
-		 *  When comparing refs we need to compare ref numbers
-		 * (32-bit words) *not* ref data words.
-		 */
-		uint32_t *anum;
-		uint32_t *bnum;
-		Uint common_len;
-		Uint alen;
-		Uint blen;
-		Uint i;
-		ExternalThing* athing;
-		ExternalThing* bthing;
-
-		if(!is_external_ref_rel(b,b_base))
-		    goto not_equal;
-
-		athing = external_thing_ptr_rel(a,a_base);
-		bthing = external_thing_ptr_rel(b,b_base);
-
-		if(athing->node != bthing->node)
-		    goto not_equal;
-
-		anum = external_thing_ref_numbers(athing);
-		bnum = external_thing_ref_numbers(bthing);
-		alen = external_thing_ref_no_of_numbers(athing);
-		blen = external_thing_ref_no_of_numbers(bthing);
-
-		goto ref_common;
-	    case REF_SUBTAG:
-		    if (!is_internal_ref_rel(b,b_base))
-			goto not_equal;
-
-		    {
-			RefThing* athing = ref_thing_ptr_rel(a,a_base);
-			RefThing* bthing = ref_thing_ptr_rel(b,b_base);
-			alen = internal_thing_ref_no_of_numbers(athing);
-			blen = internal_thing_ref_no_of_numbers(bthing);
-			anum = internal_thing_ref_numbers(athing);
-			bnum = internal_thing_ref_numbers(bthing);
-		    }
-
-	    ref_common:
-		    ASSERT(alen > 0 && blen > 0);
-
-		    if (anum[0] != bnum[0])
-			goto not_equal;
-
-		    if (alen == 3 && blen == 3) {
-			/* Most refs are of length 3 */
-			if (anum[1] == bnum[1] && anum[2] == bnum[2]) {
-			    goto pop_next; 
-			} else {
-			    goto not_equal;
-			}
-		    }
-
-		    common_len = alen;
-		    if (blen < alen)
-			common_len = blen;
-
-		    for (i = 1; i < common_len; i++)
-			if (anum[i] != bnum[i])
-			    goto not_equal;
-
-		    if(alen != blen) {
-
-			if (alen > blen) {
-			    for (i = common_len; i < alen; i++)
-				if (anum[i] != 0)
-				    goto not_equal;
-			}
-			else {
-			    for (i = common_len; i < blen; i++)
-				if (bnum[i] != 0)
-				    goto not_equal;
-			}			
-		    }
-		    goto pop_next;
-	    }
-	    case POS_BIG_SUBTAG:
-	    case NEG_BIG_SUBTAG:
-		{
-		    int i;
-  
-		    if (!is_big_rel(b,b_base))
-			goto not_equal;
-		    aa = big_val_rel(a,a_base);
-		    bb = big_val_rel(b,b_base);
-		    if (*aa != *bb)
-			goto not_equal;
-		    i = BIG_ARITY(aa);
-		    while(i--) {
-			if (*++aa != *++bb)
-			    goto not_equal;
-		    }
-		    goto pop_next;
-		}
-	    case FLOAT_SUBTAG:
-		{
-		    FloatDef af;
-		    FloatDef bf;
-  
-		    if (is_float_rel(b,b_base)) {
-			GET_DOUBLE_REL(a, af, a_base);
-			GET_DOUBLE_REL(b, bf, b_base);
-			if (af.fd == bf.fd) goto pop_next;
-		    }
-		    break; /* not equal */
-		}
-	    }
-	    break;
-	}
+        aval = list_val_rel(atmp, a_base);
+        bval = list_val_rel(btmp, b_base);
+      }
     }
-    goto not_equal;
+
+    break; /* not equal */
+
+  case TAG_PRIMARY_BOXED: {
+    Eterm hdr = *boxed_val_rel(a, a_base);
+
+    switch (hdr & _TAG_HEADER_MASK) {
+    case ARITYVAL_SUBTAG: {
+      aa = tuple_val_rel(a, a_base);
+
+      if (!is_boxed(b) || *boxed_val_rel(b, b_base) != *aa) {
+        goto not_equal;
+      }
+
+      bb = tuple_val_rel(b, b_base);
+
+      if ((sz = arityval(*aa)) == 0) {
+        goto pop_next;
+      }
+
+      ++aa;
+      ++bb;
+      goto term_array;
+    }
+
+    case MAP_SUBTAG: {
+      aa = map_val_rel(a, a_base);
+
+      if (!is_boxed(b) || *boxed_val_rel(b, b_base) != *aa) {
+        goto not_equal;
+      }
+
+      bb = map_val_rel(b, b_base);
+      sz = map_get_size((map_t *)aa);
+
+      if (sz != map_get_size((map_t *)bb)) {
+        goto not_equal;
+      }
+
+      if (sz == 0) {
+        goto pop_next;
+      }
+
+      aa += 2;
+      bb += 2;
+      sz += 1; /* increment for tuple-keys */
+      goto term_array;
+    }
+
+    case REFC_BINARY_SUBTAG:
+    case HEAP_BINARY_SUBTAG:
+    case SUB_BINARY_SUBTAG: {
+      uint8_t *a_ptr;
+      uint8_t *b_ptr;
+      size_t a_size;
+      size_t b_size;
+      Uint a_bitsize;
+      Uint b_bitsize;
+      Uint a_bitoffs;
+      Uint b_bitoffs;
+
+      if (!is_binary_rel(b, b_base)) {
+        goto not_equal;
+      }
+
+      a_size = binary_size_rel(a, a_base);
+      b_size = binary_size_rel(b, b_base);
+
+      if (a_size != b_size) {
+        goto not_equal;
+      }
+
+      ERTS_GET_BINARY_BYTES_REL(a, a_ptr, a_bitoffs, a_bitsize, a_base);
+      ERTS_GET_BINARY_BYTES_REL(b, b_ptr, b_bitoffs, b_bitsize, b_base);
+
+      if ((a_bitsize | b_bitsize | a_bitoffs | b_bitoffs) == 0) {
+        if (sys_memcmp(a_ptr, b_ptr, a_size) == 0) {
+          goto pop_next;
+        }
+      } else if (a_bitsize == b_bitsize) {
+        if (erts_cmp_bits(a_ptr, a_bitoffs, b_ptr, b_bitoffs,
+                          (a_size << 3) + a_bitsize) == 0) {
+          goto pop_next;
+        }
+      }
+
+      break; /* not equal */
+    }
+
+    case EXPORT_SUBTAG: {
+      if (is_export_rel(b, b_base)) {
+        Export *a_exp = *((Export **)(export_val_rel(a, a_base) + 1));
+        Export *b_exp = *((Export **)(export_val_rel(b, b_base) + 1));
+
+        if (a_exp == b_exp) {
+          goto pop_next;
+        }
+      }
+
+      break; /* not equal */
+    }
+
+    case FUN_SUBTAG: {
+      ErlFunThing *f1;
+      ErlFunThing *f2;
+
+      if (!is_fun_rel(b, b_base)) {
+        goto not_equal;
+      }
+
+      f1 = (ErlFunThing *) fun_val_rel(a, a_base);
+      f2 = (ErlFunThing *) fun_val_rel(b, b_base);
+
+      if (f1->fe->module != f2->fe->module ||
+          f1->fe->old_index != f2->fe->old_index ||
+          f1->fe->old_uniq != f2->fe->old_uniq ||
+          f1->num_free != f2->num_free) {
+        goto not_equal;
+      }
+
+      if ((sz = f1->num_free) == 0) {
+        goto pop_next;
+      }
+
+      aa = f1->env;
+      bb = f2->env;
+      goto term_array;
+    }
+
+    case EXTERNAL_PID_SUBTAG:
+    case EXTERNAL_PORT_SUBTAG: {
+      ExternalThing *ap;
+      ExternalThing *bp;
+
+      if (!is_external_rel(b, b_base)) {
+        goto not_equal;
+      }
+
+      ap = external_thing_ptr_rel(a, a_base);
+      bp = external_thing_ptr_rel(b, b_base);
+
+      if (ap->header == bp->header && ap->node == bp->node) {
+        ASSERT(1 == external_data_words_rel(a, a_base));
+        ASSERT(1 == external_data_words_rel(b, b_base));
+
+        if (ap->data.ui[0] == bp->data.ui[0]) {
+          goto pop_next;
+        }
+      }
+
+      break; /* not equal */
+    }
+
+    case EXTERNAL_REF_SUBTAG: {
+      /*
+       * Observe!
+       *  When comparing refs we need to compare ref numbers
+       * (32-bit words) *not* ref data words.
+       */
+      uint32_t *anum;
+      uint32_t *bnum;
+      Uint common_len;
+      Uint alen;
+      Uint blen;
+      Uint i;
+      ExternalThing *athing;
+      ExternalThing *bthing;
+
+      if (!is_external_ref_rel(b, b_base)) {
+        goto not_equal;
+      }
+
+      athing = external_thing_ptr_rel(a, a_base);
+      bthing = external_thing_ptr_rel(b, b_base);
+
+      if (athing->node != bthing->node) {
+        goto not_equal;
+      }
+
+      anum = external_thing_ref_numbers(athing);
+      bnum = external_thing_ref_numbers(bthing);
+      alen = external_thing_ref_no_of_numbers(athing);
+      blen = external_thing_ref_no_of_numbers(bthing);
+
+      goto ref_common;
+
+      case REF_SUBTAG:
+        if (!is_internal_ref_rel(b, b_base)) {
+          goto not_equal;
+        }
+
+        {
+          RefThing *athing = ref_thing_ptr_rel(a, a_base);
+          RefThing *bthing = ref_thing_ptr_rel(b, b_base);
+          alen = internal_thing_ref_no_of_numbers(athing);
+          blen = internal_thing_ref_no_of_numbers(bthing);
+          anum = internal_thing_ref_numbers(athing);
+          bnum = internal_thing_ref_numbers(bthing);
+        }
+
+ref_common:
+        ASSERT(alen > 0 && blen > 0);
+
+        if (anum[0] != bnum[0]) {
+          goto not_equal;
+        }
+
+        if (alen == 3 && blen == 3) {
+          /* Most refs are of length 3 */
+          if (anum[1] == bnum[1] && anum[2] == bnum[2]) {
+            goto pop_next;
+          } else {
+            goto not_equal;
+          }
+        }
+
+        common_len = alen;
+
+        if (blen < alen) {
+          common_len = blen;
+        }
+
+        for (i = 1; i < common_len; i++)
+          if (anum[i] != bnum[i]) {
+            goto not_equal;
+          }
+
+        if (alen != blen) {
+
+          if (alen > blen) {
+            for (i = common_len; i < alen; i++)
+              if (anum[i] != 0) {
+                goto not_equal;
+              }
+          } else {
+            for (i = common_len; i < blen; i++)
+              if (bnum[i] != 0) {
+                goto not_equal;
+              }
+          }
+        }
+
+        goto pop_next;
+      }
+
+    case POS_BIG_SUBTAG:
+    case NEG_BIG_SUBTAG: {
+      int i;
+
+      if (!is_big_rel(b, b_base)) {
+        goto not_equal;
+      }
+
+      aa = big_val_rel(a, a_base);
+      bb = big_val_rel(b, b_base);
+
+      if (*aa != *bb) {
+        goto not_equal;
+      }
+
+      i = BIG_ARITY(aa);
+
+      while (i--) {
+        if (*++aa != *++bb) {
+          goto not_equal;
+        }
+      }
+
+      goto pop_next;
+    }
+
+    case FLOAT_SUBTAG: {
+      FloatDef af;
+      FloatDef bf;
+
+      if (is_float_rel(b, b_base)) {
+        GET_DOUBLE_REL(a, af, a_base);
+        GET_DOUBLE_REL(b, bf, b_base);
+
+        if (af.fd == bf.fd) {
+          goto pop_next;
+        }
+      }
+
+      break; /* not equal */
+    }
+    }
+
+    break;
+  }
+  }
+
+  goto not_equal;
 
 
 term_array: /* arrays in 'aa' and 'bb', length in 'sz' */
-    ASSERT(sz != 0);
-    {
-	Eterm* ap = aa;
-	Eterm* bp = bb;
-	Sint i = sz;
-	for (;;) {
-	    if (!is_same(*ap,a_base,*bp,b_base)) break;
-	    if (--i == 0) goto pop_next;
-	    ++ap;
-	    ++bp;
-	}
-	a = *ap;
-	b = *bp;
-	if (is_both_immed(a,b)) {
-	    goto not_equal;
-	}
-	if (i > 1) { /* push the rest */
-	    WSTACK_PUSH3(stack, i-1, (UWord)(bp+1),
-			 ((UWord)(ap+1)) | TAG_PRIMARY_HEADER);
-	    /* We (ab)use TAG_PRIMARY_HEADER to recognize a term_array */
-	}
-	goto tailrecur_ne;
-    }
-   
-pop_next:
-    if (!WSTACK_ISEMPTY(stack)) {
-	UWord something  = WSTACK_POP(stack);
-	if (primary_tag((Eterm) something) == TAG_PRIMARY_HEADER) { /* a term_array */
-	    aa = (Eterm*) something;
-	    bb = (Eterm*) WSTACK_POP(stack);
-	    sz = WSTACK_POP(stack);
-	    goto term_array;
-	}
-	a = something;
-	b = WSTACK_POP(stack);
-	goto tailrecur;
+  ASSERT(sz != 0);
+  {
+    Eterm *ap = aa;
+    Eterm *bp = bb;
+    Sint i = sz;
+
+    for (;;) {
+      if (!is_same(*ap, a_base, *bp, b_base)) {
+        break;
+      }
+
+      if (--i == 0) {
+        goto pop_next;
+      }
+
+      ++ap;
+      ++bp;
     }
 
-    DESTROY_WSTACK(stack);
-    return 1;
+    a = *ap;
+    b = *bp;
+
+    if (is_both_immed(a, b)) {
+      goto not_equal;
+    }
+
+    if (i > 1) { /* push the rest */
+      WSTACK_PUSH3(stack, i - 1, (UWord)(bp + 1),
+                   ((UWord)(ap + 1)) | TAG_PRIMARY_HEADER);
+      /* We (ab)use TAG_PRIMARY_HEADER to recognize a term_array */
+    }
+
+    goto tailrecur_ne;
+  }
+
+pop_next:
+
+  if (!WSTACK_ISEMPTY(stack)) {
+    UWord something  = WSTACK_POP(stack);
+
+    if (primary_tag((Eterm) something) == TAG_PRIMARY_HEADER) { /* a term_array */
+      aa = (Eterm *) something;
+      bb = (Eterm *) WSTACK_POP(stack);
+      sz = WSTACK_POP(stack);
+      goto term_array;
+    }
+
+    a = something;
+    b = WSTACK_POP(stack);
+    goto tailrecur;
+  }
+
+  DESTROY_WSTACK(stack);
+  return 1;
 
 not_equal:
-    DESTROY_WSTACK(stack);
-    return 0;
+  DESTROY_WSTACK(stack);
+  return 0;
 }
 
 
-/* 
+/*
  * Lexically compare two strings of bytes (string s1 length l1 and s2 l2).
  *
- *	s1 < s2	return -1
- *	s1 = s2	return  0
- *	s1 > s2 return +1
+ *  s1 < s2 return -1
+ *  s1 = s2 return  0
+ *  s1 > s2 return +1
  */
 static int cmpbytes(uint8_t *s1, int l1, uint8_t *s2, int l2)
 {
-    int i;
-    i = 0;
-    while((i < l1) && (i < l2)) {
-	if (s1[i] < s2[i]) return(-1);
-	if (s1[i] > s2[i]) return(1);
-	i++;
+  int i;
+  i = 0;
+
+  while ((i < l1) && (i < l2)) {
+    if (s1[i] < s2[i]) {
+      return (-1);
     }
-    if (l1 < l2) return(-1);
-    if (l1 > l2) return(1);
-    return(0);
+
+    if (s1[i] > s2[i]) {
+      return (1);
+    }
+
+    i++;
+  }
+
+  if (l1 < l2) {
+    return (-1);
+  }
+
+  if (l1 > l2) {
+    return (1);
+  }
+
+  return (0);
 }
 
 
@@ -2421,13 +2781,16 @@ static int cmpbytes(uint8_t *s1, int l1, uint8_t *s2, int l2)
 
 static int cmp_atoms(Eterm a, Eterm b)
 {
-    Atom *aa = atom_tab(atom_val(a));
-    Atom *bb = atom_tab(atom_val(b));
-    int diff = aa->ord0 - bb->ord0;
-    if (diff)
-	return diff;
-    return cmpbytes(aa->name+3, aa->len-3,
-		    bb->name+3, bb->len-3);
+  Atom *aa = atom_tab(atom_val(a));
+  Atom *bb = atom_tab(atom_val(b));
+  int diff = aa->ord0 - bb->ord0;
+
+  if (diff) {
+    return diff;
+  }
+
+  return cmpbytes(aa->name + 3, aa->len - 3,
+                  bb->name + 3, bb->len - 3);
 }
 
 #if !HALFWORD_HEAP
@@ -2436,7 +2799,7 @@ static int cmp_atoms(Eterm a, Eterm b)
  */
 Sint cmp(Eterm a, Eterm b)
 {
-    return erts_cmp(a, b, 0);
+  return erts_cmp(a, b, 0);
 }
 #endif
 
@@ -2445,702 +2808,827 @@ Sint cmp(Eterm a, Eterm b)
  * exact = 0 -> arith-based compare
  */
 #if HALFWORD_HEAP
-Sint erts_cmp_rel_opt(Eterm a, Eterm* a_base, Eterm b, Eterm* b_base, int exact)
+Sint erts_cmp_rel_opt(Eterm a, Eterm *a_base, Eterm b, Eterm *b_base, int exact)
 #else
 Sint erts_cmp(Eterm a, Eterm b, int exact)
 #endif
 {
-    DECLARE_WSTACK(stack);
-    Eterm* aa;
-    Eterm* bb;
-    int i;
-    Sint j;
-    int a_tag;
-    int b_tag;
-    ErlNode *anode;
-    ErlNode *bnode;
-    Uint adata;
-    Uint bdata;
-    Uint alen;
-    Uint blen;
-    uint32_t *anum;
-    uint32_t *bnum;
+  DECLARE_WSTACK(stack);
+  Eterm *aa;
+  Eterm *bb;
+  int i;
+  Sint j;
+  int a_tag;
+  int b_tag;
+  ErlNode *anode;
+  ErlNode *bnode;
+  Uint adata;
+  Uint bdata;
+  Uint alen;
+  Uint blen;
+  uint32_t *anum;
+  uint32_t *bnum;
 
 #define RETURN_NEQ(cmp) { j=(cmp); ASSERT(j != 0); goto not_equal; }
 #define ON_CMP_GOTO(cmp) if ((j=(cmp)) == 0) goto pop_next; else goto not_equal
 
 #undef  CMP_NODES
-#define CMP_NODES(AN, BN)						\
-    do {								\
-	if((AN) != (BN)) {						\
-            if((AN)->sysname != (BN)->sysname)				\
-                RETURN_NEQ(cmp_atoms((AN)->sysname, (BN)->sysname));	\
-	    ASSERT((AN)->creation != (BN)->creation);			\
-	    RETURN_NEQ(((AN)->creation < (BN)->creation) ? -1 : 1);	\
-	}								\
+#define CMP_NODES(AN, BN)           \
+    do {                \
+  if((AN) != (BN)) {            \
+            if((AN)->sysname != (BN)->sysname)        \
+                RETURN_NEQ(cmp_atoms((AN)->sysname, (BN)->sysname));  \
+      ASSERT((AN)->creation != (BN)->creation);     \
+      RETURN_NEQ(((AN)->creation < (BN)->creation) ? -1 : 1); \
+  }               \
     } while (0)
 
 
 tailrecur:
-    if (is_same(a,a_base,b,b_base)) {	/* Equal values or pointers. */
-	goto pop_next;
-    }
+
+  if (is_same(a, a_base, b, b_base)) { /* Equal values or pointers. */
+    goto pop_next;
+  }
+
 tailrecur_ne:
 
-    /* deal with majority (?) cases by brute-force */
-    if (is_atom(a)) {
-	if (is_atom(b)) {
-	    ON_CMP_GOTO(cmp_atoms(a, b));
-	}
-    } else if (is_both_small(a, b)) {
-	ON_CMP_GOTO(signed_val(a) - signed_val(b));
+  /* deal with majority (?) cases by brute-force */
+  if (is_atom(a)) {
+    if (is_atom(b)) {
+      ON_CMP_GOTO(cmp_atoms(a, b));
+    }
+  } else if (is_both_small(a, b)) {
+    ON_CMP_GOTO(signed_val(a) - signed_val(b));
+  }
+
+  /*
+   * Take care of cases where the types are the same.
+   */
+
+  a_tag = 42;     /* Suppress warning */
+
+  switch (primary_tag(a)) {
+  case TAG_PRIMARY_IMMED1:
+    switch ((a & _TAG_IMMED1_MASK) >> _TAG_PRIMARY_SIZE) {
+    case (_TAG_IMMED1_PORT >> _TAG_PRIMARY_SIZE):
+      if (is_internal_port(b)) {
+        bnode = erts_this_node;
+        bdata = internal_port_data(b);
+      } else if (is_external_port_rel(b, b_base)) {
+        bnode = external_port_node_rel(b, b_base);
+        bdata = external_port_data_rel(b, b_base);
+      } else {
+        a_tag = PORT_DEF;
+        goto mixed_types;
+      }
+
+      anode = erts_this_node;
+      adata = internal_port_data(a);
+
+port_common:
+      CMP_NODES(anode, bnode);
+      ON_CMP_GOTO((Sint)(adata - bdata));
+
+    case (_TAG_IMMED1_PID >> _TAG_PRIMARY_SIZE):
+      if (is_internal_pid(b)) {
+        bnode = erts_this_node;
+        bdata = internal_pid_data(b);
+      } else if (is_external_pid_rel(b, b_base)) {
+        bnode = external_pid_node_rel(b, b_base);
+        bdata = external_pid_data_rel(b, b_base);
+      } else {
+        a_tag = PID_DEF;
+        goto mixed_types;
+      }
+
+      anode = erts_this_node;
+      adata = internal_pid_data(a);
+
+pid_common:
+
+      if (adata != bdata) {
+        RETURN_NEQ(adata < bdata ? -1 : 1);
+      }
+
+      CMP_NODES(anode, bnode);
+      goto pop_next;
+
+    case (_TAG_IMMED1_SMALL >> _TAG_PRIMARY_SIZE):
+      a_tag = SMALL_DEF;
+      goto mixed_types;
+
+    case (_TAG_IMMED1_IMMED2 >> _TAG_PRIMARY_SIZE): {
+      switch ((a & _TAG_IMMED2_MASK) >> _TAG_IMMED1_SIZE) {
+      case (_TAG_IMMED2_ATOM >> _TAG_IMMED1_SIZE):
+        a_tag = ATOM_DEF;
+        goto mixed_types;
+
+      case (_TAG_IMMED2_NIL >> _TAG_IMMED1_SIZE):
+        a_tag = NIL_DEF;
+        goto mixed_types;
+      }
+    }
     }
 
-    /*
-     * Take care of cases where the types are the same.
-     */
-
-    a_tag = 42;			/* Suppress warning */
-    switch (primary_tag(a)) {
-    case TAG_PRIMARY_IMMED1:
-	switch ((a & _TAG_IMMED1_MASK) >> _TAG_PRIMARY_SIZE) {
-	case (_TAG_IMMED1_PORT >> _TAG_PRIMARY_SIZE):
-	    if (is_internal_port(b)) {
-		bnode = erts_this_node;
-		bdata = internal_port_data(b);
-	    } else if (is_external_port_rel(b,b_base)) {
-		bnode = external_port_node_rel(b,b_base);
-		bdata = external_port_data_rel(b,b_base);
-	    } else {
-		a_tag = PORT_DEF;
-		goto mixed_types;
-	    }
-	    anode = erts_this_node;
-	    adata = internal_port_data(a);
-		
-	port_common:
-	    CMP_NODES(anode, bnode);
-	    ON_CMP_GOTO((Sint)(adata - bdata));
-
-	case (_TAG_IMMED1_PID >> _TAG_PRIMARY_SIZE):
-	    if (is_internal_pid(b)) {
-		bnode = erts_this_node;
-		bdata = internal_pid_data(b);
-	    } else if (is_external_pid_rel(b,b_base)) {
-		bnode = external_pid_node_rel(b,b_base);
-		bdata = external_pid_data_rel(b,b_base);
-	    } else {
-		a_tag = PID_DEF;
-		goto mixed_types;
-	    }
-	    anode = erts_this_node;
-	    adata = internal_pid_data(a);
-	    
-	pid_common:
-	    if (adata != bdata) {
-		RETURN_NEQ(adata < bdata ? -1 : 1);
-	    }
-	    CMP_NODES(anode, bnode);
-	    goto pop_next;
-	case (_TAG_IMMED1_SMALL >> _TAG_PRIMARY_SIZE):
-	    a_tag = SMALL_DEF;
-	    goto mixed_types;
-	case (_TAG_IMMED1_IMMED2 >> _TAG_PRIMARY_SIZE): {
-	    switch ((a & _TAG_IMMED2_MASK) >> _TAG_IMMED1_SIZE) {
-	    case (_TAG_IMMED2_ATOM >> _TAG_IMMED1_SIZE):
-		a_tag = ATOM_DEF;
-		goto mixed_types;
-	    case (_TAG_IMMED2_NIL >> _TAG_IMMED1_SIZE):
-		a_tag = NIL_DEF;
-		goto mixed_types;
-	    }
-	}
-	}
-    case TAG_PRIMARY_LIST:
-	if (is_not_list(b)) {
-	    a_tag = LIST_DEF;
-	    goto mixed_types;
-	}
-	aa = list_val_rel(a,a_base);
-	bb = list_val_rel(b,b_base);
-	while (1) {
-	    Eterm atmp = CAR(aa);
-	    Eterm btmp = CAR(bb);
-	    if (!is_same(atmp,a_base,btmp,b_base)) {
-		WSTACK_PUSH2(stack,(UWord) CDR(bb),(UWord) CDR(aa));
-		a = atmp;
-		b = btmp;
-		goto tailrecur_ne;
-	    }
-	    atmp = CDR(aa);
-	    btmp = CDR(bb);
-	    if (is_same(atmp,a_base,btmp,b_base)) {
-		goto pop_next;
-	    }
-	    if (is_not_list(atmp) || is_not_list(btmp)) {
-		a = atmp;
-		b = btmp;
-		goto tailrecur_ne;
-	    }
-	    aa = list_val_rel(atmp,a_base);
-	    bb = list_val_rel(btmp,b_base);
-	}
-    case TAG_PRIMARY_BOXED:
-	{
-	    Eterm ahdr = *boxed_val_rel(a,a_base);
-	    switch ((ahdr & _TAG_HEADER_MASK) >> _TAG_PRIMARY_SIZE) {
-	    case (_TAG_HEADER_ARITYVAL >> _TAG_PRIMARY_SIZE):
-		if (!is_tuple_rel(b,b_base)) {
-		    a_tag = TUPLE_DEF;
-		    goto mixed_types;
-		}
-		aa = tuple_val_rel(a,a_base);
-		bb = tuple_val_rel(b,b_base);
-		/* compare the arities */
-		i = arityval(ahdr);	/* get the arity*/
-		if (i != arityval(*bb)) {
-		    RETURN_NEQ((int)(i - arityval(*bb)));
-		}
-		if (i == 0) {
-		    goto pop_next;
-		}
-		++aa;
-		++bb;
-		goto term_array;
-	    case (_TAG_HEADER_MAP >> _TAG_PRIMARY_SIZE) :
-		if (!is_map_rel(b,b_base)) {
-		    a_tag = MAP_DEF;
-		    goto mixed_types;
-		}
-		aa = (Eterm *)map_val_rel(a,a_base);
-		bb = (Eterm *)map_val_rel(b,b_base);
-
-		i = map_get_size((map_t*)aa);
-		if (i != map_get_size((map_t*)bb)) {
-		    RETURN_NEQ((int)(i - map_get_size((map_t*)bb)));
-		}
-		if (i == 0) {
-		    goto pop_next;
-		}
-		aa += 2;
-		bb += 2;
-		i  += 1; /* increment for tuple-keys */
-		goto term_array;
-	    case (_TAG_HEADER_FLOAT >> _TAG_PRIMARY_SIZE):
-		if (!is_float_rel(b,b_base)) {
-		    a_tag = FLOAT_DEF;
-		    goto mixed_types;
-		} else {
-		    FloatDef af;
-		    FloatDef bf; 
-
-		    GET_DOUBLE_REL(a, af, a_base);
-		    GET_DOUBLE_REL(b, bf, b_base);
-		    ON_CMP_GOTO(float_comp(af.fd, bf.fd));
-		}
-	    case (_TAG_HEADER_POS_BIG >> _TAG_PRIMARY_SIZE):
-	    case (_TAG_HEADER_NEG_BIG >> _TAG_PRIMARY_SIZE):
-		if (!is_big_rel(b,b_base)) {
-		    a_tag = BIG_DEF;
-		    goto mixed_types;
-		}
-		ON_CMP_GOTO(big_comp(rterm2wterm(a,a_base), rterm2wterm(b,b_base)));
-	    case (_TAG_HEADER_EXPORT >> _TAG_PRIMARY_SIZE):
-		if (!is_export_rel(b,b_base)) {
-		    a_tag = EXPORT_DEF;
-		    goto mixed_types;
-		} else {
-		    Export* a_exp = *((Export **) (export_val_rel(a,a_base) + 1));
-		    Export* b_exp = *((Export **) (export_val_rel(b,b_base) + 1));
-
-		    if ((j = cmp_atoms(a_exp->code[0], b_exp->code[0])) != 0) {
-			RETURN_NEQ(j);
-		    }
-		    if ((j = cmp_atoms(a_exp->code[1], b_exp->code[1])) != 0) {
-			RETURN_NEQ(j);
-		    }
-		    ON_CMP_GOTO((Sint) a_exp->code[2] - (Sint) b_exp->code[2]);
-		}
-		break;
-	    case (_TAG_HEADER_FUN >> _TAG_PRIMARY_SIZE):
-		if (!is_fun_rel(b,b_base)) {
-		    a_tag = FUN_DEF;
-		    goto mixed_types;
-		} else {
-		    ErlFunThing* f1 = (ErlFunThing *) fun_val_rel(a,a_base);
-		    ErlFunThing* f2 = (ErlFunThing *) fun_val_rel(b,b_base);
-		    Sint diff;
-
-		    diff = cmpbytes(atom_tab(atom_val(f1->fe->module))->name,
-				    atom_tab(atom_val(f1->fe->module))->len,
-				    atom_tab(atom_val(f2->fe->module))->name,
-				    atom_tab(atom_val(f2->fe->module))->len);
-		    if (diff != 0) {
-			RETURN_NEQ(diff);
-		    }
-		    diff = f1->fe->old_index - f2->fe->old_index;
-		    if (diff != 0) {
-			RETURN_NEQ(diff);
-		    }
-		    diff = f1->fe->old_uniq - f2->fe->old_uniq;
-		    if (diff != 0) {
-			RETURN_NEQ(diff);
-		    }
-		    diff = f1->num_free - f2->num_free;
-		    if (diff != 0) {
-			RETURN_NEQ(diff);
-		    }		
-		    i = f1->num_free;
-		    if (i == 0) goto pop_next;
-		    aa = f1->env;
-		    bb = f2->env;
-		    goto term_array;
-		}
-	    case (_TAG_HEADER_EXTERNAL_PID >> _TAG_PRIMARY_SIZE):
-		if (is_internal_pid(b)) {
-		    bnode = erts_this_node;
-		    bdata = internal_pid_data(b);
-		} else if (is_external_pid_rel(b,b_base)) {
-		    bnode = external_pid_node_rel(b,b_base);
-		    bdata = external_pid_data_rel(b,b_base);
-		} else {
-		    a_tag = EXTERNAL_PID_DEF;
-		    goto mixed_types;
-		}
-		anode = external_pid_node_rel(a,a_base);
-		adata = external_pid_data_rel(a,a_base);
-		goto pid_common;
-	    case (_TAG_HEADER_EXTERNAL_PORT >> _TAG_PRIMARY_SIZE):
-		if (is_internal_port(b)) {
-		    bnode = erts_this_node;
-		    bdata = internal_port_data(b);
-		} else if (is_external_port_rel(b,b_base)) {
-		    bnode = external_port_node_rel(b,b_base);
-		    bdata = external_port_data_rel(b,b_base);
-		} else {
-		    a_tag = EXTERNAL_PORT_DEF;
-		    goto mixed_types;
-		}
-		anode = external_port_node_rel(a,a_base);
-		adata = external_port_data_rel(a,a_base);
-		goto port_common;
-	    case (_TAG_HEADER_REF >> _TAG_PRIMARY_SIZE):
-		/*
-		 * Note! When comparing refs we need to compare ref numbers
-		 * (32-bit words), *not* ref data words.
-		 */
-
-		
-		if (is_internal_ref_rel(b,b_base)) {
-		    RefThing* bthing = ref_thing_ptr_rel(b,b_base);
-		    bnode = erts_this_node;
-		    bnum = internal_thing_ref_numbers(bthing);
-		    blen = internal_thing_ref_no_of_numbers(bthing);
-		} else if(is_external_ref_rel(b,b_base)) {
-		    ExternalThing* bthing = external_thing_ptr_rel(b,b_base);
-		    bnode = bthing->node;
-		    bnum = external_thing_ref_numbers(bthing);
-		    blen = external_thing_ref_no_of_numbers(bthing);
-		} else {
-		    a_tag = REF_DEF;
-		    goto mixed_types;
-		}
-		{
-		    RefThing* athing = ref_thing_ptr_rel(a,a_base);
-		    anode = erts_this_node;
-		    anum = internal_thing_ref_numbers(athing);
-		    alen = internal_thing_ref_no_of_numbers(athing);
-		}
-		
-	    ref_common:
-		CMP_NODES(anode, bnode);
-		
-		ASSERT(alen > 0 && blen > 0);
-		if (alen != blen) {
-		    if (alen > blen) {
-			do {
-			    if (anum[alen - 1] != 0)
-				RETURN_NEQ(1);
-			    alen--;
-			} while (alen > blen);
-		    }
-		    else {
-			do {
-			    if (bnum[blen - 1] != 0)
-				RETURN_NEQ(-1);
-			    blen--;
-			} while (alen < blen);
-		    }
-		}
-		
-		ASSERT(alen == blen);
-		for (i = (Sint) alen - 1; i >= 0; i--)
-		    if (anum[i] != bnum[i])
-			RETURN_NEQ((int32_t) (anum[i] - bnum[i]));
-		goto pop_next;
-	    case (_TAG_HEADER_EXTERNAL_REF >> _TAG_PRIMARY_SIZE):
-		if (is_internal_ref_rel(b,b_base)) {
-		    RefThing* bthing = ref_thing_ptr_rel(b,b_base);
-		    bnode = erts_this_node;
-		    bnum = internal_thing_ref_numbers(bthing);
-		    blen = internal_thing_ref_no_of_numbers(bthing);
-		} else if (is_external_ref_rel(b,b_base)) {
-		    ExternalThing* bthing = external_thing_ptr_rel(b,b_base);
-		    bnode = bthing->node;
-		    bnum = external_thing_ref_numbers(bthing);
-		    blen = external_thing_ref_no_of_numbers(bthing);
-		} else {
-		    a_tag = EXTERNAL_REF_DEF;
-		    goto mixed_types;
-		}
-		{
-		    ExternalThing* athing = external_thing_ptr_rel(a,a_base);
-		    anode = athing->node;
-		    anum = external_thing_ref_numbers(athing);
-		    alen = external_thing_ref_no_of_numbers(athing);
-		}
-		goto ref_common;
-	    default:
-		/* Must be a binary */
-		ASSERT(is_binary_rel(a,a_base));
-		if (!is_binary_rel(b,b_base)) {
-		    a_tag = BINARY_DEF;
-		    goto mixed_types;
-		} else {
-		    Uint a_size = binary_size_rel(a,a_base);
-		    Uint b_size = binary_size_rel(b,b_base);
-		    Uint a_bitsize;
-		    Uint b_bitsize;
-		    Uint a_bitoffs;
-		    Uint b_bitoffs;
-		    Uint min_size;
-		    int cmp;
-		    uint8_t* a_ptr;
-		    uint8_t* b_ptr;
-		    ERTS_GET_BINARY_BYTES_REL(a, a_ptr, a_bitoffs, a_bitsize, a_base);
-		    ERTS_GET_BINARY_BYTES_REL(b, b_ptr, b_bitoffs, b_bitsize, b_base);
-		    if ((a_bitsize | b_bitsize | a_bitoffs | b_bitoffs) == 0) {
-			min_size = (a_size < b_size) ? a_size : b_size;
-			if ((cmp = sys_memcmp(a_ptr, b_ptr, min_size)) != 0) {
-			    RETURN_NEQ(cmp);
-			}
-		    }
-		    else {
-			a_size = (a_size << 3) + a_bitsize;
-			b_size = (b_size << 3) + b_bitsize;
-			min_size = (a_size < b_size) ? a_size : b_size;
-			if ((cmp = erts_cmp_bits(a_ptr,a_bitoffs,
-						 b_ptr,b_bitoffs,min_size)) != 0) {
-			    RETURN_NEQ(cmp);
-			}
-		    }
-		    ON_CMP_GOTO((Sint)(a_size - b_size));
-		}
-	    }
-	}
+  case TAG_PRIMARY_LIST:
+    if (is_not_list(b)) {
+      a_tag = LIST_DEF;
+      goto mixed_types;
     }
 
-    /*
-     * Take care of the case that the tags are different.
-     */
+    aa = list_val_rel(a, a_base);
+    bb = list_val_rel(b, b_base);
 
- mixed_types:
+    while (1) {
+      Eterm atmp = CAR(aa);
+      Eterm btmp = CAR(bb);
 
-    {
-	FloatDef f1, f2;
-	Eterm big;
+      if (!is_same(atmp, a_base, btmp, b_base)) {
+        WSTACK_PUSH2(stack, (UWord) CDR(bb), (UWord) CDR(aa));
+        a = atmp;
+        b = btmp;
+        goto tailrecur_ne;
+      }
+
+      atmp = CDR(aa);
+      btmp = CDR(bb);
+
+      if (is_same(atmp, a_base, btmp, b_base)) {
+        goto pop_next;
+      }
+
+      if (is_not_list(atmp) || is_not_list(btmp)) {
+        a = atmp;
+        b = btmp;
+        goto tailrecur_ne;
+      }
+
+      aa = list_val_rel(atmp, a_base);
+      bb = list_val_rel(btmp, b_base);
+    }
+
+  case TAG_PRIMARY_BOXED: {
+    Eterm ahdr = *boxed_val_rel(a, a_base);
+
+    switch ((ahdr & _TAG_HEADER_MASK) >> _TAG_PRIMARY_SIZE) {
+    case (_TAG_HEADER_ARITYVAL >> _TAG_PRIMARY_SIZE):
+      if (!is_tuple_rel(b, b_base)) {
+        a_tag = TUPLE_DEF;
+        goto mixed_types;
+      }
+
+      aa = tuple_val_rel(a, a_base);
+      bb = tuple_val_rel(b, b_base);
+      /* compare the arities */
+      i = arityval(ahdr); /* get the arity*/
+
+      if (i != arityval(*bb)) {
+        RETURN_NEQ((int)(i - arityval(*bb)));
+      }
+
+      if (i == 0) {
+        goto pop_next;
+      }
+
+      ++aa;
+      ++bb;
+      goto term_array;
+
+    case (_TAG_HEADER_MAP >> _TAG_PRIMARY_SIZE) :
+      if (!is_map_rel(b, b_base)) {
+        a_tag = MAP_DEF;
+        goto mixed_types;
+      }
+
+      aa = (Eterm *)map_val_rel(a, a_base);
+      bb = (Eterm *)map_val_rel(b, b_base);
+
+      i = map_get_size((map_t *)aa);
+
+      if (i != map_get_size((map_t *)bb)) {
+        RETURN_NEQ((int)(i - map_get_size((map_t *)bb)));
+      }
+
+      if (i == 0) {
+        goto pop_next;
+      }
+
+      aa += 2;
+      bb += 2;
+      i  += 1; /* increment for tuple-keys */
+      goto term_array;
+
+    case (_TAG_HEADER_FLOAT >> _TAG_PRIMARY_SIZE):
+      if (!is_float_rel(b, b_base)) {
+        a_tag = FLOAT_DEF;
+        goto mixed_types;
+      } else {
+        FloatDef af;
+        FloatDef bf;
+
+        GET_DOUBLE_REL(a, af, a_base);
+        GET_DOUBLE_REL(b, bf, b_base);
+        ON_CMP_GOTO(float_comp(af.fd, bf.fd));
+      }
+
+    case (_TAG_HEADER_POS_BIG >> _TAG_PRIMARY_SIZE):
+    case (_TAG_HEADER_NEG_BIG >> _TAG_PRIMARY_SIZE):
+      if (!is_big_rel(b, b_base)) {
+        a_tag = BIG_DEF;
+        goto mixed_types;
+      }
+
+      ON_CMP_GOTO(big_comp(rterm2wterm(a, a_base), rterm2wterm(b, b_base)));
+
+    case (_TAG_HEADER_EXPORT >> _TAG_PRIMARY_SIZE):
+      if (!is_export_rel(b, b_base)) {
+        a_tag = EXPORT_DEF;
+        goto mixed_types;
+      } else {
+        Export *a_exp = *((Export **)(export_val_rel(a, a_base) + 1));
+        Export *b_exp = *((Export **)(export_val_rel(b, b_base) + 1));
+
+        if ((j = cmp_atoms(a_exp->code[0], b_exp->code[0])) != 0) {
+          RETURN_NEQ(j);
+        }
+
+        if ((j = cmp_atoms(a_exp->code[1], b_exp->code[1])) != 0) {
+          RETURN_NEQ(j);
+        }
+
+        ON_CMP_GOTO((Sint) a_exp->code[2] - (Sint) b_exp->code[2]);
+      }
+
+      break;
+
+    case (_TAG_HEADER_FUN >> _TAG_PRIMARY_SIZE):
+      if (!is_fun_rel(b, b_base)) {
+        a_tag = FUN_DEF;
+        goto mixed_types;
+      } else {
+        ErlFunThing *f1 = (ErlFunThing *) fun_val_rel(a, a_base);
+        ErlFunThing *f2 = (ErlFunThing *) fun_val_rel(b, b_base);
+        Sint diff;
+
+        diff = cmpbytes(atom_tab(atom_val(f1->fe->module))->name,
+                        atom_tab(atom_val(f1->fe->module))->len,
+                        atom_tab(atom_val(f2->fe->module))->name,
+                        atom_tab(atom_val(f2->fe->module))->len);
+
+        if (diff != 0) {
+          RETURN_NEQ(diff);
+        }
+
+        diff = f1->fe->old_index - f2->fe->old_index;
+
+        if (diff != 0) {
+          RETURN_NEQ(diff);
+        }
+
+        diff = f1->fe->old_uniq - f2->fe->old_uniq;
+
+        if (diff != 0) {
+          RETURN_NEQ(diff);
+        }
+
+        diff = f1->num_free - f2->num_free;
+
+        if (diff != 0) {
+          RETURN_NEQ(diff);
+        }
+
+        i = f1->num_free;
+
+        if (i == 0) {
+          goto pop_next;
+        }
+
+        aa = f1->env;
+        bb = f2->env;
+        goto term_array;
+      }
+
+    case (_TAG_HEADER_EXTERNAL_PID >> _TAG_PRIMARY_SIZE):
+      if (is_internal_pid(b)) {
+        bnode = erts_this_node;
+        bdata = internal_pid_data(b);
+      } else if (is_external_pid_rel(b, b_base)) {
+        bnode = external_pid_node_rel(b, b_base);
+        bdata = external_pid_data_rel(b, b_base);
+      } else {
+        a_tag = EXTERNAL_PID_DEF;
+        goto mixed_types;
+      }
+
+      anode = external_pid_node_rel(a, a_base);
+      adata = external_pid_data_rel(a, a_base);
+      goto pid_common;
+
+    case (_TAG_HEADER_EXTERNAL_PORT >> _TAG_PRIMARY_SIZE):
+      if (is_internal_port(b)) {
+        bnode = erts_this_node;
+        bdata = internal_port_data(b);
+      } else if (is_external_port_rel(b, b_base)) {
+        bnode = external_port_node_rel(b, b_base);
+        bdata = external_port_data_rel(b, b_base);
+      } else {
+        a_tag = EXTERNAL_PORT_DEF;
+        goto mixed_types;
+      }
+
+      anode = external_port_node_rel(a, a_base);
+      adata = external_port_data_rel(a, a_base);
+      goto port_common;
+
+    case (_TAG_HEADER_REF >> _TAG_PRIMARY_SIZE):
+
+      /*
+       * Note! When comparing refs we need to compare ref numbers
+       * (32-bit words), *not* ref data words.
+       */
+
+
+      if (is_internal_ref_rel(b, b_base)) {
+        RefThing *bthing = ref_thing_ptr_rel(b, b_base);
+        bnode = erts_this_node;
+        bnum = internal_thing_ref_numbers(bthing);
+        blen = internal_thing_ref_no_of_numbers(bthing);
+      } else if (is_external_ref_rel(b, b_base)) {
+        ExternalThing *bthing = external_thing_ptr_rel(b, b_base);
+        bnode = bthing->node;
+        bnum = external_thing_ref_numbers(bthing);
+        blen = external_thing_ref_no_of_numbers(bthing);
+      } else {
+        a_tag = REF_DEF;
+        goto mixed_types;
+      }
+
+      {
+        RefThing *athing = ref_thing_ptr_rel(a, a_base);
+        anode = erts_this_node;
+        anum = internal_thing_ref_numbers(athing);
+        alen = internal_thing_ref_no_of_numbers(athing);
+      }
+
+ref_common:
+      CMP_NODES(anode, bnode);
+
+      ASSERT(alen > 0 && blen > 0);
+
+      if (alen != blen) {
+        if (alen > blen) {
+          do {
+            if (anum[alen - 1] != 0) {
+              RETURN_NEQ(1);
+            }
+
+            alen--;
+          } while (alen > blen);
+        } else {
+          do {
+            if (bnum[blen - 1] != 0) {
+              RETURN_NEQ(-1);
+            }
+
+            blen--;
+          } while (alen < blen);
+        }
+      }
+
+      ASSERT(alen == blen);
+
+      for (i = (Sint) alen - 1; i >= 0; i--)
+        if (anum[i] != bnum[i]) {
+          RETURN_NEQ((int32_t)(anum[i] - bnum[i]));
+        }
+
+      goto pop_next;
+
+    case (_TAG_HEADER_EXTERNAL_REF >> _TAG_PRIMARY_SIZE):
+      if (is_internal_ref_rel(b, b_base)) {
+        RefThing *bthing = ref_thing_ptr_rel(b, b_base);
+        bnode = erts_this_node;
+        bnum = internal_thing_ref_numbers(bthing);
+        blen = internal_thing_ref_no_of_numbers(bthing);
+      } else if (is_external_ref_rel(b, b_base)) {
+        ExternalThing *bthing = external_thing_ptr_rel(b, b_base);
+        bnode = bthing->node;
+        bnum = external_thing_ref_numbers(bthing);
+        blen = external_thing_ref_no_of_numbers(bthing);
+      } else {
+        a_tag = EXTERNAL_REF_DEF;
+        goto mixed_types;
+      }
+
+      {
+        ExternalThing *athing = external_thing_ptr_rel(a, a_base);
+        anode = athing->node;
+        anum = external_thing_ref_numbers(athing);
+        alen = external_thing_ref_no_of_numbers(athing);
+      }
+
+      goto ref_common;
+
+    default:
+      /* Must be a binary */
+      ASSERT(is_binary_rel(a, a_base));
+
+      if (!is_binary_rel(b, b_base)) {
+        a_tag = BINARY_DEF;
+        goto mixed_types;
+      } else {
+        Uint a_size = binary_size_rel(a, a_base);
+        Uint b_size = binary_size_rel(b, b_base);
+        Uint a_bitsize;
+        Uint b_bitsize;
+        Uint a_bitoffs;
+        Uint b_bitoffs;
+        Uint min_size;
+        int cmp;
+        uint8_t *a_ptr;
+        uint8_t *b_ptr;
+        ERTS_GET_BINARY_BYTES_REL(a, a_ptr, a_bitoffs, a_bitsize, a_base);
+        ERTS_GET_BINARY_BYTES_REL(b, b_ptr, b_bitoffs, b_bitsize, b_base);
+
+        if ((a_bitsize | b_bitsize | a_bitoffs | b_bitoffs) == 0) {
+          min_size = (a_size < b_size) ? a_size : b_size;
+
+          if ((cmp = sys_memcmp(a_ptr, b_ptr, min_size)) != 0) {
+            RETURN_NEQ(cmp);
+          }
+        } else {
+          a_size = (a_size << 3) + a_bitsize;
+          b_size = (b_size << 3) + b_bitsize;
+          min_size = (a_size < b_size) ? a_size : b_size;
+
+          if ((cmp = erts_cmp_bits(a_ptr, a_bitoffs,
+                                   b_ptr, b_bitoffs, min_size)) != 0) {
+            RETURN_NEQ(cmp);
+          }
+        }
+
+        ON_CMP_GOTO((Sint)(a_size - b_size));
+      }
+    }
+  }
+  }
+
+  /*
+   * Take care of the case that the tags are different.
+   */
+
+mixed_types:
+
+  {
+    FloatDef f1, f2;
+    Eterm big;
 #if HALFWORD_HEAP
-	Wterm aw = is_immed(a) ? a : rterm2wterm(a,a_base);
-	Wterm bw = is_immed(b) ? b : rterm2wterm(b,b_base);
+    Wterm aw = is_immed(a) ? a : rterm2wterm(a, a_base);
+    Wterm bw = is_immed(b) ? b : rterm2wterm(b, b_base);
 #else
-	Eterm aw = a;
-	Eterm bw = b;
+    Eterm aw = a;
+    Eterm bw = b;
 #endif
 #define MAX_LOSSLESS_FLOAT ((double)((1LL << 53) - 2))
 #define MIN_LOSSLESS_FLOAT ((double)(((1LL << 53) - 2)*-1))
 #define BIG_ARITY_FLOAT_MAX (1024 / D_EXP) /* arity of max float as a bignum */
-	Eterm big_buf[BIG_NEED_SIZE(BIG_ARITY_FLOAT_MAX)];
+    Eterm big_buf[BIG_NEED_SIZE(BIG_ARITY_FLOAT_MAX)];
 
-	b_tag = tag_val_def(bw);
+    b_tag = tag_val_def(bw);
 
-	switch(_NUMBER_CODE(a_tag, b_tag)) {
-	case SMALL_BIG:
-	    j = big_sign(bw) ? 1 : -1;
-	    break;
-	case BIG_SMALL:
-	    j = big_sign(aw) ? -1 : 1;
-	    break;
-	case SMALL_FLOAT:
-	    if (exact) goto exact_fall_through;
-	    GET_DOUBLE(bw, f2);
-	    if (f2.fd < MAX_LOSSLESS_FLOAT && f2.fd > MIN_LOSSLESS_FLOAT) {
-		/* Float is within the no loss limit */
-		f1.fd = signed_val(aw);
-		j = float_comp(f1.fd, f2.fd);
-	    }
+    switch (_NUMBER_CODE(a_tag, b_tag)) {
+    case SMALL_BIG:
+      j = big_sign(bw) ? 1 : -1;
+      break;
+
+    case BIG_SMALL:
+      j = big_sign(aw) ? -1 : 1;
+      break;
+
+    case SMALL_FLOAT:
+      if (exact) {
+        goto exact_fall_through;
+      }
+
+      GET_DOUBLE(bw, f2);
+
+      if (f2.fd < MAX_LOSSLESS_FLOAT && f2.fd > MIN_LOSSLESS_FLOAT) {
+        /* Float is within the no loss limit */
+        f1.fd = signed_val(aw);
+        j = float_comp(f1.fd, f2.fd);
+      }
+
 #if ERTS_SIZEOF_ETERM == 8
-	    else if (f2.fd > (double) (MAX_SMALL + 1)) {
-		/* Float is a positive bignum, i.e. bigger */
-		j = -1;
-	    } else if (f2.fd < (double) (MIN_SMALL - 1)) {
-		/* Float is a negative bignum, i.e. smaller */
-		j = 1;
-	    } else {
-		/* Float is a Sint but less precise */
-		j = signed_val(aw) - (Sint) f2.fd;
-	    }
+      else if (f2.fd > (double)(MAX_SMALL + 1)) {
+        /* Float is a positive bignum, i.e. bigger */
+        j = -1;
+      } else if (f2.fd < (double)(MIN_SMALL - 1)) {
+        /* Float is a negative bignum, i.e. smaller */
+        j = 1;
+      } else {
+        /* Float is a Sint but less precise */
+        j = signed_val(aw) - (Sint) f2.fd;
+      }
+
 #else
-	    else {
-		/* If float is positive it is bigger than small */
-		j = (f2.fd > 0.0) ? -1 : 1;
-	    }
+      else {
+        /* If float is positive it is bigger than small */
+        j = (f2.fd > 0.0) ? -1 : 1;
+      }
+
 #endif /* ERTS_SIZEOF_ETERM == 8 */
-	    break;
-        case FLOAT_BIG:
-	    if (exact) goto exact_fall_through;
-	{
-	    Wterm tmp = aw;
-	    aw = bw;
-	    bw = tmp;
-	}/* fall through */
-	case BIG_FLOAT:
-	    if (exact) goto exact_fall_through;
-	    GET_DOUBLE(bw, f2);
-	    if ((f2.fd < (double) (MAX_SMALL + 1))
-		    && (f2.fd > (double) (MIN_SMALL - 1))) {
-		/* Float is a Sint */
-		j = big_sign(aw) ? -1 : 1;
-	    } else if (big_arity(aw) > BIG_ARITY_FLOAT_MAX
-		       || pow(2.0,(big_arity(aw)-1)*D_EXP) > fabs(f2.fd)) {
-		/* If bignum size shows that it is bigger than the abs float */
-		j = big_sign(aw) ? -1 : 1;
-	    } else if (big_arity(aw) < BIG_ARITY_FLOAT_MAX
-		       && (pow(2.0,(big_arity(aw))*D_EXP)-1.0) < fabs(f2.fd)) {
-		/* If bignum size shows that it is smaller than the abs float */
-		j = f2.fd < 0 ? 1 : -1;
-	    } else if (f2.fd < MAX_LOSSLESS_FLOAT && f2.fd > MIN_LOSSLESS_FLOAT) {
-		/* Float is within the no loss limit */
-		if (big_to_double(aw, &f1.fd) < 0) {
-		    j = big_sign(aw) ? -1 : 1;
-		} else {
-		    j = float_comp(f1.fd, f2.fd);
-		}
-	    } else {
-		big = double_to_big(f2.fd, big_buf, sizeof(big_buf)/sizeof(Eterm));
-		j = big_comp(aw, rterm2wterm(big,big_buf));
-	    }
-	    if (_NUMBER_CODE(a_tag, b_tag) == FLOAT_BIG) {
-		j = -j;
-	    }
-	    break;
-	case FLOAT_SMALL:
-	    if (exact) goto exact_fall_through;
-	    GET_DOUBLE(aw, f1);
-	    if (f1.fd < MAX_LOSSLESS_FLOAT && f1.fd > MIN_LOSSLESS_FLOAT) {
-		/* Float is within the no loss limit */
-		f2.fd = signed_val(bw);
-		j = float_comp(f1.fd, f2.fd);
-	    }
+      break;
+
+    case FLOAT_BIG:
+      if (exact) {
+        goto exact_fall_through;
+      }
+
+      {
+        Wterm tmp = aw;
+        aw = bw;
+        bw = tmp;
+      }/* fall through */
+
+    case BIG_FLOAT:
+      if (exact) {
+        goto exact_fall_through;
+      }
+
+      GET_DOUBLE(bw, f2);
+
+      if ((f2.fd < (double)(MAX_SMALL + 1))
+          && (f2.fd > (double)(MIN_SMALL - 1))) {
+        /* Float is a Sint */
+        j = big_sign(aw) ? -1 : 1;
+      } else if (big_arity(aw) > BIG_ARITY_FLOAT_MAX
+                 || pow(2.0, (big_arity(aw) - 1)*D_EXP) > fabs(f2.fd)) {
+        /* If bignum size shows that it is bigger than the abs float */
+        j = big_sign(aw) ? -1 : 1;
+      } else if (big_arity(aw) < BIG_ARITY_FLOAT_MAX
+                 && (pow(2.0, (big_arity(aw))*D_EXP) - 1.0) < fabs(f2.fd)) {
+        /* If bignum size shows that it is smaller than the abs float */
+        j = f2.fd < 0 ? 1 : -1;
+      } else if (f2.fd < MAX_LOSSLESS_FLOAT && f2.fd > MIN_LOSSLESS_FLOAT) {
+        /* Float is within the no loss limit */
+        if (big_to_double(aw, &f1.fd) < 0) {
+          j = big_sign(aw) ? -1 : 1;
+        } else {
+          j = float_comp(f1.fd, f2.fd);
+        }
+      } else {
+        big = double_to_big(f2.fd, big_buf, sizeof(big_buf) / sizeof(Eterm));
+        j = big_comp(aw, rterm2wterm(big, big_buf));
+      }
+
+      if (_NUMBER_CODE(a_tag, b_tag) == FLOAT_BIG) {
+        j = -j;
+      }
+
+      break;
+
+    case FLOAT_SMALL:
+      if (exact) {
+        goto exact_fall_through;
+      }
+
+      GET_DOUBLE(aw, f1);
+
+      if (f1.fd < MAX_LOSSLESS_FLOAT && f1.fd > MIN_LOSSLESS_FLOAT) {
+        /* Float is within the no loss limit */
+        f2.fd = signed_val(bw);
+        j = float_comp(f1.fd, f2.fd);
+      }
+
 #if ERTS_SIZEOF_ETERM == 8
-	    else if (f1.fd > (double) (MAX_SMALL + 1)) {
-		/* Float is a positive bignum, i.e. bigger */
-		j = 1;
-	    } else if (f1.fd < (double) (MIN_SMALL - 1)) {
-		/* Float is a negative bignum, i.e. smaller */
-		j = -1;
-	    } else {
-		/* Float is a Sint but less precise it */
-		j = (Sint) f1.fd - signed_val(bw);
-	    }
+      else if (f1.fd > (double)(MAX_SMALL + 1)) {
+        /* Float is a positive bignum, i.e. bigger */
+        j = 1;
+      } else if (f1.fd < (double)(MIN_SMALL - 1)) {
+        /* Float is a negative bignum, i.e. smaller */
+        j = -1;
+      } else {
+        /* Float is a Sint but less precise it */
+        j = (Sint) f1.fd - signed_val(bw);
+      }
+
 #else
-	    else {
-		/* If float is positive it is bigger than small */
-		j = (f1.fd > 0.0) ? 1 : -1;
-	    }
+      else {
+        /* If float is positive it is bigger than small */
+        j = (f1.fd > 0.0) ? 1 : -1;
+      }
+
 #endif /* ERTS_SIZEOF_ETERM == 8 */
-	    break;
+      break;
 exact_fall_through:
-	default:
-	    j = b_tag - a_tag;
-	}
+
+    default:
+      j = b_tag - a_tag;
     }
-    if (j == 0) {
-	goto pop_next; 
-    } else {
-	goto not_equal;
-    }
+  }
+
+  if (j == 0) {
+    goto pop_next;
+  } else {
+    goto not_equal;
+  }
 
 term_array: /* arrays in 'aa' and 'bb', length in 'i' */
-    ASSERT(i>0);
-    while (--i) {
-	a = *aa++;
-	b = *bb++;
-	if (!is_same(a,a_base, b,b_base)) {
-	    if (is_atom(a) && is_atom(b)) {
-		if ((j = cmp_atoms(a, b)) != 0) {
-		    goto not_equal;
-		}
-	    } else if (is_both_small(a, b)) {
-		if ((j = signed_val(a)-signed_val(b)) != 0) {
-		    goto not_equal;
-		}
-	    } else {
-		/* (ab)Use TAG_PRIMARY_HEADER to recognize a term_array */
-		WSTACK_PUSH3(stack, i, (UWord)bb, (UWord)aa | TAG_PRIMARY_HEADER);
-		goto tailrecur_ne;
-	    }
-	}
+  ASSERT(i > 0);
+
+  while (--i) {
+    a = *aa++;
+    b = *bb++;
+
+    if (!is_same(a, a_base, b, b_base)) {
+      if (is_atom(a) && is_atom(b)) {
+        if ((j = cmp_atoms(a, b)) != 0) {
+          goto not_equal;
+        }
+      } else if (is_both_small(a, b)) {
+        if ((j = signed_val(a) - signed_val(b)) != 0) {
+          goto not_equal;
+        }
+      } else {
+        /* (ab)Use TAG_PRIMARY_HEADER to recognize a term_array */
+        WSTACK_PUSH3(stack, i, (UWord)bb, (UWord)aa | TAG_PRIMARY_HEADER);
+        goto tailrecur_ne;
+      }
     }
-    a = *aa;
-    b = *bb;
-    goto tailrecur;    
-   
+  }
+
+  a = *aa;
+  b = *bb;
+  goto tailrecur;
+
 pop_next:
-    if (!WSTACK_ISEMPTY(stack)) {
-	UWord something = WSTACK_POP(stack);
-	if (primary_tag((Eterm) something) == TAG_PRIMARY_HEADER) { /* a term_array */
-	    aa = (Eterm*) something;
-	    bb = (Eterm*) WSTACK_POP(stack);
-	    i = WSTACK_POP(stack);
-	    goto term_array;
-	}
-	a = (Eterm) something;
-	b = (Eterm) WSTACK_POP(stack);
-	goto tailrecur;
+
+  if (!WSTACK_ISEMPTY(stack)) {
+    UWord something = WSTACK_POP(stack);
+
+    if (primary_tag((Eterm) something) == TAG_PRIMARY_HEADER) { /* a term_array */
+      aa = (Eterm *) something;
+      bb = (Eterm *) WSTACK_POP(stack);
+      i = WSTACK_POP(stack);
+      goto term_array;
     }
 
-    DESTROY_WSTACK(stack);
-    return 0;
+    a = (Eterm) something;
+    b = (Eterm) WSTACK_POP(stack);
+    goto tailrecur;
+  }
+
+  DESTROY_WSTACK(stack);
+  return 0;
 
 not_equal:
-    DESTROY_WSTACK(stack);
-    return j;
+  DESTROY_WSTACK(stack);
+  return j;
 
 #undef CMP_NODES
 }
 
 
 Eterm
-store_external_or_ref_(Uint **hpp, ErlOffHeap* oh, Eterm ns)
+store_external_or_ref_(Uint **hpp, ErlOffHeap *oh, Eterm ns)
 {
-    Uint i;
-    Uint size;
-    Uint *from_hp;
-    Uint *to_hp = *hpp;
+  Uint i;
+  Uint size;
+  Uint *from_hp;
+  Uint *to_hp = *hpp;
 
-    ASSERT(is_external(ns) || is_internal_ref(ns));
+  ASSERT(is_external(ns) || is_internal_ref(ns));
 
-    if(is_external(ns)) {
-	from_hp = external_val(ns);
-	size = thing_arityval(*from_hp) + 1;
-	*hpp += size;
-
-	for(i = 0; i < size; i++)
-	    to_hp[i] = from_hp[i];
-
-	erts_refc_inc(&((ExternalThing *) to_hp)->node->refc, 2);
-
-	((struct erl_off_heap_header*) to_hp)->next = oh->first;
-	oh->first = (struct erl_off_heap_header*) to_hp;
-
-	return make_external(to_hp);
-    }
-
-    /* Internal ref */
-    from_hp = internal_ref_val(ns);
-
+  if (is_external(ns)) {
+    from_hp = external_val(ns);
     size = thing_arityval(*from_hp) + 1;
-
     *hpp += size;
 
-    for(i = 0; i < size; i++)
-	to_hp[i] = from_hp[i];
+    for (i = 0; i < size; i++) {
+      to_hp[i] = from_hp[i];
+    }
 
-    return make_internal_ref(to_hp);
+    erts_refc_inc(&((ExternalThing *) to_hp)->node->refc, 2);
+
+    ((struct erl_off_heap_header *) to_hp)->next = oh->first;
+    oh->first = (struct erl_off_heap_header *) to_hp;
+
+    return make_external(to_hp);
+  }
+
+  /* Internal ref */
+  from_hp = internal_ref_val(ns);
+
+  size = thing_arityval(*from_hp) + 1;
+
+  *hpp += size;
+
+  for (i = 0; i < size; i++) {
+    to_hp[i] = from_hp[i];
+  }
+
+  return make_internal_ref(to_hp);
 }
 
 Eterm
 store_external_or_ref_in_proc_(Process *proc, Eterm ns)
 {
-    Uint sz;
-    Uint *hp;
+  Uint sz;
+  Uint *hp;
 
-    ASSERT(is_external(ns) || is_internal_ref(ns));
+  ASSERT(is_external(ns) || is_internal_ref(ns));
 
-    sz = NC_HEAP_SIZE(ns);
-    ASSERT(sz > 0);
-    hp = HAlloc(proc, sz);
-    return store_external_or_ref_(&hp, &MSO(proc), ns);
+  sz = NC_HEAP_SIZE(ns);
+  ASSERT(sz > 0);
+  hp = HAlloc(proc, sz);
+  return store_external_or_ref_(&hp, &MSO(proc), ns);
 }
 
-void bin_write(int to, void *to_arg, uint8_t* buf, size_t sz)
+void bin_write(int to, void *to_arg, uint8_t *buf, size_t sz)
 {
-    size_t i;
+  size_t i;
 
-    for (i=0;i<sz;i++) {
-	if (IS_DIGIT(buf[i]))
-	    erts_print(to, to_arg, "%d,", buf[i]);
-	else if (IS_PRINT(buf[i])) {
-	    erts_print(to, to_arg, "%c,", buf[i]);
-	}
-	else
-	    erts_print(to, to_arg, "%d,", buf[i]);
+  for (i = 0; i < sz; i++) {
+    if (IS_DIGIT(buf[i])) {
+      erts_print(to, to_arg, "%d,", buf[i]);
+    } else if (IS_PRINT(buf[i])) {
+      erts_print(to, to_arg, "%c,", buf[i]);
+    } else {
+      erts_print(to, to_arg, "%d,", buf[i]);
     }
-    erts_putc(to, to_arg, '\n');
+  }
+
+  erts_putc(to, to_arg, '\n');
 }
 
-/* Fill buf with the contents of bytelist list 
+/* Fill buf with the contents of bytelist list
    return number of chars in list or -1 for error */
 
 int
 intlist_to_buf(Eterm list, char *buf, int len)
 {
-    Eterm* listptr;
-    int sz = 0;
+  Eterm *listptr;
+  int sz = 0;
 
-    if (is_nil(list)) 
-	return 0;
-    if (is_not_list(list))
-	return -1;
-    listptr = list_val(list);
+  if (is_nil(list)) {
+    return 0;
+  }
 
-    while (sz < len) {
-	if (!is_byte(*listptr)) 
-	    return -1;
-	buf[sz++] = unsigned_val(*listptr);
-	if (is_nil(*(listptr + 1)))
-	    return(sz);
-	if (is_not_list(*(listptr + 1))) 
-	    return -1;
-	listptr = list_val(*(listptr + 1));
+  if (is_not_list(list)) {
+    return -1;
+  }
+
+  listptr = list_val(list);
+
+  while (sz < len) {
+    if (!is_byte(*listptr)) {
+      return -1;
     }
-    return -1;			/* not enough space */
+
+    buf[sz++] = unsigned_val(*listptr);
+
+    if (is_nil(*(listptr + 1))) {
+      return (sz);
+    }
+
+    if (is_not_list(*(listptr + 1))) {
+      return -1;
+    }
+
+    listptr = list_val(*(listptr + 1));
+  }
+
+  return -1;      /* not enough space */
 }
 
 /*
 ** Convert an integer to a byte list
 ** return pointer to converted stuff (need not to be at start of buf!)
 */
-char* Sint_to_buf(Sint n, struct Sint_buf *buf)
+char *Sint_to_buf(Sint n, struct Sint_buf *buf)
 {
-    char* p = &buf->s[sizeof(buf->s)-1];
-    int sign = 0;
+  char *p = &buf->s[sizeof(buf->s) - 1];
+  int sign = 0;
 
-    *p-- = '\0'; /* null terminate */
-    if (n == 0)
-	*p-- = '0';
-    else if (n < 0) {
-	sign = 1;
-	n = -n;
-    }
+  *p-- = '\0'; /* null terminate */
 
-    while (n != 0) {
-	*p-- = (n % 10) + '0';
-	n /= 10;
-    }
-    if (sign)
-	*p-- = '-';
-    return p+1;
+  if (n == 0) {
+    *p-- = '0';
+  } else if (n < 0) {
+    sign = 1;
+    n = -n;
+  }
+
+  while (n != 0) {
+    *p-- = (n % 10) + '0';
+    n /= 10;
+  }
+
+  if (sign) {
+    *p-- = '-';
+  }
+
+  return p + 1;
 }
 
 /* Build a list of integers in some safe memory area
@@ -3150,19 +3638,19 @@ char* Sint_to_buf(Sint n, struct Sint_buf *buf)
 */
 
 Eterm
-buf_to_intlist(Eterm** hpp, const char *buf, size_t len, Eterm tail)
+buf_to_intlist(Eterm **hpp, const char *buf, size_t len, Eterm tail)
 {
-    Eterm* hp = *hpp;
-    size_t i = len;
+  Eterm *hp = *hpp;
+  size_t i = len;
 
-    while(i != 0) {
-	--i;
-	tail = CONS(hp, make_small((Uint)(uint8_t)buf[i]), tail);
-	hp += 2;
-    }
+  while (i != 0) {
+    --i;
+    tail = CONS(hp, make_small((Uint)(uint8_t)buf[i]), tail);
+    hp += 2;
+  }
 
-    *hpp = hp;
-    return tail;
+  *hpp = hp;
+  return tail;
 }
 
 /*
@@ -3184,25 +3672,25 @@ buf_to_intlist(Eterm** hpp, const char *buf, size_t len, Eterm tail)
 **        |   Binary
 **        |   [ iohead | iotail]
 **        ;
-** 
+**
 ** Return remaining bytes in buffer on success
 **        ERTS_IOLIST_TO_BUF_OVERFLOW on overflow
 **        ERTS_IOLIST_TO_BUF_TYPE_ERROR on type error (including that result would not be a whole number of bytes)
 **
-** Note! 
+** Note!
 ** Do not detect indata errors in this_ fiunction that are not detected by erts_iolist_size!
 **
 ** A caller should be able to rely on a successful return from erts_iolist_to_buf
-** if erts_iolist_size is previously successfully called and erts_iolist_to_buf 
+** if erts_iolist_size is previously successfully called and erts_iolist_to_buf
 ** is called with a buffer at least as large as the value given by erts_iolist_size.
-** 
+**
 */
 
 typedef enum {
-    ERTS_IL2B_BCOPY_OK,
-    ERTS_IL2B_BCOPY_YIELD,
-    ERTS_IL2B_BCOPY_OVERFLOW,
-    ERTS_IL2B_BCOPY_TYPE_ERROR
+  ERTS_IL2B_BCOPY_OK,
+  ERTS_IL2B_BCOPY_YIELD,
+  ERTS_IL2B_BCOPY_OVERFLOW,
+  ERTS_IL2B_BCOPY_TYPE_ERROR
 } ErtsIL2BBCopyRes;
 
 static ErtsIL2BBCopyRes
@@ -3210,211 +3698,233 @@ iolist_to_buf_bcopy(ErtsIOList2BufState *state, Eterm obj, int *yield_countp);
 
 static ERTS_INLINE ErlDrvSizeT
 iolist_to_buf(const int yield_support,
-	      ErtsIOList2BufState *state,
-	      Eterm obj,
-	      char* buf,
-	      ErlDrvSizeT alloced_len)
+              ErtsIOList2BufState *state,
+              Eterm obj,
+              char *buf,
+              ErlDrvSizeT alloced_len)
 {
 #undef IOLIST_TO_BUF_BCOPY
-#define IOLIST_TO_BUF_BCOPY(CONSP)					\
-do {									\
-    size_t size = binary_size(obj);					\
-    if (size > 0) {							\
-	Uint bitsize;							\
-	uint8_t* bptr;							\
-	Uint bitoffs;							\
-	Uint num_bits;							\
-	if (yield_support) {						\
-	    size_t max_size = ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT;	\
-	    if (yield_count > 0)					\
-		max_size *= yield_count+1;				\
-	    if (size > max_size) {					\
-		state->objp = CONSP;					\
-		goto L_bcopy_yield;					\
-	    }								\
-	    if (size >= ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT) {	\
-		int cost = (int) size;					\
-		cost /= ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT;	\
-		yield_count -= cost;					\
-	    }								\
-	}								\
-	if (len < size)							\
-	    goto L_overflow;						\
-	ERTS_GET_BINARY_BYTES(obj, bptr, bitoffs, bitsize);		\
-	if (bitsize != 0)						\
-	    goto L_type_error;						\
-	num_bits = 8*size;						\
-	copy_binary_to_buffer(buf, 0, bptr, bitoffs, num_bits);		\
-	buf += size;							\
-	len -= size;							\
-    }									\
+#define IOLIST_TO_BUF_BCOPY(CONSP)          \
+do {                  \
+    size_t size = binary_size(obj);         \
+    if (size > 0) {             \
+  Uint bitsize;             \
+  uint8_t* bptr;              \
+  Uint bitoffs;             \
+  Uint num_bits;              \
+  if (yield_support) {            \
+      size_t max_size = ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT; \
+      if (yield_count > 0)          \
+    max_size *= yield_count+1;        \
+      if (size > max_size) {          \
+    state->objp = CONSP;          \
+    goto L_bcopy_yield;         \
+      }               \
+      if (size >= ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT) { \
+    int cost = (int) size;          \
+    cost /= ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT; \
+    yield_count -= cost;          \
+      }               \
+  }               \
+  if (len < size)             \
+      goto L_overflow;            \
+  ERTS_GET_BINARY_BYTES(obj, bptr, bitoffs, bitsize);   \
+  if (bitsize != 0)           \
+      goto L_type_error;            \
+  num_bits = 8*size;            \
+  copy_binary_to_buffer(buf, 0, bptr, bitoffs, num_bits);   \
+  buf += size;              \
+  len -= size;              \
+    }                 \
 } while (0)
 
-    ErlDrvSizeT res, len;
-    Eterm* objp = nullptr;
-    int init_yield_count;
-    int yield_count;
-    DECLARE_ESTACK(s);
+  ErlDrvSizeT res, len;
+  Eterm *objp = nullptr;
+  int init_yield_count;
+  int yield_count;
+  DECLARE_ESTACK(s);
 
-    len = (ErlDrvSizeT) alloced_len;
+  len = (ErlDrvSizeT) alloced_len;
 
-    if (!yield_support) {
-	yield_count = init_yield_count = 0; /* Shut up faulty warning... >:-( */
-	goto L_again;
-    }
-    else {
+  if (!yield_support) {
+    yield_count = init_yield_count = 0; /* Shut up faulty warning... >:-( */
+    goto L_again;
+  } else {
 
-	if (state->iolist.reds_left <= 0)
-	    return ERTS_IOLIST_TO_BUF_YIELD;
-
-	ESTACK_CHANGE_ALLOCATOR(s, ERTS_ALC_T_SAVED_ESTACK);
-	init_yield_count = (ERTS_IOLIST_TO_BUF_YIELD_COUNT_PER_RED
-			   * state->iolist.reds_left);
-	yield_count = init_yield_count;
-
-	if (!state->iolist.estack.start)
-	    goto L_again;
-	else {
-	    int chk_stack;
-	    /* Restart; restore state... */
-	    ESTACK_RESTORE(s, &state->iolist.estack);
-
-	    if (!state->bcopy.bptr)
-		chk_stack = 0;
-	    else {
-		chk_stack = 1;
-		switch (iolist_to_buf_bcopy(state, THE_NON_VALUE, &yield_count)) {
-		case ERTS_IL2B_BCOPY_OK:
-		    break;
-		case ERTS_IL2B_BCOPY_YIELD:
-		    BUMP_ALL_REDS(state->iolist.c_p);
-		    state->iolist.reds_left = 0;
-		    ESTACK_SAVE(s, &state->iolist.estack);
-		    return ERTS_IOLIST_TO_BUF_YIELD;
-		case ERTS_IL2B_BCOPY_OVERFLOW:
-		    goto L_overflow;
-		case ERTS_IL2B_BCOPY_TYPE_ERROR:
-		    goto L_type_error;
-		}
-	    }
-
-	    obj = state->iolist.obj;
-	    buf = state->buf;
-	    len = state->len;
-	    objp = state->objp;
-            state->objp = nullptr;
-	    if (objp)
-		goto L_tail;
-	    if (!chk_stack)
-		goto L_again;
-	    /* check stack */
-	}
+    if (state->iolist.reds_left <= 0) {
+      return ERTS_IOLIST_TO_BUF_YIELD;
     }
 
-    while (!ESTACK_ISEMPTY(s)) {
-	obj = ESTACK_POP(s);
-    L_again:
-	if (is_list(obj)) {
-	    while (1) { /* Tail loop */
-		while (1) { /* Head loop */
-		    if (yield_support && --yield_count <= 0)
-			goto L_yield;
-		    objp = list_val(obj);
-		    obj = CAR(objp);
-		    if (is_byte(obj)) {
-			if (len == 0) {
-			    goto L_overflow;
-			}
-			*buf++ = unsigned_val(obj);
-			len--;
-		    } else if (is_binary(obj)) {
-			IOLIST_TO_BUF_BCOPY(objp);
-		    } else if (is_list(obj)) {
-			ESTACK_PUSH(s, CDR(objp));
-			continue; /* Head loop */
-		    } else if (is_not_nil(obj)) {
-			goto L_type_error;
-		    }
-		    break;
-		}
+    ESTACK_CHANGE_ALLOCATOR(s, ERTS_ALC_T_SAVED_ESTACK);
+    init_yield_count = (ERTS_IOLIST_TO_BUF_YIELD_COUNT_PER_RED
+                        * state->iolist.reds_left);
+    yield_count = init_yield_count;
 
-	    L_tail:
+    if (!state->iolist.estack.start) {
+      goto L_again;
+    } else {
+      int chk_stack;
+      /* Restart; restore state... */
+      ESTACK_RESTORE(s, &state->iolist.estack);
 
-		obj = CDR(objp);
+      if (!state->bcopy.bptr) {
+        chk_stack = 0;
+      } else {
+        chk_stack = 1;
 
-		if (is_list(obj)) {
-		    continue; /* Tail loop */
-		} else if (is_binary(obj)) {
-                    IOLIST_TO_BUF_BCOPY(nullptr);
-		} else if (is_not_nil(obj)) {
-		    goto L_type_error;
-		}
-		break;
-	    }
-	} else if (is_binary(obj)) {
-            IOLIST_TO_BUF_BCOPY(nullptr);
-	} else if (is_not_nil(obj)) {
-	    goto L_type_error;
-	} else if (yield_support && --yield_count <= 0)
-	    goto L_yield;
+        switch (iolist_to_buf_bcopy(state, THE_NON_VALUE, &yield_count)) {
+        case ERTS_IL2B_BCOPY_OK:
+          break;
+
+        case ERTS_IL2B_BCOPY_YIELD:
+          BUMP_ALL_REDS(state->iolist.c_p);
+          state->iolist.reds_left = 0;
+          ESTACK_SAVE(s, &state->iolist.estack);
+          return ERTS_IOLIST_TO_BUF_YIELD;
+
+        case ERTS_IL2B_BCOPY_OVERFLOW:
+          goto L_overflow;
+
+        case ERTS_IL2B_BCOPY_TYPE_ERROR:
+          goto L_type_error;
+        }
+      }
+
+      obj = state->iolist.obj;
+      buf = state->buf;
+      len = state->len;
+      objp = state->objp;
+      state->objp = nullptr;
+
+      if (objp) {
+        goto L_tail;
+      }
+
+      if (!chk_stack) {
+        goto L_again;
+      }
+
+      /* check stack */
     }
-      
-    res = len;
+  }
 
- L_return: 
+  while (!ESTACK_ISEMPTY(s)) {
+    obj = ESTACK_POP(s);
+L_again:
 
-    DESTROY_ESTACK(s);
+    if (is_list(obj)) {
+      while (1) { /* Tail loop */
+        while (1) { /* Head loop */
+          if (yield_support && --yield_count <= 0) {
+            goto L_yield;
+          }
 
-    if (yield_support) {
-	int reds;
-	CLEAR_SAVED_ESTACK(&state->iolist.estack);
-	reds = ((init_yield_count - yield_count - 1)
-		/ ERTS_IOLIST_TO_BUF_YIELD_COUNT_PER_RED) + 1;
-	BUMP_REDS(state->iolist.c_p, reds);
-	state->iolist.reds_left -= reds;
-	if (state->iolist.reds_left < 0)
-	    state->iolist.reds_left = 0;
+          objp = list_val(obj);
+          obj = CAR(objp);
+
+          if (is_byte(obj)) {
+            if (len == 0) {
+              goto L_overflow;
+            }
+
+            *buf++ = unsigned_val(obj);
+            len--;
+          } else if (is_binary(obj)) {
+            IOLIST_TO_BUF_BCOPY(objp);
+          } else if (is_list(obj)) {
+            ESTACK_PUSH(s, CDR(objp));
+            continue; /* Head loop */
+          } else if (is_not_nil(obj)) {
+            goto L_type_error;
+          }
+
+          break;
+        }
+
+L_tail:
+
+        obj = CDR(objp);
+
+        if (is_list(obj)) {
+          continue; /* Tail loop */
+        } else if (is_binary(obj)) {
+          IOLIST_TO_BUF_BCOPY(nullptr);
+        } else if (is_not_nil(obj)) {
+          goto L_type_error;
+        }
+
+        break;
+      }
+    } else if (is_binary(obj)) {
+      IOLIST_TO_BUF_BCOPY(nullptr);
+    } else if (is_not_nil(obj)) {
+      goto L_type_error;
+    } else if (yield_support && --yield_count <= 0) {
+      goto L_yield;
     }
+  }
 
+  res = len;
 
-    return res;
+L_return:
 
- L_type_error:
-    res = ERTS_IOLIST_TO_BUF_TYPE_ERROR;
-    goto L_return;
+  DESTROY_ESTACK(s);
 
- L_overflow:
-    res = ERTS_IOLIST_TO_BUF_OVERFLOW;
-    goto L_return;
+  if (yield_support) {
+    int reds;
+    CLEAR_SAVED_ESTACK(&state->iolist.estack);
+    reds = ((init_yield_count - yield_count - 1)
+            / ERTS_IOLIST_TO_BUF_YIELD_COUNT_PER_RED) + 1;
+    BUMP_REDS(state->iolist.c_p, reds);
+    state->iolist.reds_left -= reds;
 
- L_bcopy_yield:
-
-    state->buf = buf;
-    state->len = len;
-
-    switch (iolist_to_buf_bcopy(state, obj, &yield_count)) {
-    case ERTS_IL2B_BCOPY_OK:
-	ERTS_INTERNAL_ERROR("Missing yield");
-    case ERTS_IL2B_BCOPY_YIELD:
-	BUMP_ALL_REDS(state->iolist.c_p);
-	state->iolist.reds_left = 0;
-	ESTACK_SAVE(s, &state->iolist.estack);
-	return ERTS_IOLIST_TO_BUF_YIELD;
-    case ERTS_IL2B_BCOPY_OVERFLOW:
-	goto L_overflow;
-    case ERTS_IL2B_BCOPY_TYPE_ERROR:
-	goto L_type_error;
+    if (state->iolist.reds_left < 0) {
+      state->iolist.reds_left = 0;
     }
+  }
 
- L_yield:
 
+  return res;
+
+L_type_error:
+  res = ERTS_IOLIST_TO_BUF_TYPE_ERROR;
+  goto L_return;
+
+L_overflow:
+  res = ERTS_IOLIST_TO_BUF_OVERFLOW;
+  goto L_return;
+
+L_bcopy_yield:
+
+  state->buf = buf;
+  state->len = len;
+
+  switch (iolist_to_buf_bcopy(state, obj, &yield_count)) {
+  case ERTS_IL2B_BCOPY_OK:
+    ERTS_INTERNAL_ERROR("Missing yield");
+
+  case ERTS_IL2B_BCOPY_YIELD:
     BUMP_ALL_REDS(state->iolist.c_p);
     state->iolist.reds_left = 0;
-    state->iolist.obj = obj;
-    state->buf = buf;
-    state->len = len;
     ESTACK_SAVE(s, &state->iolist.estack);
     return ERTS_IOLIST_TO_BUF_YIELD;
+
+  case ERTS_IL2B_BCOPY_OVERFLOW:
+    goto L_overflow;
+
+  case ERTS_IL2B_BCOPY_TYPE_ERROR:
+    goto L_type_error;
+  }
+
+L_yield:
+
+  BUMP_ALL_REDS(state->iolist.c_p);
+  state->iolist.reds_left = 0;
+  state->iolist.obj = obj;
+  state->buf = buf;
+  state->len = len;
+  ESTACK_SAVE(s, &state->iolist.estack);
+  return ERTS_IOLIST_TO_BUF_YIELD;
 
 #undef IOLIST_TO_BUF_BCOPY
 }
@@ -3422,79 +3932,85 @@ do {									\
 static ErtsIL2BBCopyRes
 iolist_to_buf_bcopy(ErtsIOList2BufState *state, Eterm obj, int *yield_countp)
 {
-    ErtsIL2BBCopyRes res;
-    char *buf = state->buf;
-    ErlDrvSizeT len = state->len;
-    uint8_t* bptr;
-    size_t size;
-    size_t max_size;
-    Uint bitoffs;
-    Uint num_bits;
-    int yield_count = *yield_countp;
+  ErtsIL2BBCopyRes res;
+  char *buf = state->buf;
+  ErlDrvSizeT len = state->len;
+  uint8_t *bptr;
+  size_t size;
+  size_t max_size;
+  Uint bitoffs;
+  Uint num_bits;
+  int yield_count = *yield_countp;
 
-    if (state->bcopy.bptr) {
-	bptr = state->bcopy.bptr;
-	size = state->bcopy.size;
-	bitoffs = state->bcopy.bitoffs;
-        state->bcopy.bptr = nullptr;
-    }
-    else {
-	Uint bitsize;
+  if (state->bcopy.bptr) {
+    bptr = state->bcopy.bptr;
+    size = state->bcopy.size;
+    bitoffs = state->bcopy.bitoffs;
+    state->bcopy.bptr = nullptr;
+  } else {
+    Uint bitsize;
 
-	ASSERT(is_binary(obj));
+    ASSERT(is_binary(obj));
 
-	size = binary_size(obj);
-	if (size <= 0)
-	    return ERTS_IL2B_BCOPY_OK;
+    size = binary_size(obj);
 
-	if (len < size)
-	    return ERTS_IL2B_BCOPY_OVERFLOW;
-
-	ERTS_GET_BINARY_BYTES(obj, bptr, bitoffs, bitsize);
-	if (bitsize != 0)
-	    return ERTS_IL2B_BCOPY_TYPE_ERROR;
+    if (size <= 0) {
+      return ERTS_IL2B_BCOPY_OK;
     }
 
-    ASSERT(size > 0);
-    max_size = (size_t) ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT;
-    if (yield_count > 0)
-	max_size *= (size_t) (yield_count+1);
-
-    if (size <= max_size) {
-	if (size >= ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT) {
-	    int cost = (int) size;
-	    cost /= ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT;
-	    yield_count -= cost;
-	}
-	res = ERTS_IL2B_BCOPY_OK;
-    }
-    else {
-	ASSERT(0 < max_size && max_size < size);
-	yield_count = 0;
-	state->bcopy.bptr = bptr + max_size;
-	state->bcopy.bitoffs = bitoffs;
-	state->bcopy.size = size - max_size;
-	size = max_size;
-	res = ERTS_IL2B_BCOPY_YIELD;
+    if (len < size) {
+      return ERTS_IL2B_BCOPY_OVERFLOW;
     }
 
-    num_bits = 8*size;
-    copy_binary_to_buffer(buf, 0, bptr, bitoffs, num_bits);
-    state->buf += size;
-    state->len -= size;
-    *yield_countp = yield_count;
+    ERTS_GET_BINARY_BYTES(obj, bptr, bitoffs, bitsize);
 
-    return res;
+    if (bitsize != 0) {
+      return ERTS_IL2B_BCOPY_TYPE_ERROR;
+    }
+  }
+
+  ASSERT(size > 0);
+  max_size = (size_t) ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT;
+
+  if (yield_count > 0) {
+    max_size *= (size_t)(yield_count + 1);
+  }
+
+  if (size <= max_size) {
+    if (size >= ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT) {
+      int cost = (int) size;
+      cost /= ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT;
+      yield_count -= cost;
+    }
+
+    res = ERTS_IL2B_BCOPY_OK;
+  } else {
+    ASSERT(0 < max_size && max_size < size);
+    yield_count = 0;
+    state->bcopy.bptr = bptr + max_size;
+    state->bcopy.bitoffs = bitoffs;
+    state->bcopy.size = size - max_size;
+    size = max_size;
+    res = ERTS_IL2B_BCOPY_YIELD;
+  }
+
+  num_bits = 8 * size;
+  copy_binary_to_buffer(buf, 0, bptr, bitoffs, num_bits);
+  state->buf += size;
+  state->len -= size;
+  *yield_countp = yield_count;
+
+  return res;
 }
 
 ErlDrvSizeT erts_iolist_to_buf_yielding(ErtsIOList2BufState *state)
 {
-    return iolist_to_buf(1, state, state->iolist.obj, state->buf, state->len);
+  return iolist_to_buf(1, state, state->iolist.obj, state->buf, state->len);
 }
 
-ErlDrvSizeT erts_iolist_to_buf(Eterm obj, char* buf, ErlDrvSizeT alloced_len)
+ErlDrvSizeT erts_iolist_to_buf(Eterm obj, char *buf, ErlDrvSizeT alloced_len)
 {
-    return iolist_to_buf(0, nullptr, obj, buf, alloced_len);
+  return iolist_to_buf(0, nullptr, obj, buf, alloced_len);
 }
 
 /*
@@ -3507,160 +4023,180 @@ ErlDrvSizeT erts_iolist_to_buf(Eterm obj, char* buf, ErlDrvSizeT alloced_len)
  */
 
 static ERTS_INLINE int
-iolist_size(const int yield_support, ErtsIOListState *state, Eterm obj, ErlDrvSizeT* sizep)
+iolist_size(const int yield_support, ErtsIOListState *state, Eterm obj, ErlDrvSizeT *sizep)
 {
-    int res, init_yield_count, yield_count;
-    Eterm* objp;
-    Uint size = (Uint) *sizep; /* Intentionally Uint due to halfword heap */
-    DECLARE_ESTACK(s);
+  int res, init_yield_count, yield_count;
+  Eterm *objp;
+  Uint size = (Uint) * sizep; /* Intentionally Uint due to halfword heap */
+  DECLARE_ESTACK(s);
 
-    if (!yield_support)
-	yield_count = init_yield_count = 0; /* Shut up faulty warning... >:-( */
-    else {
-	if (state->reds_left <= 0)
-	    return ERTS_IOLIST_YIELD;
-	ESTACK_CHANGE_ALLOCATOR(s, ERTS_ALC_T_SAVED_ESTACK);
-	init_yield_count = ERTS_IOLIST_SIZE_YIELDS_COUNT_PER_RED;
-	init_yield_count *= state->reds_left;
-	yield_count = init_yield_count;
-	if (state->estack.start) {
-	    /* Restart; restore state... */
-	    ESTACK_RESTORE(s, &state->estack);
-	    size = (Uint) state->size;
-	    obj = state->obj;
-	}
+  if (!yield_support) {
+    yield_count = init_yield_count = 0;  /* Shut up faulty warning... >:-( */
+  } else {
+    if (state->reds_left <= 0) {
+      return ERTS_IOLIST_YIELD;
     }
 
-    goto L_again;
+    ESTACK_CHANGE_ALLOCATOR(s, ERTS_ALC_T_SAVED_ESTACK);
+    init_yield_count = ERTS_IOLIST_SIZE_YIELDS_COUNT_PER_RED;
+    init_yield_count *= state->reds_left;
+    yield_count = init_yield_count;
 
-#define SAFE_ADD(Var, Val)			\
-    do {					\
-        Uint valvar = (Val);			\
-	Var += valvar;				\
-	if (Var < valvar) {			\
-	    goto L_overflow_error;		\
-	}					\
+    if (state->estack.start) {
+      /* Restart; restore state... */
+      ESTACK_RESTORE(s, &state->estack);
+      size = (Uint) state->size;
+      obj = state->obj;
+    }
+  }
+
+  goto L_again;
+
+#define SAFE_ADD(Var, Val)      \
+    do {          \
+        Uint valvar = (Val);      \
+  Var += valvar;        \
+  if (Var < valvar) {     \
+      goto L_overflow_error;    \
+  }         \
     } while (0)
 
-    while (!ESTACK_ISEMPTY(s)) {
-	obj = ESTACK_POP(s);
-    L_again:
-	if (is_list(obj)) {
-	    while (1) { /* Tail loop */
-		while (1) { /* Head loop */
-		    if (yield_support && --yield_count <= 0)
-			goto L_yield;
-		    objp = list_val(obj);
-		    /* Head */
-		    obj = CAR(objp);
-		    if (is_byte(obj)) {
-			size++;
-			if (size == 0) {
-			    goto L_overflow_error;
-			}
-		    } else if (is_binary(obj) && binary_bitsize(obj) == 0) {
-			SAFE_ADD(size, binary_size(obj));
-		    } else if (is_list(obj)) {
-			ESTACK_PUSH(s, CDR(objp));
-			continue; /* Head loop */
-		    } else if (is_not_nil(obj)) {
-			goto L_type_error;
-		    }
-		    break;
-		}
-		/* Tail */
-		obj = CDR(objp);
-		if (is_list(obj))
-		    continue; /* Tail loop */
-		else if (is_binary(obj) && binary_bitsize(obj) == 0) {
-		    SAFE_ADD(size, binary_size(obj));
-		} else if (is_not_nil(obj)) {
-		    goto L_type_error;
-		}
-		break;
-	    }
-	} else {
-	    if (yield_support && --yield_count <= 0)
-		goto L_yield;
-	    if (is_binary(obj) && binary_bitsize(obj) == 0) { /* Tail was binary */
-		SAFE_ADD(size, binary_size(obj));
-	    } else if (is_not_nil(obj)) {
-		goto L_type_error;
-	    }
-	}
+  while (!ESTACK_ISEMPTY(s)) {
+    obj = ESTACK_POP(s);
+L_again:
+
+    if (is_list(obj)) {
+      while (1) { /* Tail loop */
+        while (1) { /* Head loop */
+          if (yield_support && --yield_count <= 0) {
+            goto L_yield;
+          }
+
+          objp = list_val(obj);
+          /* Head */
+          obj = CAR(objp);
+
+          if (is_byte(obj)) {
+            size++;
+
+            if (size == 0) {
+              goto L_overflow_error;
+            }
+          } else if (is_binary(obj) && binary_bitsize(obj) == 0) {
+            SAFE_ADD(size, binary_size(obj));
+          } else if (is_list(obj)) {
+            ESTACK_PUSH(s, CDR(objp));
+            continue; /* Head loop */
+          } else if (is_not_nil(obj)) {
+            goto L_type_error;
+          }
+
+          break;
+        }
+
+        /* Tail */
+        obj = CDR(objp);
+
+        if (is_list(obj)) {
+          continue;  /* Tail loop */
+        } else if (is_binary(obj) && binary_bitsize(obj) == 0) {
+          SAFE_ADD(size, binary_size(obj));
+        } else if (is_not_nil(obj)) {
+          goto L_type_error;
+        }
+
+        break;
+      }
+    } else {
+      if (yield_support && --yield_count <= 0) {
+        goto L_yield;
+      }
+
+      if (is_binary(obj) && binary_bitsize(obj) == 0) { /* Tail was binary */
+        SAFE_ADD(size, binary_size(obj));
+      } else if (is_not_nil(obj)) {
+        goto L_type_error;
+      }
     }
+  }
+
 #undef SAFE_ADD
 
-    *sizep = (ErlDrvSizeT) size;
+  *sizep = (ErlDrvSizeT) size;
 
-    res = ERTS_IOLIST_OK;
+  res = ERTS_IOLIST_OK;
 
- L_return:
+L_return:
 
-    DESTROY_ESTACK(s);
+  DESTROY_ESTACK(s);
 
-    if (yield_support) {
-	int yc, reds;
-	CLEAR_SAVED_ESTACK(&state->estack);
-	yc = init_yield_count - yield_count;
-	reds = ((yc - 1) / ERTS_IOLIST_SIZE_YIELDS_COUNT_PER_RED) + 1;
-	BUMP_REDS(state->c_p, reds);
-	state->reds_left -= reds;
-	state->size = (ErlDrvSizeT) size;
-	state->have_size = 1;
-    }
+  if (yield_support) {
+    int yc, reds;
+    CLEAR_SAVED_ESTACK(&state->estack);
+    yc = init_yield_count - yield_count;
+    reds = ((yc - 1) / ERTS_IOLIST_SIZE_YIELDS_COUNT_PER_RED) + 1;
+    BUMP_REDS(state->c_p, reds);
+    state->reds_left -= reds;
+    state->size = (ErlDrvSizeT) size;
+    state->have_size = 1;
+  }
 
-    return res;
+  return res;
 
- L_overflow_error:
-    res = ERTS_IOLIST_OVERFLOW;
-    size = 0;
-    goto L_return;
+L_overflow_error:
+  res = ERTS_IOLIST_OVERFLOW;
+  size = 0;
+  goto L_return;
 
- L_type_error:
-    res = ERTS_IOLIST_TYPE;
-    size = 0;
-    goto L_return;
+L_type_error:
+  res = ERTS_IOLIST_TYPE;
+  size = 0;
+  goto L_return;
 
- L_yield:
-    BUMP_ALL_REDS(state->c_p);
-    state->reds_left = 0;
-    state->size = size;
-    state->obj = obj;
-    ESTACK_SAVE(s, &state->estack);
-    return ERTS_IOLIST_YIELD;
+L_yield:
+  BUMP_ALL_REDS(state->c_p);
+  state->reds_left = 0;
+  state->size = size;
+  state->obj = obj;
+  ESTACK_SAVE(s, &state->estack);
+  return ERTS_IOLIST_YIELD;
 }
 
 int erts_iolist_size_yielding(ErtsIOListState *state)
 {
-    ErlDrvSizeT size = state->size;
-    return iolist_size(1, state, state->obj, &size);
+  ErlDrvSizeT size = state->size;
+  return iolist_size(1, state, state->obj, &size);
 }
 
-int erts_iolist_size(Eterm obj, ErlDrvSizeT* sizep)
+int erts_iolist_size(Eterm obj, ErlDrvSizeT *sizep)
 {
-    *sizep = 0;
-    return iolist_size(0, nullptr, obj, sizep);
+  *sizep = 0;
+  return iolist_size(0, nullptr, obj, sizep);
 }
 
 /* return 0 if item is not a non-empty flat list of bytes */
 int
 is_string(Eterm list)
 {
-    int len = 0;
+  int len = 0;
 
-    while(is_list(list)) {
-	Eterm* consp = list_val(list);
-	Eterm hd = CAR(consp);
+  while (is_list(list)) {
+    Eterm *consp = list_val(list);
+    Eterm hd = CAR(consp);
 
-	if (!is_byte(hd))
-	    return 0;
-	len++;
-	list = CDR(consp);
+    if (!is_byte(hd)) {
+      return 0;
     }
-    if (is_nil(list))
-	return len;
-    return 0;
+
+    len++;
+    list = CDR(consp);
+  }
+
+  if (is_nil(list)) {
+    return len;
+  }
+
+  return 0;
 }
 
 #ifdef ERTS_SMP
@@ -3676,128 +4212,136 @@ ERTS_SCHED_PREF_PRE_ALLOC_IMPL(ptimer_pre, ErtsSmpPTimer, 1000)
 #define ERTS_PTMR_FLGS_ALLCD_MASK \
   ((((uint32_t) 1) << ERTS_PTMR_FLGS_ALLCD_SIZE) - 1)
 
-#define ERTS_PTMR_FLGS_PREALLCD	((uint32_t) 1)
-#define ERTS_PTMR_FLGS_SLALLCD	((uint32_t) 2)
-#define ERTS_PTMR_FLGS_LLALLCD	((uint32_t) 3)
-#define ERTS_PTMR_FLG_CANCELLED	(((uint32_t) 1) << (ERTS_PTMR_FLGS_ALLCD_SIZE+0))
+#define ERTS_PTMR_FLGS_PREALLCD ((uint32_t) 1)
+#define ERTS_PTMR_FLGS_SLALLCD  ((uint32_t) 2)
+#define ERTS_PTMR_FLGS_LLALLCD  ((uint32_t) 3)
+#define ERTS_PTMR_FLG_CANCELLED (((uint32_t) 1) << (ERTS_PTMR_FLGS_ALLCD_SIZE+0))
 
 static void
 init_ptimers(void)
 {
-    init_ptimer_pre_alloc();
+  init_ptimer_pre_alloc();
 }
 
 static ERTS_INLINE void
 free_ptimer(ErtsSmpPTimer *ptimer)
 {
-    switch (ptimer->timer.flags & ERTS_PTMR_FLGS_ALLCD_MASK) {
-    case ERTS_PTMR_FLGS_PREALLCD:
-	(void) ptimer_pre_free(ptimer);
-	break;
-    case ERTS_PTMR_FLGS_SLALLCD:
-	erts_free(ERTS_ALC_T_SL_PTIMER, (void *) ptimer);
-	break;
-    case ERTS_PTMR_FLGS_LLALLCD:
-	erts_free(ERTS_ALC_T_LL_PTIMER, (void *) ptimer);
-	break;
-    default:
-	erl_exit(ERTS_ABORT_EXIT,
-		 "Internal error: Bad ptimer alloc type\n");
-	break;
-    }
+  switch (ptimer->timer.flags & ERTS_PTMR_FLGS_ALLCD_MASK) {
+  case ERTS_PTMR_FLGS_PREALLCD:
+    (void) ptimer_pre_free(ptimer);
+    break;
+
+  case ERTS_PTMR_FLGS_SLALLCD:
+    erts_free(ERTS_ALC_T_SL_PTIMER, (void *) ptimer);
+    break;
+
+  case ERTS_PTMR_FLGS_LLALLCD:
+    erts_free(ERTS_ALC_T_LL_PTIMER, (void *) ptimer);
+    break;
+
+  default:
+    erl_exit(ERTS_ABORT_EXIT,
+             "Internal error: Bad ptimer alloc type\n");
+    break;
+  }
 }
 
 /* Callback for process timeout cancelled */
 static void
 ptimer_cancelled(ErtsSmpPTimer *ptimer)
 {
-    free_ptimer(ptimer);
+  free_ptimer(ptimer);
 }
 
 /* Callback for process timeout */
 static void
 ptimer_timeout(ErtsSmpPTimer *ptimer)
 {
-    if (is_internal_pid(ptimer->timer.id)) {
-	Process *p;
-        p = erts_pid2proc_opt(nullptr,
-			      0,
-			      ptimer->timer.id,
-			      ERTS_PROC_LOCK_MAIN|ERTS_PROC_LOCK_STATUS,
-			      ERTS_P2P_FLG_ALLOW_OTHER_X);
-	if (p) {
-	    if (!ERTS_PROC_IS_EXITING(p)
-		&& !(ptimer->timer.flags & ERTS_PTMR_FLG_CANCELLED)) {
-		ASSERT(*ptimer->timer.timer_ref == ptimer);
-                *ptimer->timer.timer_ref = nullptr;
-		(*ptimer->timer.timeout_func)(p);
-	    }
-	    erts_smp_proc_unlock(p, ERTS_PROC_LOCK_MAIN|ERTS_PROC_LOCK_STATUS);
-	}
+  if (is_internal_pid(ptimer->timer.id)) {
+    Process *p;
+    p = erts_pid2proc_opt(nullptr,
+                          0,
+                          ptimer->timer.id,
+                          ERTS_PROC_LOCK_MAIN | ERTS_PROC_LOCK_STATUS,
+                          ERTS_P2P_FLG_ALLOW_OTHER_X);
+
+    if (p) {
+      if (!ERTS_PROC_IS_EXITING(p)
+          && !(ptimer->timer.flags & ERTS_PTMR_FLG_CANCELLED)) {
+        ASSERT(*ptimer->timer.timer_ref == ptimer);
+        *ptimer->timer.timer_ref = nullptr;
+        (*ptimer->timer.timeout_func)(p);
+      }
+
+      erts_smp_proc_unlock(p, ERTS_PROC_LOCK_MAIN | ERTS_PROC_LOCK_STATUS);
     }
-    else {
-	Port *p;
-	ASSERT(is_internal_port(ptimer->timer.id));
-	p = erts_id2port_sflgs(ptimer->timer.id,
-                               nullptr,
-			       0,
-			       ERTS_PORT_SFLGS_DEAD);
-	if (p) {
-	    if (!(ptimer->timer.flags & ERTS_PTMR_FLG_CANCELLED)) {
-		ASSERT(*ptimer->timer.timer_ref == ptimer);
-                *ptimer->timer.timer_ref = nullptr;
-		(*ptimer->timer.timeout_func)(p);
-	    }
-	    erts_port_release(p);
-	}
+  } else {
+    Port *p;
+    ASSERT(is_internal_port(ptimer->timer.id));
+    p = erts_id2port_sflgs(ptimer->timer.id,
+                           nullptr,
+                           0,
+                           ERTS_PORT_SFLGS_DEAD);
+
+    if (p) {
+      if (!(ptimer->timer.flags & ERTS_PTMR_FLG_CANCELLED)) {
+        ASSERT(*ptimer->timer.timer_ref == ptimer);
+        *ptimer->timer.timer_ref = nullptr;
+        (*ptimer->timer.timeout_func)(p);
+      }
+
+      erts_port_release(p);
     }
-    free_ptimer(ptimer);
+  }
+
+  free_ptimer(ptimer);
 }
 
 void
 erts_create_smp_ptimer(ErtsSmpPTimer **timer_ref,
-		       Eterm id,
-		       ErlTimeoutProc timeout_func,
-		       Uint timeout)
+                       Eterm id,
+                       ErlTimeoutProc timeout_func,
+                       Uint timeout)
 {
-    ErtsSmpPTimer *res = ptimer_pre_alloc();
-    if (res)
-	res->timer.flags = ERTS_PTMR_FLGS_PREALLCD;
-    else {
-	if (timeout < ERTS_ALC_MIN_LONG_LIVED_TIME) {
-            res = (ErtsSmpPTimer*)erts_alloc(ERTS_ALC_T_SL_PTIMER, sizeof(ErtsSmpPTimer));
-	    res->timer.flags = ERTS_PTMR_FLGS_SLALLCD;
-	}
-	else {
-            res = (ErtsSmpPTimer*)erts_alloc(ERTS_ALC_T_LL_PTIMER, sizeof(ErtsSmpPTimer));
-	    res->timer.flags = ERTS_PTMR_FLGS_LLALLCD;
-	}
+  ErtsSmpPTimer *res = ptimer_pre_alloc();
+
+  if (res) {
+    res->timer.flags = ERTS_PTMR_FLGS_PREALLCD;
+  } else {
+    if (timeout < ERTS_ALC_MIN_LONG_LIVED_TIME) {
+      res = (ErtsSmpPTimer *)erts_alloc(ERTS_ALC_T_SL_PTIMER, sizeof(ErtsSmpPTimer));
+      res->timer.flags = ERTS_PTMR_FLGS_SLALLCD;
+    } else {
+      res = (ErtsSmpPTimer *)erts_alloc(ERTS_ALC_T_LL_PTIMER, sizeof(ErtsSmpPTimer));
+      res->timer.flags = ERTS_PTMR_FLGS_LLALLCD;
     }
-    res->timer.timeout_func = timeout_func;
-    res->timer.timer_ref = timer_ref;
-    res->timer.id = id;
-    res->timer.tm.active = 0; /* MUST be initalized */
+  }
 
-    ASSERT(!*timer_ref);
+  res->timer.timeout_func = timeout_func;
+  res->timer.timer_ref = timer_ref;
+  res->timer.id = id;
+  res->timer.tm.active = 0; /* MUST be initalized */
 
-    *timer_ref = res;
+  ASSERT(!*timer_ref);
 
-    erts_set_timer(&res->timer.tm,
-		  (ErlTimeoutProc) ptimer_timeout,
-		  (ErlCancelProc) ptimer_cancelled,
-		  (void*) res,
-		  timeout);
+  *timer_ref = res;
+
+  erts_set_timer(&res->timer.tm,
+                 (ErlTimeoutProc) ptimer_timeout,
+                 (ErlCancelProc) ptimer_cancelled,
+                 (void *) res,
+                 timeout);
 }
 
 void
 erts_cancel_smp_ptimer(ErtsSmpPTimer *ptimer)
 {
-    if (ptimer) {
-	ASSERT(*ptimer->timer.timer_ref == ptimer);
-        *ptimer->timer.timer_ref = nullptr;
-	ptimer->timer.flags |= ERTS_PTMR_FLG_CANCELLED;
-	erts_cancel_timer(&ptimer->timer.tm);
-    }
+  if (ptimer) {
+    ASSERT(*ptimer->timer.timer_ref == ptimer);
+    *ptimer->timer.timer_ref = nullptr;
+    ptimer->timer.flags |= ERTS_PTMR_FLG_CANCELLED;
+    erts_cancel_timer(&ptimer->timer.tm);
+  }
 }
 
 #endif
@@ -3812,16 +4356,16 @@ Uint tot_bin_allocated;
 void erts_init_utils(void)
 {
 #ifdef ERTS_SMP
-    init_ptimers();
+  init_ptimers();
 #endif
 }
 
-void erts_init_utils_mem(void) 
+void erts_init_utils_mem(void)
 {
-    trim_threshold = -1;
-    top_pad = -1;
-    mmap_threshold = -1;
-    mmap_max = -1;
+  trim_threshold = -1;
+  top_pad = -1;
+  mmap_threshold = -1;
+  mmap_max = -1;
 }
 
 int
@@ -3831,7 +4375,7 @@ sys_alloc_opt(int opt, int value)
   int m_opt;
   int *curr_val;
 
-  switch(opt) {
+  switch (opt) {
   case SYS_ALLOC_OPT_TRIM_THRESHOLD:
 #ifdef M_TRIM_THRESHOLD
     m_opt = M_TRIM_THRESHOLD;
@@ -3840,6 +4384,7 @@ sys_alloc_opt(int opt, int value)
 #else
     return 0;
 #endif
+
   case SYS_ALLOC_OPT_TOP_PAD:
 #ifdef M_TOP_PAD
     m_opt = M_TOP_PAD;
@@ -3848,6 +4393,7 @@ sys_alloc_opt(int opt, int value)
 #else
     return 0;
 #endif
+
   case SYS_ALLOC_OPT_MMAP_THRESHOLD:
 #ifdef M_MMAP_THRESHOLD
     m_opt = M_MMAP_THRESHOLD;
@@ -3856,6 +4402,7 @@ sys_alloc_opt(int opt, int value)
 #else
     return 0;
 #endif
+
   case SYS_ALLOC_OPT_MMAP_MAX:
 #ifdef M_MMAP_MAX
     m_opt = M_MMAP_MAX;
@@ -3864,11 +4411,12 @@ sys_alloc_opt(int opt, int value)
 #else
     return 0;
 #endif
+
   default:
     return 0;
   }
 
-  if(mallopt(m_opt, value)) {
+  if (mallopt(m_opt, value)) {
     *curr_val = value;
     return 1;
   }
@@ -3881,49 +4429,56 @@ sys_alloc_opt(int opt, int value)
 void
 sys_alloc_stat(SysAllocStat *sasp)
 {
-   sasp->trim_threshold = trim_threshold;
-   sasp->top_pad        = top_pad;
-   sasp->mmap_threshold = mmap_threshold;
-   sasp->mmap_max       = mmap_max;
+  sasp->trim_threshold = trim_threshold;
+  sasp->top_pad        = top_pad;
+  sasp->mmap_threshold = mmap_threshold;
+  sasp->mmap_max       = mmap_max;
 
 }
 
 char *
 erts_read_env(char *key)
 {
-    size_t value_len = 256;
-    char *value = (char*)erts_alloc(ERTS_ALC_T_TMP, value_len);
-    int res;
-    while (1) {
-	res = erts_sys_getenv_raw(key, value, &value_len);
-	if (res <= 0)
-	    break;
-        value = (char*)erts_realloc(ERTS_ALC_T_TMP, value, value_len);
+  size_t value_len = 256;
+  char *value = (char *)erts_alloc(ERTS_ALC_T_TMP, value_len);
+  int res;
+
+  while (1) {
+    res = erts_sys_getenv_raw(key, value, &value_len);
+
+    if (res <= 0) {
+      break;
     }
-    if (res != 0) {
-	erts_free(ERTS_ALC_T_TMP, value);
-        return nullptr;
-    }
-    return value;
+
+    value = (char *)erts_realloc(ERTS_ALC_T_TMP, value, value_len);
+  }
+
+  if (res != 0) {
+    erts_free(ERTS_ALC_T_TMP, value);
+    return nullptr;
+  }
+
+  return value;
 }
 
 void
 erts_free_read_env(void *value)
 {
-    if (value)
-	erts_free(ERTS_ALC_T_TMP, value);
+  if (value) {
+    erts_free(ERTS_ALC_T_TMP, value);
+  }
 }
 
 
 typedef struct {
-    size_t sz;
-    char *ptr;
+  size_t sz;
+  char *ptr;
 } ErtsEmuArg;
 
 typedef struct {
-    int argc;
-    ErtsEmuArg *arg;
-    size_t no_bytes;
+  int argc;
+  ErtsEmuArg *arg;
+  size_t no_bytes;
 } ErtsEmuArgs;
 
 ErtsEmuArgs saved_emu_args = {0};
@@ -3932,274 +4487,293 @@ void
 erts_save_emu_args(int argc, char **argv)
 {
 #ifdef DEBUG
-    char *end_ptr;
+  char *end_ptr;
 #endif
-    char *ptr;
-    int i;
-    size_t arg_sz[100];
-    size_t size;
+  char *ptr;
+  int i;
+  size_t arg_sz[100];
+  size_t size;
 
-    ASSERT(!saved_emu_args.argc);
+  ASSERT(!saved_emu_args.argc);
 
-    size = sizeof(ErtsEmuArg)*argc;
-    for (i = 0; i < argc; i++) {
-	size_t sz = sys_strlen(argv[i]);
-	if (i < sizeof(arg_sz)/sizeof(arg_sz[0]))
-	    arg_sz[i] = sz;
-	size += sz+1;
-    } 
-    ptr = (char *) malloc(size);
-    if (!ptr) {
-        ERTS_INTERNAL_ERROR("malloc failed to allocate memory!");
+  size = sizeof(ErtsEmuArg) * argc;
+
+  for (i = 0; i < argc; i++) {
+    size_t sz = sys_strlen(argv[i]);
+
+    if (i < sizeof(arg_sz) / sizeof(arg_sz[0])) {
+      arg_sz[i] = sz;
     }
+
+    size += sz + 1;
+  }
+
+  ptr = (char *) malloc(size);
+
+  if (!ptr) {
+    ERTS_INTERNAL_ERROR("malloc failed to allocate memory!");
+  }
+
 #ifdef DEBUG
-    end_ptr = ptr + size;
+  end_ptr = ptr + size;
 #endif
-    saved_emu_args.arg = (ErtsEmuArg *) ptr;
-    ptr += sizeof(ErtsEmuArg)*argc;
-    saved_emu_args.argc = argc;
-    saved_emu_args.no_bytes = 0;
-    for (i = 0; i < argc; i++) {
-	size_t sz;
-	if (i < sizeof(arg_sz)/sizeof(arg_sz[0]))
-	    sz = arg_sz[i];
-	else
-	    sz = sys_strlen(argv[i]);
-	saved_emu_args.arg[i].ptr = ptr;
-	saved_emu_args.arg[i].sz = sz;
-	saved_emu_args.no_bytes += sz;
-	ptr += sz+1;
-	sys_strcpy(saved_emu_args.arg[i].ptr, argv[i]);
+  saved_emu_args.arg = (ErtsEmuArg *) ptr;
+  ptr += sizeof(ErtsEmuArg) * argc;
+  saved_emu_args.argc = argc;
+  saved_emu_args.no_bytes = 0;
+
+  for (i = 0; i < argc; i++) {
+    size_t sz;
+
+    if (i < sizeof(arg_sz) / sizeof(arg_sz[0])) {
+      sz = arg_sz[i];
+    } else {
+      sz = sys_strlen(argv[i]);
     }
-    ASSERT(ptr == end_ptr);
+
+    saved_emu_args.arg[i].ptr = ptr;
+    saved_emu_args.arg[i].sz = sz;
+    saved_emu_args.no_bytes += sz;
+    ptr += sz + 1;
+    sys_strcpy(saved_emu_args.arg[i].ptr, argv[i]);
+  }
+
+  ASSERT(ptr == end_ptr);
 }
 
 Eterm
 erts_get_emu_args(Process *c_p)
 {
 #ifdef DEBUG
-    Eterm *end_hp;
+  Eterm *end_hp;
 #endif
-    int i;
-    Uint hsz;
-    Eterm *hp, res;
+  int i;
+  Uint hsz;
+  Eterm *hp, res;
 
-    hsz = saved_emu_args.no_bytes*2;
-    hsz += saved_emu_args.argc*2;
+  hsz = saved_emu_args.no_bytes * 2;
+  hsz += saved_emu_args.argc * 2;
 
-    hp = HAlloc(c_p, hsz);
+  hp = HAlloc(c_p, hsz);
 #ifdef DEBUG
-    end_hp = hp + hsz;
+  end_hp = hp + hsz;
 #endif
-    res = NIL;
+  res = NIL;
 
-    for (i = saved_emu_args.argc-1; i >= 0; i--) {
+  for (i = saved_emu_args.argc - 1; i >= 0; i--) {
     Eterm arg = buf_to_intlist(&hp,
-				   saved_emu_args.arg[i].ptr,
-				   saved_emu_args.arg[i].sz,
-				   NIL);
-	res = CONS(hp, arg, res);
-	hp += 2;
-    }
+                               saved_emu_args.arg[i].ptr,
+                               saved_emu_args.arg[i].sz,
+                               NIL);
+    res = CONS(hp, arg, res);
+    hp += 2;
+  }
 
-    ASSERT(hp == end_hp);
+  ASSERT(hp == end_hp);
 
-    return res;
+  return res;
 }
 
 
 Eterm
 erts_get_ethread_info(Process *c_p)
 {
-    Uint sz, *szp;
-    Eterm res, *hp, **hpp, *end_hp = nullptr;
+  Uint sz, *szp;
+  Eterm res, *hp, **hpp, *end_hp = nullptr;
 
-    sz = 0;
-    szp = &sz;
-    hpp = nullptr;
+  sz = 0;
+  szp = &sz;
+  hpp = nullptr;
 
-    while (1) {
-	Eterm tup, list, name;
-#if defined(ETHR_NATIVE_ATOMIC32_IMPL)	  \
-    || defined(ETHR_NATIVE_ATOMIC64_IMPL)	\
+  while (1) {
+    Eterm tup, list, name;
+#if defined(ETHR_NATIVE_ATOMIC32_IMPL)    \
+    || defined(ETHR_NATIVE_ATOMIC64_IMPL) \
     || defined(ETHR_NATIVE_DW_ATOMIC_IMPL)
-	char buf[1024];
-	int i;
-	char **str;
+    char buf[1024];
+    int i;
+    char **str;
 #endif
 
-	res = NIL;
+    res = NIL;
 
 #ifdef ETHR_X86_MEMBAR_H__
 
-	tup = erts_bld_tuple(hpp, szp, 2,
-			     erts_bld_string(hpp, szp, "sse2"),
+    tup = erts_bld_tuple(hpp, szp, 2,
+                         erts_bld_string(hpp, szp, "sse2"),
 #ifdef ETHR_X86_RUNTIME_CONF_HAVE_SSE2__
-			     erts_bld_string(hpp, szp,
-					     (ETHR_X86_RUNTIME_CONF_HAVE_SSE2__
-					      ? "yes" : "no"))
+                         erts_bld_string(hpp, szp,
+                                         (ETHR_X86_RUNTIME_CONF_HAVE_SSE2__
+                                          ? "yes" : "no"))
 #else
-			     erts_bld_string(hpp, szp, "yes")
+                         erts_bld_string(hpp, szp, "yes")
 #endif
-	    );
-	res = erts_bld_cons(hpp, szp, tup, res);
+                        );
+    res = erts_bld_cons(hpp, szp, tup, res);
 
-	tup = erts_bld_tuple(hpp, szp, 2,
-			     erts_bld_string(hpp, szp,
-					     "x86"
+    tup = erts_bld_tuple(hpp, szp, 2,
+                         erts_bld_string(hpp, szp,
+                                         "x86"
 #ifdef ARCH_64
-					     "_64"
+                                         "_64"
 #endif
-					     " OOO"),
-			     erts_bld_string(hpp, szp,
+                                         " OOO"),
+                         erts_bld_string(hpp, szp,
 #ifdef ETHR_X86_OUT_OF_ORDER
-					     "yes"
+                                         "yes"
 #else
-					     "no"
+                                         "no"
 #endif
-				 ));
+                                        ));
 
-	res = erts_bld_cons(hpp, szp, tup, res);
+    res = erts_bld_cons(hpp, szp, tup, res);
 #endif
 
 #ifdef ETHR_SPARC_V9_MEMBAR_H__
 
-	tup = erts_bld_tuple(hpp, szp, 2,
-			     erts_bld_string(hpp, szp, "Sparc V9"),
-			     erts_bld_string(hpp, szp,
+    tup = erts_bld_tuple(hpp, szp, 2,
+                         erts_bld_string(hpp, szp, "Sparc V9"),
+                         erts_bld_string(hpp, szp,
 #if defined(ETHR_SPARC_TSO)
-					     "TSO"
+                                         "TSO"
 #elif defined(ETHR_SPARC_PSO)
-					     "PSO"
+                                         "PSO"
 #elif defined(ETHR_SPARC_RMO)
-					     "RMO"
+                                         "RMO"
 #else
-					     "undefined"
+                                         "undefined"
 #endif
-				 ));
+                                        ));
 
-	res = erts_bld_cons(hpp, szp, tup, res);
+    res = erts_bld_cons(hpp, szp, tup, res);
 
 #endif
 
 #ifdef ETHR_PPC_MEMBAR_H__
 
-	tup = erts_bld_tuple(hpp, szp, 2,
-			     erts_bld_string(hpp, szp, "lwsync"),
-			     erts_bld_string(hpp, szp,
+    tup = erts_bld_tuple(hpp, szp, 2,
+                         erts_bld_string(hpp, szp, "lwsync"),
+                         erts_bld_string(hpp, szp,
 #if defined(ETHR_PPC_HAVE_LWSYNC)
-					     "yes"
+                                         "yes"
 #elif defined(ETHR_PPC_HAVE_NO_LWSYNC)
-					     "no"
+                                         "no"
 #elif defined(ETHR_PPC_RUNTIME_CONF_HAVE_LWSYNC__)
-					     ETHR_PPC_RUNTIME_CONF_HAVE_LWSYNC__ ? "yes" : "no"
+                                         ETHR_PPC_RUNTIME_CONF_HAVE_LWSYNC__ ? "yes" : "no"
 #else
-					     "undefined"
+                                         "undefined"
 #endif
-				 ));
+                                        ));
 
-	res = erts_bld_cons(hpp, szp, tup, res);
+    res = erts_bld_cons(hpp, szp, tup, res);
 
 #endif
 
-	tup = erts_bld_tuple(hpp, szp, 2,
-			     erts_bld_string(hpp, szp, "Native rw-spinlocks"),
+    tup = erts_bld_tuple(hpp, szp, 2,
+                         erts_bld_string(hpp, szp, "Native rw-spinlocks"),
 #ifdef ETHR_NATIVE_RWSPINLOCK_IMPL
-			     erts_bld_string(hpp, szp, ETHR_NATIVE_RWSPINLOCK_IMPL)
+                         erts_bld_string(hpp, szp, ETHR_NATIVE_RWSPINLOCK_IMPL)
 #else
-			     erts_bld_string(hpp, szp, "no")
+                         erts_bld_string(hpp, szp, "no")
 #endif
-	    );
-	res = erts_bld_cons(hpp, szp, tup, res);
+                        );
+    res = erts_bld_cons(hpp, szp, tup, res);
 
-	tup = erts_bld_tuple(hpp, szp, 2,
-			     erts_bld_string(hpp, szp, "Native spinlocks"),
+    tup = erts_bld_tuple(hpp, szp, 2,
+                         erts_bld_string(hpp, szp, "Native spinlocks"),
 #ifdef ETHR_NATIVE_SPINLOCK_IMPL
-			     erts_bld_string(hpp, szp, ETHR_NATIVE_SPINLOCK_IMPL)
+                         erts_bld_string(hpp, szp, ETHR_NATIVE_SPINLOCK_IMPL)
 #else
-			     erts_bld_string(hpp, szp, "no")
+                         erts_bld_string(hpp, szp, "no")
 #endif
-	    );
-	res = erts_bld_cons(hpp, szp, tup, res);
+                        );
+    res = erts_bld_cons(hpp, szp, tup, res);
 
 
-	list = NIL;
+    list = NIL;
 #ifdef ETHR_NATIVE_DW_ATOMIC_IMPL
-	if (ethr_have_native_dw_atomic()) {
-	    name = erts_bld_string(hpp, szp, ETHR_NATIVE_DW_ATOMIC_IMPL);
-	    str = ethr_native_dw_atomic_ops();
-	    for (i = 0; str[i]; i++) {
-		erts_snprintf(buf, sizeof(buf), "ethr_native_dw_atomic_%s()", str[i]);
-		list = erts_bld_cons(hpp, szp,
-				     erts_bld_string(hpp, szp, buf),
-				     list);
-	    }
-	    str = ethr_native_su_dw_atomic_ops();
-	    for (i = 0; str[i]; i++) {
-		erts_snprintf(buf, sizeof(buf), "ethr_native_su_dw_atomic_%s()", str[i]);
-		list = erts_bld_cons(hpp, szp,
-				     erts_bld_string(hpp, szp, buf),
-				     list);
-	    }
-	}
-	else 
+
+    if (ethr_have_native_dw_atomic()) {
+      name = erts_bld_string(hpp, szp, ETHR_NATIVE_DW_ATOMIC_IMPL);
+      str = ethr_native_dw_atomic_ops();
+
+      for (i = 0; str[i]; i++) {
+        erts_snprintf(buf, sizeof(buf), "ethr_native_dw_atomic_%s()", str[i]);
+        list = erts_bld_cons(hpp, szp,
+                             erts_bld_string(hpp, szp, buf),
+                             list);
+      }
+
+      str = ethr_native_su_dw_atomic_ops();
+
+      for (i = 0; str[i]; i++) {
+        erts_snprintf(buf, sizeof(buf), "ethr_native_su_dw_atomic_%s()", str[i]);
+        list = erts_bld_cons(hpp, szp,
+                             erts_bld_string(hpp, szp, buf),
+                             list);
+      }
+    } else
 #endif
-	    name = erts_bld_string(hpp, szp, "no");
+      name = erts_bld_string(hpp, szp, "no");
 
-	tup = erts_bld_tuple(hpp, szp, 3,
-			     erts_bld_string(hpp, szp, "Double word native atomics"),
-			     name,
-			     list);
-	res = erts_bld_cons(hpp, szp, tup, res);
+    tup = erts_bld_tuple(hpp, szp, 3,
+                         erts_bld_string(hpp, szp, "Double word native atomics"),
+                         name,
+                         list);
+    res = erts_bld_cons(hpp, szp, tup, res);
 
-	list = NIL;
+    list = NIL;
 #ifdef ETHR_NATIVE_ATOMIC64_IMPL
-	name = erts_bld_string(hpp, szp, ETHR_NATIVE_ATOMIC64_IMPL);
-	str = ethr_native_atomic64_ops();
-	for (i = 0; str[i]; i++) {
-	    erts_snprintf(buf, sizeof(buf), "ethr_native_atomic64_%s()", str[i]);
-	    list = erts_bld_cons(hpp, szp,
-				 erts_bld_string(hpp, szp, buf),
-				 list);
-	}
-#else
-	name = erts_bld_string(hpp, szp, "no");
-#endif
-	tup = erts_bld_tuple(hpp, szp, 3,
-			     erts_bld_string(hpp, szp, "64-bit native atomics"),
-			     name,
-			     list);
-	res = erts_bld_cons(hpp, szp, tup, res);
+    name = erts_bld_string(hpp, szp, ETHR_NATIVE_ATOMIC64_IMPL);
+    str = ethr_native_atomic64_ops();
 
-	list = NIL;
-#ifdef ETHR_NATIVE_ATOMIC32_IMPL
-	name = erts_bld_string(hpp, szp, ETHR_NATIVE_ATOMIC32_IMPL);
-	str = ethr_native_atomic32_ops();
-	for (i = 0; str[i]; i++) {
-	    erts_snprintf(buf, sizeof(buf), "ethr_native_atomic32_%s()", str[i]);
-	    list = erts_bld_cons(hpp, szp,
-				erts_bld_string(hpp, szp, buf),
-				list);
-	}
-#else
-	name = erts_bld_string(hpp, szp, "no");
-#endif
-	tup = erts_bld_tuple(hpp, szp, 3,
-			     erts_bld_string(hpp, szp, "32-bit native atomics"),
-			     name,
-			     list);
-	res = erts_bld_cons(hpp, szp, tup, res);
-
-	if (hpp) {
-	    HRelease(c_p, end_hp, *hpp)
-	    return res;
-	}
-
-	hp = HAlloc(c_p, sz);
-	end_hp = hp + sz;
-	hpp = &hp;
-        szp = nullptr;
+    for (i = 0; str[i]; i++) {
+      erts_snprintf(buf, sizeof(buf), "ethr_native_atomic64_%s()", str[i]);
+      list = erts_bld_cons(hpp, szp,
+                           erts_bld_string(hpp, szp, buf),
+                           list);
     }
+
+#else
+    name = erts_bld_string(hpp, szp, "no");
+#endif
+    tup = erts_bld_tuple(hpp, szp, 3,
+                         erts_bld_string(hpp, szp, "64-bit native atomics"),
+                         name,
+                         list);
+    res = erts_bld_cons(hpp, szp, tup, res);
+
+    list = NIL;
+#ifdef ETHR_NATIVE_ATOMIC32_IMPL
+    name = erts_bld_string(hpp, szp, ETHR_NATIVE_ATOMIC32_IMPL);
+    str = ethr_native_atomic32_ops();
+
+    for (i = 0; str[i]; i++) {
+      erts_snprintf(buf, sizeof(buf), "ethr_native_atomic32_%s()", str[i]);
+      list = erts_bld_cons(hpp, szp,
+                           erts_bld_string(hpp, szp, buf),
+                           list);
+    }
+
+#else
+    name = erts_bld_string(hpp, szp, "no");
+#endif
+    tup = erts_bld_tuple(hpp, szp, 3,
+                         erts_bld_string(hpp, szp, "32-bit native atomics"),
+                         name,
+                         list);
+    res = erts_bld_cons(hpp, szp, tup, res);
+
+    if (hpp) {
+      HRelease(c_p, end_hp, *hpp)
+      return res;
+    }
+
+    hp = HAlloc(c_p, sz);
+    end_hp = hp + sz;
+    hpp = &hp;
+    szp = nullptr;
+  }
 }
 
 /*
@@ -4216,9 +4790,9 @@ void erts_silence_warn_unused_result(long unused)
 void
 erts_interval_init(erts_interval_t *icp)
 {
-    erts_atomic64_init_nob(&icp->counter.atomic, 0);
+  erts_atomic64_init_nob(&icp->counter.atomic, 0);
 #ifdef DEBUG
-    icp->smp_api = 0;
+  icp->smp_api = 0;
 #endif
 }
 
@@ -4226,124 +4800,136 @@ void
 erts_smp_interval_init(erts_interval_t *icp)
 {
 #ifdef ERTS_SMP
-    erts_interval_init(icp);
+  erts_interval_init(icp);
 #else
-    icp->counter.not_atomic = 0;
+  icp->counter.not_atomic = 0;
 #endif
 #ifdef DEBUG
-    icp->smp_api = 1;
+  icp->smp_api = 1;
 #endif
 }
 
 static ERTS_INLINE Uint64
 step_interval_nob(erts_interval_t *icp)
 {
-    return (Uint64) erts_atomic64_inc_read_nob(&icp->counter.atomic);
+  return (Uint64) erts_atomic64_inc_read_nob(&icp->counter.atomic);
 }
 
 static ERTS_INLINE Uint64
 step_interval_relb(erts_interval_t *icp)
 {
-    return (Uint64) erts_atomic64_inc_read_relb(&icp->counter.atomic);
+  return (Uint64) erts_atomic64_inc_read_relb(&icp->counter.atomic);
 }
 
 
 static ERTS_INLINE Uint64
 ensure_later_interval_nob(erts_interval_t *icp, Uint64 ic)
 {
-    Uint64 curr_ic;
-    curr_ic = (Uint64) erts_atomic64_read_nob(&icp->counter.atomic);
-    if (curr_ic > ic)
-	return curr_ic;
-    return (Uint64) erts_atomic64_inc_read_nob(&icp->counter.atomic);
+  Uint64 curr_ic;
+  curr_ic = (Uint64) erts_atomic64_read_nob(&icp->counter.atomic);
+
+  if (curr_ic > ic) {
+    return curr_ic;
+  }
+
+  return (Uint64) erts_atomic64_inc_read_nob(&icp->counter.atomic);
 }
 
 
 static ERTS_INLINE Uint64
 ensure_later_interval_acqb(erts_interval_t *icp, Uint64 ic)
 {
-    Uint64 curr_ic;
-    curr_ic = (Uint64) erts_atomic64_read_acqb(&icp->counter.atomic);
-    if (curr_ic > ic)
-	return curr_ic;
-    return (Uint64) erts_atomic64_inc_read_acqb(&icp->counter.atomic);
+  Uint64 curr_ic;
+  curr_ic = (Uint64) erts_atomic64_read_acqb(&icp->counter.atomic);
+
+  if (curr_ic > ic) {
+    return curr_ic;
+  }
+
+  return (Uint64) erts_atomic64_inc_read_acqb(&icp->counter.atomic);
 }
 
 Uint64
 erts_step_interval_nob(erts_interval_t *icp)
 {
-    ASSERT(!icp->smp_api);
-    return step_interval_nob(icp);
+  ASSERT(!icp->smp_api);
+  return step_interval_nob(icp);
 }
 
 Uint64
 erts_step_interval_relb(erts_interval_t *icp)
 {
-    ASSERT(!icp->smp_api);
-    return step_interval_relb(icp);
+  ASSERT(!icp->smp_api);
+  return step_interval_relb(icp);
 }
 
 Uint64
 erts_smp_step_interval_nob(erts_interval_t *icp)
 {
-    ASSERT(icp->smp_api);
+  ASSERT(icp->smp_api);
 #ifdef ERTS_SMP
-    return step_interval_nob(icp);
+  return step_interval_nob(icp);
 #else
-    return ++icp->counter.not_atomic;
+  return ++icp->counter.not_atomic;
 #endif
 }
 
 Uint64
 erts_smp_step_interval_relb(erts_interval_t *icp)
 {
-    ASSERT(icp->smp_api);
+  ASSERT(icp->smp_api);
 #ifdef ERTS_SMP
-    return step_interval_relb(icp);
+  return step_interval_relb(icp);
 #else
-    return ++icp->counter.not_atomic;
+  return ++icp->counter.not_atomic;
 #endif
 }
 
 Uint64
 erts_ensure_later_interval_nob(erts_interval_t *icp, Uint64 ic)
 {
-    ASSERT(!icp->smp_api);
-    return ensure_later_interval_nob(icp, ic);
+  ASSERT(!icp->smp_api);
+  return ensure_later_interval_nob(icp, ic);
 }
 
 Uint64
 erts_ensure_later_interval_acqb(erts_interval_t *icp, Uint64 ic)
 {
-    ASSERT(!icp->smp_api);
-    return ensure_later_interval_acqb(icp, ic);
+  ASSERT(!icp->smp_api);
+  return ensure_later_interval_acqb(icp, ic);
 }
 
 Uint64
 erts_smp_ensure_later_interval_nob(erts_interval_t *icp, Uint64 ic)
 {
-    ASSERT(icp->smp_api);
+  ASSERT(icp->smp_api);
 #ifdef ERTS_SMP
-    return ensure_later_interval_nob(icp, ic);
+  return ensure_later_interval_nob(icp, ic);
 #else
-    if (icp->counter.not_atomic > ic)
-	return icp->counter.not_atomic;
-    else
-	return ++icp->counter.not_atomic;
+
+  if (icp->counter.not_atomic > ic) {
+    return icp->counter.not_atomic;
+  } else {
+    return ++icp->counter.not_atomic;
+  }
+
 #endif
 }
 
 Uint64
 erts_smp_ensure_later_interval_acqb(erts_interval_t *icp, Uint64 ic)
 {
-    ASSERT(icp->smp_api);
+  ASSERT(icp->smp_api);
 #ifdef ERTS_SMP
-    return ensure_later_interval_acqb(icp, ic);
+  return ensure_later_interval_acqb(icp, ic);
 #else
-    if (icp->counter.not_atomic > ic)
-	return icp->counter.not_atomic;
-    else
-	return ++icp->counter.not_atomic;
+
+  if (icp->counter.not_atomic > ic) {
+    return icp->counter.not_atomic;
+  } else {
+    return ++icp->counter.not_atomic;
+  }
+
 #endif
 }
 
@@ -4354,14 +4940,14 @@ erts_smp_ensure_later_interval_acqb(erts_interval_t *icp, Uint64 ic)
 Uint64 erts_timestamp_millis(void)
 {
 #ifdef HAVE_GETHRTIME
-    return (Uint64) (sys_gethrtime() / 1000000);
+  return (Uint64)(sys_gethrtime() / 1000000);
 #else
-    Uint64 res;
-    SysTimeval tv;
-    sys_gettimeofday(&tv);
-    res = (Uint64) tv.tv_sec*1000000;
-    res += (Uint64) tv.tv_usec;
-    return (res / 1000);
+  Uint64 res;
+  SysTimeval tv;
+  sys_gettimeofday(&tv);
+  res = (Uint64) tv.tv_sec * 1000000;
+  res += (Uint64) tv.tv_usec;
+  return (res / 1000);
 #endif
 }
 
@@ -4372,52 +4958,53 @@ Uint64 erts_timestamp_millis(void)
 
 void upp(uint8_t *buf, size_t sz)
 {
-    bin_write(ERTS_PRINT_STDERR, nullptr, buf, sz);
+  bin_write(ERTS_PRINT_STDERR, nullptr, buf, sz);
 }
 
 void pat(Eterm atom)
 {
-    upp(atom_tab(atom_val(atom))->name,
-	atom_tab(atom_val(atom))->len);
+  upp(atom_tab(atom_val(atom))->name,
+      atom_tab(atom_val(atom))->len);
 }
 
 
 void pinfo()
 {
-    process_info(ERTS_PRINT_STDOUT, nullptr);
+  process_info(ERTS_PRINT_STDOUT, nullptr);
 }
 
 
 void pp(p)
 Process *p;
 {
-    if(p)
-        print_process_info(ERTS_PRINT_STDERR, nullptr, p);
+  if (p) {
+    print_process_info(ERTS_PRINT_STDERR, nullptr, p);
+  }
 }
-    
+
 void ppi(Eterm pid)
 {
-    pp(erts_proc_lookup(pid));
+  pp(erts_proc_lookup(pid));
 }
 
 void td(Eterm x)
 {
-    erts_fprintf(stderr, "%T\n", x);
+  erts_fprintf(stderr, "%T\n", x);
 }
 
 void
-ps(Process* p, Eterm* stop)
+ps(Process *p, Eterm *stop)
 {
-    Eterm* sp = STACK_START(p) - 1;
+  Eterm *sp = STACK_START(p) - 1;
 
-    if (stop <= STACK_END(p)) {
-        stop = STACK_END(p) + 1;
-    }
+  if (stop <= STACK_END(p)) {
+    stop = STACK_END(p) + 1;
+  }
 
-    while(sp >= stop) {
-	erts_printf("%p: %.75T\n", sp, *sp);
-	sp--;
-    }
+  while (sp >= stop) {
+    erts_printf("%p: %.75T\n", sp, *sp);
+    sp--;
+  }
 }
 #endif
 

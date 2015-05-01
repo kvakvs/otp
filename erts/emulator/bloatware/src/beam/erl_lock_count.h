@@ -18,44 +18,44 @@
  */
 
 /*
- * Description:	Statistics for locks.
+ * Description: Statistics for locks.
  *
- * Author:	Björn-Egil Dahlberg
- * Date:	2008-07-03
+ * Author:  Björn-Egil Dahlberg
+ * Date:  2008-07-03
  * Abstract:
- * 	Locks statistics internal representation.
- * 	
- * 	Conceptual representation, 
- * 	- set name
- * 	| - id (the unique lock)
- * 	| | - lock type
- * 	| | - statistics
- * 	| | | - location (file and line number)
- * 	| | | - tries
- * 	| | | - collisions (including trylock busy)
- * 	| | | - timer (time spent in waiting for lock)
- * 	| | | - n_timer (collisions excluding trylock busy)
- * 	| | | - histogram
- * 	| | | | - # 0 = log2(lock wait_time ns)
- * 	| | | | - ...
- * 	| | | | - # n = log2(lock wait_time ns)
+ *  Locks statistics internal representation.
  *
- * 	Each instance of a lock is the unique lock, i.e. set and id in that set.
- * 	For each lock there is a set of statistics with where and what impact
- * 	the lock aqusition had.
+ *  Conceptual representation,
+ *  - set name
+ *  | - id (the unique lock)
+ *  | | - lock type
+ *  | | - statistics
+ *  | | | - location (file and line number)
+ *  | | | - tries
+ *  | | | - collisions (including trylock busy)
+ *  | | | - timer (time spent in waiting for lock)
+ *  | | | - n_timer (collisions excluding trylock busy)
+ *  | | | - histogram
+ *  | | | | - # 0 = log2(lock wait_time ns)
+ *  | | | | - ...
+ *  | | | | - # n = log2(lock wait_time ns)
  *
- * 	Runtime options
- * 	- suspend, used when internal lock-counting can't be applied. For instance
- * 	  when allocating a term for the outside and halloc needs to be used.
- * 	  Default: off.
- * 	- location, reserved and not used.
- * 	- proclock, disable proclock counting. Used when performance might be an
- * 	  issue. Accessible from erts_debug:lock_counters({process_locks, bool()}).
- * 	  Default: off.
- * 	- copysave, enable saving of destroyed locks (and thereby its statistics).
- * 	  If memory constraints is an issue this need to be disabled.
- * 	  Accessible from erts_debug:lock_counters({copy_save, bool()}).
- * 	  Default: off.
+ *  Each instance of a lock is the unique lock, i.e. set and id in that set.
+ *  For each lock there is a set of statistics with where and what impact
+ *  the lock aqusition had.
+ *
+ *  Runtime options
+ *  - suspend, used when internal lock-counting can't be applied. For instance
+ *    when allocating a term for the outside and halloc needs to be used.
+ *    Default: off.
+ *  - location, reserved and not used.
+ *  - proclock, disable proclock counting. Used when performance might be an
+ *    issue. Accessible from erts_debug:lock_counters({process_locks, bool()}).
+ *    Default: off.
+ *  - copysave, enable saving of destroyed locks (and thereby its statistics).
+ *    If memory constraints is an issue this need to be disabled.
+ *    Accessible from erts_debug:lock_counters({copy_save, bool()}).
+ *    Default: off.
  *
  */
 
@@ -95,13 +95,13 @@
 #define ERTS_LCNT_LO_WRITE      (((Uint16) 1) << 7)
 
 #define ERTS_LCNT_LO_READ_WRITE ( ERTS_LCNT_LO_READ  \
-				| ERTS_LCNT_LO_WRITE )
+        | ERTS_LCNT_LO_WRITE )
 
 #define ERTS_LCNT_LT_ALL        ( ERTS_LCNT_LT_SPINLOCK   \
-				| ERTS_LCNT_LT_RWSPINLOCK \
-				| ERTS_LCNT_LT_MUTEX      \
-				| ERTS_LCNT_LT_RWMUTEX    \
-				| ERTS_LCNT_LT_PROCLOCK   )
+        | ERTS_LCNT_LT_RWSPINLOCK \
+        | ERTS_LCNT_LT_MUTEX      \
+        | ERTS_LCNT_LT_RWMUTEX    \
+        | ERTS_LCNT_LT_PROCLOCK   )
 /* runtime options */
 
 #define ERTS_LCNT_OPT_SUSPEND   (((Uint16) 1) << 0)
@@ -111,75 +111,75 @@
 #define ERTS_LCNT_OPT_PORTLOCK  (((Uint16) 1) << 4)
 
 typedef struct {
-    unsigned long s;
-    unsigned long ns;
+  unsigned long s;
+  unsigned long ns;
 } erts_lcnt_time_t;
-    
+
 extern erts_lcnt_time_t timer_start;
 
 typedef struct {
-   Uint32 ns[ERTS_LCNT_HISTOGRAM_SLOT_SIZE]; /* log2 array of nano seconds occurences */
+  Uint32 ns[ERTS_LCNT_HISTOGRAM_SLOT_SIZE]; /* log2 array of nano seconds occurences */
 } erts_lcnt_hist_t;
 
 typedef struct erts_lcnt_lock_stats_s {
-    /* "tries" and "colls" needs to be atomic since
-     * trylock busy does not aquire a lock and there
-     * is no post action to rectify the situation
-     */
+  /* "tries" and "colls" needs to be atomic since
+   * trylock busy does not aquire a lock and there
+   * is no post action to rectify the situation
+   */
 
-    char         *file;       /* which file the lock was taken */
-    unsigned int  line;       /* line number in file */
-    
-    ethr_atomic_t tries;      /* n tries to get lock */
-    ethr_atomic_t colls;      /* n collisions of tries to get lock */
-    
-    unsigned long timer_n;    /* #times waited for lock */
-    erts_lcnt_time_t timer;   /* total wait time for lock */
-    erts_lcnt_hist_t hist;
+  char         *file;       /* which file the lock was taken */
+  unsigned int  line;       /* line number in file */
+
+  ethr_atomic_t tries;      /* n tries to get lock */
+  ethr_atomic_t colls;      /* n collisions of tries to get lock */
+
+  unsigned long timer_n;    /* #times waited for lock */
+  erts_lcnt_time_t timer;   /* total wait time for lock */
+  erts_lcnt_hist_t hist;
 } erts_lcnt_lock_stats_t;
 
 /* rw locks uses both states, other locks only uses w_state */
 typedef struct erts_lcnt_lock_s {
-    char *name;            /* lock name */
-    Uint16 flag;           /* lock type */
-    Eterm id;              /* id if possible */ 
+  char *name;            /* lock name */
+  Uint16 flag;           /* lock type */
+  Eterm id;              /* id if possible */
 
 #ifdef DEBUG
-    ethr_atomic_t flowstate;
+  ethr_atomic_t flowstate;
 #endif
 
-    /* lock states */    
-    ethr_atomic_t w_state; /* 0 not taken, otherwise n threads waiting */
-    ethr_atomic_t r_state; /* 0 not taken, > 0 -> writes will wait */
+  /* lock states */
+  ethr_atomic_t w_state; /* 0 not taken, otherwise n threads waiting */
+  ethr_atomic_t r_state; /* 0 not taken, > 0 -> writes will wait */
 
-    /* statistics */
-    unsigned int n_stats;
-    erts_lcnt_lock_stats_t stats[ERTS_LCNT_MAX_LOCK_LOCATIONS]; /* first entry is "undefined"*/
-    
-    /* chains for list handling  */
-    /* data is hold by lcnt_lock */
-    struct erts_lcnt_lock_s *prev;
-    struct erts_lcnt_lock_s *next;
+  /* statistics */
+  unsigned int n_stats;
+  erts_lcnt_lock_stats_t stats[ERTS_LCNT_MAX_LOCK_LOCATIONS]; /* first entry is "undefined"*/
+
+  /* chains for list handling  */
+  /* data is hold by lcnt_lock */
+  struct erts_lcnt_lock_s *prev;
+  struct erts_lcnt_lock_s *next;
 } erts_lcnt_lock_t;
 
 typedef struct {
-    erts_lcnt_lock_t *head;
-    erts_lcnt_lock_t *tail;
-    unsigned long n;
+  erts_lcnt_lock_t *head;
+  erts_lcnt_lock_t *tail;
+  unsigned long n;
 } erts_lcnt_lock_list_t;
-    
+
 typedef struct {
-    erts_lcnt_time_t duration;			/* time since last clear */
-    erts_lcnt_lock_list_t *current_locks;
-    erts_lcnt_lock_list_t *deleted_locks;
+  erts_lcnt_time_t duration;      /* time since last clear */
+  erts_lcnt_lock_list_t *current_locks;
+  erts_lcnt_lock_list_t *deleted_locks;
 } erts_lcnt_data_t;
 
 typedef struct {
-    int id;
+  int id;
 
-    erts_lcnt_time_t timer;	/* timer         */
-    int timer_set;		/* bool          */
-    int lock_in_conflict;       /* bool          */
+  erts_lcnt_time_t timer; /* timer         */
+  int timer_set;    /* bool          */
+  int lock_in_conflict;       /* bool          */
 } erts_lcnt_thread_data_t;
 
 /* globals */
@@ -198,7 +198,7 @@ void erts_lcnt_thread_exit_handler(void);
 /* list operations (local)  */
 erts_lcnt_lock_list_t *erts_lcnt_list_init(void);
 
-void erts_lcnt_list_clear( erts_lcnt_lock_list_t *list);
+void erts_lcnt_list_clear(erts_lcnt_lock_list_t *list);
 void erts_lcnt_list_insert(erts_lcnt_lock_list_t *list, erts_lcnt_lock_t *lock);
 void erts_lcnt_list_delete(erts_lcnt_lock_list_t *list, erts_lcnt_lock_t *lock);
 
@@ -226,7 +226,7 @@ void   erts_lcnt_clear_counters(void);
 char  *erts_lcnt_lock_type(Uint16 type);
 erts_lcnt_data_t *erts_lcnt_get_data(void);
 
-#define ERTS_LCNT_LOCK_TYPE(lockp)	((lockp)->flag & ERTS_LCNT_LT_ALL)
+#define ERTS_LCNT_LOCK_TYPE(lockp)  ((lockp)->flag & ERTS_LCNT_LT_ALL)
 
 #endif /* ifdef  ERTS_ENABLE_LOCK_COUNT  */
 #endif /* ifndef ERTS_LOCK_COUNT_H__     */

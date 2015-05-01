@@ -1,19 +1,19 @@
 /*
  * %CopyrightBegin%
- * 
+ *
  * Copyright Ericsson AB 2003-2013. All Rights Reserved.
- * 
+ *
  * The contents of this_ file are subject to the Erlang Public License,
  * Version 1.1, (the "License"); you may not use this_ file except in
  * compliance with the License. You should have received a copy of the
  * Erlang Public License along with this_ software. If not, it can be
  * retrieved online at http://www.erlang.org/.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
  * the License for the specific language governing rights and limitations
  * under the License.
- * 
+ *
  * %CopyrightEnd%
  */
 
@@ -29,11 +29,11 @@
 typedef struct BFAllctr_t_ BFAllctr_t;
 
 typedef struct {
-    int ao;
+  int ao;
 } BFAllctrInit_t;
 
 #define ERTS_DEFAULT_BF_ALLCTR_INIT {                                      \
-    0					/* (bool_) ao:   address order    */\
+    0         /* (bool_) ao:   address order    */\
 }
 
 void erts_bfalc_init(void);
@@ -52,13 +52,13 @@ Allctr_t *erts_bfalc_start(BFAllctr_t *, BFAllctrInit_t *, AllctrInit_t *);
 typedef struct RBTree_t_ RBTree_t;
 
 struct BFAllctr_t_ {
-    Allctr_t		allctr; /* Has to be first! */
+  Allctr_t    allctr; /* Has to be first! */
 
-    RBTree_t *		mbc_root;
-    int 		address_order;
+  RBTree_t     *mbc_root;
+  int     address_order;
 };
 
 UWord erts_bfalc_test(UWord, UWord, UWord);
 
 #endif /* #if defined(GET_ERL_BF_ALLOC_IMPL)
-	      && !defined(ERL_BF_ALLOC_IMPL__) */
+        && !defined(ERL_BF_ALLOC_IMPL__) */

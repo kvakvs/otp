@@ -43,61 +43,61 @@
 #define DFLAG_MAP_TAG             0x20000
 
 /* All flags that should be enabled when term_to_binary/1 is used. */
-#define TERM_TO_BINARY_DFLAGS (DFLAG_EXTENDED_REFERENCES	\
-			       | DFLAG_NEW_FUN_TAGS		\
-			       | DFLAG_NEW_FLOATS		\
-			       | DFLAG_EXTENDED_PIDS_PORTS	\
-			       | DFLAG_EXPORT_PTR_TAG		\
-			       | DFLAG_BIT_BINARIES             \
-			       | DFLAG_MAP_TAG)
+#define TERM_TO_BINARY_DFLAGS (DFLAG_EXTENDED_REFERENCES  \
+             | DFLAG_NEW_FUN_TAGS   \
+             | DFLAG_NEW_FLOATS   \
+             | DFLAG_EXTENDED_PIDS_PORTS  \
+             | DFLAG_EXPORT_PTR_TAG   \
+             | DFLAG_BIT_BINARIES             \
+             | DFLAG_MAP_TAG)
 
 /* opcodes used in distribution messages */
-#define DOP_LINK		1
-#define DOP_SEND		2
-#define DOP_EXIT		3
-#define DOP_UNLINK		4
+#define DOP_LINK    1
+#define DOP_SEND    2
+#define DOP_EXIT    3
+#define DOP_UNLINK    4
 /* Ancient DOP_NODE_LINK (5) was here, can be reused */
-#define DOP_REG_SEND		6
-#define DOP_GROUP_LEADER	7
-#define DOP_EXIT2		8
+#define DOP_REG_SEND    6
+#define DOP_GROUP_LEADER  7
+#define DOP_EXIT2   8
 
-#define DOP_SEND_TT		12
-#define DOP_EXIT_TT		13
-#define DOP_REG_SEND_TT		16
-#define DOP_EXIT2_TT		18
+#define DOP_SEND_TT   12
+#define DOP_EXIT_TT   13
+#define DOP_REG_SEND_TT   16
+#define DOP_EXIT2_TT    18
 
-#define DOP_MONITOR_P		19
-#define DOP_DEMONITOR_P		20
-#define DOP_MONITOR_P_EXIT	21
+#define DOP_MONITOR_P   19
+#define DOP_DEMONITOR_P   20
+#define DOP_MONITOR_P_EXIT  21
 
 /* distribution trap functions */
-extern Export* dsend2_trap;
-extern Export* dsend3_trap;
-extern Export* dlink_trap;
-extern Export* dunlink_trap;
-extern Export* dmonitor_node_trap;
-extern Export* dgroup_leader_trap;
-extern Export* dexit_trap;
-extern Export* dmonitor_p_trap;
+extern Export *dsend2_trap;
+extern Export *dsend3_trap;
+extern Export *dlink_trap;
+extern Export *dunlink_trap;
+extern Export *dmonitor_node_trap;
+extern Export *dgroup_leader_trap;
+extern Export *dexit_trap;
+extern Export *dmonitor_p_trap;
 
 typedef enum {
-    ERTS_DSP_NO_LOCK,
-    ERTS_DSP_RLOCK,
-    ERTS_DSP_RWLOCK
+  ERTS_DSP_NO_LOCK,
+  ERTS_DSP_RLOCK,
+  ERTS_DSP_RWLOCK
 } ErtsDSigPrepLock;
 
 
 typedef struct {
-    Process *proc;
-    DistEntry *dep;
-    Eterm cid;
-    Eterm connection_id;
-    int no_suspend;
+  Process *proc;
+  DistEntry *dep;
+  Eterm cid;
+  Eterm connection_id;
+  int no_suspend;
 } ErtsDSigData;
 
 #define ERTS_DE_IS_NOT_CONNECTED(DEP) \
   (ERTS_SMP_LC_ASSERT(erts_lc_rwmtx_is_rlocked(&(DEP)->rwmtx) \
-		      || erts_lc_rwmtx_is_rwlocked(&(DEP)->rwmtx)), \
+          || erts_lc_rwmtx_is_rwlocked(&(DEP)->rwmtx)), \
    (is_nil((DEP)->cid) || ((DEP)->status & ERTS_DE_SFLG_EXITING)))
 
 #define ERTS_DE_IS_CONNECTED(DEP) \
@@ -117,112 +117,132 @@ extern int erts_is_alive;
  */
 
 /* Connected; signal can be sent. */
-#define ERTS_DSIG_PREP_CONNECTED	0
+#define ERTS_DSIG_PREP_CONNECTED  0
 /* Not connected; connection needs to be set up. */
-#define ERTS_DSIG_PREP_NOT_CONNECTED	1
+#define ERTS_DSIG_PREP_NOT_CONNECTED  1
 /* Caller would be suspended on send operation. */
-#define ERTS_DSIG_PREP_WOULD_SUSPEND	2
+#define ERTS_DSIG_PREP_WOULD_SUSPEND  2
 /* System not alive (distributed) */
-#define ERTS_DSIG_PREP_NOT_ALIVE	3
+#define ERTS_DSIG_PREP_NOT_ALIVE  3
 
 ERTS_GLB_INLINE int erts_dsig_prepare(ErtsDSigData *,
-				      DistEntry *,
-				      Process *,
-				      ErtsDSigPrepLock,
-				      int);
+                                      DistEntry *,
+                                      Process *,
+                                      ErtsDSigPrepLock,
+                                      int);
 
 ERTS_GLB_INLINE
 void erts_schedule_dist_command(Port *, DistEntry *);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
-ERTS_GLB_INLINE int 
+ERTS_GLB_INLINE int
 erts_dsig_prepare(ErtsDSigData *dsdp,
-		  DistEntry *dep,
-		  Process *proc,
-		  ErtsDSigPrepLock dspl,
-		  int no_suspend)
+                  DistEntry *dep,
+                  Process *proc,
+                  ErtsDSigPrepLock dspl,
+                  int no_suspend)
 {
-    int failure;
-    if (!erts_is_alive)
-	return ERTS_DSIG_PREP_NOT_ALIVE;
-    if (!dep)
-	return ERTS_DSIG_PREP_NOT_CONNECTED;
-    if (dspl == ERTS_DSP_RWLOCK)
-	erts_smp_de_rwlock(dep);
-    else
-	erts_smp_de_rlock(dep);
-    if (ERTS_DE_IS_NOT_CONNECTED(dep)) {
-	failure = ERTS_DSIG_PREP_NOT_CONNECTED;
-	goto fail;
-    }
-    if (no_suspend) {
-	failure = ERTS_DSIG_PREP_CONNECTED;
-	erts_smp_mtx_lock(&dep->qlock);
-	if (dep->qflgs & ERTS_DE_QFLG_BUSY)
-	    failure = ERTS_DSIG_PREP_WOULD_SUSPEND;
-	erts_smp_mtx_unlock(&dep->qlock);
-	if (failure == ERTS_DSIG_PREP_WOULD_SUSPEND)
-	    goto fail;
-    }
-    dsdp->proc = proc;
-    dsdp->dep = dep;
-    dsdp->cid = dep->cid;
-    dsdp->connection_id = dep->connection_id;
-    dsdp->no_suspend = no_suspend;
-    if (dspl == ERTS_DSP_NO_LOCK)
-	erts_smp_de_runlock(dep);
-    return ERTS_DSIG_PREP_CONNECTED;
+  int failure;
 
- fail:
-    if (dspl == ERTS_DSP_RWLOCK)
-	erts_smp_de_rwunlock(dep);
-    else
-	erts_smp_de_runlock(dep);
-    return failure;
+  if (!erts_is_alive) {
+    return ERTS_DSIG_PREP_NOT_ALIVE;
+  }
+
+  if (!dep) {
+    return ERTS_DSIG_PREP_NOT_CONNECTED;
+  }
+
+  if (dspl == ERTS_DSP_RWLOCK) {
+    erts_smp_de_rwlock(dep);
+  } else {
+    erts_smp_de_rlock(dep);
+  }
+
+  if (ERTS_DE_IS_NOT_CONNECTED(dep)) {
+    failure = ERTS_DSIG_PREP_NOT_CONNECTED;
+    goto fail;
+  }
+
+  if (no_suspend) {
+    failure = ERTS_DSIG_PREP_CONNECTED;
+    erts_smp_mtx_lock(&dep->qlock);
+
+    if (dep->qflgs & ERTS_DE_QFLG_BUSY) {
+      failure = ERTS_DSIG_PREP_WOULD_SUSPEND;
+    }
+
+    erts_smp_mtx_unlock(&dep->qlock);
+
+    if (failure == ERTS_DSIG_PREP_WOULD_SUSPEND) {
+      goto fail;
+    }
+  }
+
+  dsdp->proc = proc;
+  dsdp->dep = dep;
+  dsdp->cid = dep->cid;
+  dsdp->connection_id = dep->connection_id;
+  dsdp->no_suspend = no_suspend;
+
+  if (dspl == ERTS_DSP_NO_LOCK) {
+    erts_smp_de_runlock(dep);
+  }
+
+  return ERTS_DSIG_PREP_CONNECTED;
+
+fail:
+
+  if (dspl == ERTS_DSP_RWLOCK) {
+    erts_smp_de_rwunlock(dep);
+  } else {
+    erts_smp_de_runlock(dep);
+  }
+
+  return failure;
 
 }
 
 ERTS_GLB_INLINE
 void erts_schedule_dist_command(Port *prt, DistEntry *dist_entry)
 {
-    DistEntry *dep;
-    Eterm id;
+  DistEntry *dep;
+  Eterm id;
 
-    if (prt) {
-	ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
-	ASSERT((erts_atomic32_read_nob(&prt->state)
-		& ERTS_PORT_SFLGS_DEAD) == 0);
-	ASSERT(prt->dist_entry);
+  if (prt) {
+    ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
+    ASSERT((erts_atomic32_read_nob(&prt->state)
+            & ERTS_PORT_SFLGS_DEAD) == 0);
+    ASSERT(prt->dist_entry);
 
-	dep = prt->dist_entry;
-	id = prt->common.id;
-    }
-    else {
-	ASSERT(dist_entry);
-	ERTS_SMP_LC_ASSERT(erts_lc_rwmtx_is_rlocked(&dist_entry->rwmtx)
-			   || erts_lc_rwmtx_is_rwlocked(&dist_entry->rwmtx));
-	ASSERT(is_internal_port(dist_entry->cid));
+    dep = prt->dist_entry;
+    id = prt->common.id;
+  } else {
+    ASSERT(dist_entry);
+    ERTS_SMP_LC_ASSERT(erts_lc_rwmtx_is_rlocked(&dist_entry->rwmtx)
+                       || erts_lc_rwmtx_is_rwlocked(&dist_entry->rwmtx));
+    ASSERT(is_internal_port(dist_entry->cid));
 
- 	dep = dist_entry;
-	id = dep->cid;
-    }
+    dep = dist_entry;
+    id = dep->cid;
+  }
 
-    if (!erts_smp_atomic_xchg_mb(&dep->dist_cmd_scheduled, 1))
-	erts_port_task_schedule(id, &dep->dist_cmd, ERTS_PORT_TASK_DIST_CMD);
+  if (!erts_smp_atomic_xchg_mb(&dep->dist_cmd_scheduled, 1)) {
+    erts_port_task_schedule(id, &dep->dist_cmd, ERTS_PORT_TASK_DIST_CMD);
+  }
 }
 
 #endif
 
 typedef struct {
-    ErtsLink *d_lnk;
-    ErtsLink *d_sub_lnk;
+  ErtsLink *d_lnk;
+  ErtsLink *d_sub_lnk;
 } ErtsDistLinkData;
 
 ERTS_GLB_INLINE void erts_remove_dist_link(ErtsDistLinkData *,
-					   Eterm,
-					   Eterm,
-					   DistEntry *);
+    Eterm,
+    Eterm,
+    DistEntry *);
 ERTS_GLB_INLINE int erts_was_dist_link_removed(ErtsDistLinkData *);
 ERTS_GLB_INLINE void erts_destroy_dist_link(ErtsDistLinkData *);
 
@@ -230,36 +250,41 @@ ERTS_GLB_INLINE void erts_destroy_dist_link(ErtsDistLinkData *);
 
 ERTS_GLB_INLINE void
 erts_remove_dist_link(ErtsDistLinkData *dldp,
-		      Eterm lid,
-		      Eterm rid,
-		      DistEntry *dep)
+                      Eterm lid,
+                      Eterm rid,
+                      DistEntry *dep)
 {
-    erts_smp_de_links_lock(dep);
-    dldp->d_lnk = erts_lookup_link(dep->nlinks, lid);
-    if (!dldp->d_lnk)
-	dldp->d_sub_lnk = nullptr;
-    else {
-	dldp->d_sub_lnk = erts_remove_link(&ERTS_LINK_ROOT(dldp->d_lnk), rid);
-	dldp->d_lnk = (ERTS_LINK_ROOT(dldp->d_lnk)
-		       ? nullptr
-		       : erts_remove_link(&dep->nlinks, lid));
-    }
-    erts_smp_de_links_unlock(dep);
+  erts_smp_de_links_lock(dep);
+  dldp->d_lnk = erts_lookup_link(dep->nlinks, lid);
+
+  if (!dldp->d_lnk) {
+    dldp->d_sub_lnk = nullptr;
+  } else {
+    dldp->d_sub_lnk = erts_remove_link(&ERTS_LINK_ROOT(dldp->d_lnk), rid);
+    dldp->d_lnk = (ERTS_LINK_ROOT(dldp->d_lnk)
+                   ? nullptr
+                   : erts_remove_link(&dep->nlinks, lid));
+  }
+
+  erts_smp_de_links_unlock(dep);
 }
 
 ERTS_GLB_INLINE int
 erts_was_dist_link_removed(ErtsDistLinkData *dldp)
 {
-    return dldp->d_sub_lnk != nullptr;
+  return dldp->d_sub_lnk != nullptr;
 }
 
 ERTS_GLB_INLINE void
 erts_destroy_dist_link(ErtsDistLinkData *dldp)
 {
-    if (dldp->d_lnk)
-	erts_destroy_link(dldp->d_lnk);
-    if (dldp->d_sub_lnk)
-	erts_destroy_link(dldp->d_sub_lnk);	
+  if (dldp->d_lnk) {
+    erts_destroy_link(dldp->d_lnk);
+  }
+
+  if (dldp->d_sub_lnk) {
+    erts_destroy_link(dldp->d_sub_lnk);
+  }
 }
 
 #endif
@@ -267,8 +292,8 @@ erts_destroy_dist_link(ErtsDistLinkData *dldp)
 /*
  * erts_dsig_send_* return values.
  */
-#define ERTS_DSIG_SEND_OK	0
-#define ERTS_DSIG_SEND_YIELD	1
+#define ERTS_DSIG_SEND_OK 0
+#define ERTS_DSIG_SEND_YIELD  1
 
 extern int erts_dsig_send_link(ErtsDSigData *, Eterm, Eterm);
 extern int erts_dsig_send_msg(ErtsDSigData *, Eterm, Eterm);

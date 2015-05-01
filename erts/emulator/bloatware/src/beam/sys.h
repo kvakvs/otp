@@ -40,7 +40,7 @@
 #  include "erl_win_sys.h"
 #elif defined (__OSE__)
 #  include "erl_ose_sys.h"
-#else 
+#else
 #  include "erl_unix_sys.h"
 #ifndef UNIX
 #  define UNIX 1
@@ -145,7 +145,7 @@ typedef ERTS_SYS_FD_TYPE ErtsSysFdType;
 #define ERTS_GLB_INLINE
 #endif
 
-#if ERTS_CAN_INLINE || defined(ERTS_DO_INCL_GLB_INLINE_FUNC_DEF) 
+#if ERTS_CAN_INLINE || defined(ERTS_DO_INCL_GLB_INLINE_FUNC_DEF)
 #  define ERTS_GLB_INLINE_INCL_FUNC_DEF 1
 #else
 #  define ERTS_GLB_INLINE_INCL_FUNC_DEF 0
@@ -179,8 +179,8 @@ typedef ERTS_SYS_FD_TYPE ErtsSysFdType;
 #define ERTS_ASSERT(e) \
     ((void) ((e) ? 1 : (erl_assert_error(#e, __func__, __FILE__, __LINE__), 0)))
 
-__decl_noreturn void __noreturn erl_assert_error(const char* expr, const char *func,
-						 const char* file, int line);
+__decl_noreturn void __noreturn erl_assert_error(const char *expr, const char *func,
+    const char *file, int line);
 
 #ifdef DEBUG
 #  define ASSERT(e) ERTS_ASSERT(e)
@@ -399,7 +399,7 @@ typedef short          int16_t;
 //#endif
 
 #if defined(ARCH_64) && !HAVE_INT64
-#error 64-bit architecture, but no appropriate type to use for Uint64 and Sint64 found 
+#error 64-bit architecture, but no appropriate type to use for Uint64 and Sint64 found
 #endif
 
 #ifdef WORDS_BIGENDIAN
@@ -411,13 +411,13 @@ typedef short          int16_t;
 #endif
 #if ERTS_SIZEOF_TERM == 8
 typedef union {
-    Uint val;
-    uint32_t hval[2];
+  Uint val;
+  uint32_t hval[2];
 } HUint;
 #elif ERTS_SIZEOF_TERM == 4
 typedef union {
-    Uint val;
-    uint16_t hval[2];
+  Uint val;
+  uint16_t hval[2];
 } HUint;
 #else
 #error "Unsupported size of term"
@@ -489,18 +489,18 @@ extern volatile int erts_writing_erl_crash_dump;
 
 /* Stuff that is useful for port programs, drivers, etc */
 
-#ifdef ISC32			/* Too much for the Makefile... */
-#  define signal	sigset
+#ifdef ISC32      /* Too much for the Makefile... */
+#  define signal  sigset
 #  define NO_ASINH
 #  define NO_ACOSH
 #  define NO_ATANH
 #  define NO_FTRUNCATE
 #  define SIG_SIGHOLD
-#  define _POSIX_SOURCE 
+#  define _POSIX_SOURCE
 #  define _XOPEN_SOURCE
 #endif
 
-#ifdef QNX			/* Too much for the Makefile... */
+#ifdef QNX      /* Too much for the Makefile... */
 #  define SYS_SELECT_H
 #  define NO_ERF
 #  define NO_ERFC
@@ -511,7 +511,7 @@ extern volatile int erts_writing_erl_crash_dump;
 #endif
 
 
-#ifdef WANT_NONBLOCKING	    /* must define this_ to pull in fcntl.h/ioctl.h */
+#ifdef WANT_NONBLOCKING     /* must define this_ to pull in fcntl.h/ioctl.h */
 
 /* This is really a mess... We used to use fcntl O_NDELAY, but that seems
    to only work on SunOS 4 - in particular, on SysV-based systems
@@ -525,13 +525,13 @@ extern volatile int erts_writing_erl_crash_dump;
 #  ifdef __WIN32__
 
 static unsigned long zero_value = 0, one_value = 1;
-#    define SET_BLOCKING(fd)	{ if (ioctlsocket((fd), FIONBIO, &zero_value) != 0) fprintf(stderr, "Error setting socket to non-blocking: %d\n", WSAGetLastError()); }
-#    define SET_NONBLOCKING(fd)	ioctlsocket((fd), FIONBIO, &one_value)
+#    define SET_BLOCKING(fd)  { if (ioctlsocket((fd), FIONBIO, &zero_value) != 0) fprintf(stderr, "Error setting socket to non-blocking: %d\n", WSAGetLastError()); }
+#    define SET_NONBLOCKING(fd) ioctlsocket((fd), FIONBIO, &one_value)
 
 #  else
-#    ifdef NB_FIONBIO		/* Old BSD */
+#    ifdef NB_FIONBIO   /* Old BSD */
 #      include <sys/ioctl.h>
-  static const int zero_value = 0, one_value = 1;
+static const int zero_value = 0, one_value = 1;
 #      define SET_BLOCKING(fd)         ioctl((fd), FIONBIO, &zero_value)
 #      define SET_NONBLOCKING(fd)      ioctl((fd), FIONBIO, &one_value)
 #      define ERRNO_BLOCK EWOULDBLOCK
@@ -542,7 +542,7 @@ static unsigned long zero_value = 0, one_value = 1;
 #        ifndef ERRNO_BLOCK            /* allow override (e.g. EAGAIN) via Makefile */
 #          define ERRNO_BLOCK EWOULDBLOCK
 #        endif
-#      else  /* !NB_O_NDELAY */	/* The True Way - POSIX!:-) */
+#      else  /* !NB_O_NDELAY */ /* The True Way - POSIX!:-) */
 #        define NB_FLAG O_NONBLOCK
 #        define ERRNO_BLOCK EAGAIN
 #      endif /* !NB_O_NDELAY */
@@ -554,16 +554,16 @@ static unsigned long zero_value = 0, one_value = 1;
 #  endif /* !__WIN32__ */
 #endif /* WANT_NONBLOCKING */
 
-__decl_noreturn void __noreturn erl_exit(int n, const char*, ...);
+__decl_noreturn void __noreturn erl_exit(int n, const char *, ...);
 
 /* Some special erl_exit() codes: */
-#define ERTS_INTR_EXIT	INT_MIN		/* called from signal handler */
-#define ERTS_ABORT_EXIT	(INT_MIN + 1)	/* no crash dump; only abort() */
-#define ERTS_DUMP_EXIT	(INT_MIN + 2)	/* crash dump; then exit() */
+#define ERTS_INTR_EXIT  INT_MIN   /* called from signal handler */
+#define ERTS_ABORT_EXIT (INT_MIN + 1) /* no crash dump; only abort() */
+#define ERTS_DUMP_EXIT  (INT_MIN + 2) /* crash dump; then exit() */
 
 #define ERTS_INTERNAL_ERROR(What) \
     erl_exit(ERTS_ABORT_EXIT, "%s:%d:%s(): Internal error: %s\n", \
-	     __FILE__, __LINE__, __func__, What)
+       __FILE__, __LINE__, __func__, What)
 
 Eterm erts_check_io_info(void *p);
 
@@ -575,23 +575,23 @@ Uint erts_sys_misc_mem_sz(void);
 #include "erl_printf.h"
 
 /* Io constants to erts_print and erts_putc */
-#define ERTS_PRINT_STDERR	(2)
-#define ERTS_PRINT_STDOUT	(1)
-#define ERTS_PRINT_INVALID	(0) /* Don't want to use 0 since CBUF was 0 */
-#define ERTS_PRINT_FILE		(-1)
-#define ERTS_PRINT_SBUF		(-2)
-#define ERTS_PRINT_SNBUF	(-3)
-#define ERTS_PRINT_DSBUF	(-4)
+#define ERTS_PRINT_STDERR (2)
+#define ERTS_PRINT_STDOUT (1)
+#define ERTS_PRINT_INVALID  (0) /* Don't want to use 0 since CBUF was 0 */
+#define ERTS_PRINT_FILE   (-1)
+#define ERTS_PRINT_SBUF   (-2)
+#define ERTS_PRINT_SNBUF  (-3)
+#define ERTS_PRINT_DSBUF  (-4)
 
-#define ERTS_PRINT_MIN		ERTS_PRINT_DSBUF
+#define ERTS_PRINT_MIN    ERTS_PRINT_DSBUF
 
 typedef struct {
-    char *buf;
-    size_t size;
+  char *buf;
+  size_t size;
 } erts_print_sn_buf;
 
-int erts_print(int to, void *arg, const char *format, ...);	/* in utils.c */
-int erts_putc(int to, void *arg, char);			/* in utils.c */
+int erts_print(int to, void *arg, const char *format, ...); /* in utils.c */
+int erts_putc(int to, void *arg, char);     /* in utils.c */
 
 /* logger stuff is declared here instead of in global.h, so sys files
    won't have to include global.h */
@@ -600,7 +600,7 @@ erts_dsprintf_buf_t *erts_create_logger_dsbuf(void);
 int erts_send_info_to_logger(Eterm, erts_dsprintf_buf_t *);
 int erts_send_warning_to_logger(Eterm, erts_dsprintf_buf_t *);
 int erts_send_error_to_logger(Eterm, erts_dsprintf_buf_t *);
-int erts_send_info_to_logger_str(Eterm, char *); 
+int erts_send_info_to_logger_str(Eterm, char *);
 int erts_send_warning_to_logger_str(Eterm, char *);
 int erts_send_error_to_logger_str(Eterm, char *);
 int erts_send_info_to_logger_nogl(erts_dsprintf_buf_t *);
@@ -617,22 +617,22 @@ int erts_send_error_to_logger_str_nogl(char *);
  */
 
 typedef struct _SysDriverOpts {
-    Uint ifd;			/* Input file descriptor (fd driver). */
-    Uint ofd;			/* Outputfile descriptor (fd driver). */
-    int packet_bytes;		/* Number of bytes in packet header. */
-    int read_write;		/* Read and write bits. */
-    int use_stdio;		/* Use standard I/O: TRUE or FALSE. */
-    int redir_stderr;           /* Redirect stderr to stdout: TRUE/FALSE. */
-    int hide_window;		/* Hide this_ windows (Windows). */
-    int exit_status;		/* Report exit status of subprocess. */
-    int overlapped_io;          /* Only has effect on windows NT et al */
-    char *envir;		/* Environment of the port process, */
-				/* in Windows format. */
-    char **argv;                /* Argument vector in Unix'ish format. */
-    char *wd;			/* Working directory. */
-    unsigned spawn_type;        /* Bitfield of ERTS_SPAWN_DRIVER | 
-				   ERTS_SPAWN_EXTERNAL | both*/ 
-    int parallelism;            /* Optimize for parallelism */
+  Uint ifd;     /* Input file descriptor (fd driver). */
+  Uint ofd;     /* Outputfile descriptor (fd driver). */
+  int packet_bytes;   /* Number of bytes in packet header. */
+  int read_write;   /* Read and write bits. */
+  int use_stdio;    /* Use standard I/O: TRUE or FALSE. */
+  int redir_stderr;           /* Redirect stderr to stdout: TRUE/FALSE. */
+  int hide_window;    /* Hide this_ windows (Windows). */
+  int exit_status;    /* Report exit status of subprocess. */
+  int overlapped_io;          /* Only has effect on windows NT et al */
+  char *envir;    /* Environment of the port process, */
+  /* in Windows format. */
+  char **argv;                /* Argument vector in Unix'ish format. */
+  char *wd;     /* Working directory. */
+  unsigned spawn_type;        /* Bitfield of ERTS_SPAWN_DRIVER |
+           ERTS_SPAWN_EXTERNAL | both*/
+  int parallelism;            /* Optimize for parallelism */
 } SysDriverOpts;
 
 extern char *erts_default_arg0;
@@ -654,12 +654,12 @@ ERTS_GLB_INLINE void erts_unblock_fpe(int);
 
 ERTS_GLB_INLINE int erts_block_fpe(void)
 {
-    return erts_sys_block_fpe();
+  return erts_sys_block_fpe();
 }
 
 ERTS_GLB_INLINE void erts_unblock_fpe(int unmasked)
 {
-    erts_sys_unblock_fpe(unmasked);
+  erts_sys_unblock_fpe(unmasked);
 }
 
 #endif /* #if ERTS_GLB_INLINE_INCL_FUNC_DEF */
@@ -667,20 +667,20 @@ ERTS_GLB_INLINE void erts_unblock_fpe(int unmasked)
 
 /* Dynamic library/driver loading */
 typedef struct {
-    char* str;
-}ErtsSysDdllError;
+  char *str;
+} ErtsSysDdllError;
 #define ERTS_SYS_DDLL_ERROR_INIT {nullptr}
-extern void erts_sys_ddll_free_error(ErtsSysDdllError*);
+extern void erts_sys_ddll_free_error(ErtsSysDdllError *);
 extern void erl_sys_ddll_init(void); /* to initialize mutexes etc */
-extern int erts_sys_ddll_open(const char *path, void **handle, ErtsSysDdllError*);
-extern int erts_sys_ddll_open_noext(char *path, void **handle, ErtsSysDdllError*);
+extern int erts_sys_ddll_open(const char *path, void **handle, ErtsSysDdllError *);
+extern int erts_sys_ddll_open_noext(char *path, void **handle, ErtsSysDdllError *);
 extern int erts_sys_ddll_load_driver_init(void *handle, void **function);
-extern int erts_sys_ddll_load_nif_init(void *handle, void **function,ErtsSysDdllError*);
-extern int erts_sys_ddll_close2(void *handle, ErtsSysDdllError*);
+extern int erts_sys_ddll_load_nif_init(void *handle, void **function, ErtsSysDdllError *);
+extern int erts_sys_ddll_close2(void *handle, ErtsSysDdllError *);
 #define erts_sys_ddll_close(H) erts_sys_ddll_close2(H,nullptr)
 extern void *erts_sys_ddll_call_init(void *function);
 extern void *erts_sys_ddll_call_nif_init(void *function);
-extern int erts_sys_ddll_sym2(void *handle, const char *name, void **function, ErtsSysDdllError*);
+extern int erts_sys_ddll_sym2(void *handle, const char *name, void **function, ErtsSysDdllError *);
 #define erts_sys_ddll_sym(H,N,F) erts_sys_ddll_sym2(H,N,F,nullptr)
 extern char *erts_sys_ddll_error(int code);
 
@@ -708,56 +708,56 @@ void sys_tty_reset(int);
 
 int sys_max_files(void);
 void sys_init_io(void);
-Preload* sys_preloaded(void);
-uint8_t* sys_preload_begin(Preload*);
-void sys_preload_end(Preload*);
+Preload *sys_preloaded(void);
+uint8_t *sys_preload_begin(Preload *);
+void sys_preload_end(Preload *);
 int sys_get_key(int);
-void elapsed_time_both(UWord *ms_user, UWord *ms_sys, 
-		       UWord *ms_user_diff, UWord *ms_sys_diff);
-void wall_clock_elapsed_time_both(UWord *ms_total, 
-				  UWord *ms_diff);
+void elapsed_time_both(UWord *ms_user, UWord *ms_sys,
+                       UWord *ms_user_diff, UWord *ms_sys_diff);
+void wall_clock_elapsed_time_both(UWord *ms_total,
+                                  UWord *ms_diff);
 void get_time(int *hour, int *minute, int *second);
 void get_date(int *year, int *month, int *day);
-void get_localtime(int *year, int *month, int *day, 
-		   int *hour, int *minute, int *second);
-void get_universaltime(int *year, int *month, int *day, 
-		       int *hour, int *minute, int *second);
-int seconds_to_univ(Sint64 seconds, 
-		    Sint *year, Sint *month, Sint *day, 
-		    Sint *hour, Sint *minute, Sint *second);
-int univ_to_seconds(Sint year, Sint month, Sint day, 
-		    Sint hour, Sint minute, Sint second,
-		    Sint64* seconds);
+void get_localtime(int *year, int *month, int *day,
+                   int *hour, int *minute, int *second);
+void get_universaltime(int *year, int *month, int *day,
+                       int *hour, int *minute, int *second);
+int seconds_to_univ(Sint64 seconds,
+                    Sint *year, Sint *month, Sint *day,
+                    Sint *hour, Sint *minute, Sint *second);
+int univ_to_seconds(Sint year, Sint month, Sint day,
+                    Sint hour, Sint minute, Sint second,
+                    Sint64 *seconds);
 int univ_to_local(
-    Sint *year, Sint *month, Sint *day, 
-		  Sint *hour, Sint *minute, Sint *second);
-int local_to_univ(Sint *year, Sint *month, Sint *day, 
-		  Sint *hour, Sint *minute, Sint *second, int isdst);
-void get_now(Uint*, Uint*, Uint*);
-void get_sys_now(Uint*, Uint*, Uint*);
+  Sint *year, Sint *month, Sint *day,
+  Sint *hour, Sint *minute, Sint *second);
+int local_to_univ(Sint *year, Sint *month, Sint *day,
+                  Sint *hour, Sint *minute, Sint *second, int isdst);
+void get_now(Uint *, Uint *, Uint *);
+void get_sys_now(Uint *, Uint *, Uint *);
 void set_break_quit(void (*)(void), void (*)(void));
 
-void os_flavor(char*, unsigned);
-void os_version(int*, int*, int*);
+void os_flavor(char *, unsigned);
+void os_version(int *, int *, int *);
 void init_getenv_state(GETENV_STATE *);
-char * getenv_string(GETENV_STATE *);
+char *getenv_string(GETENV_STATE *);
 void fini_getenv_state(GETENV_STATE *);
 
 #define HAVE_ERTS_CHECK_IO_DEBUG
 typedef struct {
-    int no_used_fds;
-    int no_driver_select_structs;
-    int no_driver_event_structs;
+  int no_used_fds;
+  int no_driver_select_structs;
+  int no_driver_event_structs;
 } ErtsCheckIoDebugInfo;
 int erts_check_io_debug(ErtsCheckIoDebugInfo *ip);
 
 /* xxxP */
 #define SYS_DEFAULT_FLOAT_DECIMALS 20
 void init_sys_float(void);
-int sys_chars_to_double(char*, double*);
-int sys_double_to_chars(double, char*, size_t);
-int sys_double_to_chars_ext(double, char*, size_t, size_t);
-int sys_double_to_chars_fast(double, char*, int, int, int);
+int sys_chars_to_double(char *, double *);
+int sys_double_to_chars(double, char *, size_t);
+int sys_double_to_chars_ext(double, char *, size_t, size_t);
+int sys_double_to_chars_fast(double, char *, int, int, int);
 void sys_get_pid(char *, size_t);
 
 /* erts_sys_putenv() returns, 0 on success and a value != 0 on failure. */
@@ -814,102 +814,114 @@ typedef erts_smp_atomic_t erts_refc_t;
 ERTS_GLB_INLINE void erts_refc_init(erts_refc_t *refcp, erts_aint_t val);
 ERTS_GLB_INLINE void erts_refc_inc(erts_refc_t *refcp, erts_aint_t min_val);
 ERTS_GLB_INLINE erts_aint_t erts_refc_inctest(erts_refc_t *refcp,
-					      erts_aint_t min_val);
+    erts_aint_t min_val);
 ERTS_GLB_INLINE void erts_refc_dec(erts_refc_t *refcp, erts_aint_t min_val);
 ERTS_GLB_INLINE erts_aint_t erts_refc_dectest(erts_refc_t *refcp,
-					      erts_aint_t min_val);
+    erts_aint_t min_val);
 ERTS_GLB_INLINE void erts_refc_add(erts_refc_t *refcp, erts_aint_t diff,
-				   erts_aint_t min_val);
+                                   erts_aint_t min_val);
 ERTS_GLB_INLINE erts_aint_t erts_refc_read(erts_refc_t *refcp,
-					   erts_aint_t min_val);
+    erts_aint_t min_val);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
 ERTS_GLB_INLINE void
 erts_refc_init(erts_refc_t *refcp, erts_aint_t val)
 {
-    erts_smp_atomic_init_nob((erts_smp_atomic_t *) refcp, val);
+  erts_smp_atomic_init_nob((erts_smp_atomic_t *) refcp, val);
 }
 
 ERTS_GLB_INLINE void
 erts_refc_inc(erts_refc_t *refcp, erts_aint_t min_val)
 {
 #ifdef ERTS_REFC_DEBUG
-    erts_aint_t val = erts_smp_atomic_inc_read_nob((erts_smp_atomic_t *) refcp);
-    if (val < min_val)
-	erl_exit(ERTS_ABORT_EXIT,
-		 "erts_refc_inc(): Bad refc found (refc=%ld < %ld)!\n",
-		 val, min_val);
+  erts_aint_t val = erts_smp_atomic_inc_read_nob((erts_smp_atomic_t *) refcp);
+
+  if (val < min_val)
+    erl_exit(ERTS_ABORT_EXIT,
+             "erts_refc_inc(): Bad refc found (refc=%ld < %ld)!\n",
+             val, min_val);
+
 #else
-    erts_smp_atomic_inc_nob((erts_smp_atomic_t *) refcp);
+  erts_smp_atomic_inc_nob((erts_smp_atomic_t *) refcp);
 #endif
 }
 
 ERTS_GLB_INLINE erts_aint_t
 erts_refc_inctest(erts_refc_t *refcp, erts_aint_t min_val)
 {
-    erts_aint_t val = erts_smp_atomic_inc_read_nob((erts_smp_atomic_t *) refcp);
+  erts_aint_t val = erts_smp_atomic_inc_read_nob((erts_smp_atomic_t *) refcp);
 #ifdef ERTS_REFC_DEBUG
-    if (val < min_val)
-	erl_exit(ERTS_ABORT_EXIT,
-		 "erts_refc_inctest(): Bad refc found (refc=%ld < %ld)!\n",
-		 val, min_val);
+
+  if (val < min_val)
+    erl_exit(ERTS_ABORT_EXIT,
+             "erts_refc_inctest(): Bad refc found (refc=%ld < %ld)!\n",
+             val, min_val);
+
 #endif
-    return val;
+  return val;
 }
 
 ERTS_GLB_INLINE void
 erts_refc_dec(erts_refc_t *refcp, erts_aint_t min_val)
 {
 #ifdef ERTS_REFC_DEBUG
-    erts_aint_t val = erts_smp_atomic_dec_read_nob((erts_smp_atomic_t *) refcp);
-    if (val < min_val)
-	erl_exit(ERTS_ABORT_EXIT,
-		 "erts_refc_dec(): Bad refc found (refc=%ld < %ld)!\n",
-		 val, min_val);
+  erts_aint_t val = erts_smp_atomic_dec_read_nob((erts_smp_atomic_t *) refcp);
+
+  if (val < min_val)
+    erl_exit(ERTS_ABORT_EXIT,
+             "erts_refc_dec(): Bad refc found (refc=%ld < %ld)!\n",
+             val, min_val);
+
 #else
-    erts_smp_atomic_dec_nob((erts_smp_atomic_t *) refcp);
+  erts_smp_atomic_dec_nob((erts_smp_atomic_t *) refcp);
 #endif
 }
 
 ERTS_GLB_INLINE erts_aint_t
 erts_refc_dectest(erts_refc_t *refcp, erts_aint_t min_val)
 {
-    erts_aint_t val = erts_smp_atomic_dec_read_nob((erts_smp_atomic_t *) refcp);
+  erts_aint_t val = erts_smp_atomic_dec_read_nob((erts_smp_atomic_t *) refcp);
 #ifdef ERTS_REFC_DEBUG
-    if (val < min_val)
-	erl_exit(ERTS_ABORT_EXIT,
-		 "erts_refc_dectest(): Bad refc found (refc=%ld < %ld)!\n",
-		 val, min_val);
+
+  if (val < min_val)
+    erl_exit(ERTS_ABORT_EXIT,
+             "erts_refc_dectest(): Bad refc found (refc=%ld < %ld)!\n",
+             val, min_val);
+
 #endif
-    return val;
+  return val;
 }
 
 ERTS_GLB_INLINE void
 erts_refc_add(erts_refc_t *refcp, erts_aint_t diff, erts_aint_t min_val)
 {
 #ifdef ERTS_REFC_DEBUG
-    erts_aint_t val = erts_smp_atomic_add_read_nob((erts_smp_atomic_t *) refcp, diff);
-    if (val < min_val)
-	erl_exit(ERTS_ABORT_EXIT,
-		 "erts_refc_add(%ld): Bad refc found (refc=%ld < %ld)!\n",
-		 diff, val, min_val);
+  erts_aint_t val = erts_smp_atomic_add_read_nob((erts_smp_atomic_t *) refcp, diff);
+
+  if (val < min_val)
+    erl_exit(ERTS_ABORT_EXIT,
+             "erts_refc_add(%ld): Bad refc found (refc=%ld < %ld)!\n",
+             diff, val, min_val);
+
 #else
-    erts_smp_atomic_add_nob((erts_smp_atomic_t *) refcp, diff);
+  erts_smp_atomic_add_nob((erts_smp_atomic_t *) refcp, diff);
 #endif
 }
 
 ERTS_GLB_INLINE erts_aint_t
 erts_refc_read(erts_refc_t *refcp, erts_aint_t min_val)
 {
-    erts_aint_t val = erts_smp_atomic_read_nob((erts_smp_atomic_t *) refcp);
+  erts_aint_t val = erts_smp_atomic_read_nob((erts_smp_atomic_t *) refcp);
 #ifdef ERTS_REFC_DEBUG
-    if (val < min_val)
-	erl_exit(ERTS_ABORT_EXIT,
-		 "erts_refc_read(): Bad refc found (refc=%ld < %ld)!\n",
-		 val, min_val);
+
+  if (val < min_val)
+    erl_exit(ERTS_ABORT_EXIT,
+             "erts_refc_read(): Bad refc found (refc=%ld < %ld)!\n",
+             val, min_val);
+
 #endif
-    return val;
+  return val;
 }
 
 #endif /* #if ERTS_GLB_INLINE_INCL_FUNC_DEF */
@@ -971,7 +983,7 @@ extern int erts_use_kernel_poll;
                             ((char*)(s))[5] = (char)((Sint64)(i) >> 16) & 0xff;\
                             ((char*)(s))[6] = (char)((Sint64)(i) >> 8)  & 0xff;\
                             ((char*)(s))[7] = (char)((Sint64)(i))       & 0xff;\
-                           } while (0) 
+                           } while (0)
 
 #define get_int32(s) ((((uint8_t*) (s))[0] << 24) | \
                       (((uint8_t*) (s))[1] << 16) | \
@@ -1016,7 +1028,7 @@ extern int erts_use_kernel_poll;
  */
 
 #ifdef DEBUG
-void erl_debug(char* format, ...);
+void erl_debug(char *format, ...);
 void erl_bin_write(uint8_t *, int, int);
 
 #  define DEBUGF(x) erl_debug x
@@ -1027,14 +1039,14 @@ void erl_bin_write(uint8_t *, int, int);
 #ifdef __WIN32__
 #ifdef ARCH_64
 #define ERTS_ALLOC_ALIGN_BYTES 16
-#define ERTS_SMALL_ABS(Small) _abs64(Small) 
+#define ERTS_SMALL_ABS(Small) _abs64(Small)
 #else
 #define ERTS_ALLOC_ALIGN_BYTES 8
-#define ERTS_SMALL_ABS(Small) labs(Small) 
+#define ERTS_SMALL_ABS(Small) labs(Small)
 #endif
 #else
 #define ERTS_ALLOC_ALIGN_BYTES 8
-#define ERTS_SMALL_ABS(Small) labs(Small) 
+#define ERTS_SMALL_ABS(Small) labs(Small)
 #endif
 
 #ifndef ERTS_HAVE_ERTS_SYS_ALIGNED_ALLOC
@@ -1043,13 +1055,13 @@ void erl_bin_write(uint8_t *, int, int);
 
 #ifdef __WIN32__
 void call_break_handler(void);
-char* last_error(void);
-char* win32_errorstr(int);
+char *last_error(void);
+char *win32_errorstr(int);
 #endif
 
 /************************************************************************
- * Find out the native filename encoding of the process (look at locale of 
- * Unix processes and just do UTF16 on windows 
+ * Find out the native filename encoding of the process (look at locale of
+ * Unix processes and just do UTF16 on windows
  ************************************************************************/
 #define ERL_FILENAME_UNKNOWN   (0)
 #define ERL_FILENAME_LATIN1    (1)
@@ -1081,7 +1093,7 @@ int erts_get_native_filename_encoding(void);
 void erts_set_user_requested_filename_encoding(int encoding, int warning);
 int erts_get_user_requested_filename_encoding(void);
 int erts_get_filename_warning_type(void);
-/* This function is called from erl_init. The setting is read by BIF's 
+/* This function is called from erl_init. The setting is read by BIF's
    in io/io_lib. Setting is not atomic. */
 void erts_set_printable_characters(int range);
 /* Get the setting (ERL_PRINTABLE_CHARACTERS_{LATIN1|UNICODE} */

@@ -37,30 +37,30 @@
  */
 
 typedef struct erl_sub_bin {
-    Eterm thing_word;		/* Subtag SUB_BINARY_SUBTAG. */
-    Uint size;			/* Binary size in bytes. */
-    Uint offs;			/* Offset into original binary. */
-    uint8_t bitsize; 
-    uint8_t bitoffs; 
-    uint8_t is_writable;		/* The underlying binary is writable */
-    Eterm orig;			/* Original binary (REFC or HEAP binary). */
+  Eterm thing_word;   /* Subtag SUB_BINARY_SUBTAG. */
+  Uint size;      /* Binary size in bytes. */
+  Uint offs;      /* Offset into original binary. */
+  uint8_t bitsize;
+  uint8_t bitoffs;
+  uint8_t is_writable;    /* The underlying binary is writable */
+  Eterm orig;     /* Original binary (REFC or HEAP binary). */
 } ErlSubBin;
 
 #define ERL_SUB_BIN_SIZE (sizeof(ErlSubBin)/sizeof(Eterm))
-#define HEADER_SUB_BIN	_make_header(ERL_SUB_BIN_SIZE-2,_TAG_HEADER_SUB_BIN)
+#define HEADER_SUB_BIN  _make_header(ERL_SUB_BIN_SIZE-2,_TAG_HEADER_SUB_BIN)
 
 /*
  * This structure represents a HEAP_BINARY.
  */
 
 typedef struct erl_heap_bin {
-    Eterm thing_word;		/* Subtag HEAP_BINARY_SUBTAG. */
-    Uint size;			/* Binary size in bytes. */
-    Eterm data[1];		/* The data in the binary. */
+  Eterm thing_word;   /* Subtag HEAP_BINARY_SUBTAG. */
+  Uint size;      /* Binary size in bytes. */
+  Eterm data[1];    /* The data in the binary. */
 } ErlHeapBin;
 
-#define heap_bin_size(num_bytes)		\
-  (sizeof(ErlHeapBin)/sizeof(Eterm) - 1 +	\
+#define heap_bin_size(num_bytes)    \
+  (sizeof(ErlHeapBin)/sizeof(Eterm) - 1 + \
    ((num_bytes)+sizeof(Eterm)-1)/sizeof(Eterm))
 
 #define header_heap_bin(num_bytes) \
@@ -73,14 +73,14 @@ typedef struct erl_heap_bin {
 #define binary_size(Bin) (binary_val(Bin)[1])
 #define binary_size_rel(Bin,BasePtr) (binary_val_rel(Bin,BasePtr)[1])
 
-#define binary_bitsize(Bin)			\
-  ((*binary_val(Bin) == HEADER_SUB_BIN) ?	\
-   ((ErlSubBin *) binary_val(Bin))->bitsize:	\
+#define binary_bitsize(Bin)     \
+  ((*binary_val(Bin) == HEADER_SUB_BIN) ? \
+   ((ErlSubBin *) binary_val(Bin))->bitsize:  \
    0)
 
-#define binary_bitoffset(Bin)			\
-  ((*binary_val(Bin) == HEADER_SUB_BIN) ?	\
-   ((ErlSubBin *) binary_val(Bin))->bitoffs:	\
+#define binary_bitoffset(Bin)     \
+  ((*binary_val(Bin) == HEADER_SUB_BIN) ? \
+   ((ErlSubBin *) binary_val(Bin))->bitoffs:  \
    0)
 
 /*
@@ -98,22 +98,22 @@ typedef struct erl_heap_bin {
      ERTS_GET_BINARY_BYTES_REL(Bin,Bytep,Bitoffs,Bitsize,nullptr)
 
 #define ERTS_GET_BINARY_BYTES_REL(Bin,Bytep,Bitoffs,Bitsize,BasePtr)    \
-do {									\
-    Eterm* _real_bin = binary_val_rel(Bin,BasePtr);			\
-    Uint _offs = 0;							\
-    Bitoffs = Bitsize = 0;						\
-    if (*_real_bin == HEADER_SUB_BIN) {					\
-	ErlSubBin* _sb = (ErlSubBin *) _real_bin;			\
-	_offs = _sb->offs;						\
-        Bitoffs = _sb->bitoffs;						\
-        Bitsize = _sb->bitsize;						\
-	_real_bin = binary_val_rel(_sb->orig,BasePtr);			\
-    }									\
-    if (*_real_bin == HEADER_PROC_BIN) {				\
-	Bytep = ((ProcBin *) _real_bin)->bytes + _offs;			\
-    } else {								\
-	Bytep = (uint8_t *)(&(((ErlHeapBin *) _real_bin)->data)) + _offs;	\
-    }									\
+do {                  \
+    Eterm* _real_bin = binary_val_rel(Bin,BasePtr);     \
+    Uint _offs = 0;             \
+    Bitoffs = Bitsize = 0;            \
+    if (*_real_bin == HEADER_SUB_BIN) {         \
+  ErlSubBin* _sb = (ErlSubBin *) _real_bin;     \
+  _offs = _sb->offs;            \
+        Bitoffs = _sb->bitoffs;           \
+        Bitsize = _sb->bitsize;           \
+  _real_bin = binary_val_rel(_sb->orig,BasePtr);      \
+    }                 \
+    if (*_real_bin == HEADER_PROC_BIN) {        \
+  Bytep = ((ProcBin *) _real_bin)->bytes + _offs;     \
+    } else {                \
+  Bytep = (uint8_t *)(&(((ErlHeapBin *) _real_bin)->data)) + _offs; \
+    }                 \
 } while (0)
 
 /*
@@ -133,34 +133,34 @@ do {									\
      ERTS_GET_REAL_BIN_REL(Bin, RealBin, ByteOffset, BitOffset, BitSize, nullptr)
 
 #define ERTS_GET_REAL_BIN_REL(Bin, RealBin, ByteOffset, BitOffset, BitSize, BasePtr) \
-  do {									\
-    ErlSubBin* _sb = (ErlSubBin *) binary_val_rel(Bin,BasePtr);	        \
-    if (_sb->thing_word == HEADER_SUB_BIN) {				\
-      RealBin = _sb->orig;						\
-      ByteOffset = _sb->offs;						\
-      BitOffset = _sb->bitoffs;						\
-      BitSize = _sb->bitsize;						\
-    } else {								\
-      RealBin = Bin;							\
-      ByteOffset = BitOffset = BitSize = 0;				\
-    }									\
+  do {                  \
+    ErlSubBin* _sb = (ErlSubBin *) binary_val_rel(Bin,BasePtr);         \
+    if (_sb->thing_word == HEADER_SUB_BIN) {        \
+      RealBin = _sb->orig;            \
+      ByteOffset = _sb->offs;           \
+      BitOffset = _sb->bitoffs;           \
+      BitSize = _sb->bitsize;           \
+    } else {                \
+      RealBin = Bin;              \
+      ByteOffset = BitOffset = BitSize = 0;       \
+    }                 \
   } while (0)
 
 /*
  * Get a pointer to the binary bytes, for a heap or refc binary
  * (NOT sub binary).
  */
-#define binary_bytes(Bin)						\
-  (*binary_val(Bin) == HEADER_PROC_BIN ?				\
-   ((ProcBin *) binary_val(Bin))->bytes :				\
-   (ASSERT(thing_subtag(*binary_val(Bin)) == HEAP_BINARY_SUBTAG),	\
+#define binary_bytes(Bin)           \
+  (*binary_val(Bin) == HEADER_PROC_BIN ?        \
+   ((ProcBin *) binary_val(Bin))->bytes :       \
+   (ASSERT(thing_subtag(*binary_val(Bin)) == HEAP_BINARY_SUBTAG), \
    (uint8_t *)(&(((ErlHeapBin *) binary_val(Bin))->data))))
 
 void erts_init_binary(void);
 
-uint8_t* erts_get_aligned_binary_bytes_extra(Eterm, uint8_t**, ErtsAlcType_t, unsigned extra);
+uint8_t *erts_get_aligned_binary_bytes_extra(Eterm, uint8_t **, ErtsAlcType_t, unsigned extra);
 /* Used by unicode module */
-Eterm erts_bin_bytes_to_list(Eterm previous, Eterm* hp, uint8_t* bytes, Uint size, Uint bitoffs);
+Eterm erts_bin_bytes_to_list(Eterm previous, Eterm *hp, uint8_t *bytes, Uint size, Uint bitoffs);
 
 /*
  * Common implementation for erlang:list_to_binary/1 and binary:list_to_bin/1
@@ -185,9 +185,9 @@ BIF_RETTYPE erts_binary_part(Process *p, Eterm binary, Eterm epos, Eterm elen);
 #define ERTS_CHK_BIN_ALIGNMENT(B) \
   do { ASSERT(!(B) || (((UWord) &((Binary *)(B))->orig_bytes[0]) & ERTS_BIN_ALIGNMENT_MASK) == ((UWord) 0)); } while(0)
 
-ERTS_GLB_INLINE uint8_t* erts_get_aligned_binary_bytes(Eterm bin, uint8_t** base_ptr);
-ERTS_GLB_INLINE void erts_free_aligned_binary_bytes(uint8_t* buf);
-ERTS_GLB_INLINE void erts_free_aligned_binary_bytes_extra(uint8_t* buf, ErtsAlcType_t);
+ERTS_GLB_INLINE uint8_t *erts_get_aligned_binary_bytes(Eterm bin, uint8_t **base_ptr);
+ERTS_GLB_INLINE void erts_free_aligned_binary_bytes(uint8_t *buf);
+ERTS_GLB_INLINE void erts_free_aligned_binary_bytes_extra(uint8_t *buf, ErtsAlcType_t);
 ERTS_GLB_INLINE Binary *erts_bin_drv_alloc_fnf(Uint size);
 ERTS_GLB_INLINE Binary *erts_bin_drv_alloc(Uint size);
 ERTS_GLB_INLINE Binary *erts_bin_nrml_alloc(Uint size);
@@ -195,30 +195,30 @@ ERTS_GLB_INLINE Binary *erts_bin_realloc_fnf(Binary *bp, Uint size);
 ERTS_GLB_INLINE Binary *erts_bin_realloc(Binary *bp, Uint size);
 ERTS_GLB_INLINE void erts_bin_free(Binary *bp);
 ERTS_GLB_INLINE Binary *erts_create_magic_binary(Uint size,
-						 void (*destructor)(Binary *));
+    void (*destructor)(Binary *));
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
 #include <stddef.h> /* offsetof */
 
-ERTS_GLB_INLINE uint8_t*
-erts_get_aligned_binary_bytes(Eterm bin, uint8_t** base_ptr)
+ERTS_GLB_INLINE uint8_t *
+erts_get_aligned_binary_bytes(Eterm bin, uint8_t **base_ptr)
 {
-    return erts_get_aligned_binary_bytes_extra(bin, base_ptr, ERTS_ALC_T_TMP, 0);
+  return erts_get_aligned_binary_bytes_extra(bin, base_ptr, ERTS_ALC_T_TMP, 0);
 }
 
 ERTS_GLB_INLINE void
-erts_free_aligned_binary_bytes_extra(uint8_t* buf, ErtsAlcType_t allocator)
+erts_free_aligned_binary_bytes_extra(uint8_t *buf, ErtsAlcType_t allocator)
 {
-    if (buf) {
-	erts_free(allocator, (void *) buf);
-    }
+  if (buf) {
+    erts_free(allocator, (void *) buf);
+  }
 }
 
 ERTS_GLB_INLINE void
-erts_free_aligned_binary_bytes(uint8_t* buf)
+erts_free_aligned_binary_bytes(uint8_t *buf)
 {
-    erts_free_aligned_binary_bytes_extra(buf,ERTS_ALC_T_TMP);
+  erts_free_aligned_binary_bytes_extra(buf, ERTS_ALC_T_TMP);
 }
 
 /* Explicit extra bytes allocated to counter buggy drivers.
@@ -234,97 +234,121 @@ erts_free_aligned_binary_bytes(uint8_t* buf)
 ERTS_GLB_INLINE Binary *
 erts_bin_drv_alloc_fnf(Uint size)
 {
-    Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
-    void *res;
-    if (bsize < size) /* overflow */
-        return nullptr;
-    res = erts_alloc_fnf(ERTS_ALC_T_DRV_BINARY, bsize);
-    ERTS_CHK_BIN_ALIGNMENT(res);
-    return (Binary *) res;
+  Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
+  void *res;
+
+  if (bsize < size) { /* overflow */
+    return nullptr;
+  }
+
+  res = erts_alloc_fnf(ERTS_ALC_T_DRV_BINARY, bsize);
+  ERTS_CHK_BIN_ALIGNMENT(res);
+  return (Binary *) res;
 }
 
 ERTS_GLB_INLINE Binary *
 erts_bin_drv_alloc(Uint size)
 {
-    Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
-    void *res;
-    if (bsize < size) /* overflow */
-	erts_alloc_enomem(ERTS_ALC_T_DRV_BINARY, size);
-    res = erts_alloc(ERTS_ALC_T_DRV_BINARY, bsize);
-    ERTS_CHK_BIN_ALIGNMENT(res);
-    return (Binary *) res;
+  Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
+  void *res;
+
+  if (bsize < size) { /* overflow */
+    erts_alloc_enomem(ERTS_ALC_T_DRV_BINARY, size);
+  }
+
+  res = erts_alloc(ERTS_ALC_T_DRV_BINARY, bsize);
+  ERTS_CHK_BIN_ALIGNMENT(res);
+  return (Binary *) res;
 }
 
 
 ERTS_GLB_INLINE Binary *
 erts_bin_nrml_alloc(Uint size)
 {
-    Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
-    void *res;
-    if (bsize < size) /* overflow */
-	erts_alloc_enomem(ERTS_ALC_T_BINARY, size);
-    res = erts_alloc(ERTS_ALC_T_BINARY, bsize);
-    ERTS_CHK_BIN_ALIGNMENT(res);
-    return (Binary *) res;
+  Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
+  void *res;
+
+  if (bsize < size) { /* overflow */
+    erts_alloc_enomem(ERTS_ALC_T_BINARY, size);
+  }
+
+  res = erts_alloc(ERTS_ALC_T_BINARY, bsize);
+  ERTS_CHK_BIN_ALIGNMENT(res);
+  return (Binary *) res;
 }
 
 ERTS_GLB_INLINE Binary *
 erts_bin_realloc_fnf(Binary *bp, Uint size)
 {
-    Binary *nbp;
-    Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
-    ErtsAlcType_t type = (bp->flags & BIN_FLAG_DRV) ? ERTS_ALC_T_DRV_BINARY
-	                                            : ERTS_ALC_T_BINARY;
-    ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
-    if (bsize < size) /* overflow */
-        return nullptr;
-    nbp = (Binary *)erts_realloc_fnf(type, (void *) bp, bsize);
-    ERTS_CHK_BIN_ALIGNMENT(nbp);
-    return nbp;
+  Binary *nbp;
+  Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
+  ErtsAlcType_t type = (bp->flags & BIN_FLAG_DRV) ? ERTS_ALC_T_DRV_BINARY
+                       : ERTS_ALC_T_BINARY;
+  ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
+
+  if (bsize < size) { /* overflow */
+    return nullptr;
+  }
+
+  nbp = (Binary *)erts_realloc_fnf(type, (void *) bp, bsize);
+  ERTS_CHK_BIN_ALIGNMENT(nbp);
+  return nbp;
 }
 
 ERTS_GLB_INLINE Binary *
 erts_bin_realloc(Binary *bp, Uint size)
 {
-    Binary *nbp;
-    Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
-    ErtsAlcType_t type = (bp->flags & BIN_FLAG_DRV) ? ERTS_ALC_T_DRV_BINARY
-	                                            : ERTS_ALC_T_BINARY;
-    ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
-    if (bsize < size) /* overflow */
-	erts_realloc_enomem(type, bp, size);
-    nbp = (Binary *)erts_realloc_fnf(type, (void *) bp, bsize);
-    if (!nbp)
-	erts_realloc_enomem(type, bp, bsize);
-    ERTS_CHK_BIN_ALIGNMENT(nbp);
-    return nbp;
+  Binary *nbp;
+  Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
+  ErtsAlcType_t type = (bp->flags & BIN_FLAG_DRV) ? ERTS_ALC_T_DRV_BINARY
+                       : ERTS_ALC_T_BINARY;
+  ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
+
+  if (bsize < size) { /* overflow */
+    erts_realloc_enomem(type, bp, size);
+  }
+
+  nbp = (Binary *)erts_realloc_fnf(type, (void *) bp, bsize);
+
+  if (!nbp) {
+    erts_realloc_enomem(type, bp, bsize);
+  }
+
+  ERTS_CHK_BIN_ALIGNMENT(nbp);
+  return nbp;
 }
 
 ERTS_GLB_INLINE void
 erts_bin_free(Binary *bp)
 {
-    if (bp->flags & BIN_FLAG_MAGIC)
-	ERTS_MAGIC_BIN_DESTRUCTOR(bp)(bp);
-    if (bp->flags & BIN_FLAG_DRV)
-	erts_free(ERTS_ALC_T_DRV_BINARY, (void *) bp);
-    else
-	erts_free(ERTS_ALC_T_BINARY, (void *) bp);
+  if (bp->flags & BIN_FLAG_MAGIC) {
+    ERTS_MAGIC_BIN_DESTRUCTOR(bp)(bp);
+  }
+
+  if (bp->flags & BIN_FLAG_DRV) {
+    erts_free(ERTS_ALC_T_DRV_BINARY, (void *) bp);
+  } else {
+    erts_free(ERTS_ALC_T_BINARY, (void *) bp);
+  }
 }
 
 ERTS_GLB_INLINE Binary *
 erts_create_magic_binary(Uint size, void (*destructor)(Binary *))
 {
-    Uint bsize = ERTS_MAGIC_BIN_SIZE(size);
-    Binary* bptr = (Binary *)erts_alloc_fnf(ERTS_ALC_T_BINARY, bsize);
-    ASSERT(bsize > size);
-    if (!bptr)
-	erts_alloc_n_enomem(ERTS_ALC_T2N(ERTS_ALC_T_BINARY), bsize);
-    ERTS_CHK_BIN_ALIGNMENT(bptr);
-    bptr->flags = BIN_FLAG_MAGIC;
-    bptr->orig_size = ERTS_MAGIC_BIN_ORIG_SIZE(size);
-    erts_refc_init(&bptr->refc, 0);
-    ERTS_MAGIC_BIN_DESTRUCTOR(bptr) = destructor;
-    return bptr;
+  Uint bsize = ERTS_MAGIC_BIN_SIZE(size);
+  Binary *bptr = (Binary *)erts_alloc_fnf(ERTS_ALC_T_BINARY, bsize);
+  ASSERT(bsize > size);
+
+  if (!bptr) {
+    erts_alloc_n_enomem(ERTS_ALC_T2N(ERTS_ALC_T_BINARY), bsize);
+  }
+
+  ERTS_CHK_BIN_ALIGNMENT(bptr);
+  bptr->flags = BIN_FLAG_MAGIC;
+  bptr->orig_size = ERTS_MAGIC_BIN_ORIG_SIZE(size);
+  erts_refc_init(&bptr->refc, 0);
+  ERTS_MAGIC_BIN_DESTRUCTOR(bptr) = destructor;
+  return bptr;
 }
 
 #endif /* #if ERTS_GLB_INLINE_INCL_FUNC_DEF */
