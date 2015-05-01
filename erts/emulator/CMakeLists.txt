@@ -18,7 +18,7 @@ include_directories( ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/bloatware/src/beam
     ${CMAKE_SOURCE_DIR}/hipe
     ${CMAKE_SOURCE_DIR}/pcre
-    ${CMAKE_SOURCE_DIR}/drivers/common
+    ${CMAKE_SOURCE_DIR}/bloatware/src/drivers/common
     ${CMAKE_SOURCE_DIR}/bloatware/src/sys/common
     ${CMAKE_SOURCE_DIR}/bloatware/src/sys/${EMU_PLATF_OS}
     ${CMAKE_SOURCE_DIR}/../include
@@ -153,15 +153,15 @@ set(SRC_LIST
     bloatware/src/beam/utils.cpp
 
     #======================================================
-    drivers/common/efile_drv.cpp
-        drivers/common/erl_efile.h
-    drivers/common/gzio.cpp     drivers/common/gzio.h
-    drivers/common/inet_drv.cpp
-    drivers/common/ram_file_drv.cpp
-    drivers/common/zlib_drv.cpp
+    bloatware/src/drivers/common/efile_drv.cpp
+        bloatware/src/drivers/common/erl_efile.h
+    bloatware/src/drivers/common/gzio.cpp     bloatware/src/drivers/common/gzio.h
+    bloatware/src/drivers/common/inet_drv.cpp
+    bloatware/src/drivers/common/ram_file_drv.cpp
+    bloatware/src/drivers/common/zlib_drv.cpp
 
-    drivers/unix/ttsl_drv.cpp
-    drivers/unix/unix_efile.cpp
+    bloatware/src/drivers/unix/ttsl_drv.cpp
+    bloatware/src/drivers/unix/unix_efile.cpp
 
     #======================================================
     #hipe/hipe_${HIPE_ARCH}.cpp
