@@ -324,7 +324,7 @@ typedef struct erl_drv_entry {
   typedef void (*ready_output_fn_t)(ErlDrvData drv_data, ErlDrvEvent event);
   ready_output_fn_t ready_output; /* called when output is possible to one of
 				   the driver's handles */
-  char *driver_name;		/* name supplied as command
+  const char *driver_name;		/* name supplied as command
 				   in open_port XXX ? */
   typedef void (*finish_fn_t)(void);        /* called before unloading the driver -*/
   finish_fn_t finish;		   /* DYNAMIC DRIVERS ONLY */

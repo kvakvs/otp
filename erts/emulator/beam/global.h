@@ -128,7 +128,7 @@ typedef struct {
 struct erts_driver_t_ {
     erts_driver_t *next;
     erts_driver_t *prev;
-    char *name;
+    const char *name;
     struct {
 	int major;
 	int minor;
@@ -167,7 +167,7 @@ extern erts_driver_t *driver_list;
 extern erts_smp_rwmtx_t erts_driver_list_lock;
 
 extern void erts_ddll_init(void);
-extern void erts_ddll_lock_driver(DE_Handle *dh, char *name);
+extern void erts_ddll_lock_driver(DE_Handle *dh, const char *name);
 
 /* These are for bookkeeping */
 extern void erts_ddll_increment_port_count(DE_Handle *dh);

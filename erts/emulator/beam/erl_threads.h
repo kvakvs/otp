@@ -2460,7 +2460,7 @@ erts_rwmtx_set_reader_group(int no)
 ERTS_GLB_INLINE void
 erts_rwmtx_init_opt_x(erts_rwmtx_t *rwmtx,
 		      erts_rwmtx_opt_t *opt,
-		      char *name,
+                      const char *name,
 		      Eterm extra)
 {
 #ifdef USE_THREADS
@@ -2485,7 +2485,7 @@ erts_rwmtx_init_opt_x(erts_rwmtx_t *rwmtx,
 
 ERTS_GLB_INLINE void
 erts_rwmtx_init_x(erts_rwmtx_t *rwmtx,
-		  char *name,
+                  const char *name,
 		  Eterm extra)
 {
     erts_rwmtx_init_opt_x(rwmtx, nullptr, name, extra);
@@ -2494,7 +2494,7 @@ erts_rwmtx_init_x(erts_rwmtx_t *rwmtx,
 ERTS_GLB_INLINE void
 erts_rwmtx_init_opt(erts_rwmtx_t *rwmtx,
 		    erts_rwmtx_opt_t *opt,
-		    char *name)
+                    const char *name)
 {
 #ifdef USE_THREADS
     int res = ethr_rwmutex_init_opt(&rwmtx->rwmtx, opt);
@@ -2510,7 +2510,7 @@ erts_rwmtx_init_opt(erts_rwmtx_t *rwmtx,
 }
 
 ERTS_GLB_INLINE void
-erts_rwmtx_init(erts_rwmtx_t *rwmtx, char *name)
+erts_rwmtx_init(erts_rwmtx_t *rwmtx, const char *name)
 {
     erts_rwmtx_init_opt(rwmtx, nullptr, name);
 }

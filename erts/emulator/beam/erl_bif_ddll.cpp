@@ -69,8 +69,8 @@ typedef struct {
  * Forward
  */
 static char *pick_list_or_atom(Eterm name_term);
-static erts_driver_t *lookup_driver(char *name);
-static Eterm mkatom(char *str);
+static erts_driver_t *lookup_driver(const char *name);
+static Eterm mkatom(const char *str);
 static void add_proc_loaded(DE_Handle *dh, Process *proc); 
 static void add_proc_loaded_deref(DE_Handle *dh, Process *proc);
 static void set_driver_reloading(DE_Handle *dh, Process *proc, char *path, char *name, Uint flags);
@@ -89,7 +89,7 @@ static int num_procs(DE_Handle *dh, Uint status);
 /*static int num_entries(DE_Handle *dh, Process *proc, Uint status);*/
 static void notify_proc(Process *proc, Eterm ref, Eterm driver_name, 
 			Eterm type, Eterm tag, int errcode);
-static void notify_all(DE_Handle *dh, char *name, Uint awaiting, Eterm type, Eterm tag);
+static void notify_all(DE_Handle *dh, const char *name, Uint awaiting, Eterm type, Eterm tag);
 static int load_error_need(int code);
 static Eterm build_load_error_hp(Eterm *hp, int code);
 static Eterm build_load_error(Process *p, int code);
@@ -1064,7 +1064,7 @@ void erts_ddll_proc_dead(Process *p, ErtsProcLocks plocks)
     unlock_drv_list();
     erts_smp_proc_lock(p, plocks);
 }
-void erts_ddll_lock_driver(DE_Handle *dh, char *name)
+void erts_ddll_lock_driver(DE_Handle *dh, const char *name)
 {
     DE_ProcEntry *p,*q;
     assert_drv_list_rwlocked();
@@ -1737,7 +1737,7 @@ static void notify_proc(Process *proc, Eterm ref, Eterm driver_name, Eterm type,
     ERTS_SMP_CHK_NO_PROC_LOCKS;
 }
 
-static void notify_all(DE_Handle *dh, char *name, Uint awaiting, Eterm type, Eterm tag)
+static void notify_all(DE_Handle *dh, const char *name, Uint awaiting, Eterm type, Eterm tag)
 {
     DE_ProcEntry **p;
 
@@ -1839,7 +1839,7 @@ static Eterm build_load_error_hp(Eterm *hp, int code)
     
 
 
-static Eterm mkatom(char *str)
+static Eterm mkatom(const char *str)
 {
     return erts_atom_put((byte *) str,
 			 sys_strlen(str),
@@ -1926,7 +1926,7 @@ static int build_proc_info(DE_Handle *dh, ProcEntryInfo **out_pei, Uint filter)
 	    
     
 
-static erts_driver_t *lookup_driver(char *name)
+static erts_driver_t *lookup_driver(const char *name)
 {
     erts_driver_t *drv;
     assert_drv_list_locked();

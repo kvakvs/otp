@@ -4967,7 +4967,7 @@ erts_get_port_names(Eterm id, ErlDrvPort drv_port)
         pnp = (ErtsPortNames*)erts_alloc(ERTS_ALC_T_PORT_NAMES, pnp_len);
 	do {
 	    int nlen;
-	    char *name, *driver_name;
+            const char *name, *driver_name;
 	    if (len > 0) {
 		erts_free(ERTS_ALC_T_PORT_NAMES, pnp);
 		pnp_len = sizeof(ErtsPortNames) + len;

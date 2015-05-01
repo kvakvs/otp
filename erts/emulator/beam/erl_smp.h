@@ -154,16 +154,16 @@ ERTS_GLB_INLINE void erts_smp_cnd_broadcast(erts_smp_cnd_t *cnd);
 ERTS_GLB_INLINE void erts_smp_rwmtx_set_reader_group(int no);
 ERTS_GLB_INLINE void erts_smp_rwmtx_init_opt_x(erts_smp_rwmtx_t *rwmtx,
 					       erts_smp_rwmtx_opt_t *opt,
-					       char *name,
+                                               const char *name,
 					       Eterm extra);
 ERTS_GLB_INLINE void erts_smp_rwmtx_init_x(erts_smp_rwmtx_t *rwmtx,
-					   char *name,
+                                           const char *name,
 					   Eterm extra);
 ERTS_GLB_INLINE void erts_smp_rwmtx_init_opt(erts_smp_rwmtx_t *rwmtx,
 					     erts_smp_rwmtx_opt_t *opt,
-					     char *name);
+                                             const char *name);
 ERTS_GLB_INLINE void erts_smp_rwmtx_init(erts_smp_rwmtx_t *rwmtx,
-					 char *name);
+                                         const char *name);
 ERTS_GLB_INLINE void erts_smp_rwmtx_destroy(erts_smp_rwmtx_t *rwmtx);
 #ifdef ERTS_ENABLE_LOCK_POSITION
 ERTS_GLB_INLINE int erts_smp_rwmtx_tryrlock_x(erts_smp_rwmtx_t *rwmtx, char *file, unsigned int line);
@@ -1212,7 +1212,7 @@ erts_smp_rwmtx_set_reader_group(int no)
 ERTS_GLB_INLINE void
 erts_smp_rwmtx_init_opt_x(erts_smp_rwmtx_t *rwmtx,
 			  erts_smp_rwmtx_opt_t *opt,
-			  char *name,
+                          const char *name,
 			  Eterm extra)
 {
 #ifdef ERTS_SMP
@@ -1221,7 +1221,7 @@ erts_smp_rwmtx_init_opt_x(erts_smp_rwmtx_t *rwmtx,
 }
 
 ERTS_GLB_INLINE void
-erts_smp_rwmtx_init_x(erts_smp_rwmtx_t *rwmtx, char *name, Eterm extra)
+erts_smp_rwmtx_init_x(erts_smp_rwmtx_t *rwmtx, const char *name, Eterm extra)
 {
 #ifdef ERTS_SMP
     erts_rwmtx_init_x(rwmtx, name, extra);
@@ -1231,7 +1231,7 @@ erts_smp_rwmtx_init_x(erts_smp_rwmtx_t *rwmtx, char *name, Eterm extra)
 ERTS_GLB_INLINE void
 erts_smp_rwmtx_init_opt(erts_smp_rwmtx_t *rwmtx,
 			erts_smp_rwmtx_opt_t *opt,
-			char *name)
+                        const char *name)
 {
 #ifdef ERTS_SMP
     erts_rwmtx_init_opt(rwmtx, opt, name);
@@ -1239,7 +1239,7 @@ erts_smp_rwmtx_init_opt(erts_smp_rwmtx_t *rwmtx,
 }
 
 ERTS_GLB_INLINE void
-erts_smp_rwmtx_init(erts_smp_rwmtx_t *rwmtx, char *name)
+erts_smp_rwmtx_init(erts_smp_rwmtx_t *rwmtx, const char *name)
 {
 #ifdef ERTS_SMP
     erts_rwmtx_init(rwmtx, name);
