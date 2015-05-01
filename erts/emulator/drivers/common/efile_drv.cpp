@@ -3893,7 +3893,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	    goto done;
 	}
 #else
-	if (((byte *)ev->iov[q].iov_base)[ev->iov[q].iov_len-1] != '\0') {
+	if (((uint8_t *)ev->iov[q].iov_base)[ev->iov[q].iov_len-1] != '\0') {
 	    /* Name not in one single buffer */
 	    reply_posix_error(desc, EINVAL);
 	    goto done;

@@ -12293,7 +12293,7 @@ void erts_sock_close(erts_sock_t socket)
 }
 
 
-int erts_sock_connect(erts_sock_t socket, byte *ip_addr, int len, Uint16 port)
+int erts_sock_connect(erts_sock_t socket, uint8_t *ip_addr, int len, Uint16 port)
 {
     SOCKET s = (SOCKET) socket;
     char buf[2 + 4];

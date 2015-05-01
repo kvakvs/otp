@@ -126,12 +126,12 @@ static FILE *ttysl_out;
 /* Functions that work on the line buffer. */
 static int start_lbuf(void);
 static int stop_lbuf(void);
-static int put_chars(byte*,int);
+static int put_chars(uint8_t*,int);
 static int move_rel(int);
-static int ins_chars(byte *,int);
+static int ins_chars(uint8_t *,int);
 static int del_chars(int);
 static int step_over_chars(int);
-static int insert_buf(byte*,int);
+static int insert_buf(uint8_t*,int);
 static int write_buf(Uint32 *,int);
 static int outc(int c);
 static int move_cursor(int,int);
@@ -188,7 +188,7 @@ static void my_debug_printf(char *fmt, ...)
 #endif
 
 static int utf8_mode = 0;
-static byte utf8buf[4]; /* for incomplete input */
+static uint8_t utf8buf[4]; /* for incomplete input */
 static int utf8buf_size; /* size of incomplete input */
 
 #  define IF_IMPL(x) x
@@ -411,23 +411,23 @@ static void ttysl_stop(ErlDrvData ttysl_data)
     /* return TRUE; */
 }
 
-static int put_utf8(int ch, byte *target, int sz, int *pos)
+static int put_utf8(int ch, uint8_t *target, int sz, int *pos)
 {
     Uint x = (Uint) ch;
     if (x < 0x80) {
     if (*pos >= sz) {
 	return -1;
     }
-	target[(*pos)++] = (byte) x;
+	target[(*pos)++] = (uint8_t) x;
     }
     else if (x < 0x800) {
 	if (((*pos) + 1) >= sz) {
 	    return -1;
 	}
-	target[(*pos)++] = (((byte) (x >> 6)) | 
-			    ((byte) 0xC0));
-	target[(*pos)++] = (((byte) (x & 0x3F)) | 
-			    ((byte) 0x80));
+	target[(*pos)++] = (((uint8_t) (x >> 6)) | 
+			    ((uint8_t) 0xC0));
+	target[(*pos)++] = (((uint8_t) (x & 0x3F)) | 
+			    ((uint8_t) 0x80));
     } else if (x < 0x10000) {
 	if ((x >= 0xD800 && x <= 0xDFFF) ||
 	    (x == 0xFFFE) ||
@@ -438,24 +438,24 @@ static int put_utf8(int ch, byte *target, int sz, int *pos)
 	    return -1;
 	}
 
-	target[(*pos)++] = (((byte) (x >> 12)) | 
-			    ((byte) 0xE0));
-	target[(*pos)++] = ((((byte) (x >> 6)) & 0x3F)  | 
-			    ((byte) 0x80));
-	target[(*pos)++] = (((byte) (x & 0x3F)) | 
-			    ((byte) 0x80));
+	target[(*pos)++] = (((uint8_t) (x >> 12)) | 
+			    ((uint8_t) 0xE0));
+	target[(*pos)++] = ((((uint8_t) (x >> 6)) & 0x3F)  | 
+			    ((uint8_t) 0x80));
+	target[(*pos)++] = (((uint8_t) (x & 0x3F)) | 
+			    ((uint8_t) 0x80));
     } else if (x < 0x110000) { /* Standard imposed max */
 	if (((*pos) + 3) >= sz) {
 	    return -1;
 	}
-	target[(*pos)++] = (((byte) (x >> 18)) | 
-			    ((byte) 0xF0));
-	target[(*pos)++] = ((((byte) (x >> 12)) & 0x3F)  | 
-			    ((byte) 0x80));
-	target[(*pos)++] = ((((byte) (x >> 6)) & 0x3F)  | 
-			    ((byte) 0x80));
-	target[(*pos)++] = (((byte) (x & 0x3F)) | 
-			    ((byte) 0x80));
+	target[(*pos)++] = (((uint8_t) (x >> 18)) | 
+			    ((uint8_t) 0xF0));
+	target[(*pos)++] = ((((uint8_t) (x >> 12)) & 0x3F)  | 
+			    ((uint8_t) 0x80));
+	target[(*pos)++] = ((((uint8_t) (x >> 6)) & 0x3F)  | 
+			    ((uint8_t) 0x80));
+	target[(*pos)++] = (((uint8_t) (x & 0x3F)) | 
+			    ((uint8_t) 0x80));
     } else {
 	return -1;
     }
@@ -463,41 +463,41 @@ static int put_utf8(int ch, byte *target, int sz, int *pos)
 }
     
 
-static int pick_utf8(byte *s, int sz, int *pos) 
+static int pick_utf8(uint8_t *s, int sz, int *pos) 
 {
     int size = sz - (*pos);
-    byte *source;
+    uint8_t *source;
     Uint unipoint;
 
     if (size > 0) {
 	source = s + (*pos);
-	if (((*source) & ((byte) 0x80)) == 0) {
+	if (((*source) & ((uint8_t) 0x80)) == 0) {
 	    unipoint = (int) *source;
 	    ++(*pos);
 	    return (int) unipoint;
-	} else if (((*source) & ((byte) 0xE0)) == 0xC0) {
+	} else if (((*source) & ((uint8_t) 0xE0)) == 0xC0) {
 	    if (size < 2) {
 		return -2;
 	    }
-	    if (((source[1] & ((byte) 0xC0)) != 0x80) ||
+	    if (((source[1] & ((uint8_t) 0xC0)) != 0x80) ||
 		((*source) < 0xC2) /* overlong */) {
 		return -1;
 	    }
 	    (*pos) += 2;
 	    unipoint = 
-		(((Uint) ((*source) & ((byte) 0x1F))) << 6) |
-		((Uint) (source[1] & ((byte) 0x3F))); 	
+		(((Uint) ((*source) & ((uint8_t) 0x1F))) << 6) |
+		((Uint) (source[1] & ((uint8_t) 0x3F))); 	
 	    return (int) unipoint;
-	} else if (((*source) & ((byte) 0xF0)) == 0xE0) {
+	} else if (((*source) & ((uint8_t) 0xF0)) == 0xE0) {
 	    if (size < 3) {
 		return -2;
 	    }
-	    if (((source[1] & ((byte) 0xC0)) != 0x80) ||
-		((source[2] & ((byte) 0xC0)) != 0x80) ||
+	    if (((source[1] & ((uint8_t) 0xC0)) != 0x80) ||
+		((source[2] & ((uint8_t) 0xC0)) != 0x80) ||
 		(((*source) == 0xE0) && (source[1] < 0xA0)) /* overlong */ ) {
 		return -1;
 	    }
-	    if ((((*source) & ((byte) 0xF)) == 0xD) && 
+	    if ((((*source) & ((uint8_t) 0xF)) == 0xD) && 
 		((source[1] & 0x20) != 0)) {
 		return -1;
 	    }
@@ -507,31 +507,31 @@ static int pick_utf8(byte *s, int sz, int *pos)
 	    }
 	    (*pos) += 3;
 	    unipoint = 
-		(((Uint) ((*source) & ((byte) 0xF))) << 12) |
-		(((Uint) (source[1] & ((byte) 0x3F))) << 6) |
-		((Uint) (source[2] & ((byte) 0x3F))); 	 	
+		(((Uint) ((*source) & ((uint8_t) 0xF))) << 12) |
+		(((Uint) (source[1] & ((uint8_t) 0x3F))) << 6) |
+		((Uint) (source[2] & ((uint8_t) 0x3F))); 	 	
 	    return (int) unipoint;
-	} else if (((*source) & ((byte) 0xF8)) == 0xF0) {
+	} else if (((*source) & ((uint8_t) 0xF8)) == 0xF0) {
 	    if (size < 4) {
 		return -2 ;
 	    }
-	    if (((source[1] & ((byte) 0xC0)) != 0x80) ||
-		((source[2] & ((byte) 0xC0)) != 0x80) ||
-		((source[3] & ((byte) 0xC0)) != 0x80) ||
+	    if (((source[1] & ((uint8_t) 0xC0)) != 0x80) ||
+		((source[2] & ((uint8_t) 0xC0)) != 0x80) ||
+		((source[3] & ((uint8_t) 0xC0)) != 0x80) ||
 		(((*source) == 0xF0) && (source[1] < 0x90)) /* overlong */) {
 		return -1;
 	    }
-	    if ((((*source) & ((byte)0x7)) > 0x4U) ||
-		((((*source) & ((byte)0x7)) == 0x4U) && 
-		 ((source[1] & ((byte)0x3F)) > 0xFU))) {
+	    if ((((*source) & ((uint8_t)0x7)) > 0x4U) ||
+		((((*source) & ((uint8_t)0x7)) == 0x4U) && 
+		 ((source[1] & ((uint8_t)0x3F)) > 0xFU))) {
 		return -1;
 	    }
 	    (*pos) += 4;
 	    unipoint = 
-		(((Uint) ((*source) & ((byte) 0x7))) << 18) |
-		(((Uint) (source[1] & ((byte) 0x3F))) << 12) |
-		(((Uint) (source[2] & ((byte) 0x3F))) << 6) |
-		((Uint) (source[3] & ((byte) 0x3F))); 	 	
+		(((Uint) ((*source) & ((uint8_t) 0x7))) << 18) |
+		(((Uint) (source[1] & ((uint8_t) 0x3F))) << 12) |
+		(((Uint) (source[2] & ((uint8_t) 0x3F))) << 6) |
+		((Uint) (source[3] & ((uint8_t) 0x3F))); 	 	
 	    return (int) unipoint;
 	} else {
 	    return -1;
@@ -565,9 +565,9 @@ static int octal_or_hex_positions(Uint c)
     return x+3;
 }
 
-static void octal_or_hex_format(Uint ch, byte *buf, int *pos)
+static void octal_or_hex_format(Uint ch, uint8_t *buf, int *pos)
 {
-    static byte hex_chars[] = { '0','1','2','3','4','5','6','7','8','9',
+    static uint8_t hex_chars[] = { '0','1','2','3','4','5','6','7','8','9',
 				'A','B','C','D','E','F'};
     int num = octal_or_hex_positions(ch);
     if (num != 3) {
@@ -580,7 +580,7 @@ static void octal_or_hex_format(Uint ch, byte *buf, int *pos)
 	buf[(*pos)++] = '}';
     } else {
 	while(num--) {
-	    buf[(*pos)++] = ((byte) ((ch >> (3*num)) & 0x7U) + '0');
+	    buf[(*pos)++] = ((uint8_t) ((ch >> (3*num)) & 0x7U) + '0');
 	}
     }	
 }
@@ -589,7 +589,7 @@ static void octal_or_hex_format(Uint ch, byte *buf, int *pos)
  * Check that there is enough room in all buffers to copy all pad chars
  * and stiff we need If not, realloc lbuf.
  */
-static int check_buf_size(byte *s, int n)
+static int check_buf_size(uint8_t *s, int n)
 {
     int pos = 0;
     int ch;
@@ -653,22 +653,22 @@ static int check_buf_size(byte *s, int n)
 static void ttysl_from_erlang(ErlDrvData ttysl_data, char* buf, ErlDrvSizeT count)
 {
     if (lpos > MAXSIZE) 
-	put_chars((byte*)"\n", 1);
+	put_chars((uint8_t*)"\n", 1);
 
     switch (buf[0]) {
     case OP_PUTC:
 	DEBUGLOG(("OP: Putc(%lu)",(unsigned long) count-1));
-	if (check_buf_size((byte*)buf+1, count-1) == 0)
+	if (check_buf_size((uint8_t*)buf+1, count-1) == 0)
 	    return; 
-	put_chars((byte*)buf+1, count-1);
+	put_chars((uint8_t*)buf+1, count-1);
 	break;
     case OP_MOVE:
 	move_rel(get_sint16(buf+1));
 	break;
     case OP_INSC:
-	if (check_buf_size((byte*)buf+1, count-1) == 0)
+	if (check_buf_size((uint8_t*)buf+1, count-1) == 0)
 	    return;
-	ins_chars((byte*)buf+1, count-1);
+	ins_chars((uint8_t*)buf+1, count-1);
 	break;
     case OP_DELC:
 	del_chars(get_sint16(buf+1));
@@ -686,12 +686,12 @@ static void ttysl_from_erlang(ErlDrvData ttysl_data, char* buf, ErlDrvSizeT coun
 
 static void ttysl_from_tty(ErlDrvData ttysl_data, ErlDrvEvent fd)
 {
-    byte b[1024];
+    uint8_t b[1024];
     ssize_t i;
     int ch = 0, pos = 0;
     int left = 1024;
-    byte *p = b;
-    byte t[1024];
+    uint8_t *p = b;
+    uint8_t t[1024];
     int tpos;
 
     if (utf8buf_size > 0) {
@@ -745,7 +745,7 @@ static void ttysl_stop_select(ErlDrvEvent e, void* _)
 /* Procedures for putting and getting integers to/from strings. */
 static Sint16 get_sint16(char *s)
 {
-    return ((*s << 8) | ((byte*)s)[1]);
+    return ((*s << 8) | ((uint8_t*)s)[1]);
 }
 
 static int start_lbuf(void)
@@ -767,7 +767,7 @@ static int stop_lbuf(void)
 }
 
 /* Put l bytes (in UTF8) from s into the buffer and output them. */
-static int put_chars(byte *s, int l)
+static int put_chars(uint8_t *s, int l)
 {
     int n;
 
@@ -797,7 +797,7 @@ static int move_rel(int n)
 }
 
 /* Insert characters into the buffer at the current position. */
-static int ins_chars(byte *s, int l)
+static int ins_chars(uint8_t *s, int l)
 {
     int n, tl;
     Uint32 *tbuf = nullptr;    /* Suppress warning about use-before-set */
@@ -911,7 +911,7 @@ static int step_over_chars(int n)
  * Know about pad characters and treat \n specially.
  */
 
-static int insert_buf(byte *s, int n)
+static int insert_buf(uint8_t *s, int n)
 {
     int pos = 0;
     int buffpos = lpos;
@@ -981,9 +981,9 @@ static int insert_buf(byte *s, int n)
 
 static int write_buf(Uint32 *s, int n)
 {
-    byte ubuf[4];
+    uint8_t ubuf[4];
     int ubytes = 0, i;
-    byte lastput = ' ';
+    uint8_t lastput = ' ';
 
     update_cols();
 
@@ -998,8 +998,8 @@ static int write_buf(Uint32 *s, int n)
 		    lastput = 0; /* Means the last written character was multibyte UTF8 */
 		}
 	    } else {
-		outc((byte) *s);
-		lastput = (byte) *s;
+		outc((uint8_t) *s);
+		lastput = (uint8_t) *s;
 	    }
 	    --n;
 	    ++s;
@@ -1013,18 +1013,18 @@ static int write_buf(Uint32 *s, int n)
 	    }
 	} else if (*s & CONTROL_TAG) {
 	    outc('^');
-	    outc(lastput = ((byte) ((*s == 0177) ? '?' : *s | 0x40)));
+	    outc(lastput = ((uint8_t) ((*s == 0177) ? '?' : *s | 0x40)));
 	    n -= 2;
 	    s += 2;
 	} else if (*s & ESCAPED_TAG) {
 	    Uint32 ch = *s & ~(TAG_MASK);
-	    byte *octbuff;
-	    byte octtmp[256];
+	    uint8_t *octbuff;
+	    uint8_t octtmp[256];
 	    int octbytes;
 	    DEBUGLOG(("Escaped: %d", ch));
 	    octbytes = octal_or_hex_positions(ch);
 	    if (octbytes > 256) {
-                octbuff = (byte*)driver_alloc(octbytes);
+                octbuff = (uint8_t*)driver_alloc(octbytes);
 	    } else {
 		octbuff = octtmp;
 	    }
