@@ -126,14 +126,14 @@ int packet_parse(enum PacketParseType htype,
 
 #define FCGI_VERSION_1 1
 struct fcgi_head {
-    unsigned char version;
-    unsigned char type;
-    unsigned char requestIdB1;
-    unsigned char requestIdB0;
-    unsigned char contentLengthB1;
-    unsigned char contentLengthB0;
-    unsigned char paddingLength;
-    unsigned char reserved;
+    uint8_t version;
+    uint8_t type;
+    uint8_t requestIdB1;
+    uint8_t requestIdB0;
+    uint8_t contentLengthB1;
+    uint8_t contentLengthB0;
+    uint8_t paddingLength;
+    uint8_t reserved;
     /* char data[] */
     /* char padding[paddingLength] */
 };

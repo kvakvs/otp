@@ -384,9 +384,9 @@ typedef struct pcre_extra {
   void *study_data;               /* Opaque data from pcre_study() */
   unsigned long int match_limit;  /* Maximum number of calls to match() */
   void *callout_data;             /* Data passed back in callouts */
-  const unsigned char *tables;    /* Pointer to character tables */
+  const uint8_t *tables;    /* Pointer to character tables */
   unsigned long int match_limit_recursion; /* Max recursive calls to match() */
-  unsigned char **mark;           /* For passing back a mark pointer */
+  uint8_t **mark;           /* For passing back a mark pointer */
   void *executable_jit;           /* Contains a pointer to a compiled jit code */
 #if defined(ERLANG_INTEGRATION)
   unsigned long int loop_limit;
@@ -405,7 +405,7 @@ typedef struct pcre16_extra {
   void *study_data;               /* Opaque data from pcre_study() */
   unsigned long int match_limit;  /* Maximum number of calls to match() */
   void *callout_data;             /* Data passed back in callouts */
-  const unsigned char *tables;    /* Pointer to character tables */
+  const uint8_t *tables;    /* Pointer to character tables */
   unsigned long int match_limit_recursion; /* Max recursive calls to match() */
   PCRE_UCHAR16 **mark;            /* For passing back a mark pointer */
   void *executable_jit;           /* Contains a pointer to a compiled jit code */
@@ -418,7 +418,7 @@ typedef struct pcre32_extra {
   void *study_data;               /* Opaque data from pcre_study() */
   unsigned long int match_limit;  /* Maximum number of calls to match() */
   void *callout_data;             /* Data passed back in callouts */
-  const unsigned char *tables;    /* Pointer to character tables */
+  const uint8_t *tables;    /* Pointer to character tables */
   unsigned long int match_limit_recursion; /* Max recursive calls to match() */
   PCRE_UCHAR32 **mark;            /* For passing back a mark pointer */
   void *executable_jit;           /* Contains a pointer to a compiled jit code */
@@ -449,7 +449,7 @@ typedef struct pcre_callout_block {
   int          pattern_position;  /* Offset to next item in the pattern */
   int          next_item_length;  /* Length of next item in the pattern */
   /* ------------------- Added for Version 2 -------------------------- */
-  const unsigned char *mark;      /* Pointer to current mark or NULL    */
+  const uint8_t *mark;      /* Pointer to current mark or NULL    */
   /* ------------------------------------------------------------------ */
 #if defined(ERLANG_INTEGRATION)
 } erts_pcre_callout_block;
@@ -569,26 +569,26 @@ typedef pcre32_jit_stack *(*pcre32_jit_callback)(void *);
 
 #if defined(ERLANG_INTEGRATION)
 PCRE_EXP_DECL pcre *erts_pcre_compile(const char *, int, const char **, int *,
-                  const unsigned char *);
+                  const uint8_t *);
 #else
 PCRE_EXP_DECL pcre *pcre_compile(const char *, int, const char **, int *,
-                  const unsigned char *);
+                  const uint8_t *);
 #endif
 PCRE_EXP_DECL pcre16 *pcre16_compile(PCRE_SPTR16, int, const char **, int *,
-                  const unsigned char *);
+                  const uint8_t *);
 PCRE_EXP_DECL pcre32 *pcre32_compile(PCRE_SPTR32, int, const char **, int *,
-                  const unsigned char *);
+                  const uint8_t *);
 #if defined(ERLANG_INTEGRATION)
 PCRE_EXP_DECL pcre *erts_pcre_compile2(const char *, int, int *, const char **,
-                  int *, const unsigned char *);
+                  int *, const uint8_t *);
 #else
 PCRE_EXP_DECL pcre *pcre_compile2(const char *, int, int *, const char **,
-                  int *, const unsigned char *);
+                  int *, const uint8_t *);
 #endif
 PCRE_EXP_DECL pcre16 *pcre16_compile2(PCRE_SPTR16, int, int *, const char **,
-                  int *, const unsigned char *);
+                  int *, const uint8_t *);
 PCRE_EXP_DECL pcre32 *pcre32_compile2(PCRE_SPTR32, int, int *, const char **,
-                  int *, const unsigned char *);
+                  int *, const uint8_t *);
 #if defined(ERLANG_INTEGRATION)
 PCRE_EXP_DECL int  erts_pcre_config(int, void *);
 #else
@@ -732,12 +732,12 @@ PCRE_EXP_DECL int  pcre16_get_substring_list(PCRE_SPTR16, int *, int,
 PCRE_EXP_DECL int  pcre32_get_substring_list(PCRE_SPTR32, int *, int,
                   PCRE_SPTR32 **);
 #if defined(ERLANG_INTEGRATION)
-PCRE_EXP_DECL const unsigned char *erts_pcre_maketables(void);
+PCRE_EXP_DECL const uint8_t *erts_pcre_maketables(void);
 #else
-PCRE_EXP_DECL const unsigned char *pcre_maketables(void);
+PCRE_EXP_DECL const uint8_t *pcre_maketables(void);
 #endif
-PCRE_EXP_DECL const unsigned char *pcre16_maketables(void);
-PCRE_EXP_DECL const unsigned char *pcre32_maketables(void);
+PCRE_EXP_DECL const uint8_t *pcre16_maketables(void);
+PCRE_EXP_DECL const uint8_t *pcre32_maketables(void);
 #if defined(ERLANG_INTEGRATION)
 PCRE_EXP_DECL int  erts_pcre_refcount(pcre *, int);
 #else
@@ -770,15 +770,15 @@ PCRE_EXP_DECL const char *pcre32_version(void);
 /* Utility functions for byte order swaps. */
 #if defined(ERLANG_INTEGRATION)
 PCRE_EXP_DECL int  erts_pcre_pattern_to_host_byte_order(pcre *, erts_pcre_extra *,
-                  const unsigned char *);
+                  const uint8_t *);
 #else
 PCRE_EXP_DECL int  pcre_pattern_to_host_byte_order(pcre *, pcre_extra *,
-                  const unsigned char *);
+                  const uint8_t *);
 #endif
 PCRE_EXP_DECL int  pcre16_pattern_to_host_byte_order(pcre16 *, pcre16_extra *,
-                  const unsigned char *);
+                  const uint8_t *);
 PCRE_EXP_DECL int  pcre32_pattern_to_host_byte_order(pcre32 *, pcre32_extra *,
-                  const unsigned char *);
+                  const uint8_t *);
 PCRE_EXP_DECL int  pcre16_utf16_to_host_byte_order(PCRE_UCHAR16 *,
                   PCRE_SPTR16, int, int *, int);
 PCRE_EXP_DECL int  pcre32_utf32_to_host_byte_order(PCRE_UCHAR32 *,

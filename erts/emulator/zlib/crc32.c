@@ -42,9 +42,9 @@
 #endif
 #ifdef BYFOUR
    local unsigned long crc32_little OF((unsigned long,
-                        const unsigned char FAR *, unsigned));
+                        const uint8_t FAR *, unsigned));
    local unsigned long crc32_big OF((unsigned long,
-                        const unsigned char FAR *, unsigned));
+                        const uint8_t FAR *, unsigned));
 #  define TBLS 8
 #else
 #  define TBLS 1
@@ -98,7 +98,7 @@ local void make_crc_table()
     z_crc_t poly;                       /* polynomial exclusive-or pattern */
     /* terms of polynomial defining this crc (except x^32): */
     static volatile int first = 1;      /* flag to limit concurrent making */
-    static const unsigned char p[] = {0,1,2,4,5,7,8,10,11,12,16,22,23,26};
+    static const uint8_t p[] = {0,1,2,4,5,7,8,10,11,12,16,22,23,26};
 
     /* See if another task is already doing this (not thread-safe, but better
        than nothing -- significantly reduces duration of vulnerability in
@@ -108,7 +108,7 @@ local void make_crc_table()
 
         /* make exclusive-or pattern from polynomial (0xedb88320UL) */
         poly = 0;
-        for (n = 0; n < (int)(sizeof(p)/sizeof(unsigned char)); n++)
+        for (n = 0; n < (int)(sizeof(p)/sizeof(uint8_t)); n++)
             poly |= (z_crc_t)1 << (31 - p[n]);
 
         /* generate a crc for every 8-bit value */
@@ -207,7 +207,7 @@ const z_crc_t FAR * ZEXPORT get_crc_table()
 /* ========================================================================= */
 unsigned long ZEXPORT crc32(crc, buf, len)
     unsigned long crc;
-    const unsigned char FAR *buf;
+    const uint8_t FAR *buf;
     uInt len;
 {
     if (buf == Z_NULL) return 0UL;
@@ -222,7 +222,7 @@ unsigned long ZEXPORT crc32(crc, buf, len)
         z_crc_t endian;
 
         endian = 1;
-        if (*((unsigned char *)(&endian)))
+        if (*((uint8_t *)(&endian)))
             return crc32_little(crc, buf, len);
         else
             return crc32_big(crc, buf, len);
@@ -250,7 +250,7 @@ unsigned long ZEXPORT crc32(crc, buf, len)
 /* ========================================================================= */
 local unsigned long crc32_little(crc, buf, len)
     unsigned long crc;
-    const unsigned char FAR *buf;
+    const uint8_t FAR *buf;
     unsigned len;
 {
     register z_crc_t c;
@@ -272,7 +272,7 @@ local unsigned long crc32_little(crc, buf, len)
         DOLIT4;
         len -= 4;
     }
-    buf = (const unsigned char FAR *)buf4;
+    buf = (const uint8_t FAR *)buf4;
 
     if (len) do {
         c = crc_table[0][(c ^ *buf++) & 0xff] ^ (c >> 8);
@@ -290,7 +290,7 @@ local unsigned long crc32_little(crc, buf, len)
 /* ========================================================================= */
 local unsigned long crc32_big(crc, buf, len)
     unsigned long crc;
-    const unsigned char FAR *buf;
+    const uint8_t FAR *buf;
     unsigned len;
 {
     register z_crc_t c;
@@ -314,7 +314,7 @@ local unsigned long crc32_big(crc, buf, len)
         len -= 4;
     }
     buf4++;
-    buf = (const unsigned char FAR *)buf4;
+    buf = (const uint8_t FAR *)buf4;
 
     if (len) do {
         c = crc_table[4][(c >> 24) ^ *buf++] ^ (c << 8);

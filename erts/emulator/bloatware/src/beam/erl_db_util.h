@@ -87,7 +87,7 @@ typedef struct {
     int mustResize;
     void* lck;
 #if HALFWORD_HEAP
-    unsigned char* abs_vec;  /* [i] true if dbterm->tpl[i] is absolute Eterm */
+    uint8_t* abs_vec;  /* [i] true if dbterm->tpl[i] is absolute Eterm */
 #endif
 } DbUpdateHandle;
 

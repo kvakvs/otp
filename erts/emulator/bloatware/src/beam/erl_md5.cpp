@@ -60,11 +60,11 @@ typedef void *POINTER;
 #define S43 15
 #define S44 21
 
-static void MD5Transform(Uint32 [4], unsigned char [64]);
-static void Encode(unsigned char *, Uint32 *, unsigned int);
-static void Decode(Uint32 *, unsigned char *, unsigned int);
+static void MD5Transform(Uint32 [4], uint8_t [64]);
+static void Encode(uint8_t *, Uint32 *, unsigned int);
+static void Decode(Uint32 *, uint8_t *, unsigned int);
 
-static unsigned char PADDING[64] = {
+static uint8_t PADDING[64] = {
     0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -129,7 +129,7 @@ void MD5Init(MD5_CTX* context)
  * operation, processing another message block, and updating the
  * context.
  */
-void MD5Update (MD5_CTX *context, unsigned char *input, unsigned int inputLen)
+void MD5Update (MD5_CTX *context, uint8_t *input, unsigned int inputLen)
 {
     unsigned int i, index, partLen;
 
@@ -172,9 +172,9 @@ void MD5Update (MD5_CTX *context, unsigned char *input, unsigned int inputLen)
  * MD5 finalization. Ends an MD5 message-digest operation, writing the
   the message digest and zeroizing the context.
  */
-void MD5Final (unsigned char digest[16], MD5_CTX *context)
+void MD5Final (uint8_t digest[16], MD5_CTX *context)
 {
-    unsigned char bits[8];
+    uint8_t bits[8];
     unsigned int index, padLen;
 
     /*
@@ -208,7 +208,7 @@ void MD5Final (unsigned char digest[16], MD5_CTX *context)
 /*
  * MD5 basic transformation. Transforms state based on block.
  */
-static void MD5Transform (Uint32 state[4], unsigned char block[64])
+static void MD5Transform (Uint32 state[4], uint8_t block[64])
 {
     Uint32 a = state[0], b = state[1], c = state[2], d = state[3], x[16];
 
@@ -298,26 +298,26 @@ static void MD5Transform (Uint32 state[4], unsigned char block[64])
 }
 
 /*
- * Encodes input (Uint32) into output (unsigned char). Assumes len is
+ * Encodes input (Uint32) into output (uint8_t). Assumes len is
  * a multiple of 4.
  */
-static void Encode (unsigned char *output, Uint32 *input, unsigned int len)
+static void Encode (uint8_t *output, Uint32 *input, unsigned int len)
 {
     unsigned int i, j;
 
     for (i = 0, j = 0; j < len; i++, j += 4) {
-	output[j] = (unsigned char)(input[i] & 0xff);
-	output[j+1] = (unsigned char)((input[i] >> 8) & 0xff);
-	output[j+2] = (unsigned char)((input[i] >> 16) & 0xff);
-	output[j+3] = (unsigned char)((input[i] >> 24) & 0xff);
+	output[j] = (uint8_t)(input[i] & 0xff);
+	output[j+1] = (uint8_t)((input[i] >> 8) & 0xff);
+	output[j+2] = (uint8_t)((input[i] >> 16) & 0xff);
+	output[j+3] = (uint8_t)((input[i] >> 24) & 0xff);
     }
 }
 
 /*
- * Decodes input (unsigned char) into output (Uint32). Assumes len is
+ * Decodes input (uint8_t) into output (Uint32). Assumes len is
  * a multiple of 4.
  */
-static void Decode (Uint32 *output, unsigned char *input, unsigned int len)
+static void Decode (Uint32 *output, uint8_t *input, unsigned int len)
 {
     unsigned int i, j;
 

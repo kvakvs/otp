@@ -31,7 +31,7 @@
 #include "zlib.h"
 
 
-typedef void (*ChksumFun)(void *sum_in_out, unsigned char *buf, 
+typedef void (*ChksumFun)(void *sum_in_out, uint8_t *buf, 
 			  unsigned buflen);
 
 /* Hidden trap target */
@@ -55,7 +55,7 @@ static Eterm do_chksum(ChksumFun sumfun, Process *p, Eterm ioterm, int left,
     Eterm obj;
     int c;
     DECLARE_ESTACK(stack);
-    unsigned char *bytes = nullptr;
+    uint8_t *bytes = nullptr;
     int numbytes = 0;
 
     *err = 0;
@@ -69,7 +69,7 @@ static Eterm do_chksum(ChksumFun sumfun, Process *p, Eterm ioterm, int left,
 	Uint bitsize;
 	Uint size;
 	Eterm res_term = NIL;
-	unsigned char *bytes;
+	uint8_t *bytes;
         uint8_t *temp_alloc = nullptr;
 	
 	ERTS_GET_BINARY_BYTES(ioterm, bytes, bitoffs, bitsize);
@@ -143,7 +143,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 		    for(;;) {
 			if (bsize >= numbytes) {
 			    if (!bytes) {
-                                bytes = (unsigned char *)erts_alloc(ERTS_ALC_T_TMP,
+                                bytes = (uint8_t *)erts_alloc(ERTS_ALC_T_TMP,
 						   numbytes = 500);
 			    } else {
 				if (numbytes > left) {
@@ -151,11 +151,11 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 				} else {
 				    numbytes *= 2;
 				}
-                                bytes = (unsigned char *)erts_realloc(ERTS_ALC_T_TMP, bytes,
+                                bytes = (uint8_t *)erts_realloc(ERTS_ALC_T_TMP, bytes,
 						     numbytes);
 			    }
 			}  
-			bytes[bsize++] = (unsigned char) unsigned_val(obj);
+			bytes[bsize++] = (uint8_t) unsigned_val(obj);
 			--left;
 			ioterm = CDR(objp);
 			if (!is_list(ioterm)) {
@@ -241,8 +241,8 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 	    /* inproper list end */
 #ifdef ALLOW_BYTE_TAIL
 	    if (is_byte(ioterm)) {
-		unsigned char b[1];
-		b[0] = (unsigned char) unsigned_val(ioterm);
+		uint8_t b[1];
+		b[0] = (uint8_t) unsigned_val(ioterm);
 		(*sumfun)(sum, b, 1);
 		++(*res);
 		--left;
@@ -285,21 +285,21 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
     return ioterm;
 }
 
-static void adler32_wrap(void *vsum, unsigned char *buf, unsigned buflen)
+static void adler32_wrap(void *vsum, uint8_t *buf, unsigned buflen)
 {
     unsigned long sum = *((unsigned long *) vsum);
     sum = adler32(sum,buf,buflen);
     *((unsigned long *) vsum) = sum;
 }
 
-static void crc32_wrap(void *vsum, unsigned char *buf, unsigned buflen)
+static void crc32_wrap(void *vsum, uint8_t *buf, unsigned buflen)
 {
     unsigned long sum = *((unsigned long *) vsum);
     sum = crc32(sum,buf,buflen);
     *((unsigned long *) vsum) = sum;
 }
 
-static void md5_wrap(void *vsum, unsigned char *buf, unsigned buflen)
+static void md5_wrap(void *vsum, uint8_t *buf, unsigned buflen)
 {
     MD5_CTX *ctx = ((MD5_CTX *) vsum);
     MD5Update(ctx,buf,buflen);

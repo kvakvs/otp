@@ -215,7 +215,7 @@ dump_element(int to, void *to_arg, Eterm x)
 	erts_print(to, to_arg, "H" PTR_FMT, boxed_val(x));
     } else if (is_immed(x)) {
 	if (is_atom(x)) {
-	    unsigned char* s = atom_tab(atom_val(x))->name;
+	    uint8_t* s = atom_tab(atom_val(x))->name;
 	    int len = atom_tab(atom_val(x))->len;
 	    int i;
 

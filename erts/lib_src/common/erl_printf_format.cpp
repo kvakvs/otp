@@ -35,6 +35,8 @@
 #include <vxWorks.h>
 #endif
 
+#include <stdint.h>
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -706,7 +708,7 @@ int erts_printf_format(fmtfn_t fn, void* arg, char* fmt, va_list ap)
 	    case FMTC_X:
 		switch(fmt & FMTL_MASK) {
 		case FMTL_hh: {
-		    unsigned char tval = (unsigned char) va_arg(ap,int);
+		    uint8_t tval = (uint8_t) va_arg(ap,int);
 		    ul_val = (ErlPfUWord) tval;
 		    res = fmt_uword(fn,arg,USIGN(tval),ul_val,
 				   width,precision,fmt,&count);

@@ -23,6 +23,7 @@
 #ifndef __ERL_NIF_H__
 #define __ERL_NIF_H__
 
+#include <stdint.h>
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -155,7 +156,7 @@ typedef struct enif_entry_t
 typedef struct
 {
     size_t size;
-    unsigned char* data;
+    uint8_t* data;
 
     /* Internals (avert your eyes) */
     ERL_NIF_TERM bin_term;

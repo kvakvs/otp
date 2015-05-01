@@ -197,7 +197,8 @@ part of "configure") because PCRE is often cross-compiled for use on other
 systems. Instead we make use of the maximum sizes that are available at
 preprocessor time in standard C environments. */
 
-typedef unsigned char pcre_uint8;
+#include <stdint.h>
+typedef uint8_t pcre_uint8;
 
 #if USHRT_MAX == 65535
 typedef unsigned short pcre_uint16;
@@ -266,7 +267,7 @@ items, some check is needed before accessing these tables.
 
 #if defined COMPILE_PCRE8
 
-typedef unsigned char pcre_uchar;
+typedef uint8_t pcre_uchar;
 #define IN_UCHARS(x) (x)
 #define MAX_255(c) 1
 #define TABLE_GET(c, table, default) ((table)[c])
@@ -346,7 +347,7 @@ with a custom type. This makes it possible, for example, to allow pcre_exec()
 to process subject strings that are discontinuous by using a smart pointer
 class. It must always be possible to inspect all of the subject string in
 pcre_exec() because of the way it backtracks. Two macros are required in the
-normal case, for sign-unspecified and unsigned char pointers. The former is
+normal case, for sign-unspecified and uint8_t pointers. The former is
 used for the external interface and appears in pcre.h, which is why its name
 must begin with PCRE_. */
 
@@ -394,8 +395,8 @@ static void *
 pcre_memmove(void *d, const void *s, size_t n)
 {
 size_t i;
-unsigned char *dest = (unsigned char *)d;
-const unsigned char *src = (const unsigned char *)s;
+uint8_t *dest = (uint8_t *)d;
+const uint8_t *src = (const uint8_t *)s;
 if (dest > src)
   {
   dest += n;
@@ -1291,7 +1292,7 @@ a positive value. */
 
 #define CHAR_LF                     '\n'
 #define CHAR_NL                     CHAR_LF
-#define CHAR_NEL                    ((unsigned char)'\x85')
+#define CHAR_NEL                    ((uint8_t)'\x85')
 #define CHAR_ESC                    '\033'
 #define CHAR_DEL                    '\177'
 
@@ -1566,7 +1567,7 @@ only. */
 #define CHAR_CR                     '\015'
 #define CHAR_LF                     '\012'
 #define CHAR_NL                     CHAR_LF
-#define CHAR_NEL                    ((unsigned char)'\x85')
+#define CHAR_NEL                    ((uint8_t)'\x85')
 #define CHAR_BS                     '\010'
 #define CHAR_BEL                    '\007'
 #define CHAR_ESC                    '\033'

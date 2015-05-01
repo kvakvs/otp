@@ -706,14 +706,14 @@ static int my_strncasecmp(const char *s1, const char *s2, size_t n)
 
 #include "packet_parser.h"
 
-#define get_int24(s) ((((unsigned char*) (s))[0] << 16) | \
-                      (((unsigned char*) (s))[1] << 8)  | \
-                      (((unsigned char*) (s))[2]))
+#define get_int24(s) ((((uint8_t*) (s))[0] << 16) | \
+                      (((uint8_t*) (s))[1] << 8)  | \
+                      (((uint8_t*) (s))[2]))
 
-#define get_little_int32(s) ((((unsigned char*) (s))[3] << 24) | \
-			     (((unsigned char*) (s))[2] << 16)  | \
-			     (((unsigned char*) (s))[1] << 8) | \
-			     (((unsigned char*) (s))[0]))
+#define get_little_int32(s) ((((uint8_t*) (s))[3] << 24) | \
+			     (((uint8_t*) (s))[2] << 16)  | \
+			     (((uint8_t*) (s))[1] << 8) | \
+			     (((uint8_t*) (s))[0]))
 
 
 #ifdef VALGRIND
@@ -1692,7 +1692,7 @@ static int load_ip_address(ErlDrvTermData* spec, int i, int family, char* buf)
     if (family == AF_INET) {
 	for (n = 0;  n < 4;  n++) {
 	    spec[i++] = ERL_DRV_INT;
-	    spec[i++] = (ErlDrvTermData) ((unsigned char)buf[n]);
+	    spec[i++] = (ErlDrvTermData) ((uint8_t)buf[n]);
 	}
 	spec[i++] = ERL_DRV_TUPLE;
 	spec[i++] = 4;

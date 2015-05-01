@@ -7731,20 +7731,20 @@ Returns:        pointer to compiled data block, or NULL on error,
 #if defined(ERLANG_INTEGRATION)
 PCRE_EXP_DEFN pcre * PCRE_CALL_CONVENTION
 erts_pcre_compile(const char *pattern, int options, const char **errorptr,
-		  int *erroroffset, const unsigned char *tables)
+		  int *erroroffset, const uint8_t *tables)
 #else
 PCRE_EXP_DEFN pcre * PCRE_CALL_CONVENTION
 pcre_compile(const char *pattern, int options, const char **errorptr,
-  int *erroroffset, const unsigned char *tables)
+  int *erroroffset, const uint8_t *tables)
 #endif
 #elif defined COMPILE_PCRE16
 PCRE_EXP_DEFN pcre16 * PCRE_CALL_CONVENTION
 pcre16_compile(PCRE_SPTR16 pattern, int options, const char **errorptr,
-  int *erroroffset, const unsigned char *tables)
+  int *erroroffset, const uint8_t *tables)
 #elif defined COMPILE_PCRE32
 PCRE_EXP_DEFN pcre32 * PCRE_CALL_CONVENTION
 pcre32_compile(PCRE_SPTR32 pattern, int options, const char **errorptr,
-  int *erroroffset, const unsigned char *tables)
+  int *erroroffset, const uint8_t *tables)
 #endif
 {
 #if defined COMPILE_PCRE8
@@ -7766,20 +7766,20 @@ return pcre32_compile2(pattern, options, NULL, errorptr, erroroffset, tables);
 #if defined(ERLANG_INTEGRATION)
 PCRE_EXP_DEFN pcre * PCRE_CALL_CONVENTION
 erts_pcre_compile2(const char *pattern, int options, int *errorcodeptr,
-  const char **errorptr, int *erroroffset, const unsigned char *tables)
+  const char **errorptr, int *erroroffset, const uint8_t *tables)
 #else
 PCRE_EXP_DEFN pcre * PCRE_CALL_CONVENTION
 pcre_compile2(const char *pattern, int options, int *errorcodeptr,
-  const char **errorptr, int *erroroffset, const unsigned char *tables)
+  const char **errorptr, int *erroroffset, const uint8_t *tables)
 #endif
 #elif defined COMPILE_PCRE16
 PCRE_EXP_DEFN pcre16 * PCRE_CALL_CONVENTION
 pcre16_compile2(PCRE_SPTR16 pattern, int options, int *errorcodeptr,
-  const char **errorptr, int *erroroffset, const unsigned char *tables)
+  const char **errorptr, int *erroroffset, const uint8_t *tables)
 #elif defined COMPILE_PCRE32
 PCRE_EXP_DEFN pcre32 * PCRE_CALL_CONVENTION
 pcre32_compile2(PCRE_SPTR32 pattern, int options, int *errorcodeptr,
-  const char **errorptr, int *erroroffset, const unsigned char *tables)
+  const char **errorptr, int *erroroffset, const uint8_t *tables)
 #endif
 {
 REAL_PCRE *re;

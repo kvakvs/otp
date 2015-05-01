@@ -94,7 +94,7 @@
 
 #define BFILE_BLOCK  1024
 
-typedef unsigned char uchar;
+typedef uint8_t uchar;
 
 static ErlDrvData rfile_start(ErlDrvPort, char*);
 static int rfile_init(void);

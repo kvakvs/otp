@@ -24,6 +24,7 @@
 #ifndef __ERL_DRIVER_H__
 #define __ERL_DRIVER_H__
 
+#include <stdint.h>
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -240,7 +241,7 @@ typedef struct erl_drv_event_data *ErlDrvEventData; /* Event data */
  * A driver monitor
  */
 typedef struct {
-    unsigned char data[sizeof(void *)*4];
+    uint8_t data[sizeof(void *)*4];
 } ErlDrvMonitor;
 
 typedef struct {

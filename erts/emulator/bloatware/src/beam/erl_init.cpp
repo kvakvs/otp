@@ -416,7 +416,7 @@ erts_preloaded(Process* p)
     int need;
     Eterm mod;
     Eterm* hp;
-    char* name;
+    const char* name;
     const Preload *preload = sys_preloaded();
 
     j = 0;
@@ -466,7 +466,7 @@ load_preloaded(void)
     Preload* preload_p;
     Eterm module_name;
     uint8_t* code;
-    char* name;
+    const char* name;
     int length;
 
     if ((preload_p = sys_preloaded()) == nullptr) {

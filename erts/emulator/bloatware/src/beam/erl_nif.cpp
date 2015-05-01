@@ -63,7 +63,7 @@ struct erl_module_nif {
 #endif
 #ifdef READONLY_CHECK
 #  define ADD_READONLY_CHECK(ENV,PTR,SIZE) add_readonly_check(ENV,PTR,SIZE)
-static void add_readonly_check(ErlNifEnv*, unsigned char* ptr, unsigned sz);
+static void add_readonly_check(ErlNifEnv*, uint8_t* ptr, unsigned sz);
 #else
 #  define ADD_READONLY_CHECK(ENV,PTR,SIZE) ((void)0)
 #endif
@@ -517,7 +517,7 @@ int enif_inspect_iolist_as_binary(ErlNifEnv* env, Eterm term, ErlNifBinary* bin)
 	return enif_inspect_binary(env,term,bin);
     }
     if (is_nil(term)) {
-	bin->data = (unsigned char*) &bin->data; /* dummy non-nullptr */
+	bin->data = (uint8_t*) &bin->data; /* dummy non-nullptr */
 	bin->size = 0;
 	bin->bin_term = THE_NON_VALUE;
 	bin->ref_bin = nullptr;
@@ -534,7 +534,7 @@ int enif_inspect_iolist_as_binary(ErlNifEnv* env, Eterm term, ErlNifBinary* bin)
     tobj->dtor = &tmp_alloc_dtor;
     env->tmp_obj_list = tobj;
 
-    bin->data = (unsigned char*) &tobj[1]; 
+    bin->data = (uint8_t*) &tobj[1]; 
     bin->size = sz;
     bin->bin_term = THE_NON_VALUE;
     bin->ref_bin = nullptr;
@@ -556,7 +556,7 @@ int enif_alloc_binary(size_t size, ErlNifBinary* bin)
     refbin->orig_size = (SWord) size;
 
     bin->size = size;
-    bin->data = (unsigned char*) refbin->orig_bytes;
+    bin->data = (uint8_t*) refbin->orig_bytes;
     bin->bin_term = THE_NON_VALUE;
     bin->ref_bin = refbin;
     return 1;
@@ -575,11 +575,11 @@ int enif_realloc_binary(ErlNifBinary* bin, size_t size)
 	}    
 	newbin->orig_size = size;
 	bin->ref_bin = newbin;
-	bin->data = (unsigned char*) newbin->orig_bytes;
+	bin->data = (uint8_t*) newbin->orig_bytes;
 	bin->size = size;
     }
     else {
-	unsigned char* old_data = bin->data;
+	uint8_t* old_data = bin->data;
 	size_t cpy_sz = (size < bin->size ? size : bin->size);  
 	enif_alloc_binary(size, bin);
 	sys_memcpy(bin->data, old_data, cpy_sz); 
@@ -604,7 +604,7 @@ void enif_release_binary(ErlNifBinary* bin)
 #endif
 }
 
-unsigned char* enif_make_new_binary(ErlNifEnv* env, size_t size,
+uint8_t* enif_make_new_binary(ErlNifEnv* env, size_t size,
 				    ERL_NIF_TERM* termp)
 {
     flush_env(env);
@@ -2608,16 +2608,16 @@ void dtrace_nifenv_str(ErlNifEnv *env, char *process_buf)
 /* Use checksums to assert that NIFs do not write into inspected binaries
 */
 static void readonly_check_dtor(struct enif_tmp_obj_t*);
-static unsigned calc_checksum(unsigned char* ptr, unsigned size);
+static unsigned calc_checksum(uint8_t* ptr, unsigned size);
 
 struct readonly_check_t
 {
     struct enif_tmp_obj_t hdr;
-    unsigned char* ptr;
+    uint8_t* ptr;
     unsigned size;
     unsigned checksum;
 };
-static void add_readonly_check(ErlNifEnv* env, unsigned char* ptr, unsigned sz)
+static void add_readonly_check(ErlNifEnv* env, uint8_t* ptr, unsigned sz)
 {
     ErtsAlcType_t allocator = is_proc_bound(env) ? ERTS_ALC_T_TMP : ERTS_ALC_T_NIF;
     struct readonly_check_t* obj = erts_alloc(allocator, 
@@ -2641,7 +2641,7 @@ static void readonly_check_dtor(struct enif_tmp_obj_t* o)
     }
     erts_free(obj->hdr.allocator,  obj);
 }
-static unsigned calc_checksum(unsigned char* ptr, unsigned size)
+static unsigned calc_checksum(uint8_t* ptr, unsigned size)
 {
     unsigned i, sum = 0;
     for (i=0; i<size; i++) {

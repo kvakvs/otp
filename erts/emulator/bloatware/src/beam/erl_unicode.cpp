@@ -186,7 +186,7 @@ static ERTS_INLINE int simple_loops_to_common(int cost)
 
 static Sint aligned_binary_size(Eterm binary)
 {
-    ERTS_DECLARE_DUMMY(unsigned char *bytes);
+    ERTS_DECLARE_DUMMY(uint8_t *bytes);
     ERTS_DECLARE_DUMMY(Uint bitoffs);
     Uint bitsize;
     
@@ -199,7 +199,7 @@ static Sint aligned_binary_size(Eterm binary)
 
 static Sint latin1_binary_need(Eterm binary)
 {
-    unsigned char *bytes;
+    uint8_t *bytes;
     uint8_t *temp_alloc = nullptr;
     Uint bitoffs;
     Uint bitsize;
@@ -521,7 +521,7 @@ static Eterm do_build_utf8(Process *p, Eterm ioterm, int *left, int latin1,
 	Uint size;
 	Uint i;
 	Eterm res_term = NIL;
-	unsigned char *bytes;
+	uint8_t *bytes;
 	uint8_t *temp_alloc = nullptr;
 	Uint orig_size;
 	

@@ -270,7 +270,7 @@ dt_private *get_dt_private(int);
 #define DEFAULT_LINEBUF_SIZE 512 /* Small, it's usually discarded anyway */ 
 #endif
 
-typedef unsigned char uchar;
+typedef uint8_t uchar;
 
 static ErlDrvData file_start(ErlDrvPort port, char* command);
 static int file_init(void);
@@ -556,7 +556,7 @@ efile_ev_get_char(ErlIOVec *ev, char *p, size_t *pp, size_t *qp) {
 
 /* Uint32 EV_UINT32(ErlIOVec *ev, int p, int q)*/
 #define EV_UINT32(ev, p, q)						\
-    ((Uint32) ((unsigned char *)(ev)->iov[q].iov_base)[p])
+    ((Uint32) ((uint8_t *)(ev)->iov[q].iov_base)[p])
 
 /* int EV_GET_UINT32(ErlIOVec *ev, Uint32 *p, int *pp, int *qp) */
 #define EV_GET_UINT32(ev, p, pp, qp) efile_ev_get_uint32(ev, p, pp, qp)
@@ -580,7 +580,7 @@ efile_ev_get_uint32(ErlIOVec *ev, Uint32 *p, size_t *pp, size_t *qp) {
 
 /* Uint64 EV_UINT64(ErlIOVec *ev, int p, int q)*/
 #define EV_UINT64(ev, p, q)						\
-    ((Uint64) ((unsigned char *)(ev)->iov[q].iov_base)[p])
+    ((Uint64) ((uint8_t *)(ev)->iov[q].iov_base)[p])
 
 /* int EV_GET_UINT64(ErlIOVec *ev, Uint64 *p, int *pp, int *qp) */
 #define EV_GET_UINT64(ev, p, pp, qp) efile_ev_get_uint64(ev, p, pp, qp)
@@ -1353,7 +1353,7 @@ static void invoke_preadv(void *data)
     struct t_preadv *c = &d->c.preadv;
     ErlIOVec        *ev = &c->eiov;
     size_t           bytes_read_so_far = 0;
-    unsigned char   *p = (unsigned char *)ev->iov[0].iov_base + 4+4+8*c->cnt;
+    uint8_t   *p = (uint8_t *)ev->iov[0].iov_base + 4+4+8*c->cnt;
     DTRACE_INVOKE_SETUP(FILE_PREADV);
 
     while (c->cnt < c->n) {

@@ -37,7 +37,7 @@
 #define LOOP_FACTOR 10
 
 
-static const unsigned char *default_table;
+static const uint8_t *default_table;
 static Uint max_loop_limit;
 static Export re_exec_trap_export;
 static Export *grun_trap_exportp = nullptr;
@@ -833,8 +833,8 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
 
 #define RINFO_SIZ(Num) (sizeof(ReturnInfo) + (sizeof(int) * (Num - 1)))
 #define PICK_INDEX(NameEntry)					        \
-    ((int) ((((unsigned) ((unsigned char *) (NameEntry))[0]) << 8) +	\
-	    ((unsigned) ((unsigned char *) (NameEntry))[1])))
+    ((int) ((((unsigned) ((uint8_t *) (NameEntry))[0]) << 8) +	\
+	    ((unsigned) ((uint8_t *) (NameEntry))[1])))
 
 
 static void build_one_capture(const pcre *code, ReturnInfo **ri, int *sallocated, int has_dupnames, char *name) 
@@ -927,7 +927,7 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 	{
 	    int rc,i,top;
 	    int entrysize;
-            unsigned char *nametable, *last = nullptr;
+            uint8_t *nametable, *last = nullptr;
 	    int has_dupnames;
 	    unsigned long options;
 
@@ -1402,7 +1402,7 @@ re_inspect_2(BIF_ALIST_2)
     Eterm *tp,*tmp_vec,*hp;
     int i,top,j;
     int entrysize;
-    unsigned char *nametable, *last,*name;
+    uint8_t *nametable, *last,*name;
     int has_dupnames;
     unsigned long options;
     int num_names;

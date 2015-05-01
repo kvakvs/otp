@@ -4962,7 +4962,7 @@ BIF_RETTYPE dt_prepend_vm_tag_data_1(BIF_ALIST_1)
     if (is_binary((DT_UTAG(BIF_P)))) {
 	Uint sz = binary_size(DT_UTAG(BIF_P));
 	int i;
-	unsigned char *p,*q;
+	uint8_t *p,*q;
         uint8_t *temp_alloc = nullptr;
         b = new_binary(BIF_P,nullptr,sz+1);
 	q = binary_bytes(b);
@@ -4989,7 +4989,7 @@ BIF_RETTYPE dt_append_vm_tag_data_1(BIF_ALIST_1)
     if (is_binary((DT_UTAG(BIF_P)))) {
 	Uint sz = binary_size(DT_UTAG(BIF_P));
 	int i;
-	unsigned char *p,*q;
+	uint8_t *p,*q;
         uint8_t *temp_alloc = nullptr;
         b = new_binary(BIF_P,nullptr,sz+1);
 	q = binary_bytes(b);

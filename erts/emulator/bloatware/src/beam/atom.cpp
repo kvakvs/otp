@@ -55,7 +55,7 @@ static erts_smp_atomic_t atom_put_ops;
 
 typedef struct _atom_text {
     struct _atom_text* next;
-    unsigned char text[ATOM_TEXT_SIZE];
+    uint8_t text[ATOM_TEXT_SIZE];
 } AtomText;
 
 static AtomText* text_list;	/* List of text buffers */
@@ -181,7 +181,7 @@ atom_alloc(Atom* tmpl)
      * ordinal values to represent their relative order.
      */
     {
-	unsigned char c[4];
+        uint8_t c[4];
 	int i;
 	int j;
 
@@ -218,7 +218,7 @@ need_convertion:
     sys_memcpy(conv_buf, src, i);
     dst = conv_buf + i;
     for ( ; i < len; ++i) {
-	unsigned char chr = src[i];
+        uint8_t chr = src[i];
 	if (!(chr & 0x80)) {
 	    *dst++ = chr;
 	}

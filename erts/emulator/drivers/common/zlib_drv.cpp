@@ -126,10 +126,10 @@ static __inline__ int i32(char* buf)
 #endif
 {
     return (int) (
-		  (((int)((unsigned char*)buf)[0]) << 24) |
-		  (((int)((unsigned char*)buf)[1]) << 16) |
-		  (((int)((unsigned char*)buf)[2]) << 8) |
-		  (((int)((unsigned char*)buf)[3]) << 0));
+		  (((int)((uint8_t*)buf)[0]) << 24) |
+		  (((int)((uint8_t*)buf)[1]) << 16) |
+		  (((int)((uint8_t*)buf)[2]) << 8) |
+		  (((int)((uint8_t*)buf)[3]) << 0));
 }
 
 static char* zlib_reason(int code, int* err)
@@ -214,7 +214,7 @@ static int zlib_output_init(ZLibData* d)
     if ((d->bin = driver_alloc_binary(d->binsz_need)) == nullptr)
 	return -1;
     d->binsz = d->binsz_need;
-    d->s.next_out = (unsigned char*)d->bin->orig_bytes;
+    d->s.next_out = (uint8_t*)d->bin->orig_bytes;
     d->s.avail_out = d->binsz;
     return 0;
 }
@@ -274,7 +274,7 @@ static int zlib_inflate(ZLibData* d, int flush)
 		possibly_more_output = 0;
 	    } else {
 		if (d->want_crc)
-		    d->crc = crc32(d->crc, (unsigned char*)d->bin->orig_bytes,
+		    d->crc = crc32(d->crc, (uint8_t*)d->bin->orig_bytes,
 				   d->binsz - d->s.avail_out);
 		zlib_output(d);
 		possibly_more_output = 1;
@@ -285,7 +285,7 @@ static int zlib_inflate(ZLibData* d, int flush)
     }
 
     if (d->want_crc) {
-       d->crc = crc32(d->crc, (unsigned char*) d->bin->orig_bytes,
+       d->crc = crc32(d->crc, (uint8_t*) d->bin->orig_bytes,
 		      d->binsz - d->s.avail_out);
     }
     zlib_output(d);
@@ -457,7 +457,7 @@ static ErlDrvSSizeT zlib_ctl(ErlDrvData drv_data, unsigned int command, char *bu
 	
     case DEFLATE_SETDICT:
 	if (d->state != ST_DEFLATE) goto badarg;
-	res = deflateSetDictionary(&d->s, (unsigned char*)buf, len);
+	res = deflateSetDictionary(&d->s, (uint8_t*)buf, len);
 	if (res == Z_OK) {
 	    return zlib_value(d->s.adler, rbuf, rlen);
 	} else {
@@ -521,7 +521,7 @@ static ErlDrvSSizeT zlib_ctl(ErlDrvData drv_data, unsigned int command, char *bu
 	
     case INFLATE_SETDICT:
 	if (d->state != ST_INFLATE) goto badarg;
-	res = inflateSetDictionary(&d->s, (unsigned char*)buf, len);
+	res = inflateSetDictionary(&d->s, (uint8_t*)buf, len);
 	return zlib_return(res, rbuf, rlen);
 
     case INFLATE_SYNC:
@@ -600,7 +600,7 @@ static ErlDrvSSizeT zlib_ctl(ErlDrvData drv_data, unsigned int command, char *bu
 
     case CRC32_1: {
 	uLong crc = crc32(0L, Z_NULL, 0);
-	crc = crc32(crc, (unsigned char*) buf, len);
+	crc = crc32(crc, (uint8_t*) buf, len);
 	return zlib_value(crc, rbuf, rlen);
     }
 	
@@ -608,13 +608,13 @@ static ErlDrvSSizeT zlib_ctl(ErlDrvData drv_data, unsigned int command, char *bu
 	uLong crc;
 	if (len < 4) goto badarg;
 	crc = (unsigned int) i32(buf);
-	crc = crc32(crc, (unsigned char*) buf+4, len-4);
+	crc = crc32(crc, (uint8_t*) buf+4, len-4);
 	return zlib_value(crc, rbuf, rlen);
     }
 
     case ADLER32_1: {
 	uLong adler = adler32(0L, Z_NULL, 0);
-	adler = adler32(adler, (unsigned char*) buf, len);
+	adler = adler32(adler, (uint8_t*) buf, len);
 	return zlib_value(adler, rbuf, rlen);
     }
 	
@@ -622,7 +622,7 @@ static ErlDrvSSizeT zlib_ctl(ErlDrvData drv_data, unsigned int command, char *bu
        uLong adler;
        if (len < 4) goto badarg;
        adler = (unsigned int) i32(buf);
-       adler = adler32(adler, (unsigned char*) buf+4, len-4);
+       adler = adler32(adler, (uint8_t*) buf+4, len-4);
        return zlib_value(adler, rbuf, rlen);
     }
 

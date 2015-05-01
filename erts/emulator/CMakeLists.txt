@@ -35,7 +35,7 @@ add_definitions(-DHAVE_CONFIG_H
     -D_GNU_SOURCE=1
     -DERLANG_INTEGRATION
     -DLIBSCTP=libsctp.so.1
-    -O3
+    -O0
     )
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS}
     -std=c++11
@@ -54,7 +54,7 @@ set(SRC_GENERATED
     bloatware/gen/driver_tab.cpp
     ${emulator_PLATF}/erl_atom_table.c      ${emulator_PLATF}/erl_atom_table.h
     bloatware/gen/erl_bif_wrap.cpp
-    ${emulator_PLATF}/preload.c
+    bloatware/gen/preload.cpp           bloatware/src/beam/preload.h
     #${emulator_PLATF}/erl_bif_table.cpp
     bloatware/gen/erl_bif_table.cpp
     )

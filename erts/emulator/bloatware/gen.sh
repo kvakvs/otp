@@ -46,3 +46,17 @@ DRV_OBJS="$OBJDIR/efile_drv.o \
 STATIC_DRIVER_LIBS=""
 LANG=C $PERL scripts/make_driver_tab -o $TARGET_DIR/driver_tab.cpp \
     -nifs $STATIC_NIF_LIBS -drivers $DRV_OBJS $STATIC_DRIVER_LIBS
+
+#==================================
+PRELOAD_SRC="$ERL_TOP/erts/preloaded/ebin/otp_ring0.beam \
+            $ERL_TOP/erts/preloaded/ebin/init.beam \
+            $ERL_TOP/erts/preloaded/ebin/prim_eval.beam \
+            $ERL_TOP/erts/preloaded/ebin/prim_inet.beam \
+            $ERL_TOP/erts/preloaded/ebin/prim_file.beam \
+            $ERL_TOP/erts/preloaded/ebin/zlib.beam \
+            $ERL_TOP/erts/preloaded/ebin/prim_zip.beam \
+            $ERL_TOP/erts/preloaded/ebin/erl_prim_loader.beam \
+            $ERL_TOP/erts/preloaded/ebin/erlang.beam \
+            $ERL_TOP/erts/preloaded/ebin/erts_internal.beam"
+LANG=C $PERL scripts/make_preload -old $PRELOAD_SRC > $TARGET_DIR/preload.cpp
+

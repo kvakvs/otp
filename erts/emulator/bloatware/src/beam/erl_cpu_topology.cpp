@@ -1009,7 +1009,7 @@ get_cput_value_or_range(int *v, int *vr, char **str)
     long l;
     char *c = *str;
     errno = 0;
-    if (!isdigit((unsigned char)*c))
+    if (!isdigit((uint8_t)*c))
 	return ERTS_INIT_CPU_TOPOLOGY_INVALID_ID;
     l = strtol(c, &c, 10);
     if (errno != 0 || l < 0 || ERTS_MAX_CPU_TOPOLOGY_ID < l)
@@ -1017,7 +1017,7 @@ get_cput_value_or_range(int *v, int *vr, char **str)
     *v = (int) l;
     if (*c == '-') {
 	c++;
-	if (!isdigit((unsigned char)*c))
+	if (!isdigit((uint8_t)*c))
 	    return ERTS_INIT_CPU_TOPOLOGY_INVALID_ID_RANGE;
 	l = strtol(c, &c, 10);
 	if (errno != 0 || l < 0 || ERTS_MAX_CPU_TOPOLOGY_ID < l)

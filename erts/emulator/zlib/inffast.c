@@ -72,18 +72,18 @@ z_streamp strm;
 unsigned start;         /* inflate()'s starting value for strm->avail_out */
 {
     struct inflate_state FAR *state;
-    z_const unsigned char FAR *in;      /* local strm->next_in */
-    z_const unsigned char FAR *last;    /* have enough input while in < last */
-    unsigned char FAR *out;     /* local strm->next_out */
-    unsigned char FAR *beg;     /* inflate()'s initial strm->next_out */
-    unsigned char FAR *end;     /* while out < end, enough space available */
+    z_const uint8_t FAR *in;      /* local strm->next_in */
+    z_const uint8_t FAR *last;    /* have enough input while in < last */
+    uint8_t FAR *out;     /* local strm->next_out */
+    uint8_t FAR *beg;     /* inflate()'s initial strm->next_out */
+    uint8_t FAR *end;     /* while out < end, enough space available */
 #ifdef INFLATE_STRICT
     unsigned dmax;              /* maximum distance from zlib header */
 #endif
     unsigned wsize;             /* window size or zero if not using window */
     unsigned whave;             /* valid bytes in the window */
     unsigned wnext;             /* window write index */
-    unsigned char FAR *window;  /* allocated sliding window, if wsize != 0 */
+    uint8_t FAR *window;  /* allocated sliding window, if wsize != 0 */
     unsigned long hold;         /* local strm->hold */
     unsigned bits;              /* local strm->bits */
     code const FAR *lcode;      /* local strm->lencode */
@@ -95,7 +95,7 @@ unsigned start;         /* inflate()'s starting value for strm->avail_out */
                                 /*  window position, window bytes to copy */
     unsigned len;               /* match length, unused bytes */
     unsigned dist;              /* match distance */
-    unsigned char FAR *from;    /* where to copy match from */
+    uint8_t FAR *from;    /* where to copy match from */
 
     /* copy state to local variables */
     state = (struct inflate_state FAR *)strm->state;
@@ -137,7 +137,7 @@ unsigned start;         /* inflate()'s starting value for strm->avail_out */
             Tracevv((stderr, here.val >= 0x20 && here.val < 0x7f ?
                     "inflate:         literal '%c'\n" :
                     "inflate:         literal 0x%02x\n", here.val));
-            PUP(out) = (unsigned char)(here.val);
+            PUP(out) = (uint8_t)(here.val);
         }
         else if (op & 16) {                     /* length base */
             len = (unsigned)(here.val);

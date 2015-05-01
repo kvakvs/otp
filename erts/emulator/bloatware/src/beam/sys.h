@@ -393,7 +393,7 @@ typedef short          Sint16;
 #endif
 
 //#if CHAR_BIT == 8
-//typedef unsigned char uint8_t;
+//typedef uint8_t uint8_t;
 //#else
 //#error Found no appropriate type to use for 'uint8_t'
 //#endif
@@ -611,13 +611,6 @@ int erts_send_info_to_logger_str_nogl(char *);
    int erts_send_warning_to_logger_str_nogl(char *); */
 int erts_send_error_to_logger_str_nogl(char *);
 
-typedef struct preload {
-    char *name;			/* Name of module */
-    int  size;			/* Size of code */
-    unsigned char* code;	/* Code pointer */
-} Preload;
-
-
 /*
  * This structure contains options to all built in drivers.
  * None of the drivers use all of the fields.
@@ -711,10 +704,12 @@ extern void erl_sys_args(int *argc, char **argv);
 extern void erl_sys_schedule(int);
 void sys_tty_reset(int);
 
+#include "preload.h"
+
 int sys_max_files(void);
 void sys_init_io(void);
 Preload* sys_preloaded(void);
-unsigned char* sys_preload_begin(Preload*);
+uint8_t* sys_preload_begin(Preload*);
 void sys_preload_end(Preload*);
 int sys_get_key(int);
 void elapsed_time_both(UWord *ms_user, UWord *ms_sys, 
@@ -959,14 +954,14 @@ extern int erts_use_kernel_poll;
 
 /* Standard set of integer macros  .. */
 
-#define get_int64(s) (((Uint64)(((unsigned char*) (s))[0]) << 56) | \
-                      (((Uint64)((unsigned char*) (s))[1]) << 48) | \
-                      (((Uint64)((unsigned char*) (s))[2]) << 40) | \
-                      (((Uint64)((unsigned char*) (s))[3]) << 32) | \
-                      (((Uint64)((unsigned char*) (s))[4]) << 24) | \
-                      (((Uint64)((unsigned char*) (s))[5]) << 16) | \
-                      (((Uint64)((unsigned char*) (s))[6]) << 8)  | \
-                      (((Uint64)((unsigned char*) (s))[7])))
+#define get_int64(s) (((Uint64)(((uint8_t*) (s))[0]) << 56) | \
+                      (((Uint64)((uint8_t*) (s))[1]) << 48) | \
+                      (((Uint64)((uint8_t*) (s))[2]) << 40) | \
+                      (((Uint64)((uint8_t*) (s))[3]) << 32) | \
+                      (((Uint64)((uint8_t*) (s))[4]) << 24) | \
+                      (((Uint64)((uint8_t*) (s))[5]) << 16) | \
+                      (((Uint64)((uint8_t*) (s))[6]) << 8)  | \
+                      (((Uint64)((uint8_t*) (s))[7])))
 
 #define put_int64(i, s) do {((char*)(s))[0] = (char)((Sint64)(i) >> 56) & 0xff;\
                             ((char*)(s))[1] = (char)((Sint64)(i) >> 48) & 0xff;\
@@ -978,10 +973,10 @@ extern int erts_use_kernel_poll;
                             ((char*)(s))[7] = (char)((Sint64)(i))       & 0xff;\
                            } while (0) 
 
-#define get_int32(s) ((((unsigned char*) (s))[0] << 24) | \
-                      (((unsigned char*) (s))[1] << 16) | \
-                      (((unsigned char*) (s))[2] << 8)  | \
-                      (((unsigned char*) (s))[3]))
+#define get_int32(s) ((((uint8_t*) (s))[0] << 24) | \
+                      (((uint8_t*) (s))[1] << 16) | \
+                      (((uint8_t*) (s))[2] << 8)  | \
+                      (((uint8_t*) (s))[3]))
 
 #define put_int32(i, s) do {((char*)(s))[0] = (char)((i) >> 24) & 0xff;   \
                             ((char*)(s))[1] = (char)((i) >> 16) & 0xff;   \
@@ -989,27 +984,27 @@ extern int erts_use_kernel_poll;
                             ((char*)(s))[3] = (char)(i)         & 0xff;} \
                         while (0)
 
-#define get_int24(s) ((((unsigned char*) (s))[0] << 16) | \
-                      (((unsigned char*) (s))[1] << 8)  | \
-                      (((unsigned char*) (s))[2]))
+#define get_int24(s) ((((uint8_t*) (s))[0] << 16) | \
+                      (((uint8_t*) (s))[1] << 8)  | \
+                      (((uint8_t*) (s))[2]))
 
 #define put_int24(i, s) do {((char*)(s))[0] = (char)((i) >> 16) & 0xff;  \
                             ((char*)(s))[1] = (char)((i) >> 8)  & 0xff;  \
                             ((char*)(s))[2] = (char)(i)         & 0xff;} \
                         while (0)
 
-#define get_int16(s) ((((unsigned char*)  (s))[0] << 8) | \
-                      (((unsigned char*)  (s))[1]))
+#define get_int16(s) ((((uint8_t*)  (s))[0] << 8) | \
+                      (((uint8_t*)  (s))[1]))
 
 
 #define put_int16(i, s) do {((char*)(s))[0] = (char)((i) >> 8) & 0xff;  \
                             ((char*)(s))[1] = (char)(i)        & 0xff;} \
                         while (0)
 
-#define get_int8(s) ((((unsigned char*)  (s))[0] ))
+#define get_int8(s) ((((uint8_t*)  (s))[0] ))
 
 
-#define put_int8(i, s) do {((unsigned char*)(s))[0] = (i) & 0xff;} while (0)
+#define put_int8(i, s) do {((uint8_t*)(s))[0] = (i) & 0xff;} while (0)
 
 
 /*
@@ -1022,7 +1017,7 @@ extern int erts_use_kernel_poll;
 
 #ifdef DEBUG
 void erl_debug(char* format, ...);
-void erl_bin_write(unsigned char *, int, int);
+void erl_bin_write(uint8_t *, int, int);
 
 #  define DEBUGF(x) erl_debug x
 #else

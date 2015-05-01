@@ -131,7 +131,7 @@ do {                                     \
  * the loader has precalculated a byte offset.
  */
 #define ADD_BYTE_OFFSET(ptr, offset) \
-   ((Eterm *) (((unsigned char *)ptr) + (offset)))
+   ((Eterm *) (((uint8_t *)ptr) + (offset)))
 
 /* We don't check the range if an ordinary switch is used */
 #ifdef NO_JUMP_TABLE
@@ -289,9 +289,9 @@ extern int count_instructions;
 
 #define db(N) (N)
 #define tb(N) (N)
-#define xb(N) (*(Eterm *) (((unsigned char *)reg) + (N)))
-#define yb(N) (*(Eterm *) (((unsigned char *)E) + (N)))
-#define fb(N) (*(double *) (((unsigned char *)&(freg[0].fd)) + (N)))
+#define xb(N) (*(Eterm *) (((uint8_t *)reg) + (N)))
+#define yb(N) (*(Eterm *) (((uint8_t *)E) + (N)))
+#define fb(N) (*(double *) (((uint8_t *)&(freg[0].fd)) + (N)))
 #define Qb(N) (N)
 #define Ib(N) (N)
 #define x(N) reg[N]
@@ -622,14 +622,14 @@ extern int count_instructions;
 
 #define GetTupleElement(Src, Element, Dest)				\
   do {									\
-    tmp_arg1 = (Eterm) COMPRESS_POINTER(((unsigned char *) tuple_val(Src)) + 	\
+    tmp_arg1 = (Eterm) COMPRESS_POINTER(((uint8_t *) tuple_val(Src)) + 	\
 				(Element));				\
     (Dest) = (*(Eterm *) EXPAND_POINTER(tmp_arg1));			\
   } while (0)
 
 #define ExtractNextElement(Dest)					  \
     tmp_arg1 += sizeof(Eterm);						  \
-    (Dest) = (* (Eterm *) (((unsigned char *) EXPAND_POINTER(tmp_arg1))))
+    (Dest) = (* (Eterm *) (((uint8_t *) EXPAND_POINTER(tmp_arg1))))
 
 #define ExtractNextElement2(Dest)				\
   do {								\
@@ -3354,7 +3354,7 @@ get_map_elements_fail:
      PreFetch(3, next);
      GetArg2(0, element, tuple);
      ASSERT(is_tuple(tuple));
-     p = (Eterm *) ((unsigned char *) tuple_val(tuple) + Arg(2));
+     p = (Eterm *) ((uint8_t *) tuple_val(tuple) + Arg(2));
      *p = element;
      NextPF(3, next);
  }

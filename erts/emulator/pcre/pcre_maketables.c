@@ -69,27 +69,27 @@ Returns:     pointer to the contiguous block of data
 
 #if defined COMPILE_PCRE8
 #if defined(ERLANG_INTEGRATION)
-const unsigned char *
+const uint8_t *
 erts_pcre_maketables(void)
 #else
-const unsigned char *
+const uint8_t *
 pcre_maketables(void)
 #endif
 #elif defined COMPILE_PCRE16
-const unsigned char *
+const uint8_t *
 pcre16_maketables(void)
 #elif defined COMPILE_PCRE32
-const unsigned char *
+const uint8_t *
 pcre32_maketables(void)
 #endif
 {
-unsigned char *yield, *p;
+uint8_t *yield, *p;
 int i;
 
 #ifndef DFTABLES
-yield = (unsigned char*)(PUBL(malloc))(tables_length);
+yield = (uint8_t*)(PUBL(malloc))(tables_length);
 #else
-yield = (unsigned char*)malloc(tables_length);
+yield = (uint8_t*)malloc(tables_length);
 #endif
 
 if (yield == NULL) return NULL;

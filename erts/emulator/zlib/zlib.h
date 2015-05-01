@@ -1002,7 +1002,7 @@ ZEXTERN int ZEXPORT inflateGetHeader OF((z_streamp strm,
 
 /*
 ZEXTERN int ZEXPORT inflateBackInit OF((z_streamp strm, int windowBits,
-                                        unsigned char FAR *window));
+                                        uint8_t FAR *window));
 
      Initialize the internal stream state for decompression using inflateBack()
    calls.  The fields zalloc, zfree and opaque in strm must be initialized
@@ -1023,8 +1023,8 @@ ZEXTERN int ZEXPORT inflateBackInit OF((z_streamp strm, int windowBits,
 */
 
 typedef unsigned (*in_func) OF((void FAR *,
-                                z_const unsigned char FAR * FAR *));
-typedef int (*out_func) OF((void FAR *, unsigned char FAR *, unsigned));
+                                z_const uint8_t FAR * FAR *));
+typedef int (*out_func) OF((void FAR *, uint8_t FAR *, unsigned));
 
 ZEXTERN int ZEXPORT inflateBack OF((z_streamp strm,
                                     in_func in, void FAR *in_desc,
@@ -1384,7 +1384,7 @@ ZEXTERN char * ZEXPORT gzgets OF((gzFile file, char *buf, int len));
 
 ZEXTERN int ZEXPORT gzputc OF((gzFile file, int c));
 /*
-     Writes c, converted to an unsigned char, into the compressed file.  gzputc
+     Writes c, converted to an uint8_t, into the compressed file.  gzputc
    returns the value that was written, or -1 in case of error.
 */
 
@@ -1641,7 +1641,7 @@ ZEXTERN int ZEXPORT deflateInit2_ OF((z_streamp strm, int  level, int  method,
 ZEXTERN int ZEXPORT inflateInit2_ OF((z_streamp strm, int  windowBits,
                                       const char *version, int stream_size));
 ZEXTERN int ZEXPORT inflateBackInit_ OF((z_streamp strm, int windowBits,
-                                         unsigned char FAR *window,
+                                         uint8_t FAR *window,
                                          const char *version,
                                          int stream_size));
 #define deflateInit(strm, level) \
@@ -1669,7 +1669,7 @@ ZEXTERN int ZEXPORT inflateBackInit_ OF((z_streamp strm, int windowBits,
  */
 struct gzFile_s {
     unsigned have;
-    unsigned char *next;
+    uint8_t *next;
     z_off64_t pos;
 };
 ZEXTERN int ZEXPORT gzgetc_ OF((gzFile file));  /* backward compatibility */

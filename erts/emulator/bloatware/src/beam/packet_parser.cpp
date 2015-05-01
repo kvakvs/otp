@@ -38,14 +38,14 @@
 #   define DEBUGF(X) printf X
 #endif
 
-#define get_int24(s) ((((unsigned char*) (s))[0] << 16) | \
-                      (((unsigned char*) (s))[1] << 8)  | \
-                      (((unsigned char*) (s))[2]))
+#define get_int24(s) ((((uint8_t*) (s))[0] << 16) | \
+                      (((uint8_t*) (s))[1] << 8)  | \
+                      (((uint8_t*) (s))[2]))
 
-#define get_little_int32(s) ((((unsigned char*) (s))[3] << 24) | \
-                             (((unsigned char*) (s))[2] << 16)  | \
-                             (((unsigned char*) (s))[1] << 8) | \
-                             (((unsigned char*) (s))[0]))
+#define get_little_int32(s) ((((uint8_t*) (s))[3] << 24) | \
+                             (((uint8_t*) (s))[2] << 16)  | \
+                             (((uint8_t*) (s))[1] << 8) | \
+                             (((uint8_t*) (s))[0]))
 
 #if !defined(__WIN32__) && !defined(HAVE_STRNCASECMP)
 #define STRNCASECMP my_strncasecmp
@@ -163,7 +163,7 @@ static void http_hash_insert(const char* name, http_atom_t* entry,
                              http_atom_t** hash, int hsize)
 {
     unsigned long h = 0;
-    const unsigned char* ptr = (const unsigned char*) name;
+    const uint8_t* ptr = (const uint8_t*) name;
     int ix;
     int len = 0;
 
@@ -187,13 +187,13 @@ static void http_hash_insert(const char* name, http_atom_t* entry,
 static int http_init(void)
 {
     int i;
-    unsigned char* ptr;
+    uint8_t* ptr;
 
     for (i = 0; i < 33; i++)
         tspecial[i] = 1;
     for (i = 33; i < 127; i++)
         tspecial[i] = 0;
-    for (ptr = (unsigned char*)"()<>@,;:\\\"/[]?={} \t"; *ptr != '\0'; ptr++)
+    for (ptr = (uint8_t*)"()<>@,;:\\\"/[]?={} \t"; *ptr != '\0'; ptr++)
         tspecial[*ptr] = 1;
 
     for (i = 0; i < HTTP_HDR_HASH_SIZE; i++)
@@ -221,21 +221,21 @@ static int http_init(void)
 #define CDR_MAGIC "GIOP"
 
 struct cdr_head {
-    unsigned char magic[4];        /* 4 bytes must be 'GIOP' */
-    unsigned char major;           /* major version */ 
-    unsigned char minor;           /* minor version */
-    unsigned char flags;           /* bit 0: 0 == big endian, 1 == little endian 
+    uint8_t magic[4];        /* 4 bytes must be 'GIOP' */
+    uint8_t major;           /* major version */ 
+    uint8_t minor;           /* minor version */
+    uint8_t flags;           /* bit 0: 0 == big endian, 1 == little endian 
                                       bit 1: 1 == more fragments follow */
-    unsigned char message_type;    /* message type ... */
-    unsigned char message_size[4]; /* size in (flags bit 0 byte order) */
+    uint8_t message_type;    /* message type ... */
+    uint8_t message_size[4]; /* size in (flags bit 0 byte order) */
 };
 
 #define TPKT_VRSN 3
 
 struct tpkt_head {
-    unsigned char vrsn;             /* contains TPKT_VRSN */
-    unsigned char reserved;
-    unsigned char packet_length[2]; /* size incl header, big-endian (?) */
+    uint8_t vrsn;             /* contains TPKT_VRSN */
+    uint8_t reserved;
+    uint8_t packet_length[2]; /* size incl header, big-endian (?) */
 };
 
 void packet_parser_init()
@@ -717,7 +717,7 @@ int packet_parse_http(const char* buf, int len, int* statep,
             int minor  = 0;
             unsigned long h = 0;
 
-            while (n && !is_tspecial((unsigned char)*ptr)) {
+            while (n && !is_tspecial((uint8_t)*ptr)) {
                 hash_update(h, (int)*ptr);
                 ptr++;
                 n--;
@@ -792,7 +792,7 @@ int packet_parse_http(const char* buf, int len, int* statep,
         }
         h = 0;
         name_len = 0;
-        while (!is_tspecial((unsigned char)*ptr)) {
+        while (!is_tspecial((uint8_t)*ptr)) {
             if (name_len < HTTP_MAX_NAME_LEN) {
                 int c = *ptr;
                 if (up) {
@@ -846,8 +846,8 @@ int packet_parse_ssl(const char* buf, int len,
 {
     /* Check for ssl-v2 client hello */
     if ((buf[0] & 0x80) && buf[2] == 1) {
-        unsigned major = (unsigned char) buf[3];
-        unsigned minor = (unsigned char) buf[4];
+        unsigned major = (uint8_t) buf[3];
+        unsigned minor = (uint8_t) buf[4];
         char prefix[4];
         /* <<1:8,Length:24,Data/binary>> */
         prefix[0] = 1;
@@ -856,9 +856,9 @@ int packet_parse_ssl(const char* buf, int len,
     } 
     else {
         /* ContentType (1 byte), ProtocolVersion (2 bytes), Length (2 bytes big-endian) */
-        unsigned type  = (unsigned char) buf[0];
-        unsigned major = (unsigned char) buf[1];
-        unsigned minor = (unsigned char) buf[2];
+        unsigned type  = (uint8_t) buf[0];
+        unsigned major = (uint8_t) buf[1];
+        unsigned minor = (uint8_t) buf[2];
         return pcb->ssl_tls(arg, type, major, minor, buf+5, len-5, nullptr, 0);
     }
 }

@@ -8,6 +8,8 @@
 #ifndef ZCONF_H
 #define ZCONF_H
 
+#include <stdint.h>
+
 /*
  * If you *really* need a unique prefix for all types and library functions,
  * compile with -DZ_PREFIX. The "standard" zlib should be compiled without it.
@@ -365,7 +367,7 @@
 #endif
 
 #if !defined(__MACTYPES__)
-typedef unsigned char  Byte;  /* 8 bits */
+typedef uint8_t  Byte;  /* 8 bits */
 #endif
 typedef unsigned int   uInt;  /* 16 bits or more */
 typedef unsigned long  uLong; /* 32 bits or more */

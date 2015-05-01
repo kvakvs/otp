@@ -1720,7 +1720,7 @@ BIF_RETTYPE binary_binary_part_2(BIF_ALIST_2)
 typedef struct {
     int type;            /* CL_TYPE_XXX */
     uint8_t *temp_alloc;    /* Used for erts_get/free_aligned, i.e. CL_TYPE_ALIGNED */
-    unsigned char *buff; /* Used for all types, malloced if CL_TYPE_HEAP */
+    uint8_t *buff; /* Used for all types, malloced if CL_TYPE_HEAP */
     Uint bufflen;        /* The length (in bytes) of buffer */
 } CommonData;
 
@@ -1745,7 +1745,7 @@ static int do_search_forward(CommonData *cd, Uint *posp, Uint *redsp)
     Uint pos = *posp;
     Sint reds = (Sint) *redsp;
     int i;
-    unsigned char current = 0;
+    uint8_t current = 0;
 
     for(;;) {
 	for(i = 0; cd[i].type != CL_TYPE_EMPTY; ++i) {
@@ -1786,7 +1786,7 @@ static int do_search_backward(CommonData *cd, Uint *posp, Uint *redsp)
     Uint pos = *posp;
     Sint reds = (Sint) *redsp;
     int i;
-    unsigned char current = 0;
+    uint8_t current = 0;
 
     for(;;) {
 	for(i = 0; cd[i].type != CL_TYPE_EMPTY; ++i) {
@@ -1936,8 +1936,8 @@ static BIF_RETTYPE do_longest_common(Process *p, Eterm list, int direction)
 	/* Copy all heap binaries that are not already copied (aligned) */
 	for(i = 0; i < n; ++i) {
 	    if (cd[i].type == CL_TYPE_HEAP_NOALLOC) {
-		unsigned char *tmp = cd[i].buff;
-                cd[i].buff = (unsigned char*)erts_alloc(ERTS_ALC_T_BINARY_BUFFER, cd[i].bufflen);
+                uint8_t *tmp = cd[i].buff;
+                cd[i].buff = (uint8_t*)erts_alloc(ERTS_ALC_T_BINARY_BUFFER, cd[i].bufflen);
 		memcpy(cd[i].buff,tmp,cd[i].bufflen);
 		cd[i].type = CL_TYPE_HEAP;
 	    }

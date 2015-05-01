@@ -746,12 +746,12 @@ erts_gzinflate_buffer(char* start, uLong size)
     ErlDrvBinary* bin;
     ErlDrvBinary* bin2;
     z_stream zstr;
-    unsigned char* bptr;
+    uint8_t* bptr;
 
     /*
      * Check for the magic bytes beginning a GZIP header.
      */
-    bptr = (unsigned char *) start;
+    bptr = (uint8_t *) start;
     if (size < 2 || bptr[0] != gz_magic[0] || bptr[1] != gz_magic[1]) {
 	/* No GZIP header -- just copy the data into a new_ binary */
         if ((bin = driver_alloc_binary(size)) == nullptr) {
@@ -766,7 +766,7 @@ erts_gzinflate_buffer(char* start, uLong size)
      * It is an error if the GZIP header is not correct.
      */
 
-    zstr.next_in = (unsigned char*) start;
+    zstr.next_in = (uint8_t*) start;
     zstr.avail_in = size;
     erl_zlib_alloc_init(&zstr);
     size *= 2;
@@ -780,7 +780,7 @@ erts_gzinflate_buffer(char* start, uLong size)
     for (;;) {
 	int status;
 
-	zstr.next_out = (unsigned char *) bin->orig_bytes + zstr.total_out;
+	zstr.next_out = (uint8_t *) bin->orig_bytes + zstr.total_out;
 	zstr.avail_out = size - zstr.total_out;
 	status = inflate(&zstr, Z_NO_FLUSH);
 	if (status == Z_OK) {
@@ -847,7 +847,7 @@ erts_gzdeflate_buffer(char* start, uLong size)
 	driver_free_binary(bin);
         return nullptr;
     }
-    crc = crc32(crc, (unsigned char*)start, size);
+    crc = crc32(crc, (uint8_t*)start, size);
     ptr = c_stream.next_out;
     szIn = c_stream.total_in;
 

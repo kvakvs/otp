@@ -2279,7 +2279,7 @@ static void ready_input(ErlDrvData e, ErlDrvEvent ready_fd)
 	    fd_data[ready_fd].psz += res;
 	}
 	else  { /* if (res >= packet_bytes) */
-	    unsigned char* cpos = read_buf;
+	    uint8_t* cpos = read_buf;
 	    int bytes_left = res;
 
 	    while (1) {
@@ -2541,7 +2541,6 @@ char *buf;
 #endif
 
 extern const char pre_loaded_code[];
-extern Preload pre_loaded[];
 
 void erts_sys_alloc_init(void)
 {
@@ -2631,7 +2630,7 @@ sys_preloaded(void)
 }
 
 /* Return a pointer to preloaded code for module "module" */
-unsigned char*
+uint8_t*
 sys_preload_begin(Preload* p)
 {
     return p->code;
@@ -2648,7 +2647,7 @@ void sys_preload_end(Preload* p)
 int sys_get_key(int fd)
 {
     int c;
-    unsigned char rbuf[64];
+    uint8_t rbuf[64];
 
     fflush(stdout);		/* Flush query ??? */
 
