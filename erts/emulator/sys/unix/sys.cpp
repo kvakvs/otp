@@ -1120,7 +1120,7 @@ struct erl_drv_entry spawn_driver_entry = {
     nullptr,
     nullptr,
     nullptr,
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     ERL_DRV_FLAG_USE_PORT_LOCKING,
@@ -1144,7 +1144,7 @@ struct erl_drv_entry fd_driver_entry = {
     nullptr, /* flush */
     nullptr, /* call */
     nullptr, /* event */
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0, /* ERL_DRV_FLAGs */
@@ -1169,7 +1169,7 @@ struct erl_drv_entry vanilla_driver_entry = {
     nullptr, /* flush */
     nullptr, /* call */
     nullptr, /* event */
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0, /* ERL_DRV_FLAGs */
