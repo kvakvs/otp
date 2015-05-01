@@ -470,9 +470,9 @@ struct t_data {
       size_t        read_offset; /* in - out */
       size_t        read_size; /* in - out */
       size_t        nl_pos; /* out */
-      short         nl_skip; /* out, 0 or 1 */
+      int16_t         nl_skip; /* out, 0 or 1 */
 #if !ALWAYS_READ_LINE_AHEAD
-      short         read_ahead; /* in, bool_ */
+      int16_t         read_ahead; /* in, bool_ */
 #endif
     } read_line;
     struct {

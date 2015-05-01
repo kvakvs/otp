@@ -386,7 +386,7 @@ typedef int          int32_t;
 typedef unsigned int uint16_t;
 typedef int          int16_t;
 #elif SIZEOF_SHORT == 2
-typedef unsigned short uint16_t;
+typedef uint16_t uint16_t;
 typedef short          int16_t;
 #else
 #error Found no appropriate type to use for 'uint16_t' and 'int16_t'

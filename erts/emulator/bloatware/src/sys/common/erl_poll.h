@@ -143,9 +143,9 @@ struct erts_sys_fd_type {
 #include <sys/devpoll.h>
 
 #define ERTS_POLL_EV_E2N(EV) \
-  ((short) ((EV) & ~((~((ErtsPollEvents) 0)) << 8*SIZEOF_SHORT)))
+  ((int16_t) ((EV) & ~((~((ErtsPollEvents) 0)) << 8*SIZEOF_SHORT)))
 #define ERTS_POLL_EV_N2E(EV) \
-  ((ErtsPollEvents) ((unsigned short) (EV)))
+  ((ErtsPollEvents) ((uint16_t) (EV)))
 
 #define ERTS_POLL_EV_IN     ERTS_POLL_EV_N2E(POLLIN)
 #define ERTS_POLL_EV_OUT    ERTS_POLL_EV_N2E(POLLOUT)
@@ -161,9 +161,9 @@ struct erts_sys_fd_type {
 #include <poll.h>
 
 #define ERTS_POLL_EV_NKP_E2N(EV) \
-  ((short) ((EV) & ~((~((ErtsPollEvents) 0)) << 8*SIZEOF_SHORT)))
+  ((int16_t) ((EV) & ~((~((ErtsPollEvents) 0)) << 8*SIZEOF_SHORT)))
 #define ERTS_POLL_EV_NKP_N2E(EV) \
-  ((ErtsPollEvents) ((unsigned short) (EV)))
+  ((ErtsPollEvents) ((uint16_t) (EV)))
 
 /* At least on FreeBSD, we need POLLRDNORM for normal files, not POLLIN. */
 /* Whether this_ is a bug in FreeBSD, I don't know. */

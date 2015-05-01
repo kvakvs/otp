@@ -24,7 +24,7 @@
 typedef struct {
     uint8_t op;           /* operation, extra bits, table bits */
     uint8_t bits;         /* bits in this part of the code */
-    unsigned short val;         /* offset in table or code value */
+    uint16_t val;         /* offset in table or code value */
 } code;
 
 /* op values as set by inflate_table():
@@ -57,6 +57,6 @@ typedef enum {
     DISTS
 } codetype;
 
-int ZLIB_INTERNAL inflate_table OF((codetype type, unsigned short FAR *lens,
+int ZLIB_INTERNAL inflate_table OF((codetype type, uint16_t FAR *lens,
                              unsigned codes, code FAR * FAR *table,
-                             unsigned FAR *bits, unsigned short FAR *work));
+                             unsigned FAR *bits, uint16_t FAR *work));

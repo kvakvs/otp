@@ -201,7 +201,7 @@ preprocessor time in standard C environments. */
 typedef uint8_t pcre_uint8;
 
 #if USHRT_MAX == 65535
-typedef unsigned short pcre_uint16;
+typedef uint16_t pcre_uint16;
 typedef short pcre_int16;
 #define PCRE_UINT16_MAX USHRT_MAX
 #define PCRE_INT16_MAX SHRT_MAX

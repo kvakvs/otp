@@ -128,10 +128,17 @@ extern Uint erts_total_code_size;
  * Macros for manipulating locations.
  */
 
-#define IS_VALID_LOCATION(File, Line) \
-    ((unsigned) (File) < 255 && (unsigned) (Line) < ((1 << 24) - 1))
-#define MAKE_LOCATION(File, Line) (((File) << 24) | (Line))
-#define LOC_FILE(Loc) ((Loc) >> 24)
-#define LOC_LINE(Loc) ((Loc) & ((1 << 24)-1))
+inline bool IS_VALID_LOCATION(BeamInstr File, BeamInstr Line) {
+    return ((unsigned) (File) < 255 && (unsigned) (Line) < ((1 << 24) - 1));
+}
+inline BeamInstr MAKE_LOCATION(BeamInstr File, BeamInstr Line) {
+  return (((File) << 24) | (Line));
+}
+inline BeamInstr LOC_FILE(BeamInstr Loc) {
+  return ((Loc) >> 24);
+}
+inline BeamInstr LOC_LINE(BeamInstr Loc) {
+  return ((Loc) & ((1 << 24)-1));
+}
 
 #endif /* _BEAM_LOAD_H */

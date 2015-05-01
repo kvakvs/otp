@@ -1107,7 +1107,7 @@ static dsize_t I_rem(ErtsDigit *x, dsize_t xl, ErtsDigit *y, dsize_t yl, ErtsDig
 /*
 ** Remove trailing digits from bitwise operations
 */
-static dsize_t I_btrail(ErtsDigit *r0, ErtsDigit *r, short sign)
+static dsize_t I_btrail(ErtsDigit *r0, ErtsDigit *r, int16_t sign)
 {
   /* convert negative numbers to one complement */
   if (sign) {
@@ -1154,11 +1154,11 @@ static dsize_t I_btrail(ErtsDigit *r0, ErtsDigit *r, short sign)
 /*
 ** Bitwise and
 */
-static dsize_t I_band(ErtsDigit *x, dsize_t xl, short xsgn,
-                      ErtsDigit *y, dsize_t yl, short ysgn, ErtsDigit *r)
+static dsize_t I_band(ErtsDigit *x, dsize_t xl, int16_t xsgn,
+                      ErtsDigit *y, dsize_t yl, int16_t ysgn, ErtsDigit *r)
 {
   ErtsDigit *r0 = r;
-  short sign = xsgn && ysgn;
+  int16_t sign = xsgn && ysgn;
 
   ASSERT(xl >= yl);
 
@@ -1237,11 +1237,11 @@ static dsize_t I_band(ErtsDigit *x, dsize_t xl, short xsgn,
  * Bitwise 'or'.
  */
 static dsize_t
-I_bor(ErtsDigit *x, dsize_t xl, short xsgn, ErtsDigit *y,
-      dsize_t yl, short ysgn, ErtsDigit *r)
+I_bor(ErtsDigit *x, dsize_t xl, int16_t xsgn, ErtsDigit *y,
+      dsize_t yl, int16_t ysgn, ErtsDigit *r)
 {
   ErtsDigit *r0 = r;
-  short sign = xsgn || ysgn;
+  int16_t sign = xsgn || ysgn;
 
   ASSERT(xl >= yl);
 
@@ -1319,11 +1319,11 @@ I_bor(ErtsDigit *x, dsize_t xl, short xsgn, ErtsDigit *y,
 /*
 ** Bitwise xor
 */
-static dsize_t I_bxor(ErtsDigit *x, dsize_t xl, short xsgn,
-                      ErtsDigit *y, dsize_t yl, short ysgn, ErtsDigit *r)
+static dsize_t I_bxor(ErtsDigit *x, dsize_t xl, int16_t xsgn,
+                      ErtsDigit *y, dsize_t yl, int16_t ysgn, ErtsDigit *r)
 {
   ErtsDigit *r0 = r;
-  short sign = xsgn != ysgn;
+  int16_t sign = xsgn != ysgn;
 
   ASSERT(xl >= yl);
 
@@ -1409,7 +1409,7 @@ static dsize_t I_bxor(ErtsDigit *x, dsize_t xl, short xsgn,
 ** bnot -X  == (X - 1)
 ** bnot +X  == -(X + 1)
 */
-static dsize_t I_bnot(ErtsDigit *x, dsize_t xl, short xsgn, ErtsDigit *r)
+static dsize_t I_bnot(ErtsDigit *x, dsize_t xl, int16_t xsgn, ErtsDigit *r)
 {
   if (xsgn) {
     return D_add(x, xl, 1, r);
@@ -1422,7 +1422,7 @@ static dsize_t I_bnot(ErtsDigit *x, dsize_t xl, short xsgn, ErtsDigit *r)
 ** Arithmetic left shift or right
 */
 static dsize_t I_lshift(ErtsDigit *x, dsize_t xl, Sint y,
-                        short sign, ErtsDigit *r)
+                        int16_t sign, ErtsDigit *r)
 {
   if (y == 0) {
     MOVE_DIGITS(r, x, xl);
@@ -1719,7 +1719,7 @@ big_to_double(Wterm x, double *resp)
   Eterm *xp = big_val(x);
   dsize_t xl = BIG_SIZE(xp);
   ErtsDigit *s = BIG_V(xp) + xl;
-  short xsgn = BIG_SIGN(xp);
+  int16_t xsgn = BIG_SIGN(xp);
   double dbase = ((double)(D_MASK) + 1);
 #ifndef NO_FPE_SIGNALS
   volatile unsigned long *fpexnp = erts_get_current_fp_exception();
@@ -1830,7 +1830,7 @@ static Uint write_big(Wterm x, void (*write_func)(void *, char), void *arg)
   Eterm *xp = big_val(x);
   ErtsDigit *dx = BIG_V(xp);
   dsize_t xl = BIG_SIZE(xp);
-  short sign = BIG_SIGN(xp);
+  int16_t sign = BIG_SIGN(xp);
   ErtsDigit rem;
   Uint n = 0;
 
@@ -1943,7 +1943,7 @@ Uint erts_big_to_binary_bytes(Eterm x, char *buf, Uint buf_sz)
 ** Normalize a bignum given thing pointer length in digits and a sign
 ** patch zero if odd length
 */
-static Eterm big_norm(Eterm *x, dsize_t xl, short sign)
+static Eterm big_norm(Eterm *x, dsize_t xl, int16_t sign)
 {
   Uint arity;
 
@@ -2352,8 +2352,8 @@ int term_to_Sint64(Eterm term, int64_t *sp)
 /*
 ** Add and subtract
 */
-static Eterm B_plus_minus(ErtsDigit *x, dsize_t xl, short xsgn,
-                          ErtsDigit *y, dsize_t yl, short ysgn, Eterm *r)
+static Eterm B_plus_minus(ErtsDigit *x, dsize_t xl, int16_t xsgn,
+                          ErtsDigit *y, dsize_t yl, int16_t ysgn, Eterm *r)
 {
   if (xsgn == ysgn) {
     if (xl > yl) {
@@ -2382,8 +2382,8 @@ Eterm big_plus(Wterm x, Wterm y, Eterm *r)
   Eterm *xp = big_val(x);
   Eterm *yp = big_val(y);
 
-  return B_plus_minus(BIG_V(xp), BIG_SIZE(xp), (short) BIG_SIGN(xp),
-                      BIG_V(yp), BIG_SIZE(yp), (short) BIG_SIGN(yp), r);
+  return B_plus_minus(BIG_V(xp), BIG_SIZE(xp), (int16_t) BIG_SIGN(xp),
+                      BIG_V(yp), BIG_SIZE(yp), (int16_t) BIG_SIGN(yp), r);
 }
 
 /*
@@ -2395,8 +2395,8 @@ Eterm big_minus(Eterm x, Eterm y, Eterm *r)
   Eterm *xp = big_val(x);
   Eterm *yp = big_val(y);
 
-  return B_plus_minus(BIG_V(xp), BIG_SIZE(xp), (short) BIG_SIGN(xp),
-                      BIG_V(yp), BIG_SIZE(yp), (short) !BIG_SIGN(yp), r);
+  return B_plus_minus(BIG_V(xp), BIG_SIZE(xp), (int16_t) BIG_SIGN(xp),
+                      BIG_V(yp), BIG_SIZE(yp), (int16_t) !BIG_SIGN(yp), r);
 }
 
 /*
@@ -2408,10 +2408,10 @@ Eterm big_minus_small(Eterm x, Eterm y, Eterm *r)
 
   if (BIG_SIGN(xp))
     return big_norm(r, D_add(BIG_V(xp), BIG_SIZE(xp), (ErtsDigit) y, BIG_V(r)),
-                    (short) BIG_SIGN(xp));
+                    (int16_t) BIG_SIGN(xp));
   else
     return big_norm(r, D_sub(BIG_V(xp), BIG_SIZE(xp), (ErtsDigit) y, BIG_V(r)),
-                    (short) BIG_SIGN(xp));
+                    (int16_t) BIG_SIGN(xp));
 }
 
 /*
@@ -2420,7 +2420,7 @@ Eterm big_minus_small(Eterm x, Eterm y, Eterm *r)
 
 Eterm small_times(Sint x, Sint y, Eterm *r)
 {
-  short sign = (x < 0) != (y < 0);
+  int16_t sign = (x < 0) != (y < 0);
   ErtsDigit xu = (x > 0) ? x : -x;
   ErtsDigit yu = (y > 0) ? y : -y;
   ErtsDigit d1 = 0;
@@ -2462,7 +2462,7 @@ Eterm big_times(Eterm x, Eterm y, Eterm *r)
   Eterm *xp = big_val(x);
   Eterm *yp = big_val(y);
 
-  short sign = BIG_SIGN(xp) != BIG_SIGN(yp);
+  int16_t sign = BIG_SIGN(xp) != BIG_SIGN(yp);
   dsize_t xsz = BIG_SIZE(xp);
   dsize_t ysz = BIG_SIZE(yp);
   dsize_t rsz;
@@ -2495,7 +2495,7 @@ Eterm big_div(Eterm x, Eterm y, Eterm *q)
   Eterm *xp = big_val(x);
   Eterm *yp = big_val(y);
 
-  short sign = BIG_SIGN(xp) != BIG_SIGN(yp);
+  int16_t sign = BIG_SIGN(xp) != BIG_SIGN(yp);
   dsize_t xsz = BIG_SIZE(xp);
   dsize_t ysz = BIG_SIZE(yp);
   dsize_t qsz;
@@ -2523,7 +2523,7 @@ Eterm big_rem(Eterm x, Eterm y, Eterm *r)
 {
   Eterm *xp = big_val(x);
   Eterm *yp = big_val(y);
-  short sign = BIG_SIGN(xp);
+  int16_t sign = BIG_SIGN(xp);
   dsize_t xsz = BIG_SIZE(xp);
   dsize_t ysz = BIG_SIZE(yp);
 
@@ -2557,10 +2557,10 @@ Eterm big_neg(Eterm x, Eterm *r)
 {
   Eterm *xp = big_val(x);
   dsize_t xsz = BIG_SIZE(xp);
-  short xsgn = BIG_SIGN(xp);
+  int16_t xsgn = BIG_SIGN(xp);
 
   MOVE_DIGITS(BIG_V(r), BIG_V(xp), xsz);
-  return big_norm(r, xsz, (short) !xsgn);
+  return big_norm(r, xsz, (int16_t) !xsgn);
 }
 
 Eterm big_band(Eterm x, Eterm y, Eterm *r)
@@ -2568,9 +2568,9 @@ Eterm big_band(Eterm x, Eterm y, Eterm *r)
   Eterm *xp = big_val(x);
   Eterm *yp = big_val(y);
 
-  short xsgn = BIG_SIGN(xp);
-  short ysgn = BIG_SIGN(yp);
-  short sign = xsgn && ysgn;
+  int16_t xsgn = BIG_SIGN(xp);
+  int16_t ysgn = BIG_SIGN(yp);
+  int16_t sign = xsgn && ysgn;
   dsize_t xsz = BIG_SIZE(xp);
   dsize_t ysz = BIG_SIZE(yp);
 
@@ -2589,9 +2589,9 @@ Eterm big_bor(Eterm x, Eterm y, Eterm *r)
 {
   Eterm *xp = big_val(x);
   Eterm *yp = big_val(y);
-  short xsgn = BIG_SIGN(xp);
-  short ysgn = BIG_SIGN(yp);
-  short sign = (xsgn || ysgn);
+  int16_t xsgn = BIG_SIGN(xp);
+  int16_t ysgn = BIG_SIGN(yp);
+  int16_t sign = (xsgn || ysgn);
   dsize_t xsz = BIG_SIZE(xp);
   dsize_t ysz = BIG_SIZE(yp);
 
@@ -2610,9 +2610,9 @@ Eterm big_bxor(Eterm x, Eterm y, Eterm *r)
 {
   Eterm *xp = big_val(x);
   Eterm *yp = big_val(y);
-  short xsgn = BIG_SIGN(xp);
-  short ysgn = BIG_SIGN(yp);
-  short sign = (xsgn != ysgn);
+  int16_t xsgn = BIG_SIGN(xp);
+  int16_t ysgn = BIG_SIGN(yp);
+  int16_t sign = (xsgn != ysgn);
   dsize_t xsz = BIG_SIZE(xp);
   dsize_t ysz = BIG_SIZE(yp);
 
@@ -2629,7 +2629,7 @@ Eterm big_bxor(Eterm x, Eterm y, Eterm *r)
 Eterm big_bnot(Eterm x,  Eterm *r)
 {
   Eterm *xp = big_val(x);
-  short sign = !BIG_SIGN(xp);
+  int16_t sign = !BIG_SIGN(xp);
   dsize_t xsz = BIG_SIZE(xp);
 
   return big_norm(r, I_bnot(BIG_V(xp), xsz, sign, BIG_V(r)), sign);
@@ -2638,7 +2638,7 @@ Eterm big_bnot(Eterm x,  Eterm *r)
 Eterm big_lshift(Eterm x, Sint y, Eterm *r)
 {
   Eterm *xp = big_val(x);
-  short sign = BIG_SIGN(xp);
+  int16_t sign = BIG_SIGN(xp);
   dsize_t xsz = BIG_SIZE(xp);
 
   return big_norm(r, I_lshift(BIG_V(xp), xsz, y, sign, BIG_V(r)), sign);
@@ -2653,10 +2653,10 @@ Eterm big_plus_small(Eterm x, Uint y, Eterm *r)
 
   if (BIG_SIGN(xp))
     return big_norm(r, D_sub(BIG_V(xp), BIG_SIZE(xp), (ErtsDigit) y,
-                             BIG_V(r)), (short) BIG_SIGN(xp));
+                             BIG_V(r)), (int16_t) BIG_SIGN(xp));
   else
     return big_norm(r, D_add(BIG_V(xp), BIG_SIZE(xp), (ErtsDigit) y,
-                             BIG_V(r)), (short) BIG_SIGN(xp));
+                             BIG_V(r)), (int16_t) BIG_SIGN(xp));
 }
 
 Eterm big_times_small(Eterm x, Uint y, Eterm *r)
@@ -2664,7 +2664,7 @@ Eterm big_times_small(Eterm x, Uint y, Eterm *r)
   Eterm *xp = big_val(x);
 
   return big_norm(r, D_mul(BIG_V(xp), BIG_SIZE(xp), (ErtsDigit) y,
-                           BIG_V(r)), (short) BIG_SIGN(xp));
+                           BIG_V(r)), (int16_t) BIG_SIGN(xp));
 }
 
 /*

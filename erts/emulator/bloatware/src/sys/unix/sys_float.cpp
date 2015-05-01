@@ -111,7 +111,7 @@ void erts_fp_check_init_error(volatile unsigned long *fpexnp)
 
 static void unmask_x87(void)
 {
-  unsigned short cw;
+  uint16_t cw;
 
   __asm__ __volatile__("fstcw %0" : "=m"(cw));
   cw &= ~(0x01 | 0x04 | 0x08); /* unmask IM, ZM, OM */
@@ -121,7 +121,7 @@ static void unmask_x87(void)
 /* mask x87 FPE, return true if the previous state was unmasked */
 static int mask_x87(void)
 {
-  unsigned short cw;
+  uint16_t cw;
   int unmasked;
 
   __asm__ __volatile__("fstcw %0" : "=m"(cw));
@@ -614,12 +614,12 @@ static void fpe_sig_action(int sig, siginfo_t *si, void *puc)
   mcontext_t mc = uc->uc_mcontext;
   pc = mc_pc(mc);
   mc->__fs.__fpu_mxcsr = 0x1F80;
-  *(unsigned short *)&mc->__fs.__fpu_fsw &= ~0xFF;
+  *(uint16_t *)&mc->__fs.__fpu_fsw &= ~0xFF;
 #else
   mcontext_t mc = uc->uc_mcontext;
   pc = mc_pc(mc);
   mc->fs.fpu_mxcsr = 0x1F80;
-  *(unsigned short *)&mc->fs.fpu_fsw &= ~0xFF;
+  *(uint16_t *)&mc->fs.fpu_fsw &= ~0xFF;
 #endif /* DARWIN_MODERN_MCONTEXT */
 #elif defined(__DARWIN__) && defined(__ppc__)
   mcontext_t mc = uc->uc_mcontext;

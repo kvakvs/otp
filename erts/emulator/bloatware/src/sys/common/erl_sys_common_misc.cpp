@@ -205,7 +205,7 @@ sys_double_to_chars_fast(double f, char *buffer, int buffer_size, int decimals,
   };
 
   long long mantissa, int_part = 0, frac_part = 0;
-  short exp;
+  int16_t exp;
   int max;
   int neg;
   double fr;

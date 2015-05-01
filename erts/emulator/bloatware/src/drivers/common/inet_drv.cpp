@@ -4317,7 +4317,7 @@ error:
 static char *inet_set_address(int family, inet_address *dst,
                               char *src, ErlDrvSizeT *len)
 {
-  short port;
+  uint16_t port;
 
   if ((family == AF_INET) && (*len >= 2 + 4)) {
     sys_memzero((char *)dst, sizeof(struct sockaddr_in));
@@ -4476,7 +4476,7 @@ static char *inet_set_faddress(int family, inet_address *dst,
 static int inet_get_address(char *dst, inet_address *src, unsigned int *len)
 {
   int family;
-  short port;
+  int16_t port;
 
   family = src->sa.sa_family;
 
@@ -4510,7 +4510,7 @@ static int inet_get_address(char *dst, inet_address *src, unsigned int *len)
 */
 static int inet_address_to_erlang(char *dst, inet_address **src)
 {
-  short port;
+  int16_t port;
 
   switch ((*src)->sa.sa_family) {
   case AF_INET:
@@ -9855,7 +9855,7 @@ static ErlDrvSSizeT inet_ctl(inet_descriptor *desc, int cmd, char *buf,
   case INET_REQ_BIND:  {      /* bind socket */
     char tbuf[2];
     inet_address local;
-    short port;
+    int16_t port;
 
     DEBUGF(("inet_ctl(%ld): BIND\r\n", (long)desc->port));
 
@@ -9940,7 +9940,7 @@ static ErlDrvSSizeT inet_ctl(inet_descriptor *desc, int cmd, char *buf,
     char protobuf[256];
     char tbuf[2];
     struct servent *srv;
-    short port;
+    int16_t port;
     int n;
 
     if (len < 2) {
@@ -9981,7 +9981,7 @@ static ErlDrvSSizeT inet_ctl(inet_descriptor *desc, int cmd, char *buf,
 
   case INET_REQ_GETSERVBYPORT: { /* P1 P0 L1 Proto-String */
     char protobuf[256];
-    unsigned short port;
+    uint16_t port;
     int n;
     struct servent *srv;
 

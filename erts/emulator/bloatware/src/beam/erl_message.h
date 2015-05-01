@@ -214,17 +214,17 @@ do {                  \
 
 #define ERTS_SND_FLG_NO_SEQ_TRACE   (((unsigned) 1) << 0)
 
-#define ERTS_HEAP_FRAG_SIZE(DATA_WORDS) \
-   (sizeof(ErlHeapFragment) - sizeof(Eterm) + (DATA_WORDS)*sizeof(Eterm))
+inline size_t ERTS_HEAP_FRAG_SIZE(size_t DATA_WORDS) {
+   return (sizeof(ErlHeapFragment) - sizeof(Eterm) + (DATA_WORDS)*sizeof(Eterm));
+}
 
-#define ERTS_INIT_HEAP_FRAG(HEAP_FRAG_P, DATA_WORDS)  \
-do {              \
-    (HEAP_FRAG_P)->next = nullptr;        \
-    (HEAP_FRAG_P)->alloc_size = (DATA_WORDS);   \
-    (HEAP_FRAG_P)->used_size = (DATA_WORDS);            \
-    (HEAP_FRAG_P)->off_heap.first = nullptr;          \
-    (HEAP_FRAG_P)->off_heap.overhead = 0;   \
-} while (0)
+inline void ERTS_INIT_HEAP_FRAG(ErlHeapFragment* HEAP_FRAG_P, size_t DATA_WORDS) {
+    (HEAP_FRAG_P)->next = nullptr;
+    (HEAP_FRAG_P)->alloc_size = (DATA_WORDS);
+    (HEAP_FRAG_P)->used_size = (DATA_WORDS);
+    (HEAP_FRAG_P)->off_heap.first = nullptr;
+    (HEAP_FRAG_P)->off_heap.overhead = 0;
+}
 
 void init_message(void);
 void free_message(ErlMessage *);

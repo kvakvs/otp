@@ -23,6 +23,8 @@
  * Author: Rickard Green
  */
 
+#include <stdint.h>
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -510,12 +512,12 @@ int ethr_set_main_thr_status(int on, int no)
     if (on) {
 	if (no < 1 || main_threads < no)
 	    return EINVAL;
-	tsep->mtix = (unsigned short) no;
+	tsep->mtix = (uint16_t) no;
 	tsep->iflgs |= ETHR_TS_EV_MAIN_THR;
     }
     else {
 	tsep->iflgs &= ~ETHR_TS_EV_MAIN_THR;
-	tsep->mtix = (unsigned short) 0;
+	tsep->mtix = (uint16_t) 0;
     }
     return 0;
 }

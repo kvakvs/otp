@@ -640,8 +640,8 @@ struct ethr_ts_event_ {
     ethr_atomic32_t uaflgs;
     unsigned uflgs;
     unsigned iflgs;		/* for ethr lib only */
-    short rgix;			/* for ethr lib only */
-    short mtix;			/* for ethr lib only */
+    int16_t rgix;			/* for ethr lib only */
+    int16_t mtix;			/* for ethr lib only */
 };
 
 #define ETHR_TS_EV_ETHREAD	(((unsigned) 1) << 0)

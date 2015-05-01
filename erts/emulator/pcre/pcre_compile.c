@@ -143,7 +143,7 @@ is invalid. */
 /* This is the "normal" table for ASCII systems or for EBCDIC systems running
 in UTF-8 mode. */
 
-static const short int escapes[] = {
+static const int16_t escapes[] = {
      0,                       0,
      0,                       0,
      0,                       0,
@@ -188,7 +188,7 @@ static const short int escapes[] = {
 
 /* This is the "abnormal" table for EBCDIC systems without UTF-8 support. */
 
-static const short int escapes[] = {
+static const int16_t escapes[] = {
 /*  48 */     0,     0,      0,     '.',    '<',   '(',    '+',    '|',
 /*  50 */   '&',     0,      0,       0,      0,     0,      0,      0,
 /*  58 */     0,     0,    '!',     '$',    '*',   ')',    ';',    '~',

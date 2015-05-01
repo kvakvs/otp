@@ -751,13 +751,13 @@ mtxb_init(struct ethr_mutex_base_ *mtxb,
 	else if (main_scnt < 0)
 	    mtxb->main_scnt = def_main_scnt;
 	else
-	    mtxb->main_scnt = (short) main_scnt;
+	    mtxb->main_scnt = (int16_t) main_scnt;
 	if (aux_scnt > SHRT_MAX)
 	    mtxb->aux_scnt = SHRT_MAX;
 	else if (aux_scnt < 0)
 	    mtxb->aux_scnt = def_aux_scnt;
 	else
-	    mtxb->aux_scnt = (short) aux_scnt;
+	    mtxb->aux_scnt = (int16_t) aux_scnt;
 	if (mtxb->main_scnt < mtxb->aux_scnt)
 	    mtxb->main_scnt = mtxb->aux_scnt;
 
@@ -1010,13 +1010,13 @@ ethr_cond_init_opt(ethr_cond *cnd, ethr_cond_opt *opt)
 	else if (opt->main_spincount > SHRT_MAX)
 	    cnd->main_scnt = SHRT_MAX;
 	else
-	    cnd->main_scnt = (short) opt->main_spincount;
+	    cnd->main_scnt = (int16_t) opt->main_spincount;
 	if (!opt || opt->aux_spincount < 0)
 	    cnd->aux_scnt = default_cnd_aux_spincount;
 	else if (opt->aux_spincount > SHRT_MAX)
 	    cnd->aux_scnt = SHRT_MAX;
 	else
-	    cnd->aux_scnt = (short) opt->aux_spincount;
+	    cnd->aux_scnt = (int16_t) opt->aux_spincount;
 	if (cnd->main_scnt < cnd->aux_scnt)
 	    cnd->main_scnt = cnd->aux_scnt;
     }

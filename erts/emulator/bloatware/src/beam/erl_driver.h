@@ -231,8 +231,8 @@ typedef struct _erl_drv_port *ErlDrvThreadData; /* Thread data. */
 
 #if !defined(__WIN32__) && !defined(_WIN32) && !defined(_WIN32_) && !defined(USE_SELECT)
 struct erl_drv_event_data {
-  short events;
-  short revents;
+  int16_t events;
+  int16_t revents;
 };
 #endif
 typedef struct erl_drv_event_data *ErlDrvEventData; /* Event data */

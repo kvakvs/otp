@@ -400,7 +400,7 @@ typedef uLong FAR uLongf;
 #  elif (ULONG_MAX == 0xffffffffUL)
 #    define Z_U4 unsigned long
 #  elif (USHRT_MAX == 0xffffffffUL)
-#    define Z_U4 unsigned short
+#    define Z_U4 uint16_t
 #  endif
 #endif
 

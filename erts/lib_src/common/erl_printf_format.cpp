@@ -669,7 +669,7 @@ int erts_printf_format(fmtfn_t fn, void* arg, char* fmt, va_list ap)
 		    break;
 		}
 		case FMTL_h: {
-		    signed short tval = (signed short) va_arg(ap,int);
+                    int16_t tval = (int16_t) va_arg(ap,int);
 		    ul_val = (ErlPfUWord) (tval < 0 ? (-tval) : tval);
 		    res = fmt_uword(fn,arg,SIGN(tval),ul_val,
 				   width,precision,fmt,&count);
@@ -715,7 +715,7 @@ int erts_printf_format(fmtfn_t fn, void* arg, char* fmt, va_list ap)
 		    break;
 		}
 		case FMTL_h: {
-		    unsigned short tval = (unsigned short) va_arg(ap,int);
+		    uint16_t tval = (uint16_t) va_arg(ap,int);
 		    ul_val = (ErlPfUWord) tval;
 		    res = fmt_uword(fn,arg,USIGN(tval),ul_val,
 				   width,precision,fmt,&count);
@@ -813,7 +813,7 @@ int erts_printf_format(fmtfn_t fn, void* arg, char* fmt, va_list ap)
 	    case FMTC_n:
 		switch(fmt & FMTL_MASK) {
 		case FMTL_hh: *va_arg(ap,char*) = count; break;
-		case FMTL_h:  *va_arg(ap,short*) = count; break;
+		case FMTL_h:  *va_arg(ap,int16_t*) = count; break;
 		case FMTL_l:  *va_arg(ap,long*) = count; break;
 #if SIZEOF_LONG_LONG
 		case FMTL_ll: *va_arg(ap,long_long*) = count; break;
