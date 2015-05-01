@@ -1329,7 +1329,7 @@ static int is_candidate(Uint cp)
     return !!(comp_candidate_map[index] & (1UL << pos));
 }
 
-static int hashsearch(int *htab, int htab_size, CompEntry *cv, Uint16 c)
+static int hashsearch(int *htab, int htab_size, CompEntry *cv, uint16_t c)
 {
 	int bucket = c % htab_size;
 	while (htab[bucket] != -1 && cv[htab[bucket]].c != c)
@@ -1341,7 +1341,7 @@ static int hashsearch(int *htab, int htab_size, CompEntry *cv, Uint16 c)
 #define TRANSLATE_MAYBE -1
 
 /* The s array is reversed */
-static int translate(Uint16 *s, int slen, Uint16 *res)
+static int translate(uint16_t *s, int slen, uint16_t *res)
 {
     /* Go backwards through buffer and match against tree */
     int pos = 0;
@@ -1366,18 +1366,18 @@ static int translate(Uint16 *s, int slen, Uint16 *res)
     return TRANSLATE_MAYBE;
 }
 
-static void handle_first_norm(Uint16 *savepoints, int *numpointsp, Uint unipoint)
+static void handle_first_norm(uint16_t *savepoints, int *numpointsp, Uint unipoint)
 {
     /*erts_fprintf(stderr,"CP = %d, numpoints = %d\n",(int) unipoint,(int) *numpointsp);*/
     *numpointsp = 1;
-    savepoints[0] = (Uint16) unipoint;
+    savepoints[0] = (uint16_t) unipoint;
 }
 
-static void cleanup_norm(Eterm **hpp, Uint16 *savepoints, int numpoints, Eterm *retp)
+static void cleanup_norm(Eterm **hpp, uint16_t *savepoints, int numpoints, Eterm *retp)
 {
     Eterm *hp = *hpp;
     int res,i;
-    Uint16 newpoint;
+    uint16_t newpoint;
     Eterm ret = *retp;
     
     ret = CONS(hp,make_small((Uint) savepoints[0]),ret);
@@ -1398,17 +1398,17 @@ static void cleanup_norm(Eterm **hpp, Uint16 *savepoints, int numpoints, Eterm *
     *retp = ret;
 }
     
-static void handle_potential_norm(Eterm **hpp, Uint16 *savepoints, int *numpointsp, Uint unipoint, Eterm *retp)
+static void handle_potential_norm(Eterm **hpp, uint16_t *savepoints, int *numpointsp, Uint unipoint, Eterm *retp)
 {
     Eterm *hp = *hpp;
     int numpoints = *numpointsp;
     int res,i;
-    Uint16 newpoint;
+    uint16_t newpoint;
     Eterm ret = *retp;
 
     /* erts_fprintf(stderr,"CP = %d, numpoints = %d\n",(int) unipoint,(int) numpoints);*/
     if ((unipoint >> 16) == 0) { /* otherwise we're done here */ 
-	savepoints[numpoints++] = (Uint16) unipoint;
+	savepoints[numpoints++] = (uint16_t) unipoint;
 	res = translate(savepoints,numpoints,&newpoint);
 	if (res == TRANSLATE_NO) {
 	    ret = CONS(hp,make_small((Uint) savepoints[0]),ret);
@@ -1473,7 +1473,7 @@ static Eterm do_utf8_to_list_normalize(Process *p, Uint num, uint8_t *bytes, Uin
     Eterm ret;
     uint8_t *source;
     Uint unipoint;
-    Uint16 savepoints[4];
+    uint16_t savepoints[4];
     int numpoints = 0;
 
     if (num == 0)

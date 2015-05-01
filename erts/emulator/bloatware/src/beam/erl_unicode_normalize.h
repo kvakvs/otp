@@ -21,9 +21,9 @@
 */
 #define HASH_SIZE_FACTOR 2
 typedef struct _compose_entry {
-    Uint16 c;
-    Uint16 res;
-    Uint16 num_subs;
+    uint16_t c;
+    uint16_t res;
+    uint16_t num_subs;
     struct _compose_entry *subs;
     int *hash;
 } CompEntry;

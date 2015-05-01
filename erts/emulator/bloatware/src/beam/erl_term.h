@@ -440,7 +440,7 @@ typedef union float_def
 {
     ieee754_8 fd;
     uint8_t   fb[sizeof(ieee754_8)];
-    Uint16 fs[sizeof(ieee754_8) / sizeof(Uint16)];
+    uint16_t fs[sizeof(ieee754_8) / sizeof(uint16_t)];
     uint32_t fw[sizeof(ieee754_8) / sizeof(uint32_t)];
 #if defined(ARCH_64) && !HALFWORD_HEAP
     Uint   fdw;

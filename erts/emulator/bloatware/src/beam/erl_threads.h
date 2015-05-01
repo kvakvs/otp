@@ -480,7 +480,7 @@ ERTS_GLB_INLINE int erts_equal_tids(erts_tid_t x, erts_tid_t y);
 ERTS_GLB_INLINE void erts_mtx_init_x(erts_mtx_t *mtx, const char *name, Eterm extra,
 				     int enable_lcnt);
 ERTS_GLB_INLINE void erts_mtx_init_x_opt(erts_mtx_t *mtx, const char *name, Eterm extra,
-					 Uint16 opt, int enable_lcnt);
+					 uint16_t opt, int enable_lcnt);
 ERTS_GLB_INLINE void erts_mtx_init_locked_x(erts_mtx_t *mtx,
                                             const char *name,
 					    Eterm extra,
@@ -610,7 +610,7 @@ ERTS_GLB_INLINE erts_aint64_t erts_no_atomic64_read_bset(erts_no_atomic64_t *var
 ERTS_GLB_INLINE void erts_spinlock_init_x_opt(erts_spinlock_t *lock,
 					      char *name,
 					      Eterm extra,
-					      Uint16 opt);
+					      uint16_t opt);
 ERTS_GLB_INLINE void erts_spinlock_init_x(erts_spinlock_t *lock,
 					  char *name,
 					  Eterm extra);
@@ -2160,7 +2160,7 @@ erts_mtx_init_x(erts_mtx_t *mtx, const char *name, Eterm extra, int enable_lcnt)
 }
 
 ERTS_GLB_INLINE void
-erts_mtx_init_x_opt(erts_mtx_t *mtx, const char *name, Eterm extra, Uint16 opt,
+erts_mtx_init_x_opt(erts_mtx_t *mtx, const char *name, Eterm extra, uint16_t opt,
 		    int enable_lcnt)
 {
 #ifdef USE_THREADS
@@ -3088,7 +3088,7 @@ erts_spinlock_init_x(erts_spinlock_t *lock, char *name, Eterm extra)
 
 ERTS_GLB_INLINE void
 erts_spinlock_init_x_opt(erts_spinlock_t *lock, char *name, Eterm extra,
-			 Uint16 opt)
+			 uint16_t opt)
 {
 #ifdef USE_THREADS
     int res = ethr_spinlock_init(&lock->slck);

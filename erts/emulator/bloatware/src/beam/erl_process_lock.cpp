@@ -100,10 +100,10 @@ static void cleanup_tse(void);
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
 static struct {
-    Sint16 proc_lock_main;
-    Sint16 proc_lock_link;
-    Sint16 proc_lock_msgq;
-    Sint16 proc_lock_status;
+    int16_t proc_lock_main;
+    int16_t proc_lock_link;
+    int16_t proc_lock_msgq;
+    int16_t proc_lock_status;
 } lc_id;
 #endif
 

@@ -4236,9 +4236,9 @@ freeze_code(LoaderState* stp)
 	line_tab[MI_LINE_LOC_TAB] = (Eterm) (BeamInstr) p;
 	line_tab[MI_LINE_LOC_SIZE] = stp->loc_size;
 	if (stp->loc_size == 2) {
-	    Uint16* locp = (Uint16 *) p;
+	    uint16_t* locp = (uint16_t *) p;
 	    for (i = 0; i < num_instrs; i++) {
-		*locp++ = (Uint16) stp->line_instr[i].loc;
+		*locp++ = (uint16_t) stp->line_instr[i].loc;
 	    }
 	    *locp++ = LINE_INVALID_LOCATION;
 	    str_table = (uint8_t *) locp;

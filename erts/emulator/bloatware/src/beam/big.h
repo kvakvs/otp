@@ -37,13 +37,13 @@ typedef Uint     ErtsDigit;
 #if ((SIZEOF_VOID_P == 4) || HALFWORD_HEAP) && defined(SIZEOF_LONG_LONG) && (SIZEOF_LONG_LONG == 8)
 /* Assume 32-bit machine with long long support */
 typedef Uint64   ErtsDoubleDigit;
-typedef Uint16   ErtsHalfDigit;
+typedef uint16_t   ErtsHalfDigit;
 #define BIG_HAVE_DOUBLE_DIGIT 1
 
 #elif (SIZEOF_VOID_P == 4)
 /* Assume 32-bit machine with no long support */
 #undef  BIG_HAVE_DOUBLE_DIGIT
-typedef Uint16   ErtsHalfDigit;
+typedef uint16_t   ErtsHalfDigit;
 
 #elif (SIZEOF_VOID_P == 8)
 /* Assume 64-bit machine, does it exist 128 bit long long long ? */

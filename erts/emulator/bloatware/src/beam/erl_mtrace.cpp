@@ -114,8 +114,8 @@ static erts_mtx_t mtrace_buf_mutex;
 
 #define PUT_VSZ_UI16(P, M, V)						\
 do {									\
-    Uint16 v__ = (Uint16) (V);						\
-    if (v__ >= (((Uint16) 1) << 8)) (M) = 1; else (M) = 0;		\
+    uint16_t v__ = (uint16_t) (V);						\
+    if (v__ >= (((uint16_t) 1) << 8)) (M) = 1; else (M) = 0;		\
     switch ((M)) {							\
     case 1: *((P)++) = (uint8_t) ((v__ >>  8) & 0xff);			\
     case 0: *((P)++) = (uint8_t) ( v__        & 0xff);			\
@@ -186,16 +186,16 @@ static int send_trace_buffer(void);
 void
 check_alloc_entry(uint8_t *sp, uint8_t *ep,
 		  uint8_t tag,
-		  Uint16 ct_no, int ct_no_n,
-		  Uint16 type, int type_n,
+		  uint16_t ct_no, int ct_no_n,
+		  uint16_t type, int type_n,
 		  UWord res, int res_n,
 		  Uint size, int size_n,
 		  uint32_t ti,int ti_n);
 void
 check_realloc_entry(uint8_t *sp, uint8_t *ep,
 		    uint8_t tag,
-		    Uint16 ct_no, int ct_no_n,
-		    Uint16 type, int type_n,
+		    uint16_t ct_no, int ct_no_n,
+		    uint16_t type, int type_n,
 		    UWord res, int res_n,
 		    UWord ptr, int ptr_n,
 		    Uint size, int size_n,
@@ -203,8 +203,8 @@ check_realloc_entry(uint8_t *sp, uint8_t *ep,
 void
 check_free_entry(uint8_t *sp, uint8_t *ep,
 		 uint8_t tag,
-		 Uint16 ct_no, int ct_no_n,
-		 Uint16 t_no, int t_no_n,
+		 uint16_t ct_no, int ct_no_n,
+		 uint16_t t_no, int t_no_n,
 		 UWord ptr, int ptr_n,
 		 uint32_t ti,int ti_n);
 void
@@ -265,7 +265,7 @@ get_time_inc(void)
 	   put a time inc entry in trace ... */
 	if (MAKE_TBUF_SZ(UI8_SZ + UI16_SZ + 2*UI32_SZ)) {
 	    uint8_t *hdrp;
-	    Uint16 hdr;
+	    uint16_t hdr;
 	    int secs_n, usecs_n;
 
 	    *(tracep++) = ERTS_MT_TIME_INC_BDY_TAG;
@@ -364,7 +364,7 @@ write_trace_header(const char *nodename, const char *pid, const char *hostname)
 #ifdef DEBUG
     uint8_t *startp;
 #endif
-    Uint16 entry_sz;
+    uint16_t entry_sz;
     uint32_t flags, n_len, h_len, p_len, hdr_prolog_len;
     int i, no, str_len;
     const char *str;
@@ -453,7 +453,7 @@ write_trace_header(const char *nodename, const char *pid, const char *hostname)
      */
 
     /*
-     * All tags from here on should be followed by an Uint16 size
+     * All tags from here on should be followed by an uint16_t size
      * field containing the total size of the entry.
      *
      * New stuff can eigther be added at the end of an entry, or
@@ -462,7 +462,7 @@ write_trace_header(const char *nodename, const char *pid, const char *hostname)
      */
 
     for (i = ERTS_ALC_A_MIN; i <= ERTS_ALC_A_MAX; i++) {
-	Uint16 aflags = 0;
+	uint16_t aflags = 0;
 
 #ifndef ERTS_CAN_TRACK_MALLOC
 	if (i != ERTS_ALC_A_SYSTEM)
@@ -490,7 +490,7 @@ write_trace_header(const char *nodename, const char *pid, const char *hostname)
 	PUT_UI8(tracep, ERTS_MT_ALLOCATOR_HDR_TAG);
 	PUT_UI16(tracep, entry_sz);
 	PUT_UI16(tracep, aflags);
-	PUT_UI16(tracep, (Uint16) i);
+	PUT_UI16(tracep, (uint16_t) i);
 	PUT_UI8( tracep, (uint8_t) str_len);
 	memcpy((void *) tracep, (void *) str, str_len);
 	tracep += str_len;
@@ -514,7 +514,7 @@ write_trace_header(const char *nodename, const char *pid, const char *hostname)
     }
 
     for (i = ERTS_ALC_N_MIN; i <= ERTS_ALC_N_MAX; i++) {
-	Uint16 nflags = 0;
+	uint16_t nflags = 0;
 	str = ERTS_ALC_N2TD(i);
 	ASSERT(str);
 
@@ -540,7 +540,7 @@ write_trace_header(const char *nodename, const char *pid, const char *hostname)
 	PUT_UI8(tracep, ERTS_MT_BLOCK_TYPE_HDR_TAG);
 	PUT_UI16(tracep, entry_sz);
 	PUT_UI16(tracep, nflags);
-	PUT_UI16(tracep, (Uint16) i);
+	PUT_UI16(tracep, (uint16_t) i);
 	PUT_UI8(tracep, (uint8_t) str_len);
 	memcpy((void *) tracep, (void *) str, str_len);
 	tracep += str_len;
@@ -580,7 +580,7 @@ void erts_mtrace_init(char *receiver, char *nodename)
     if (erts_mtrace_enabled) {
 	unsigned a, b, c, d, p;
 	uint8_t ip_addr[4];
-	Uint16 port;
+	uint16_t port;
 
 	erts_mtx_init(&mtrace_buf_mutex, "mtrace_buf");
 	erts_mtx_init(&mtrace_op_mutex, "mtrace_op");
@@ -603,7 +603,7 @@ void erts_mtrace_init(char *receiver, char *nodename)
 	ip_addr[2] = (uint8_t) c;
 	ip_addr[3] = (uint8_t) d; 
 
-	port = (Uint16) p;
+	port = (uint16_t) p;
 
 	if (!erts_sock_connect(socket_desc, ip_addr, 4, port)) {
 	    disable_trace(1, "Failed to connect to receiver",
@@ -657,7 +657,7 @@ erts_mtrace_stop(void)
 	if (ti != INVALID_TIME_INC
 	    && MAKE_TBUF_SZ(UI8_SZ + UI16_SZ + UI32_SZ)) {
 	    uint8_t *hdrp;
-	    Uint16 hdr;
+	    uint16_t hdr;
 	    int ti_n;
 
 	    *(tracep++) = ERTS_MT_STOP_BDY_TAG;
@@ -694,7 +694,7 @@ erts_mtrace_exit(uint32_t exit_value)
 	if (ti != INVALID_TIME_INC
 	    && MAKE_TBUF_SZ(UI8_SZ + UI16_SZ + 2*UI32_SZ)) {
 	    uint8_t *hdrp;
-	    Uint16 hdr;
+	    uint16_t hdr;
 	    int ti_n, exit_value_n;
 
 	    *(tracep++) = ERTS_MT_EXIT_BDY_TAG;
@@ -736,7 +736,7 @@ write_alloc_entry(uint8_t tag,
 
 	if (ti != INVALID_TIME_INC
 	    && MAKE_TBUF_SZ(UI8_SZ + 2*UI16_SZ + 2*UI_SZ + UI32_SZ)) {
-	    Uint16 hdr, t_no = (Uint16) x, ct_no = (Uint16) y;
+	    uint16_t hdr, t_no = (uint16_t) x, ct_no = (uint16_t) y;
 	    uint8_t *hdrp;
 	    int t_no_n, ct_no_n = 0, res_n, size_n, ti_n;
 
@@ -812,7 +812,7 @@ write_realloc_entry(uint8_t tag,
 
 	if (ti != INVALID_TIME_INC
 	    && MAKE_TBUF_SZ(UI8_SZ + 2*UI16_SZ + 3*UI_SZ + UI32_SZ)) {
-	    Uint16 hdr, t_no = (Uint16) x, ct_no = (Uint16) y;
+	    uint16_t hdr, t_no = (uint16_t) x, ct_no = (uint16_t) y;
 	    uint8_t *hdrp;
 	    int t_no_n, ct_no_n = 0, res_n, ptr_n, size_n, ti_n;
 
@@ -889,7 +889,7 @@ write_free_entry(uint8_t tag,
 
 	if (ti != INVALID_TIME_INC
 	    && MAKE_TBUF_SZ(UI8_SZ + 2*UI16_SZ + UI_SZ + UI32_SZ)) {
-	    Uint16 hdr, t_no = (Uint16) x, ct_no = (Uint16) y;
+	    uint16_t hdr, t_no = (uint16_t) x, ct_no = (uint16_t) y;
 	    uint8_t *hdrp;
 	    int t_no_n, ct_no_n = 0, ptr_n, ti_n;
 
@@ -1037,8 +1037,8 @@ erts_mtrace_crr_free(ErtsAlcType_t n, ErtsAlcType_t m, void *ptr)
 #if TRACE_PRINTOUTS
 static void
 print_trace_entry(uint8_t tag,
-		  Uint16 t_no, int t_no_n,
-		  Uint16 ct_no, int ct_no_n,
+		  uint16_t t_no, int t_no_n,
+		  uint16_t ct_no, int ct_no_n,
 		  Uint res, int res_n,
 		  Uint ptr, int ptr_n,
 		  Uint size, int size_n,
@@ -1118,11 +1118,11 @@ print_trace_entry(uint8_t tag,
 #ifdef DEBUG
 
 #define GET_UI16(P) ((P) += UI16_SZ, \
-		     (((Uint16) (*((P) - 2) << 8)) | ((Uint16) (*((P) - 1)))))
+		     (((uint16_t) (*((P) - 2) << 8)) | ((uint16_t) (*((P) - 1)))))
 
 static void
-check_ui(Uint16 *hdrp, uint8_t **pp, Uint ui, int msb,
-	 Uint16 f_mask, Uint16 f_size)
+check_ui(uint16_t *hdrp, uint8_t **pp, Uint ui, int msb,
+	 uint16_t f_mask, uint16_t f_size)
 {
     Uint x;
     int n;
@@ -1157,14 +1157,14 @@ check_ui(Uint16 *hdrp, uint8_t **pp, Uint ui, int msb,
 void
 check_alloc_entry(uint8_t *sp, uint8_t *ep,
 		  uint8_t tag,
-		  Uint16 ct_no, int ct_no_n,
-		  Uint16 t_no, int t_no_n,
+		  uint16_t ct_no, int ct_no_n,
+		  uint16_t t_no, int t_no_n,
 		  UWord res, int res_n,
 		  Uint size, int size_n,
 		  uint32_t ti,int ti_n)
 {
     uint8_t *p = sp;
-    Uint16 hdr;
+    uint16_t hdr;
 
     ASSERT(*p == tag);
     p++;
@@ -1185,15 +1185,15 @@ check_alloc_entry(uint8_t *sp, uint8_t *ep,
 void
 check_realloc_entry(uint8_t *sp, uint8_t *ep,
 		    uint8_t tag,
-		    Uint16 ct_no, int ct_no_n,
-		    Uint16 t_no, int t_no_n,
+		    uint16_t ct_no, int ct_no_n,
+		    uint16_t t_no, int t_no_n,
 		    UWord res, int res_n,
 		    UWord ptr, int ptr_n,
 		    Uint size, int size_n,
 		    uint32_t ti,int ti_n)
 {
     uint8_t *p = sp;
-    Uint16 hdr;
+    uint16_t hdr;
 
     ASSERT(*p == tag);
     p++;
@@ -1215,13 +1215,13 @@ check_realloc_entry(uint8_t *sp, uint8_t *ep,
 void
 check_free_entry(uint8_t *sp, uint8_t *ep,
 		 uint8_t tag,
-		 Uint16 ct_no, int ct_no_n,
-		 Uint16 t_no, int t_no_n,
+		 uint16_t ct_no, int ct_no_n,
+		 uint16_t t_no, int t_no_n,
 		 UWord ptr, int ptr_n,
 		 uint32_t ti,int ti_n)
 {
     uint8_t *p = sp;
-    Uint16 hdr;
+    uint16_t hdr;
 
     ASSERT(*p == tag);
     p++;
@@ -1245,7 +1245,7 @@ check_time_inc_entry(uint8_t *sp, uint8_t *ep,
 		     uint32_t usecs, int usecs_n)
 {
     uint8_t *p = sp;
-    Uint16 hdr;
+    uint16_t hdr;
 
     ASSERT(*p == ERTS_MT_TIME_INC_BDY_TAG);
     p++;

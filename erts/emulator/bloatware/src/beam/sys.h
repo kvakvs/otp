@@ -235,8 +235,8 @@ __decl_noreturn void __noreturn erl_assert_error(const char* expr, const char *f
 **          or larger than an Eterm
 ** uint32_t: An unsigned integer of 32 bits exactly
 ** int32_t: A signed integer of 32 bits exactly
-** Uint16: An unsigned integer of 16 bits exactly
-** Sint16: A signed integer of 16 bits exactly.
+** uint16_t: An unsigned integer of 16 bits exactly
+** int16_t: A signed integer of 16 bits exactly.
 */
 
 #if !((SIZEOF_VOID_P >= 4) && (SIZEOF_VOID_P == SIZEOF_SIZE_T) \
@@ -383,17 +383,17 @@ typedef int          int32_t;
 #endif
 
 #if SIZEOF_INT == 2
-typedef unsigned int Uint16;
-typedef int          Sint16;
+typedef unsigned int uint16_t;
+typedef int          int16_t;
 #elif SIZEOF_SHORT == 2
-typedef unsigned short Uint16;
-typedef short          Sint16;
+typedef unsigned short uint16_t;
+typedef short          int16_t;
 #else
-#error Found no appropriate type to use for 'Uint16' and 'Sint16'
+#error Found no appropriate type to use for 'uint16_t' and 'int16_t'
 #endif
 
 //#if CHAR_BIT == 8
-//typedef uint8_t uint8_t;
+//typedef uint8_t byte;
 //#else
 //#error Found no appropriate type to use for 'uint8_t'
 //#endif
@@ -417,7 +417,7 @@ typedef union {
 #elif ERTS_SIZEOF_TERM == 4
 typedef union {
     Uint val;
-    Uint16 hval[2];
+    uint16_t hval[2];
 } HUint;
 #else
 #error "Unsupported size of term"

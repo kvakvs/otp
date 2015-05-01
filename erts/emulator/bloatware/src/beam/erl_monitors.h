@@ -97,13 +97,13 @@
    ErtsMonitorOrLink */
 typedef struct erts_monitor_or_link {
     struct erts_monitor_or_link *left, *right;
-    Sint16 balance;    
+    int16_t balance;    
 } ErtsMonitorOrLink;
 
 typedef struct erts_monitor {
     struct erts_monitor *left, *right; 
-    Sint16 balance;
-    Uint16 type;  /* MON_ORIGIN | MON_TARGET */
+    int16_t balance;
+    uint16_t type;  /* MON_ORIGIN | MON_TARGET */
     Eterm ref;
     Eterm pid;    /* In case of distributed named monitor, this_ is the
 		     nodename atom in MON_ORIGIN process, otherwise a pid or
@@ -114,8 +114,8 @@ typedef struct erts_monitor {
 
 typedef struct erts_link {
     struct erts_link *left, *right;
-    Sint16 balance;
-    Uint16 type;             /* LINK_PID | LINK_NODE */
+    int16_t balance;
+    uint16_t type;             /* LINK_PID | LINK_NODE */
     Eterm pid;               /* When node monitor, 
 				the node atom is here instead */
     union {
@@ -127,7 +127,7 @@ typedef struct erts_link {
 
 typedef struct erts_suspend_monitor {
     struct erts_suspend_monitor *left, *right;
-    Sint16 balance;
+    int16_t balance;
 
     int pending;
     int active;

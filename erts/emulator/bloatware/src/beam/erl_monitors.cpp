@@ -131,7 +131,7 @@ static ErtsMonitor *create_monitor(Uint type, Eterm ref, Eterm pid, Eterm name)
 
 
      n->left = n->right = nullptr; /* Always the same initial value*/
-     n->type = (Uint16) type;
+     n->type = (uint16_t) type;
      n->balance = 0;            /* Always the same initial value */
      n->name = name; /* atom() or [] */
      CP_LINK_VAL(n->ref, hp, ref); /*XXX Unneccesary check, never immediate*/
@@ -162,7 +162,7 @@ static ErtsLink *create_link(Uint type, Eterm pid)
 
 
      n->left = n->right = nullptr; /* Always the same initial value*/
-     n->type = (Uint16) type;
+     n->type = (uint16_t) type;
      n->balance = 0;            /* Always the same initial value */
      if (n->type == LINK_NODE) {
 	 ERTS_LINK_REFC(n) = 0;

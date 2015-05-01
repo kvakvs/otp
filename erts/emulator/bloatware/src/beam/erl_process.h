@@ -942,8 +942,8 @@ struct process {
     Eterm *old_hend;            /* Heap pointers for generational GC. */
     Eterm *old_htop;
     Eterm *old_heap;
-    Uint16 gen_gcs;		/* Number of (minor) generational GCs. */
-    Uint16 max_gen_gcs;		/* Max minor gen GCs before fullsweep. */
+    uint16_t gen_gcs;		/* Number of (minor) generational GCs. */
+    uint16_t max_gen_gcs;		/* Max minor gen GCs before fullsweep. */
     ErlOffHeap off_heap;	/* Off-heap data updated by copy_struct(). */
     ErlHeapFragment* mbuf;	/* Pointer to message buffer list */
     Uint mbuf_sz;		/* Size of all message buffers */
@@ -1136,7 +1136,7 @@ typedef struct {
 				 * from next_heap_size()).  */
     Uint min_vheap_size;	/* Minimum virtual heap size  */
     int priority;		/* Priority for process. */
-    Uint16 max_gen_gcs;		/* Maximum number of gen GCs before fullsweep. */
+    uint16_t max_gen_gcs;		/* Maximum number of gen GCs before fullsweep. */
     int scheduler;
 } ErlSpawnOpts;
 

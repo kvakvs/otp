@@ -1846,7 +1846,7 @@ static void invoke_readdir(void *data)
 	    res = efile_readdir(&d->errInfo, d->b, &d->dir_handle, p + n + 2, &file_bs);
 
 	    if (res) {
-		put_int16((Uint16)file_bs, p + n);
+		put_int16((uint16_t)file_bs, p + n);
 		n += 2 + file_bs;
 		file_bs = READDIR_BUFSIZE - n;
 	    }
@@ -2787,7 +2787,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 		    res = efile_readdir(&errInfo, name, &dir_handle, resbuf + n + 2, &resbufsize);
 
 		    if (res) {
-			put_int16((Uint16)resbufsize, resbuf + n);
+			put_int16((uint16_t)resbufsize, resbuf + n);
 			n += 2 + resbufsize;
 			resbufsize = READDIR_BUFSIZE - n;
 		    }

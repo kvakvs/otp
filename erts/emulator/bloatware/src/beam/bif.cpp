@@ -843,7 +843,7 @@ BIF_RETTYPE spawn_opt_1(BIF_ALIST_1)
     so.min_heap_size  = H_MIN_SIZE;
     so.min_vheap_size = BIN_VH_MIN_SIZE;
     so.priority       = PRIORITY_NORMAL;
-    so.max_gen_gcs    = (Uint16) erts_smp_atomic32_read_nob(&erts_max_gen_gcs);
+    so.max_gen_gcs    = (uint16_t) erts_smp_atomic32_read_nob(&erts_max_gen_gcs);
     so.scheduler      = 0;
 
     /*
@@ -4370,12 +4370,12 @@ BIF_RETTYPE system_flag_2(BIF_ALIST_2)
 	}
 #endif
     } else if (BIF_ARG_1 == am_fullsweep_after) {
-	Uint16 nval;
+	uint16_t nval;
 	Uint oval;
 	if (!is_small(BIF_ARG_2) || (n = signed_val(BIF_ARG_2)) < 0) {
 	    goto error;
 	}
-	nval = (n > (Sint) ((Uint16) -1)) ? ((Uint16) -1) : ((Uint16) n);
+	nval = (n > (Sint) ((uint16_t) -1)) ? ((uint16_t) -1) : ((uint16_t) n);
 	oval = (Uint) erts_smp_atomic32_xchg_nob(&erts_max_gen_gcs,
 						 (erts_aint32_t) nval);
 	BIF_RET(make_small(oval));

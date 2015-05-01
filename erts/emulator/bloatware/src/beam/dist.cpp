@@ -3111,9 +3111,9 @@ BIF_RETTYPE net_kernel_dflag_unicode_io_1(BIF_ALIST_1)
  * This in order to simplify the task of being backward compatible.
  */
 
-#define ERTS_NODES_MON_OPT_TYPE_VISIBLE		(((Uint16) 1) << 0)
-#define ERTS_NODES_MON_OPT_TYPE_HIDDEN		(((Uint16) 1) << 1)
-#define ERTS_NODES_MON_OPT_DOWN_REASON		(((Uint16) 1) << 2)
+#define ERTS_NODES_MON_OPT_TYPE_VISIBLE		(((uint16_t) 1) << 0)
+#define ERTS_NODES_MON_OPT_TYPE_HIDDEN		(((uint16_t) 1) << 1)
+#define ERTS_NODES_MON_OPT_DOWN_REASON		(((uint16_t) 1) << 2)
 
 #define ERTS_NODES_MON_OPT_TYPES \
   (ERTS_NODES_MON_OPT_TYPE_VISIBLE|ERTS_NODES_MON_OPT_TYPE_HIDDEN)
@@ -3123,8 +3123,8 @@ struct ErtsNodesMonitor_ {
     ErtsNodesMonitor *prev;
     ErtsNodesMonitor *next;
     Process *proc;
-    Uint16 opts;
-    Uint16 no;
+    uint16_t opts;
+    uint16_t no;
 };
 
 static erts_smp_mtx_t nodes_monitors_mtx;
@@ -3276,7 +3276,7 @@ send_nodes_mon_msgs(Process *c_p, Eterm what, Eterm node, Eterm type, Eterm reas
 
     for (nmp = nodes_monitors; nmp; nmp = nmp->next) {
 	int i;
-	Uint16 no;
+	uint16_t no;
 	Uint sz;
 
         ASSERT(nmp->proc != nullptr);
@@ -3341,7 +3341,7 @@ send_nodes_mon_msgs(Process *c_p, Eterm what, Eterm node, Eterm type, Eterm reas
 static Eterm
 insert_nodes_monitor(Process *c_p, uint32_t opts)
 {
-    Uint16 no = 1;
+    uint16_t no = 1;
     Eterm res = am_false;
     ErtsNodesMonitor *xnmp, *nmp;
 
@@ -3497,7 +3497,7 @@ erts_monitor_nodes(Process *c_p, Eterm on, Eterm olist)
 {
     Eterm res;
     Eterm opts_list = olist;
-    Uint16 opts = (Uint16) 0;
+    uint16_t opts = (uint16_t) 0;
 
     ASSERT(c_p);
     ERTS_SMP_LC_ASSERT(erts_proc_lc_my_proc_locks(c_p) == ERTS_PROC_LOCK_MAIN);
@@ -3597,7 +3597,7 @@ erts_processes_monitoring_nodes(Process *c_p)
     res = NIL;
 
     for (nmp = nodes_monitors_end; nmp; nmp = nmp->prev) {
-	Uint16 i;
+	uint16_t i;
 	for (i = 0; i < nmp->no; i++) {
 	    Eterm olist = NIL;
 	    if (nmp->opts & ERTS_NODES_MON_OPT_TYPES) {

@@ -10534,7 +10534,7 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
     } else {
 	p->min_heap_size  = H_MIN_SIZE;
 	p->min_vheap_size = BIN_VH_MIN_SIZE;
-	p->max_gen_gcs    = (Uint16) erts_smp_atomic32_read_nob(&erts_max_gen_gcs);
+	p->max_gen_gcs    = (uint16_t) erts_smp_atomic32_read_nob(&erts_max_gen_gcs);
     }
     p->schedule_count = 0;
     ASSERT(p->min_heap_size == erts_next_heap_size(p->min_heap_size, 0));

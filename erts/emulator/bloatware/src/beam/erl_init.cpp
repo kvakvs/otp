@@ -732,7 +732,7 @@ early_init(int *argc, char **argv) /*
 #endif
 
     erts_smp_atomic32_init_nob(&erts_max_gen_gcs,
-			       (erts_aint32_t) ((Uint16) -1));
+			       (erts_aint32_t) ((uint16_t) -1));
 
     erts_pre_init_process();
 #if defined(USE_THREADS) && !defined(ERTS_SMP)
@@ -1201,7 +1201,7 @@ erl_start(int argc, char **argv)
 
     envbufsz = sizeof(envbuf);
     if (erts_sys_getenv_raw("ERL_FULLSWEEP_AFTER", envbuf, &envbufsz) == 0) {
-	Uint16 max_gen_gcs = atoi(envbuf);
+	uint16_t max_gen_gcs = atoi(envbuf);
 	erts_smp_atomic32_set_nob(&erts_max_gen_gcs,
 				  (erts_aint32_t) max_gen_gcs);
     }

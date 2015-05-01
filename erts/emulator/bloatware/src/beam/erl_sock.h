@@ -36,7 +36,7 @@ typedef int erts_sock_t;
 
 erts_sock_t erts_sock_open(void);
 void erts_sock_close(erts_sock_t);
-int erts_sock_connect(erts_sock_t, uint8_t *, int, Uint16);
+int erts_sock_connect(erts_sock_t, uint8_t *, int, uint16_t);
 Sint erts_sock_send(erts_sock_t, const void *, Sint);
 int erts_sock_gethostname(char *, int);
 int erts_sock_errno(void);

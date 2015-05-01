@@ -117,7 +117,7 @@ static void ttysl_stop(ErlDrvData);
 static void ttysl_from_erlang(ErlDrvData, char*, ErlDrvSizeT);
 static void ttysl_from_tty(ErlDrvData, ErlDrvEvent);
 static void ttysl_stop_select(ErlDrvEvent, void*);
-static Sint16 get_sint16(char*);
+static int16_t get_sint16(char*);
 
 static ErlDrvPort ttysl_port;
 static int ttysl_fd;
@@ -743,7 +743,7 @@ static void ttysl_stop_select(ErlDrvEvent e, void* _)
 }
 
 /* Procedures for putting and getting integers to/from strings. */
-static Sint16 get_sint16(char *s)
+static int16_t get_sint16(char *s)
 {
     return ((*s << 8) | ((uint8_t*)s)[1]);
 }

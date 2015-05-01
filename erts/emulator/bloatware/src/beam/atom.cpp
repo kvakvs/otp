@@ -327,7 +327,7 @@ erts_atom_put(const uint8_t *name, int len, ErtsAtomEncoding enc, int trunc)
     ASSERT(-1 <= no_latin1_chars && no_latin1_chars <= MAX_ATOM_CHARACTERS);
 
     a.len = tlen;
-    a.latin1_chars = (Sint16) no_latin1_chars;
+    a.latin1_chars = (int16_t) no_latin1_chars;
     a.name = (uint8_t *) text;
     atom_write_lock();
     aix = index_put(&erts_atom_table, (void*) &a);
@@ -382,11 +382,11 @@ erts_atom_get(const char *name, int len, Eterm* ap, ErtsAtomEncoding enc)
     int i;
     int res;
 
-    a.len = (Sint16) len;
+    a.len = (int16_t) len;
     a.name = (uint8_t *)name;
     if (enc == ERTS_ATOM_ENC_LATIN1) {
         latin1_to_utf8(utf8_copy, (const uint8_t**)&a.name, &len);
-	a.len = (Sint16) len;
+	a.len = (int16_t) len;
     }
     atom_read_lock();
     i = index_get(&erts_atom_table, (void*) &a);

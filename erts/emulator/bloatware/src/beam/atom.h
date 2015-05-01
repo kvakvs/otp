@@ -47,8 +47,8 @@
  */
 typedef struct atom {
     IndexSlot slot;  /* MUST BE LOCATED AT TOP OF STRUCT!!! */
-    Sint16 len;      /* length of atom name (UTF-8 encoded) */
-    Sint16 latin1_chars; /* 0-255 if atom can be encoded in latin1; otherwise, -1 */
+    int16_t len;      /* length of atom name (UTF-8 encoded) */
+    int16_t latin1_chars; /* 0-255 if atom can be encoded in latin1; otherwise, -1 */
     int ord0;        /* ordinal value of first 3 bytes + 7 bits */
     uint8_t* name;      /* name of atom */
 } Atom;

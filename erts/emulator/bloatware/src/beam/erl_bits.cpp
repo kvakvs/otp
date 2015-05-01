@@ -918,7 +918,7 @@ erts_bs_put_utf16(ERL_BITS_PROTO_2(Eterm arg, Uint flags))
 	    dst[1] = val;
 	}
     } else {
-	Uint16 w1, w2;
+	uint16_t w1, w2;
 
 	num_bits = 32;
 	val = val - 0x10000UL;
@@ -1741,8 +1741,8 @@ erts_bs_get_utf16(ErlBinMatchBuffer* mb, Uint flags)
     Uint num_bits = mb->size - mb->offset;
     uint8_t* src;
     uint8_t tmp_buf[4];
-    Uint16 w1;
-    Uint16 w2;
+    uint16_t w1;
+    uint16_t w2;
 
     if (num_bits < 16) {
 	return THE_NON_VALUE;

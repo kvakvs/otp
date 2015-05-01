@@ -1105,7 +1105,7 @@ typedef struct {
     inet_async_op  op_queue[INET_MAX_ASYNC];  /* call queue */
 
     int   active;               /* 0 = passive, 1 = active, 2 = active once */
-    Sint16 active_count;        /* counter for {active,N} */
+    int16_t active_count;        /* counter for {active,N} */
     int   stype;                /* socket type:
 				    SOCK_STREAM/SOCK_DGRAM/SOCK_SEQPACKET   */
     int   sprotocol;            /* socket protocol:
@@ -6108,7 +6108,7 @@ static int inet_set_opts(inet_descriptor* desc, char* ptr, int len)
 	    desc->active = ival;
             if (desc->active == INET_MULTI) {
                 long ac = desc->active_count;
-                Sint16 nval = get_int16(ptr);
+                int16_t nval = get_int16(ptr);
                 ptr += 2;
                 len -= 2;
                 ac += nval;
@@ -6571,7 +6571,7 @@ static int sctp_set_opts(inet_descriptor* desc, char* ptr, int len)
 	    desc->active = get_int32(curr);		curr += 4;
             if (desc->active == INET_MULTI) {
                 long ac = desc->active_count;
-                Sint16 nval = get_int16(curr);          curr += 2;
+                int16_t nval = get_int16(curr);          curr += 2;
 		ac += nval;
                 if (ac > INT16_MAX || ac < INT16_MIN)
                     return -1;
@@ -12293,7 +12293,7 @@ void erts_sock_close(erts_sock_t socket)
 }
 
 
-int erts_sock_connect(erts_sock_t socket, uint8_t *ip_addr, int len, Uint16 port)
+int erts_sock_connect(erts_sock_t socket, uint8_t *ip_addr, int len, uint16_t port)
 {
     SOCKET s = (SOCKET) socket;
     char buf[2 + 4];
