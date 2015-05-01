@@ -175,7 +175,7 @@ ERTS_GLB_INLINE void
 erts_port_task_init_sched(ErtsPortTaskSched *ptsp, Eterm instr_id)
 {
 #ifdef ERTS_SMP
-    char *lock_str = "port_sched_lock";
+    const char *lock_str = "port_sched_lock";
 #endif
     ptsp->next = nullptr;
     ptsp->taskq.local.busy.first = nullptr;

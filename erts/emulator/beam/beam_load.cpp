@@ -1738,7 +1738,7 @@ load_code(LoaderState* stp)
     int i;
     int ci;
     int last_func_start = 0;	/* Needed by nif loading and line instructions */
-    char* sign;
+    const char* sign;
     int arg;			/* Number of current argument. */
     int num_specific;		/* Number of specific ops for current. */
     BeamInstr* code;
@@ -2263,7 +2263,7 @@ load_code(LoaderState* stp)
 	 * The packing engine.
 	 */
 	if (opc[stp->specific_op].pack[0]) {
-	    char* prog;		/* Program for packing engine. */
+            const char* prog;		/* Program for packing engine. */
 	    BeamInstr stack[8];	/* Stack. */
 	    BeamInstr* sp = stack;	/* Points to next free position. */
 	    BeamInstr packed = 0;	/* Accumulator for packed operations. */

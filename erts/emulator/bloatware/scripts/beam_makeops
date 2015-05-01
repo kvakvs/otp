@@ -19,6 +19,7 @@
 #
 use strict;
 use vars qw($BEAM_FORMAT_NUMBER);
+use Scalar::Util qw(looks_like_number);
 
 $BEAM_FORMAT_NUMBER = undef;
 
@@ -439,9 +440,9 @@ sub emulator_output {
     my $key;			# Loop variable.
 
     #
-    # Information about opcodes (beam_opcodes.c).
+    # Information about opcodes (beam_opcodes.cpp).
     #
-    $name = "$outdir/beam_opcodes.c";
+    $name = "$outdir/beam_opcodes.cpp";
     open(STDOUT, ">$name") || die "Failed to open $name for writing: $!\n";
     &comment('C');
     print "#ifdef HAVE_CONFIG_H\n";
@@ -595,6 +596,7 @@ sub emulator_output {
     &comment('C');
     print "#ifndef __OPCODES_H__\n";
     print "#define __OPCODES_H__\n\n";
+    print '#include "sys.h"\n';
 
     print "#define BEAM_FORMAT_NUMBER $BEAM_FORMAT_NUMBER\n";
     print "#define MAX_GENERIC_OPCODE ", $num_file_opcodes-1, "\n";
@@ -1396,7 +1398,8 @@ sub tr_gen {
 
 	foreach $instr (@instr) {
 	    my($size, $instr_ref, $comment) = @$instr;
-	    my($op, @args) = @$instr_ref;
+	    my($op, @args0) = @$instr_ref;
+	    my @args = map {looks_like_number($_) ? ($_ < 0 ? "(Uint)$_" : $_) : $_} @args0;
 	    print "    ";
 	    if (!defined $op) {
 		$comment =~ s/\n(.)/\n    $1/g;

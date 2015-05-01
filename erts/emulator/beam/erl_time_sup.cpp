@@ -129,7 +129,7 @@ erts_get_approx_time(void)
 
 #ifdef HAVE_GETHRTIME
 
-int erts_disable_tolerant_timeofday;
+extern int erts_disable_tolerant_timeofday;
 
 static SysHrTime hr_init_time, hr_last_correction_check, 
     hr_correction, hr_last_time;

@@ -346,9 +346,9 @@ print_op(int to, void *to_arg, int op, int size, BeamInstr* addr)
 {
     int i;
     BeamInstr tag;
-    char* sign;
-    char* start_prog;		/* Start of program for packer. */
-    char* prog;			/* Current position in packer program. */
+    const char* sign;
+    const char* start_prog;		/* Start of program for packer. */
+    const char* prog;			/* Current position in packer program. */
     BeamInstr stack[8];		/* Stack for packer. */
     BeamInstr* sp = stack;		/* Points to next free position. */
     BeamInstr packed = 0;		/* Accumulator for packed operations. */

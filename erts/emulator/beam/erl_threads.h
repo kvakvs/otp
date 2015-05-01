@@ -477,16 +477,16 @@ ERTS_GLB_INLINE void erts_thr_exit(void *res);
 ERTS_GLB_INLINE void erts_thr_install_exit_handler(void (*exit_handler)(void));
 ERTS_GLB_INLINE erts_tid_t erts_thr_self(void);
 ERTS_GLB_INLINE int erts_equal_tids(erts_tid_t x, erts_tid_t y);
-ERTS_GLB_INLINE void erts_mtx_init_x(erts_mtx_t *mtx, char *name, Eterm extra,
+ERTS_GLB_INLINE void erts_mtx_init_x(erts_mtx_t *mtx, const char *name, Eterm extra,
 				     int enable_lcnt);
-ERTS_GLB_INLINE void erts_mtx_init_x_opt(erts_mtx_t *mtx, char *name, Eterm extra,
+ERTS_GLB_INLINE void erts_mtx_init_x_opt(erts_mtx_t *mtx, const char *name, Eterm extra,
 					 Uint16 opt, int enable_lcnt);
 ERTS_GLB_INLINE void erts_mtx_init_locked_x(erts_mtx_t *mtx,
-					    char *name,
+                                            const char *name,
 					    Eterm extra,
 					    int enable_lcnt);
-ERTS_GLB_INLINE void erts_mtx_init(erts_mtx_t *mtx, char *name);
-ERTS_GLB_INLINE void erts_mtx_init_locked(erts_mtx_t *mtx, char *name);
+ERTS_GLB_INLINE void erts_mtx_init(erts_mtx_t *mtx, const char *name);
+ERTS_GLB_INLINE void erts_mtx_init_locked(erts_mtx_t *mtx, const char *name);
 ERTS_GLB_INLINE void erts_mtx_destroy(erts_mtx_t *mtx);
 #ifdef ERTS_ENABLE_LOCK_POSITION
 ERTS_GLB_INLINE int erts_mtx_trylock_x(erts_mtx_t *mtx, char *file,
@@ -2141,7 +2141,7 @@ erts_equal_tids(erts_tid_t x, erts_tid_t y)
 }
 
 ERTS_GLB_INLINE void
-erts_mtx_init_x(erts_mtx_t *mtx, char *name, Eterm extra, int enable_lcnt)
+erts_mtx_init_x(erts_mtx_t *mtx, const char *name, Eterm extra, int enable_lcnt)
 {
 #ifdef USE_THREADS
     int res = ethr_mutex_init(&mtx->mtx);
@@ -2160,7 +2160,7 @@ erts_mtx_init_x(erts_mtx_t *mtx, char *name, Eterm extra, int enable_lcnt)
 }
 
 ERTS_GLB_INLINE void
-erts_mtx_init_x_opt(erts_mtx_t *mtx, char *name, Eterm extra, Uint16 opt,
+erts_mtx_init_x_opt(erts_mtx_t *mtx, const char *name, Eterm extra, Uint16 opt,
 		    int enable_lcnt)
 {
 #ifdef USE_THREADS
@@ -2181,7 +2181,7 @@ erts_mtx_init_x_opt(erts_mtx_t *mtx, char *name, Eterm extra, Uint16 opt,
 
 
 ERTS_GLB_INLINE void
-erts_mtx_init_locked_x(erts_mtx_t *mtx, char *name, Eterm extra, int enable_lcnt)
+erts_mtx_init_locked_x(erts_mtx_t *mtx, const char *name, Eterm extra, int enable_lcnt)
 {
 #ifdef USE_THREADS
     int res = ethr_mutex_init(&mtx->mtx);
@@ -2207,7 +2207,7 @@ erts_mtx_init_locked_x(erts_mtx_t *mtx, char *name, Eterm extra, int enable_lcnt
 }
 
 ERTS_GLB_INLINE void
-erts_mtx_init(erts_mtx_t *mtx, char *name)
+erts_mtx_init(erts_mtx_t *mtx, const char *name)
 {
 #ifdef USE_THREADS
     int res = ethr_mutex_init(&mtx->mtx);
@@ -2223,7 +2223,7 @@ erts_mtx_init(erts_mtx_t *mtx, char *name)
 }
 
 ERTS_GLB_INLINE void
-erts_mtx_init_locked(erts_mtx_t *mtx, char *name)
+erts_mtx_init_locked(erts_mtx_t *mtx, const char *name)
 {
 #ifdef USE_THREADS
     int res = ethr_mutex_init(&mtx->mtx);
