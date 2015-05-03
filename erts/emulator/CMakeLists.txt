@@ -15,12 +15,12 @@ set(emulator_PLATF_opt_SMP  ${CMAKE_SOURCE_DIR}/${EMU_PLATF_TRIPLET}/opt/${EMU_S
 set(emulator_PLATF          ${CMAKE_SOURCE_DIR}/${EMU_PLATF_TRIPLET})
 
 include_directories( ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/bloatware/src/beam
+    ${CMAKE_SOURCE_DIR}/bloatware/legacy/beam
     ${CMAKE_SOURCE_DIR}/hipe
     ${CMAKE_SOURCE_DIR}/pcre
-    ${CMAKE_SOURCE_DIR}/bloatware/src/drivers/common
-    ${CMAKE_SOURCE_DIR}/bloatware/src/sys/common
-    ${CMAKE_SOURCE_DIR}/bloatware/src/sys/${EMU_PLATF_OS}
+    ${CMAKE_SOURCE_DIR}/bloatware/legacy/drivers/common
+    ${CMAKE_SOURCE_DIR}/bloatware/legacy/sys/common
+    ${CMAKE_SOURCE_DIR}/bloatware/legacy/sys/${EMU_PLATF_OS}
     ${CMAKE_SOURCE_DIR}/../include
     ${CMAKE_SOURCE_DIR}/../include/internal
     ${CMAKE_SOURCE_DIR}/../include/${EMU_PLATF_TRIPLET}
@@ -54,114 +54,114 @@ set(SRC_GENERATED
     bloatware/gen/driver_tab.cpp
     ${emulator_PLATF}/erl_atom_table.c      ${emulator_PLATF}/erl_atom_table.h
     bloatware/gen/erl_bif_wrap.cpp
-    bloatware/gen/preload.cpp           bloatware/src/beam/preload.h
+    bloatware/gen/preload.cpp           bloatware/legacy/beam/preload.h
     #${emulator_PLATF}/erl_bif_table.cpp
     bloatware/gen/erl_bif_table.cpp
     )
 set(SRC_LIST
-    bloatware/src/beam/atom.cpp               bloatware/src/beam/atom.h
-    bloatware/src/beam/beam_bif_load.cpp
-    bloatware/src/beam/beam_bp.cpp            bloatware/src/beam/beam_bp.h
-    bloatware/src/beam/beam_catches.cpp       bloatware/src/beam/beam_catches.h
-    bloatware/src/beam/beam_debug.cpp
-    bloatware/src/beam/beam_emu.cpp
-    bloatware/src/beam/beam_load.cpp          bloatware/src/beam/beam_load.h
-    bloatware/src/beam/beam_ranges.cpp
-    bloatware/src/beam/benchmark.cpp          bloatware/src/beam/benchmark.h
-    bloatware/src/beam/bif.cpp                bloatware/src/beam/bif.h
-    bloatware/src/beam/big.cpp                bloatware/src/beam/big.h
-    bloatware/src/beam/binary.cpp
-    bloatware/src/beam/break.cpp
-    bloatware/src/beam/code_ix.cpp            bloatware/src/beam/code_ix.h
-    bloatware/src/beam/copy.cpp
-    bloatware/src/beam/dist.cpp               bloatware/src/beam/dist.h
-    bloatware/src/beam/erl_afit_alloc.cpp     bloatware/src/beam/erl_afit_alloc.h
-    bloatware/src/beam/erl_alloc.cpp          bloatware/src/beam/erl_alloc.h
-    bloatware/src/beam/erl_alloc_util.cpp     bloatware/src/beam/erl_alloc_util.h
-    bloatware/src/beam/erl_ao_firstfit_alloc.cpp   bloatware/src/beam/erl_ao_firstfit_alloc.h
-    bloatware/src/beam/erl_arith.cpp
-    bloatware/src/beam/erl_async.cpp          bloatware/src/beam/erl_async.h
-    bloatware/src/beam/erl_bestfit_alloc.cpp  bloatware/src/beam/erl_bestfit_alloc.h
-    bloatware/src/beam/erl_bif_binary.cpp
-    bloatware/src/beam/erl_bif_chksum.cpp
-    bloatware/src/beam/erl_bif_ddll.cpp
-    bloatware/src/beam/erl_bif_info.cpp
-    bloatware/src/beam/erl_bif_op.cpp
-    bloatware/src/beam/erl_bif_guard.cpp
-    bloatware/src/beam/erl_bif_lists.cpp
-    bloatware/src/beam/erl_bif_os.cpp
-    bloatware/src/beam/erl_bif_port.cpp
-    bloatware/src/beam/erl_bif_re.cpp
-    bloatware/src/beam/erl_bif_timer.cpp      bloatware/src/beam/erl_bif_timer.h
-    bloatware/src/beam/erl_bif_trace.cpp
-    bloatware/src/beam/erl_bits.cpp           bloatware/src/beam/erl_bits.h
-      bloatware/src/beam/erl_binary.h
-    bloatware/src/beam/erl_cpu_topology.cpp   bloatware/src/beam/erl_cpu_topology.h
-    bloatware/src/beam/erl_db.cpp             bloatware/src/beam/erl_db.h
-    bloatware/src/beam/erl_db_hash.cpp        bloatware/src/beam/erl_db_hash.h
-    bloatware/src/beam/erl_db_tree.cpp        bloatware/src/beam/erl_db_tree.h
-    bloatware/src/beam/erl_db_util.cpp        bloatware/src/beam/erl_db_util.h
-      bloatware/src/beam/erl_driver.h
-    bloatware/src/beam/erl_drv_thread.cpp
-    bloatware/src/beam/erl_fun.cpp            bloatware/src/beam/erl_fun.h
-    bloatware/src/beam/erl_gc.cpp             bloatware/src/beam/erl_gc.h
-    bloatware/src/beam/erl_goodfit_alloc.cpp  bloatware/src/beam/erl_goodfit_alloc.h
-    bloatware/src/beam/erl_init.cpp
-    bloatware/src/beam/erl_instrument.cpp     bloatware/src/beam/erl_instrument.h
-    bloatware/src/beam/erl_map.cpp            bloatware/src/beam/erl_map.h
-    bloatware/src/beam/erl_math.cpp
-    bloatware/src/beam/erl_md5.cpp
-    bloatware/src/beam/erl_message.cpp        bloatware/src/beam/erl_message.h
-    bloatware/src/beam/erl_monitors.cpp       bloatware/src/beam/erl_monitors.h
-    bloatware/src/beam/erl_mtrace.cpp         bloatware/src/beam/erl_mtrace.h
-    bloatware/src/beam/erl_nif.cpp            bloatware/src/beam/erl_nif.h
-    bloatware/src/beam/erl_node_tables.cpp    bloatware/src/beam/erl_node_tables.h
-      bloatware/src/beam/erl_port.h
-    bloatware/src/beam/erl_port_task.cpp      bloatware/src/beam/erl_port_task.h
-    bloatware/src/beam/erl_posix_str.cpp
-    bloatware/src/beam/erl_printf_term.cpp    bloatware/src/beam/erl_printf_term.h
-    bloatware/src/beam/erl_process.cpp        bloatware/src/beam/erl_process.h
-    bloatware/src/beam/erl_process_dict.cpp   bloatware/src/beam/erl_process_dict.h
-    bloatware/src/beam/erl_process_dump.cpp
-    bloatware/src/beam/erl_process_lock.cpp   bloatware/src/beam/erl_process_lock.h
-    bloatware/src/beam/erl_ptab.cpp           bloatware/src/beam/erl_ptab.h
-    bloatware/src/beam/erl_sched_spec_pre_alloc.cpp bloatware/src/beam/erl_sched_spec_pre_alloc.h
-      bloatware/src/beam/erl_smp.h
-    bloatware/src/beam/erl_term.cpp           bloatware/src/beam/erl_term.h
-      bloatware/src/beam/erl_threads.h
-    bloatware/src/beam/erl_thr_progress.cpp   bloatware/src/beam/erl_thr_progress.h
-    bloatware/src/beam/erl_thr_queue.cpp      bloatware/src/beam/erl_thr_queue.h
-      bloatware/src/beam/erl_thr_queue.h
-      bloatware/src/beam/erl_time.h
-    bloatware/src/beam/erl_time_sup.cpp
-    bloatware/src/beam/erl_trace.cpp          bloatware/src/beam/erl_trace.h
-    bloatware/src/beam/erl_unicode.cpp        bloatware/src/beam/erl_unicode.h
-    bloatware/src/beam/erl_zlib.cpp           bloatware/src/beam/erl_zlib.h
-      bloatware/src/beam/erl_utils.h
-    bloatware/src/beam/export.cpp             bloatware/src/beam/export.h
-    bloatware/src/beam/external.cpp           bloatware/src/beam/external.h
-      bloatware/src/beam/global.h
-    bloatware/src/beam/hash.cpp               bloatware/src/beam/hash.h
-    bloatware/src/beam/index.cpp              bloatware/src/beam/index.h
-    bloatware/src/beam/io.cpp
-    bloatware/src/beam/module.cpp             bloatware/src/beam/module.h
-    bloatware/src/beam/packet_parser.cpp      bloatware/src/beam/packet_parser.h
-    bloatware/src/beam/register.cpp           bloatware/src/beam/register.h
-    bloatware/src/beam/safe_hash.cpp          bloatware/src/beam/safe_hash.h
-      bloatware/src/beam/sys.h
-    bloatware/src/beam/time.cpp
-    bloatware/src/beam/utils.cpp
+    bloatware/legacy/beam/atom.cpp               bloatware/legacy/beam/atom.h
+    bloatware/legacy/beam/beam_bif_load.cpp
+    bloatware/legacy/beam/beam_bp.cpp            bloatware/legacy/beam/beam_bp.h
+    bloatware/legacy/beam/beam_catches.cpp       bloatware/legacy/beam/beam_catches.h
+    bloatware/legacy/beam/beam_debug.cpp
+    bloatware/legacy/beam/beam_emu.cpp
+    bloatware/legacy/beam/beam_load.cpp          bloatware/legacy/beam/beam_load.h
+    bloatware/legacy/beam/beam_ranges.cpp
+    bloatware/legacy/beam/benchmark.cpp          bloatware/legacy/beam/benchmark.h
+    bloatware/legacy/beam/bif.cpp                bloatware/legacy/beam/bif.h
+    bloatware/legacy/beam/big.cpp                bloatware/legacy/beam/big.h
+    bloatware/legacy/beam/binary.cpp
+    bloatware/legacy/beam/break.cpp
+    bloatware/legacy/beam/code_ix.cpp            bloatware/legacy/beam/code_ix.h
+    bloatware/legacy/beam/copy.cpp
+    bloatware/legacy/beam/dist.cpp               bloatware/legacy/beam/dist.h
+    bloatware/legacy/beam/erl_afit_alloc.cpp     bloatware/legacy/beam/erl_afit_alloc.h
+    bloatware/legacy/beam/erl_alloc.cpp          bloatware/legacy/beam/erl_alloc.h
+    bloatware/legacy/beam/erl_alloc_util.cpp     bloatware/legacy/beam/erl_alloc_util.h
+    bloatware/legacy/beam/erl_ao_firstfit_alloc.cpp   bloatware/legacy/beam/erl_ao_firstfit_alloc.h
+    bloatware/legacy/beam/erl_arith.cpp
+    bloatware/legacy/beam/erl_async.cpp          bloatware/legacy/beam/erl_async.h
+    bloatware/legacy/beam/erl_bestfit_alloc.cpp  bloatware/legacy/beam/erl_bestfit_alloc.h
+    bloatware/legacy/beam/erl_bif_binary.cpp
+    bloatware/legacy/beam/erl_bif_chksum.cpp
+    bloatware/legacy/beam/erl_bif_ddll.cpp
+    bloatware/legacy/beam/erl_bif_info.cpp
+    bloatware/legacy/beam/erl_bif_op.cpp
+    bloatware/legacy/beam/erl_bif_guard.cpp
+    bloatware/legacy/beam/erl_bif_lists.cpp
+    bloatware/legacy/beam/erl_bif_os.cpp
+    bloatware/legacy/beam/erl_bif_port.cpp
+    bloatware/legacy/beam/erl_bif_re.cpp
+    bloatware/legacy/beam/erl_bif_timer.cpp      bloatware/legacy/beam/erl_bif_timer.h
+    bloatware/legacy/beam/erl_bif_trace.cpp
+    bloatware/legacy/beam/erl_bits.cpp           bloatware/legacy/beam/erl_bits.h
+      bloatware/legacy/beam/erl_binary.h
+    bloatware/legacy/beam/erl_cpu_topology.cpp   bloatware/legacy/beam/erl_cpu_topology.h
+    bloatware/legacy/beam/erl_db.cpp             bloatware/legacy/beam/erl_db.h
+    bloatware/legacy/beam/erl_db_hash.cpp        bloatware/legacy/beam/erl_db_hash.h
+    bloatware/legacy/beam/erl_db_tree.cpp        bloatware/legacy/beam/erl_db_tree.h
+    bloatware/legacy/beam/erl_db_util.cpp        bloatware/legacy/beam/erl_db_util.h
+      bloatware/legacy/beam/erl_driver.h
+    bloatware/legacy/beam/erl_drv_thread.cpp
+    bloatware/legacy/beam/erl_fun.cpp            bloatware/legacy/beam/erl_fun.h
+    bloatware/legacy/beam/erl_gc.cpp             bloatware/legacy/beam/erl_gc.h
+    bloatware/legacy/beam/erl_goodfit_alloc.cpp  bloatware/legacy/beam/erl_goodfit_alloc.h
+    bloatware/legacy/beam/erl_init.cpp
+    bloatware/legacy/beam/erl_instrument.cpp     bloatware/legacy/beam/erl_instrument.h
+    bloatware/legacy/beam/erl_map.cpp            bloatware/legacy/beam/erl_map.h
+    bloatware/legacy/beam/erl_math.cpp
+    bloatware/legacy/beam/erl_md5.cpp
+    bloatware/legacy/beam/erl_message.cpp        bloatware/legacy/beam/erl_message.h
+    bloatware/legacy/beam/erl_monitors.cpp       bloatware/legacy/beam/erl_monitors.h
+    bloatware/legacy/beam/erl_mtrace.cpp         bloatware/legacy/beam/erl_mtrace.h
+    bloatware/legacy/beam/erl_nif.cpp            bloatware/legacy/beam/erl_nif.h
+    bloatware/legacy/beam/erl_node_tables.cpp    bloatware/legacy/beam/erl_node_tables.h
+      bloatware/legacy/beam/erl_port.h
+    bloatware/legacy/beam/erl_port_task.cpp      bloatware/legacy/beam/erl_port_task.h
+    bloatware/legacy/beam/erl_posix_str.cpp
+    bloatware/legacy/beam/erl_printf_term.cpp    bloatware/legacy/beam/erl_printf_term.h
+    bloatware/legacy/beam/erl_process.cpp        bloatware/legacy/beam/erl_process.h
+    bloatware/legacy/beam/erl_process_dict.cpp   bloatware/legacy/beam/erl_process_dict.h
+    bloatware/legacy/beam/erl_process_dump.cpp
+    bloatware/legacy/beam/erl_process_lock.cpp   bloatware/legacy/beam/erl_process_lock.h
+    bloatware/legacy/beam/erl_ptab.cpp           bloatware/legacy/beam/erl_ptab.h
+    bloatware/legacy/beam/erl_sched_spec_pre_alloc.cpp bloatware/legacy/beam/erl_sched_spec_pre_alloc.h
+      bloatware/legacy/beam/erl_smp.h
+    bloatware/legacy/beam/erl_term.cpp           bloatware/legacy/beam/erl_term.h
+      bloatware/legacy/beam/erl_threads.h
+    bloatware/legacy/beam/erl_thr_progress.cpp   bloatware/legacy/beam/erl_thr_progress.h
+    bloatware/legacy/beam/erl_thr_queue.cpp      bloatware/legacy/beam/erl_thr_queue.h
+      bloatware/legacy/beam/erl_thr_queue.h
+      bloatware/legacy/beam/erl_time.h
+    bloatware/legacy/beam/erl_time_sup.cpp
+    bloatware/legacy/beam/erl_trace.cpp          bloatware/legacy/beam/erl_trace.h
+    bloatware/legacy/beam/erl_unicode.cpp        bloatware/legacy/beam/erl_unicode.h
+    bloatware/legacy/beam/erl_zlib.cpp           bloatware/legacy/beam/erl_zlib.h
+      bloatware/legacy/beam/erl_utils.h
+    bloatware/legacy/beam/export.cpp             bloatware/legacy/beam/export.h
+    bloatware/legacy/beam/external.cpp           bloatware/legacy/beam/external.h
+      bloatware/legacy/beam/global.h
+    bloatware/legacy/beam/hash.cpp               bloatware/legacy/beam/hash.h
+    bloatware/legacy/beam/index.cpp              bloatware/legacy/beam/index.h
+    bloatware/legacy/beam/io.cpp
+    bloatware/legacy/beam/module.cpp             bloatware/legacy/beam/module.h
+    bloatware/legacy/beam/packet_parser.cpp      bloatware/legacy/beam/packet_parser.h
+    bloatware/legacy/beam/register.cpp           bloatware/legacy/beam/register.h
+    bloatware/legacy/beam/safe_hash.cpp          bloatware/legacy/beam/safe_hash.h
+      bloatware/legacy/beam/sys.h
+    bloatware/legacy/beam/time.cpp
+    bloatware/legacy/beam/utils.cpp
 
     #======================================================
-    bloatware/src/drivers/common/efile_drv.cpp
-        bloatware/src/drivers/common/erl_efile.h
-    bloatware/src/drivers/common/gzio.cpp     bloatware/src/drivers/common/gzio.h
-    bloatware/src/drivers/common/inet_drv.cpp
-    bloatware/src/drivers/common/ram_file_drv.cpp
-    bloatware/src/drivers/common/zlib_drv.cpp
+    bloatware/legacy/drivers/common/efile_drv.cpp
+        bloatware/legacy/drivers/common/erl_efile.h
+    bloatware/legacy/drivers/common/gzio.cpp     bloatware/legacy/drivers/common/gzio.h
+    bloatware/legacy/drivers/common/inet_drv.cpp
+    bloatware/legacy/drivers/common/ram_file_drv.cpp
+    bloatware/legacy/drivers/common/zlib_drv.cpp
 
-    bloatware/src/drivers/unix/ttsl_drv.cpp
-    bloatware/src/drivers/unix/unix_efile.cpp
+    bloatware/legacy/drivers/unix/ttsl_drv.cpp
+    bloatware/legacy/drivers/unix/unix_efile.cpp
 
     #======================================================
     #hipe/hipe_${HIPE_ARCH}.cpp
@@ -214,21 +214,21 @@ set(SRC_LIST
     pcre/ucp.h
 
     #======================================================
-    bloatware/src/sys/common/erl_check_io.kp.cpp
-    bloatware/src/sys/common/erl_check_io.nkp.cpp       bloatware/src/sys/common/erl_check_io.h
-    bloatware/src/sys/common/erl_mmap.cpp               bloatware/src/sys/common/erl_mmap.h
-    bloatware/src/sys/common/erl_mtrace_sys_wrap.cpp
-    bloatware/src/sys/common/erl_mseg.cpp               bloatware/src/sys/common/erl_mseg.h
-    bloatware/src/sys/common/erl_poll.kp.cpp
-    bloatware/src/sys/common/erl_poll.nkp.cpp           bloatware/src/sys/common/erl_poll.h
-    bloatware/src/sys/common/erl_sys_common_misc.cpp
+    bloatware/legacy/sys/common/erl_check_io.kp.cpp
+    bloatware/legacy/sys/common/erl_check_io.nkp.cpp       bloatware/legacy/sys/common/erl_check_io.h
+    bloatware/legacy/sys/common/erl_mmap.cpp               bloatware/legacy/sys/common/erl_mmap.h
+    bloatware/legacy/sys/common/erl_mtrace_sys_wrap.cpp
+    bloatware/legacy/sys/common/erl_mseg.cpp               bloatware/legacy/sys/common/erl_mseg.h
+    bloatware/legacy/sys/common/erl_poll.kp.cpp
+    bloatware/legacy/sys/common/erl_poll.nkp.cpp           bloatware/legacy/sys/common/erl_poll.h
+    bloatware/legacy/sys/common/erl_sys_common_misc.cpp
 
-    bloatware/src/sys/${EMU_PLATF_OS}/erl_main.cpp
-      bloatware/src/sys/${EMU_PLATF_OS}/erl_unix_sys.h
-    bloatware/src/sys/${EMU_PLATF_OS}/erl_unix_sys_ddll.cpp
-    bloatware/src/sys/${EMU_PLATF_OS}/sys.cpp
-    bloatware/src/sys/${EMU_PLATF_OS}/sys_float.cpp
-    bloatware/src/sys/${EMU_PLATF_OS}/sys_time.cpp
+    bloatware/legacy/sys/${EMU_PLATF_OS}/erl_main.cpp
+      bloatware/legacy/sys/${EMU_PLATF_OS}/erl_unix_sys.h
+    bloatware/legacy/sys/${EMU_PLATF_OS}/erl_unix_sys_ddll.cpp
+    bloatware/legacy/sys/${EMU_PLATF_OS}/sys.cpp
+    bloatware/legacy/sys/${EMU_PLATF_OS}/sys_float.cpp
+    bloatware/legacy/sys/${EMU_PLATF_OS}/sys_time.cpp
 
     #======================================================
     zlib/adler32.c
