@@ -15,7 +15,9 @@ set(emulator_PLATF_opt_SMP  ${CMAKE_SOURCE_DIR}/${EMU_PLATF_TRIPLET}/opt/${EMU_S
 set(emulator_PLATF          ${CMAKE_SOURCE_DIR}/${EMU_PLATF_TRIPLET})
 
 include_directories( ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/bloatware/src/beam
     ${CMAKE_SOURCE_DIR}/bloatware/legacy/beam
+    ${CMAKE_SOURCE_DIR}/bloatware/include
     ${CMAKE_SOURCE_DIR}/hipe
     ${CMAKE_SOURCE_DIR}/pcre
     ${CMAKE_SOURCE_DIR}/bloatware/legacy/drivers/common
@@ -106,7 +108,10 @@ set(SRC_LIST
     bloatware/legacy/beam/erl_fun.cpp            bloatware/legacy/beam/erl_fun.h
     bloatware/legacy/beam/erl_gc.cpp             bloatware/legacy/beam/erl_gc.h
     bloatware/legacy/beam/erl_goodfit_alloc.cpp  bloatware/legacy/beam/erl_goodfit_alloc.h
+
+    bloatware/src/beam/bw_beam_init.cpp bloatware/src/beam/bw_beam_init.h
     bloatware/legacy/beam/erl_init.cpp
+
     bloatware/legacy/beam/erl_instrument.cpp     bloatware/legacy/beam/erl_instrument.h
     bloatware/legacy/beam/erl_map.cpp            bloatware/legacy/beam/erl_map.h
     bloatware/legacy/beam/erl_math.cpp
@@ -116,11 +121,17 @@ set(SRC_LIST
     bloatware/legacy/beam/erl_mtrace.cpp         bloatware/legacy/beam/erl_mtrace.h
     bloatware/legacy/beam/erl_nif.cpp            bloatware/legacy/beam/erl_nif.h
     bloatware/legacy/beam/erl_node_tables.cpp    bloatware/legacy/beam/erl_node_tables.h
+
+    bloatware/src/beam/bw_port.h
       bloatware/legacy/beam/erl_port.h
+
     bloatware/legacy/beam/erl_port_task.cpp      bloatware/legacy/beam/erl_port_task.h
     bloatware/legacy/beam/erl_posix_str.cpp
     bloatware/legacy/beam/erl_printf_term.cpp    bloatware/legacy/beam/erl_printf_term.h
+
+    bloatware/src/beam/bw_process.cpp            bloatware/src/beam/bw_process.h
     bloatware/legacy/beam/erl_process.cpp        bloatware/legacy/beam/erl_process.h
+
     bloatware/legacy/beam/erl_process_dict.cpp   bloatware/legacy/beam/erl_process_dict.h
     bloatware/legacy/beam/erl_process_dump.cpp
     bloatware/legacy/beam/erl_process_lock.cpp   bloatware/legacy/beam/erl_process_lock.h
@@ -223,10 +234,14 @@ set(SRC_LIST
     bloatware/legacy/sys/common/erl_poll.nkp.cpp           bloatware/legacy/sys/common/erl_poll.h
     bloatware/legacy/sys/common/erl_sys_common_misc.cpp
 
-    bloatware/legacy/sys/${EMU_PLATF_OS}/erl_main.cpp
+    #bloatware/legacy/sys/${EMU_PLATF_OS}/erl_main.cpp
+    bloatware/src/${EMU_PLATF_OS}/bw_main.cpp
       bloatware/legacy/sys/${EMU_PLATF_OS}/erl_unix_sys.h
     bloatware/legacy/sys/${EMU_PLATF_OS}/erl_unix_sys_ddll.cpp
+
     bloatware/legacy/sys/${EMU_PLATF_OS}/sys.cpp
+    bloatware/src/unix/bw_sys.cpp bloatware/include/bw_sys.h
+
     bloatware/legacy/sys/${EMU_PLATF_OS}/sys_float.cpp
     bloatware/legacy/sys/${EMU_PLATF_OS}/sys_time.cpp
 

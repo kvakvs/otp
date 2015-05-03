@@ -984,14 +984,14 @@ struct process {
 #endif
 
 #ifdef CHECK_FOR_HOLES
-  Eterm *last_htop;   /* No need to scan the heap below this_ point. */
-  ErlHeapFragment *last_mbuf; /* No need to scan beyond this_ mbuf. */
+  Eterm *last_htop;   /* No need to scan the heap below this point. */
+  ErlHeapFragment *last_mbuf; /* No need to scan beyond this mbuf. */
 #endif
 
 #ifdef DEBUG
   Eterm *last_old_htop; /*
-                                 * No need to scan the old heap below this_ point
-         * when looking for invalid pointers into the new_ heap or
+                    * No need to scan the old heap below this point
+         * when looking for invalid pointers into the new heap or
          * heap fragments.
          */
 #endif
