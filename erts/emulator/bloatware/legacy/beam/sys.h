@@ -20,6 +20,7 @@
 #ifndef __SYS_H__
 #define __SYS_H__
 
+#include "config.h"
 
 #if defined(VALGRIND) && !defined(NO_FPE_SIGNALS)
 #  define NO_FPE_SIGNALS
@@ -242,7 +243,7 @@ __decl_noreturn void __noreturn erl_assert_error(const char *expr, const char *f
 #if !((SIZEOF_VOID_P >= 4) && (SIZEOF_VOID_P == SIZEOF_SIZE_T) \
       && ((SIZEOF_VOID_P == SIZEOF_INT) || (SIZEOF_VOID_P == SIZEOF_LONG) || \
           (SIZEOF_VOID_P == SIZEOF_LONG_LONG)))
-#error Cannot handle this_ combination of int/long/void*/size_t sizes
+#error Cannot handle this combination of int/long/void*/size_t sizes
 #endif
 
 #if SIZEOF_VOID_P == 8

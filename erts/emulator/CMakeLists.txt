@@ -18,6 +18,7 @@ include_directories( ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/bloatware/src/beam
     ${CMAKE_SOURCE_DIR}/bloatware/legacy/beam
     ${CMAKE_SOURCE_DIR}/bloatware/include
+    ${CMAKE_SOURCE_DIR}/bloatware/src/ethread
     ${CMAKE_SOURCE_DIR}/hipe
     ${CMAKE_SOURCE_DIR}/pcre
     ${CMAKE_SOURCE_DIR}/bloatware/legacy/drivers/common
@@ -98,7 +99,10 @@ set(SRC_LIST
     bloatware/legacy/beam/erl_bif_trace.cpp
     bloatware/legacy/beam/erl_bits.cpp           bloatware/legacy/beam/erl_bits.h
       bloatware/legacy/beam/erl_binary.h
+
     bloatware/legacy/beam/erl_cpu_topology.cpp   bloatware/legacy/beam/erl_cpu_topology.h
+    bloatware/src/beam/bw_cpu_topology.cpp bloatware/src/beam/bw_cpu_topology.h
+
     bloatware/legacy/beam/erl_db.cpp             bloatware/legacy/beam/erl_db.h
     bloatware/legacy/beam/erl_db_hash.cpp        bloatware/legacy/beam/erl_db_hash.h
     bloatware/legacy/beam/erl_db_tree.cpp        bloatware/legacy/beam/erl_db_tree.h
@@ -147,6 +151,7 @@ set(SRC_LIST
     bloatware/legacy/beam/erl_time_sup.cpp
     bloatware/legacy/beam/erl_trace.cpp          bloatware/legacy/beam/erl_trace.h
     bloatware/legacy/beam/erl_unicode.cpp        bloatware/legacy/beam/erl_unicode.h
+    bloatware/src/beam/bw_erl_vm.cpp  bloatware/src/beam/bw_erl_vm.h
     bloatware/legacy/beam/erl_zlib.cpp           bloatware/legacy/beam/erl_zlib.h
       bloatware/legacy/beam/erl_utils.h
     bloatware/legacy/beam/export.cpp             bloatware/legacy/beam/export.h
@@ -265,6 +270,8 @@ set(SRC_LIST
     ../${EMU_PLATF_TRIPLET}/config.h
 
     ../lib_src/common/erl_misc_utils.cpp ../include/internal/erl_misc_utils.h
+    bloatware/src/beam/bw_misc_utils.cpp bloatware/src/beam/bw_misc_utils.h
+
     ../lib_src/common/erl_printf.cpp
     ../lib_src/common/erl_printf_format.cpp
     ../lib_src/common/ethr_atomics.cpp

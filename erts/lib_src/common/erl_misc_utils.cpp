@@ -25,6 +25,8 @@
 #  include <windows.h>
 #endif
 
+#include "bw_cpu_topology.h"
+
 #include "ethread_inline.h"
 #include "erl_misc_utils.h"
 
@@ -115,10 +117,11 @@
 #include <limits.h>
 #endif
 
-#ifdef __linux__
-#  define ERTS_SYS_NODE_PATH	"/sys/devices/system/node"
-#  define ERTS_SYS_CPU_PATH	"/sys/devices/system/cpu"
-#endif
+// moved to bw_cpu_topology
+//#ifdef __linux__
+//#  define ERTS_SYS_NODE_PATH	"/sys/devices/system/node"
+//#  define ERTS_SYS_CPU_PATH	"/sys/devices/system/cpu"
+//#endif
 
 #ifdef __FreeBSD__
 #include <sys/types.h>
@@ -133,25 +136,26 @@
 
 static int read_topology(erts_cpu_info_t *cpuinfo);
 
-#if defined(ERTS_HAVE_MISC_UTIL_AFFINITY_MASK__)
-static int
-cpu_sets_are_eq(cpu_set_t *x, cpu_set_t *y)
-{
-    int i;
-    for (i = 0; i < CPU_SETSIZE; i++) {
-	if (CPU_ISSET(i, x)) {
-	    if (!CPU_ISSET(i, y))
-		return 0;
-	}
-	else {
-	    if (CPU_ISSET(i, y))
-		return 0;
-	}
-    }
-    return 1;
-}
+// moved to bw_cpu_topo
+//#if defined(ERTS_HAVE_MISC_UTIL_AFFINITY_MASK__)
+//static int
+//cpu_sets_are_eq(cpu_set_t *x, cpu_set_t *y)
+//{
+//    int i;
+//    for (i = 0; i < CPU_SETSIZE; i++) {
+//	if (CPU_ISSET(i, x)) {
+//	    if (!CPU_ISSET(i, y))
+//		return 0;
+//	}
+//	else {
+//	    if (CPU_ISSET(i, y))
+//		return 0;
+//	}
+//    }
+//    return 1;
+//}
 
-#endif
+//#endif
 
 int
 erts_milli_sleep(long ms)
@@ -335,7 +339,7 @@ erts_cpu_info_update(erts_cpu_info_t *cpuinfo)
 
 #if defined(ERTS_HAVE_MISC_UTIL_AFFINITY_MASK__)
     if (ERTS_MU_GET_PROC_AFFINITY__(cpuinfo, &cpuset) == 0) {
-	if (!changed && !cpu_sets_are_eq(&cpuset, &cpuinfo->cpuset))
+        if (!changed && !cpu::cpu_sets_equal(&cpuset, &cpuinfo->cpuset))
 	    changed = 1;
 
 	if (!changed)
@@ -691,17 +695,17 @@ pn_cmp(const void *vx, const void *vy)
     erts_cpu_topology_t *y = (erts_cpu_topology_t *) vy;
 
     if (x->processor != y->processor)
-	return x->processor - y->processor;
+        return x->processor - y->processor;
     if (x->node != y->node)
-	return x->node - y->node;
+        return x->node - y->node;
     if (x->processor_node != y->processor_node)
-	return x->processor_node - y->processor_node;
+        return x->processor_node - y->processor_node;
     if (x->core != y->core)
-	return x->core - y->core;
+        return x->core - y->core;
     if (x->thread != y->thread)
-	return x->thread - y->thread;
+        return x->thread - y->thread;
     if (x->logical != y->logical)
-	return x->logical - y->logical;
+        return x->logical - y->logical;
     return 0;
 }
 
@@ -712,17 +716,17 @@ cpu_cmp(const void *vx, const void *vy)
     erts_cpu_topology_t *y = (erts_cpu_topology_t *) vy;
 
     if (x->node != y->node)
-	return x->node - y->node;
+        return x->node - y->node;
     if (x->processor != y->processor)
-	return x->processor - y->processor;
+        return x->processor - y->processor;
     if (x->processor_node != y->processor_node)
-	return x->processor_node - y->processor_node;
+        return x->processor_node - y->processor_node;
     if (x->core != y->core)
-	return x->core - y->core;
+        return x->core - y->core;
     if (x->thread != y->thread)
-	return x->thread - y->thread;
+        return x->thread - y->thread;
     if (x->logical != y->logical)
-	return x->logical - y->logical;
+        return x->logical - y->logical;
     return 0;
 }
 
@@ -731,47 +735,47 @@ adjust_processor_nodes(erts_cpu_info_t *cpuinfo, int no_nodes)
 {
     erts_cpu_topology_t *prev, *this_, *last;
     if (no_nodes > 1) {
-	int processor = -1;
-	int processor_node = 0;
-	int node = -1;
+        int processor = -1;
+        int processor_node = 0;
+        int node = -1;
 
-	qsort(cpuinfo->topology,
-	      cpuinfo->topology_size,
-	      sizeof(erts_cpu_topology_t),
-	      pn_cmp);
+        qsort(cpuinfo->topology,
+              cpuinfo->topology_size,
+              sizeof(erts_cpu_topology_t),
+              pn_cmp);
 
-	prev = nullptr;
-	this_ = &cpuinfo->topology[0];
-	last = &cpuinfo->topology[cpuinfo->topology_size-1];
-	while (1) {
-	    if (processor == this_->processor) {
-		if (node != this_->node)
-		    processor_node = 1;
-	    }
-	    else {
-		if (processor_node) {
-		make_processor_node:
-		    while (prev->processor == processor) {
-			prev->processor_node = prev->node;
-			prev->node = -1;
-			if (prev == &cpuinfo->topology[0])
-			    break;
-			prev--;
-		    }
-		    processor_node = 0;
-		}
-		processor = this_->processor;
-		node = this_->node;
-	    }
-	    if (this_ == last) {
-		if (processor_node) {
-		    prev = this_;
-		    goto make_processor_node;
-		}
-		break;
-	    }
-	    prev = this_++;
-	}
+        prev = nullptr;
+        this_ = &cpuinfo->topology[0];
+        last = &cpuinfo->topology[cpuinfo->topology_size-1];
+        while (1) {
+            if (processor == this_->processor) {
+                if (node != this_->node)
+                    processor_node = 1;
+            }
+            else {
+                if (processor_node) {
+                make_processor_node:
+                    while (prev->processor == processor) {
+                        prev->processor_node = prev->node;
+                        prev->node = -1;
+                        if (prev == &cpuinfo->topology[0])
+                            break;
+                        prev--;
+                    }
+                    processor_node = 0;
+                }
+                processor = this_->processor;
+                node = this_->node;
+            }
+            if (this_ == last) {
+                if (processor_node) {
+                    prev = this_;
+                    goto make_processor_node;
+                }
+                break;
+            }
+            prev = this_++;
+        }
     }
 }
 #endif
@@ -849,7 +853,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
 
     ix = -1;
 
-    if (realpath(ERTS_SYS_NODE_PATH, npath)) {
+    if (realpath(BW_ERTS_SYS_NODE_PATH, npath)) {
 	ndir = opendir(npath);
 	got_nodes = (ndir != nullptr);
     }
@@ -858,7 +862,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
 	int node_id = -1;
 
 	if (!got_nodes) {
-	    if (!realpath(ERTS_SYS_CPU_PATH, cpath))
+            if (!realpath(BW_ERTS_SYS_CPU_PATH, cpath))
 		goto error;
 	}
 	else {
@@ -943,7 +947,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
                 cpuinfo->topology = (erts_cpu_topology_t*)t;
 	}
 
-	adjust_processor_nodes(cpuinfo, no_nodes);
+        adjust_processor_nodes(cpuinfo, no_nodes);
 
 	qsort(cpuinfo->topology,
 	      cpuinfo->topology_size,

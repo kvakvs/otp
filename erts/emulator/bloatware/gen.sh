@@ -1,9 +1,11 @@
 #!/bin/sh
 
+
 PERL=`which perl`
 TARGET_DIR="`pwd`/gen"
 ERL_TOP="../../.."
-rm -f $TARGET_DIR/OPCODES-GENERATED
+rm -f $TARGET_DIR/*-GENERATED
+mkdir $TARGET_DIR
 
 #================================
 OPCODE_TABLES="$ERL_TOP/lib/compiler/src/genop.tab ../beam/ops.tab"

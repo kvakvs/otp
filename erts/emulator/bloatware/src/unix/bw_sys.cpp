@@ -7,6 +7,25 @@
 #include <errno.h>
 #include <fcntl.h>
 
+
+std::atomic<bool> Erts::g_break_requested(false);
+std::atomic<bool> Erts::g_no_crash_dump(false);
+bool Erts::g_initialized         = false;
+bool Erts::g_tty_using_oldshell  = true;
+bool Erts::g_ignore_break        = false;
+bool Erts::g_replace_intr        = false; // erl::start command line parse
+uint32_t Erts::g_backtrace_depth = erts::DEFAULT_BACKTRACE_SIZE;
+bool Erts::g_use_sender_punish   = true;
+int32_t Erts::g_compat_rel;
+
+// set early so the break handler has access to initial mode
+struct termios Erts::g_tty_initial_mode;
+
+void (*IoFunc::check_io_async_interrupt)() = nullptr;
+void (*IoFunc::check_io_interrupt)(bool) = nullptr;
+void (*IoFunc::check_io)(int) = nullptr;
+uint32_t(*IoFunc::size)() = nullptr;
+
 namespace sys {
 
 void set_signal(int sig, void (*fn)(int))
@@ -125,20 +144,3 @@ void set_nonblocking(int fd)
 }
 
 } // ns sys
-
-//namespace erts {
-
-std::atomic<bool> Erts::g_break_requested(false);
-std::atomic<bool> Erts::g_no_crash_dump(false);
-bool Erts::g_initialized        = false;
-bool Erts::g_tty_using_oldshell = true;
-bool Erts::g_replace_intr       = false; // erl::start command line parse
-// set early so the break handler has access to initial mode
-struct termios Erts::g_tty_initial_mode;
-
-void (*IoFunc::check_io_async_interrupt)() = nullptr;
-void (*IoFunc::check_io_interrupt)(bool) = nullptr;
-void (*IoFunc::check_io)(int) = nullptr;
-uint32_t(*IoFunc::size)() = nullptr;
-
-//} // ns erts

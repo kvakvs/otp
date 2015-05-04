@@ -25,17 +25,6 @@ namespace sys {
   void set_nonblocking(int fd);
 } // ns sys
 
-class Erts {
-public:
-  static std::atomic<bool> g_break_requested;
-  static std::atomic<bool> g_no_crash_dump;
-  static bool g_initialized;
-  static bool g_replace_intr;
-
-  static bool g_tty_using_oldshell;
-  static struct ::termios g_tty_initial_mode;
-};
-
 namespace erts {
 
   // Some special erl::exit() codes
@@ -43,7 +32,37 @@ namespace erts {
   const uint32_t ABORT_EXIT = (INT_MIN + 1); // no crash dump; only abort()
   const uint32_t DUMP_EXIT  = (INT_MIN + 2); // crash dump; then exit()
 
+  const uint32_t MAX_BACKTRACE_SIZE = 64; // whatever just not too huge
+  const uint32_t DEFAULT_BACKTRACE_SIZE = 8;
+
+  // erts::DEFAULT_NO_ASYNC_THREADS
+  // erts::ASYNC_THREAD_MIN_STACK_SIZE
+
 } // ns erts
+
+class Erts {
+public:
+  //
+  // VM global flags and state
+  //
+  static std::atomic<bool> g_break_requested;
+  static std::atomic<bool> g_no_crash_dump;
+  static bool g_initialized;
+  static bool g_ignore_break;
+  static bool g_replace_intr;
+  static uint32_t g_backtrace_depth;
+  static bool g_use_sender_punish;
+  static int32_t g_compat_rel;
+
+  //static uint32_t g_async_max_threads;
+  //static uint32_t g_async_thread_suggested_stack_size;
+
+  //
+  // TTY (console)
+  //
+  static bool g_tty_using_oldshell;
+  static struct ::termios g_tty_initial_mode;
+};
 
 // TODO: if no kernel poll - replace iofunc globs with direct calls
 // to like erts_check_io_interrupt(1) etc

@@ -21,6 +21,9 @@
 #  include "config.h"
 #endif
 
+// Bloatware
+#include "bw_erl_vm.h"
+
 #include "sys.h"
 #include <ctype.h>
 #include "erl_vm.h"
@@ -545,9 +548,9 @@ void erts_usage(void)
   erts_fprintf(stderr, "               (halt(String) will still produce a crash dump)\n");
   erts_fprintf(stderr, "-fn[u|a|l]     Control how filenames are interpreted\n");
   erts_fprintf(stderr, "-hms size      set minimum heap size in words (default %d)\n",
-               H_DEFAULT_SIZE);
+               vm::H_DEFAULT_SIZE);
   erts_fprintf(stderr, "-hmbs size     set minimum binary virtual heap size in words (default %d)\n",
-               VH_DEFAULT_SIZE);
+               vm::VH_DEFAULT_SIZE);
   erts_fprintf(stderr, "-hpds size     initial process dictionary size (default %d)\n",
                erts_pd_initial_size);
 
@@ -720,8 +723,8 @@ early_init(int *argc, char **argv) /*
   erts_backtrace_depth = DEFAULT_BACKTRACE_SIZE;
   erts_async_max_threads = ERTS_DEFAULT_NO_ASYNC_THREADS;
   erts_async_thread_suggested_stack_size = ERTS_ASYNC_THREAD_MIN_STACK_SIZE;
-  H_MIN_SIZE = H_DEFAULT_SIZE;
-  BIN_VH_MIN_SIZE = VH_DEFAULT_SIZE;
+  H_MIN_SIZE = vm::H_DEFAULT_SIZE;
+  BIN_VH_MIN_SIZE = vm::VH_DEFAULT_SIZE;
 
   erts_initialized = 0;
 
