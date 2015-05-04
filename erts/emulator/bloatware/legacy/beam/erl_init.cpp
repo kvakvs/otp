@@ -24,6 +24,8 @@
 // Bloatware
 #include "bw_erl_vm.h"
 #include "bw_beam_init.h"
+#include "bw_port.h"
+#include "bw_sys.h"
 
 #include "sys.h"
 #include <ctype.h>
@@ -148,13 +150,13 @@ erts_tsd_key_t erts_is_crash_dumping_key;
 #else
 volatile int erts_writing_erl_crash_dump = 0;
 #endif
-int erts_initialized = 0;
+//int erts_initialized = 0;
 
 #if defined(USE_THREADS) && !defined(ERTS_SMP)
 static erts_tid_t main_thread;
 #endif
 
-int erts_use_sender_punish;
+//int erts_use_sender_punish;
 
 /*
  * Configurable parameters.
@@ -228,8 +230,8 @@ ErtsModifiedTimings erts_modified_timings[] = {
 
 Export *erts_delay_trap = nullptr;
 
-int ignore_break;
-int replace_intr;
+//int ignore_break;
+//int replace_intr;
 
 static ERTS_INLINE int
 has_prefix(const char *prefix, const char *string)
@@ -304,12 +306,12 @@ erts_short_init(void)
 {
   int ncpu = early_init(nullptr, nullptr);
   erl_init(ncpu,
-           ERTS_DEFAULT_MAX_PROCESSES,
+           erts::DEFAULT_MAX_PROCESSES,
            0,
            ERTS_DEFAULT_MAX_PORTS,
            0,
            0);
-  erts_initialized = 1;
+  Erts::g_initialized = 1;
 }
 
 static void
@@ -729,9 +731,9 @@ early_init(int *argc, char **argv) /*
   H_MIN_SIZE = vm::H_DEFAULT_SIZE;
   BIN_VH_MIN_SIZE = vm::VH_DEFAULT_SIZE;
 
-  erts_initialized = 0;
+  Erts::g_initialized = 0;
 
-  erts_use_sender_punish = 1;
+  Erts::g_use_sender_punish = true;
 
   erts_pre_early_init_cpu_topology(&max_reader_groups,
                                    &ncpu,
@@ -743,8 +745,8 @@ early_init(int *argc, char **argv) /*
   ncpuavail = 1;
 #endif
 
-  ignore_break = 0;
-  replace_intr = 0;
+  Erts::g_ignore_break = false;
+  Erts::g_replace_intr = false;
   Init::g_program = argv[0];
 
   erts_modified_timing_level = -1;
@@ -1305,8 +1307,8 @@ erl_start(int argc, char **argv)
   char envbuf[21]; /* enough for any 64-bit integer */
   size_t envbufsz;
   int ncpu = early_init(&argc, argv);
-  int proc_tab_sz = ERTS_DEFAULT_MAX_PROCESSES;
-  int port_tab_sz = ERTS_DEFAULT_MAX_PORTS;
+  int proc_tab_sz = erts::DEFAULT_MAX_PROCESSES;
+  int port_tab_sz = erts::DEFAULT_MAX_PORTS;
   int port_tab_sz_ignore_files = 0;
   int legacy_proc_tab = 0;
   int legacy_port_tab = 0;
@@ -1696,17 +1698,17 @@ erl_start(int argc, char **argv)
 
     case 'B':
       if (argv[i][2] == 'i') {        /* +Bi */
-        ignore_break = 1;
+        Erts::g_ignore_break = true;
       } else if (argv[i][2] == 'c') { /* +Bc */
-        replace_intr = 1;
+        Erts::g_replace_intr = true;
       } else if (argv[i][2] == 'd') { /* +Bd */
         have_break_handler = 0;
       } else if (argv[i + 1][0] == 'i') { /* +B i */
         get_arg(argv[i] + 2, argv[i + 1], &i);
-        ignore_break = 1;
+        Erts::g_ignore_break = true;
       } else if (argv[i + 1][0] == 'c') { /* +B c */
         get_arg(argv[i] + 2, argv[i + 1], &i);
-        replace_intr = 1;
+        Erts::g_replace_intr = true;
       } else if (argv[i + 1][0] == 'd') { /* +B d */
         get_arg(argv[i] + 2, argv[i + 1], &i);
         have_break_handler = 0;
@@ -1960,7 +1962,7 @@ bad_n_option:
           erts_usage();
         }
       } else if (sys_strcmp("nsp", sub_param) == 0) {
-        erts_use_sender_punish = 0;
+        Erts::g_use_sender_punish = 0;
       } else if (has_prefix("tbt", sub_param)) {
         arg = get_arg(sub_param + 3, argv[i + 1], &i);
         res = erts_init_scheduler_bind_type_string(arg);
@@ -2236,7 +2238,7 @@ bad_n_option:
   /* Restart will not reinstall the break handler */
 #ifdef __WIN32__
 
-  if (ignore_break) {
+  if (Erts::g_ignore_break) {
     erts_set_ignore_break();
   } else if (replace_intr) {
     erts_replace_intr();
@@ -2246,13 +2248,13 @@ bad_n_option:
 
 #else
 
-  if (ignore_break) {
+  if (Erts::g_ignore_break) {
     erts_set_ignore_break();
   } else if (have_break_handler) {
     init_break_handler();
   }
 
-  if (replace_intr) {
+  if (Erts::g_replace_intr) {
     erts_replace_intr();
   }
 
@@ -2272,7 +2274,7 @@ bad_n_option:
   erts_end_staging_code_ix();
   erts_commit_staging_code_ix();
 
-  erts_initialized = 1;
+  Erts::g_initialized = 1;
 
   erl_first_process_otp("otp_ring0", nullptr, 0, Init::g_boot_argc, Init::g_boot_argv);
 
@@ -2346,7 +2348,7 @@ system_cleanup(int flush_async)
    */
 
   if (!flush_async
-      || !erts_initialized
+      || !Erts::g_initialized
 #if defined(USE_THREADS) && !defined(ERTS_SMP)
       || !erts_equal_tids(main_thread, erts_thr_self())
 #endif
@@ -2384,7 +2386,7 @@ erl_exit_vv(int n, int flush_async, const char *fmt, va_list args1, va_list args
 
   /* Produce an Erlang core dump if error */
   if (((n > 0 && erts_no_crash_dump == 0) || n == ERTS_DUMP_EXIT)
-      && erts_initialized) {
+      && Erts::g_initialized) {
     erl_crash_dump_v((char *) nullptr, 0, fmt, args1);
   }
 

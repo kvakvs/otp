@@ -25,6 +25,7 @@
 #  include "config.h"
 #endif
 
+#include "bw_sys.h"
 #include "erl_driver.h"
 
 static int ttysl_init(void);
@@ -258,7 +259,7 @@ static ErlDrvData ttysl_start(ErlDrvPort port, char *buf)
   char *s, *t, *l;
   int canon, echo, sig; /* Terminal characteristics */
   int flag;
-  extern int using_oldshell; /* set this_ to let the rest of erts know */
+  //extern int using_oldshell; /* set this_ to let the rest of erts know */
 
   utf8buf_size = 0;
 
@@ -349,7 +350,7 @@ static ErlDrvData ttysl_start(ErlDrvPort port, char *buf)
   ttysl_port = port;
 
   /* we need to know this_ when we enter the break handler */
-  using_oldshell = 0;
+  Erts::g_tty_using_oldshell = 0;
 
   return (ErlDrvData)ttysl_port;  /* Nothing important to return */
 #endif /* HAVE_TERMCAP */

@@ -21,6 +21,8 @@
 #  include "config.h"
 #endif
 
+#include "bw_sys.h"
+
 #include "sys.h"
 #include "erl_vm.h"
 #include "global.h"
@@ -2653,9 +2655,9 @@ bld_instruction_counts:
   } else if (BIF_ARG_1 == am_creation) {
     return make_small(erts_this_node->creation);
   } else if (BIF_ARG_1 == am_break_ignored) {
-    extern int ignore_break;
+    //extern int ignore_break;
 
-    if (ignore_break) {
+    if (Erts::g_ignore_break) {
       return am_true;
     } else {
       return am_false;

@@ -21,6 +21,8 @@
 #  include "config.h"
 #endif
 
+#include "bw_sys.h"
+
 #include <stddef.h> /* offsetof() */
 #include "sys.h"
 #include "erl_vm.h"
@@ -2314,7 +2316,7 @@ send_message: {
     /* send to local process */
     res = erts_send_message(p, rp, &rp_locks, msg, 0);
 
-    if (erts_use_sender_punish) {
+    if (Erts::g_use_sender_punish) {
       res *= 4;
     } else {
       res = 0;

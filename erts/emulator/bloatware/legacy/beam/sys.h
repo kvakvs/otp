@@ -435,6 +435,7 @@ int erts_send_warning_to_logger_str_nogl(char *);
 #include "erl_smp.h"
 
 #ifdef ERTS_WANT_BREAK_HANDLING
+/*
 #  ifdef ERTS_SMP
 extern erts_smp_atomic32_t erts_break_requested;
 #    define ERTS_BREAK_REQUESTED \
@@ -443,6 +444,7 @@ extern erts_smp_atomic32_t erts_break_requested;
 extern volatile int erts_break_requested;
 #    define ERTS_BREAK_REQUESTED erts_break_requested
 #  endif
+*/
 void erts_do_break_handling(void);
 #endif
 

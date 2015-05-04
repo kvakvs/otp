@@ -21,6 +21,8 @@
 #  include "config.h"
 #endif
 
+#include "bw_sys.h"
+
 #ifdef ISC32
 #define _POSIX_SOURCE
 #define _XOPEN_SOURCE
@@ -254,7 +256,7 @@ static int max_files = -1;
 /*
  * a few variables used by the break handler
  */
-#ifdef ERTS_SMP
+/*#ifdef ERTS_SMP
 erts_smp_atomic32_t erts_break_requested;
 #define ERTS_SET_BREAK_REQUESTED \
   erts_smp_atomic32_set_nob(&erts_break_requested, (erts_aint32_t) 1)
@@ -265,11 +267,12 @@ volatile int erts_break_requested = 0;
 #define ERTS_SET_BREAK_REQUESTED (erts_break_requested = 1)
 #define ERTS_UNSET_BREAK_REQUESTED (erts_break_requested = 0)
 #endif
+*/
 /* set early so the break handler has access to initial mode */
-static struct termios initial_tty_mode;
-static int replace_intr = 0;
+//static struct termios initial_tty_mode;
+//static int replace_intr = 0;
 /* assume yes initially, ttsl_init will clear it */
-int using_oldshell = 1;
+//int using_oldshell = 1;
 
 #ifdef ERTS_ENABLE_KERNEL_POLL
 
@@ -404,10 +407,10 @@ erts_sys_misc_mem_sz(void)
  */
 void sys_tty_reset(int exit_code)
 {
-  if (using_oldshell && !replace_intr) {
+  if (Erts::g_tty_using_oldshell && !Erts::g_replace_intr) {
     SET_BLOCKING(0);
   } else if (isatty(0)) {
-    tcsetattr(0, TCSANOW, &initial_tty_mode);
+    tcsetattr(0, TCSANOW, &Erts::g_tty_initial_mode);
   }
 }
 
@@ -541,7 +544,8 @@ erts_sys_pre_init(void)
 #endif
   }
 #ifdef ERTS_SMP
-  erts_smp_atomic32_init_nob(&erts_break_requested, 0);
+  //erts_smp_atomic32_init_nob(&erts_break_requested, 0);
+  Erts::g_break_requested = false;
   erts_smp_atomic32_init_nob(&erts_got_sigusr1, 0);
   erts_smp_atomic32_init_nob(&have_prepared_crash_dump, 0);
 #else
@@ -640,7 +644,7 @@ erl_sys_init(void)
   /* we save this_ so the break handler can set and reset it properly */
   /* also so that we can reset on exit (break handler or not) */
   if (isatty(0)) {
-    tcgetattr(0, &initial_tty_mode);
+    tcgetattr(0, &Erts::g_tty_initial_mode);
   }
 
   tzset(); /* Required at least for NetBSD with localtime_r() */
@@ -818,11 +822,12 @@ break_requested(void)
   fprintf(stderr, "break!\n");
 #endif
 
-  if (ERTS_BREAK_REQUESTED) {
+  if (Erts::g_break_requested) {
     erl_exit(ERTS_INTR_EXIT, "");
   }
 
-  ERTS_SET_BREAK_REQUESTED;
+  //ERTS_SET_BREAK_REQUESTED;
+  Erts::g_break_requested = true;
   ERTS_CHK_IO_AS_INTR(); /* Make sure we don't sleep in poll */
 }
 
@@ -941,7 +946,7 @@ void erts_replace_intr(void)
 
     mode.c_cc[VINTR] = 0; /* disable ctrl-c */
     tcsetattr(0, TCSANOW, &mode);
-    replace_intr = 1;
+    Erts::g_replace_intr = 1;
   }
 }
 
@@ -2568,23 +2573,20 @@ void erts_do_break_handling(void)
 
   /* during break we revert to initial settings */
   /* this_ is done differently for oldshell */
-  if (using_oldshell && !replace_intr) {
+  if (Erts::g_tty_using_oldshell && !Erts::g_replace_intr) {
     SET_BLOCKING(1);
   } else if (isatty(0)) {
     tcgetattr(0, &temp_mode);
-    tcsetattr(0, TCSANOW, &initial_tty_mode);
+    tcsetattr(0, TCSANOW, &Erts::g_tty_initial_mode);
     saved = 1;
   }
 
   /* call the break handling function, reset the flag */
   do_break();
 
-  ERTS_UNSET_BREAK_REQUESTED;
-
-  fflush(stdout);
-
-  /* after break we go back to saved settings */
-  if (using_oldshell && !replace_intr) {
+  //ERTS_UNSET_BREAK_REQUESTED;
+  Erts::g_break_requested = false;  /* after break we go back to saved settings */
+  if (Erts::g_tty_using_oldshell && !Erts::g_replace_intr) {
     SET_NONBLOCKING(1);
   } else if (saved) {
     tcsetattr(0, TCSANOW, &temp_mode);
@@ -2857,7 +2859,7 @@ int sys_get_key(int fd)
 }
 
 
-extern int erts_initialized;
+//extern int erts_initialized;
 void
 erl_assert_error(const char *expr, const char *func, const char *file, int line)
 {

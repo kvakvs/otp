@@ -79,7 +79,7 @@ struct ErtsNodesMonitor_;
 #define ERTS_MAX_NO_OF_DIRTY_IO_SCHEDULERS ERTS_MAX_NO_OF_SCHEDULERS
 #endif
 
-#define ERTS_DEFAULT_MAX_PROCESSES (1 << 18)
+//#define ERTS_DEFAULT_MAX_PROCESSES (1 << 18)
 
 #define ERTS_HEAP_ALLOC(Type, Size)         \
      erts_alloc((Type), (Size))
@@ -2315,3 +2315,5 @@ erts_sched_poke(ErtsSchedulerSleepInfo *ssi)
 void erl_halt(int code);
 extern erts_smp_atomic32_t erts_halt_progress;
 extern int erts_halt_code;
+
+#include "bw_process.h"

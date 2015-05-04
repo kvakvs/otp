@@ -802,9 +802,9 @@ extern ErtsModifiedTimings erts_modified_timings[];
 
 extern int erts_no_line_info;
 extern Eterm erts_error_logger_warnings;
-extern int erts_initialized;
+//extern int erts_initialized;
 extern int erts_compat_rel;
-extern int erts_use_sender_punish;
+//extern int erts_use_sender_punish;
 void erts_short_init(void);
 void erl_start(int, char **);
 void erts_usage(void);
