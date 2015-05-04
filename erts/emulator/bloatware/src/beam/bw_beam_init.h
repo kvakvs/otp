@@ -17,5 +17,5 @@ public:
   static const char *g_init;
   static const char *g_boot;
   static int        g_boot_argc;
-  static const char **g_boot_argv;
+  static char * const *g_boot_argv;
 };

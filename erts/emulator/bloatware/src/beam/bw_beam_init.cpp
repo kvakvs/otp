@@ -18,7 +18,7 @@ const char *Init::g_program;
 const char *Init::g_init = "init";
 const char *Init::g_boot = "boot";
 int        Init::g_boot_argc;
-const char **Init::g_boot_argv;
+char * const *Init::g_boot_argv;
 
 namespace erl {
 

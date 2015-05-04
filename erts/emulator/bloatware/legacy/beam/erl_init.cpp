@@ -23,6 +23,7 @@
 
 // Bloatware
 #include "bw_erl_vm.h"
+#include "bw_beam_init.h"
 
 #include "sys.h"
 #include <ctype.h>
@@ -243,8 +244,8 @@ has_prefix(const char *prefix, const char *string)
   return 1;
 }
 
-static char *
-progname(char *fullname)
+static const char *
+progname(const char *fullname)
 {
   int i;
 
@@ -383,7 +384,8 @@ erl_init(int ncpu,
 }
 
 static void
-erl_first_process_otp(char *modname, void *code, unsigned size, int argc, char **argv)
+erl_first_process_otp(char *modname, void *code, unsigned size, int argc,
+                      char * const *argv)
 {
   int i;
   Eterm start_mod;
@@ -460,11 +462,11 @@ erts_preloaded(Process *p)
 
 
 /* static variables that must not change (use same values at restart) */
-static char *program;
-static char *init = "init";
-static char *boot = "boot";
-static int    boot_argc;
-static char **boot_argv;
+//static char *program;
+//static char *init = "init";
+//static char *boot = "boot";
+//static int    boot_argc;
+//static char **boot_argv;
 
 static char *
 get_arg(char *rest, char *next, int *ip)
@@ -522,7 +524,8 @@ load_preloaded(void)
 void erts_usage(void)
 {
   int this_rel = this_rel_num();
-  erts_fprintf(stderr, "Usage: %s [flags] [ -- [init_args] ]\n", progname(program));
+  erts_fprintf(stderr, "Usage: %s [flags] [ -- [init_args] ]\n",
+               progname(Init::g_program));
   erts_fprintf(stderr, "The flags are:\n\n");
 
   /*    erts_fprintf(stderr, "-# number  set the number of items to be used in traces etc\n"); */
@@ -742,7 +745,7 @@ early_init(int *argc, char **argv) /*
 
   ignore_break = 0;
   replace_intr = 0;
-  program = argv[0];
+  Init::g_program = argv[0];
 
   erts_modified_timing_level = -1;
 
@@ -1683,12 +1686,12 @@ erl_start(int argc, char **argv)
 
     case 'i':
       /* define name of module for initial function */
-      init = get_arg(argv[i] + 2, argv[i + 1], &i);
+      Init::g_init = get_arg(argv[i] + 2, argv[i + 1], &i);
       break;
 
     case 'b':
       /* define name of initial function */
-      boot = get_arg(argv[i] + 2, argv[i + 1], &i);
+      Init::g_boot = get_arg(argv[i] + 2, argv[i + 1], &i);
       break;
 
     case 'B':
@@ -2255,8 +2258,8 @@ bad_n_option:
 
 #endif
 
-  boot_argc = argc - i;  /* Number of arguments to init */
-  boot_argv = &argv[i];
+  Init::g_boot_argc = argc - i;  /* Number of arguments to init */
+  Init::g_boot_argv = &argv[i];
 
   erl_init(ncpu,
            proc_tab_sz,
@@ -2271,7 +2274,7 @@ bad_n_option:
 
   erts_initialized = 1;
 
-  erl_first_process_otp("otp_ring0", nullptr, 0, boot_argc, boot_argv);
+  erl_first_process_otp("otp_ring0", nullptr, 0, Init::g_boot_argc, Init::g_boot_argv);
 
 #ifdef ERTS_SMP
   erts_start_schedulers();
