@@ -39,7 +39,7 @@
 /*
  * ERTS_PORT_CALLBACK_VREDS: Limit the amount of callback calls we do...
  */
-#define ERTS_PORT_CALLBACK_VREDS (CONTEXT_REDS/20)
+#define ERTS_PORT_CALLBACK_VREDS (vm::CONTEXT_REDS/20)
 
 #if defined(DEBUG) && 0
 #define ERTS_HARD_DEBUG_TASK_QUEUES
@@ -1337,13 +1337,13 @@ erl_drv_consume_timeslice(ErlDrvPort dprt, int percent)
     percent = 100;
   }
 
-  pp->reds += percent * ((CONTEXT_REDS + 99) / 100);
+  pp->reds += percent * ((vm::CONTEXT_REDS + 99) / 100);
 
-  if (pp->reds < CONTEXT_REDS) {
+  if (pp->reds < vm::CONTEXT_REDS) {
     return 0;
   }
 
-  pp->reds = CONTEXT_REDS;
+  pp->reds = vm::CONTEXT_REDS;
   return 1;
 }
 
@@ -1969,7 +1969,7 @@ erts_port_task_execute(ErtsRunQueue *runq, Port **curr_port_pp)
 
     case ERTS_PORT_TASK_DIST_CMD:
       reset_handle(ptp);
-      reds = erts_dist_command(pp, CONTEXT_REDS - pp->reds);
+      reds = erts_dist_command(pp, vm::CONTEXT_REDS - pp->reds);
       break;
 
     default:
@@ -2009,7 +2009,7 @@ begin_handle_tasks:
     pp->reds += reds;
     reds = 0;
 
-    if (pp->reds >= CONTEXT_REDS) {
+    if (pp->reds >= vm::CONTEXT_REDS) {
       break;
     }
   }

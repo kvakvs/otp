@@ -75,7 +75,7 @@ static Export *c_to_l_int_trap_exportp = nullptr;
 
 void erts_init_unicode(void)
 {
-  max_loop_limit = CONTEXT_REDS * LOOP_FACTOR;
+  max_loop_limit = vm::CONTEXT_REDS * LOOP_FACTOR;
   /* Non visual BIFs to trap to. */
   erts_init_trap_export(&characters_to_utf8_trap_exp,
                         am_erlang, am_atom_put("characters_to_utf8_trap", 23), 3,
@@ -157,7 +157,7 @@ ssize_t erts_unicode_set_loop_limit(ssize_t limit)
   ssize_t save = (ssize_t) max_loop_limit;
 
   if (limit <= 0) {
-    max_loop_limit = CONTEXT_REDS * LOOP_FACTOR;
+    max_loop_limit = vm::CONTEXT_REDS * LOOP_FACTOR;
   } else {
     max_loop_limit = (size_t) limit;
   }

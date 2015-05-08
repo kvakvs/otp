@@ -6424,7 +6424,7 @@ error2:
   arity = 0;
 
   while (is_list(tmp)) {
-    if (arity < (MAX_REG - 1)) {
+    if (arity < (vm::MAX_REG - 1)) {
       reg[arity++] = CAR(list_val(tmp));
       tmp = CDR(list_val(tmp));
     } else {
@@ -6561,7 +6561,7 @@ error2:
   tmp = args;
 
   while (is_list(tmp)) {
-    if (arity < MAX_REG) {
+    if (arity < vm::MAX_REG) {
       tmp = CDR(list_val(tmp));
       arity++;
     } else {
@@ -6822,7 +6822,7 @@ apply_fun(Process *p, Eterm fun, Eterm args, Eterm *reg)
   arity = 0;
 
   while (is_list(tmp)) {
-    if (arity < MAX_REG - 1) {
+    if (arity < vm::MAX_REG - 1) {
       reg[arity++] = CAR(list_val(tmp));
       tmp = CDR(list_val(tmp));
     } else {

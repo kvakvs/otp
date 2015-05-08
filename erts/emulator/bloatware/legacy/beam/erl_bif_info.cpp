@@ -2840,7 +2840,7 @@ bld_instruction_counts:
     erts_mtrace_stop();
     BIF_RET(am_true);
   } else if (ERTS_IS_ATOM_STR("context_reductions", BIF_ARG_1)) {
-    BIF_RET(make_small(CONTEXT_REDS));
+    BIF_RET(make_small(vm::CONTEXT_REDS));
   } else if (ERTS_IS_ATOM_STR("kernel_poll", BIF_ARG_1)) {
 #ifdef ERTS_ENABLE_KERNEL_POLL
     BIF_RET(erts_use_kernel_poll ? am_true : am_false);
@@ -3979,11 +3979,11 @@ BIF_RETTYPE erts_debug_set_internal_state_2(BIF_ALIST_2)
       ssize_t reds;
 
       if (term_to_Sint(BIF_ARG_2, &reds) != 0) {
-        if (0 <= reds && reds <= CONTEXT_REDS) {
+        if (0 <= reds && reds <= vm::CONTEXT_REDS) {
           if (!ERTS_PROC_GET_SAVED_CALLS_BUF(BIF_P)) {
             BIF_P->fcalls = reds;
           } else {
-            BIF_P->fcalls = reds - CONTEXT_REDS;
+            BIF_P->fcalls = reds - vm::CONTEXT_REDS;
           }
         }
 

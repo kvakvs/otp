@@ -11,6 +11,13 @@ namespace vm {
 
   const bool IS_FORCE_HEAP_FRAGS = false;
 
+  // Swap process out after this number
+  const size_t CONTEXT_REDS = 2000;
+  // Max number of arguments allowed
+  const size_t MAX_ARG = 255;
+  // Max number of x(N) registers used
+  const size_t MAX_REG = 1024;
+
   // Allocate heap memory, first on the ordinary heap;
   // failing that, in a heap fragment.
   inline Eterm *heap_alloc(Process *p, size_t sz, size_t xtra) {

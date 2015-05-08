@@ -76,7 +76,7 @@ void erts_init_bif_re(void)
   erts_pcre_stack_malloc = &erts_erts_pcre_stack_malloc;
   erts_pcre_stack_free = &erts_erts_pcre_stack_free;
   default_table = nullptr; /* ISO8859-1 default, forced into pcre */
-  max_loop_limit = CONTEXT_REDS * LOOP_FACTOR;
+  max_loop_limit = vm::CONTEXT_REDS * LOOP_FACTOR;
 
   erts_init_trap_export(&re_exec_trap_export, am_erlang, am_re_run_trap, 3,
                         &re_exec_trap);
@@ -93,7 +93,7 @@ ssize_t erts_re_set_loop_limit(ssize_t limit)
   ssize_t save = (ssize_t) max_loop_limit;
 
   if (limit <= 0) {
-    max_loop_limit = CONTEXT_REDS * LOOP_FACTOR;
+    max_loop_limit = vm::CONTEXT_REDS * LOOP_FACTOR;
   } else {
     max_loop_limit = (size_t) limit;
   }

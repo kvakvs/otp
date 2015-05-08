@@ -40,13 +40,13 @@ extern Export *erts_format_cpu_topology_trap;
      ? 0          \
      : (!ERTS_PROC_GET_SAVED_CALLS_BUF((p)) \
   ? (p)->fcalls == 0      \
-  : ((p)->fcalls == -CONTEXT_REDS)))
+  : ((p)->fcalls == -vm::CONTEXT_REDS)))
 
 #define BUMP_ALL_REDS(p) do {     \
     if (!ERTS_PROC_GET_SAVED_CALLS_BUF((p)))  \
   (p)->fcalls = 0;      \
     else          \
-  (p)->fcalls = -CONTEXT_REDS;    \
+  (p)->fcalls = -vm::CONTEXT_REDS;    \
 } while(0)
 
 
@@ -58,10 +58,10 @@ do {                  \
   (p)->fcalls = 0;            \
     }                 \
     else {                \
-  if ((p)->fcalls > -CONTEXT_REDS)        \
+  if ((p)->fcalls > -vm::CONTEXT_REDS)        \
       ERTS_PROC_GET_SCHDATA((p))->virtual_reds      \
-    += ((p)->fcalls - (-CONTEXT_REDS));     \
-  (p)->fcalls = -CONTEXT_REDS;          \
+    += ((p)->fcalls - (-vm::CONTEXT_REDS));     \
+  (p)->fcalls = -vm::CONTEXT_REDS;          \
     }                 \
 } while(0)
 
@@ -72,8 +72,8 @@ do {                  \
      if ((p)->fcalls < 0) {          \
   if (!ERTS_PROC_GET_SAVED_CALLS_BUF((p)))   \
            (p)->fcalls = 0;          \
-  else if ((p)->fcalls < -CONTEXT_REDS)      \
-           (p)->fcalls = -CONTEXT_REDS;      \
+  else if ((p)->fcalls < -vm::CONTEXT_REDS)      \
+           (p)->fcalls = -vm::CONTEXT_REDS;      \
      }               \
 } while(0)
 
@@ -92,22 +92,22 @@ do {                  \
   }               \
     }                 \
     else {                \
-  if ((p)->fcalls >= reds - CONTEXT_REDS) {     \
+  if ((p)->fcalls >= reds - vm::CONTEXT_REDS) {     \
       (p)->fcalls -= reds;          \
       ERTS_PROC_GET_SCHDATA((p))->virtual_reds += reds;   \
   }               \
   else {                \
-      if ((p)->fcalls > -CONTEXT_REDS)        \
+      if ((p)->fcalls > -vm::CONTEXT_REDS)        \
     ERTS_PROC_GET_SCHDATA((p))->virtual_reds    \
-        += (p)->fcalls - (-CONTEXT_REDS);     \
-      (p)->fcalls = -CONTEXT_REDS;        \
+        += (p)->fcalls - (-vm::CONTEXT_REDS);     \
+      (p)->fcalls = -vm::CONTEXT_REDS;        \
   }               \
     }                 \
 } while(0)
 
 #define ERTS_BIF_REDS_LEFT(p)           \
   (ERTS_PROC_GET_SAVED_CALLS_BUF((p))         \
-   ? ((p)->fcalls > -CONTEXT_REDS ? ((p)->fcalls - (-CONTEXT_REDS)) : 0)\
+   ? ((p)->fcalls > -vm::CONTEXT_REDS ? ((p)->fcalls - (-vm::CONTEXT_REDS)) : 0)\
    : ((p)->fcalls > 0 ? (p)->fcalls : 0))
 
 #define BIF_RET2(x, gc) do {      \

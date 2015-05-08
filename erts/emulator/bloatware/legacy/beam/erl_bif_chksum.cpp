@@ -356,7 +356,7 @@ static void md5_wrap(void *vsum, uint8_t *buf, unsigned buflen)
 }
 
 #define BYTES_PER_REDUCTION 10
-#define CHUNK_PER_SCHEDULE (BYTES_PER_REDUCTION * CONTEXT_REDS)
+#define CHUNK_PER_SCHEDULE (BYTES_PER_REDUCTION * vm::CONTEXT_REDS)
 
 BIF_RETTYPE
 crc32_1(BIF_ALIST_1)

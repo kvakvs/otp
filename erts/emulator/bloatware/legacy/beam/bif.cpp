@@ -1681,7 +1681,7 @@ static BIF_RETTYPE process_flag_aux(Process *BIF_P,
     /* Make sure the process in question is rescheduled
     immediately, if it's us, so the call saving takes effect. */
     if (rp == BIF_P) {
-      BIF_RET2(old_value, CONTEXT_REDS);
+      BIF_RET2(old_value, vm::CONTEXT_REDS);
     } else {
       BIF_RET(old_value);
     }
@@ -5276,8 +5276,8 @@ BIF_RETTYPE bump_reductions_1(BIF_ALIST_1)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  if (reds > CONTEXT_REDS) {
-    reds = CONTEXT_REDS;
+  if (reds > vm::CONTEXT_REDS) {
+    reds = vm::CONTEXT_REDS;
   }
 
   BIF_RET2(am_true, reds);

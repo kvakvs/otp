@@ -37,9 +37,9 @@
 #define EMULATOR "BEAM"
 #define SEQ_TRACE 1
 
-#define CONTEXT_REDS 2000 /* Swap process out after this number */
-#define MAX_ARG 255         /* Max number of arguments allowed */
-#define MAX_REG 1024            /* Max number of x(N) registers used */
+//#define CONTEXT_REDS 2000 /* Swap process out after this number */
+//#define MAX_ARG 255         /* Max number of arguments allowed */
+//#define MAX_REG 1024            /* Max number of x(N) registers used */
 
 /* Scheduler stores data for temporary heaps if
    !HEAP_ON_C_STACK. Macros (*TmpHeap*) in global.h selects if we put temporary
@@ -53,9 +53,9 @@
  * The new arithmetic operations need some extra X registers in the register array.
  * so does the gc_bif's (i_gc_bif3 need 3 extra).
  */
-#define ERTS_X_REGS_ALLOCATED (MAX_REG+3)
+#define ERTS_X_REGS_ALLOCATED (vm::MAX_REG+3)
 
-#define INPUT_REDUCTIONS (2 * CONTEXT_REDS)
+#define INPUT_REDUCTIONS (2 * vm::CONTEXT_REDS)
 
 //#define H_DEFAULT_SIZE  233        /* default (heap + stack) min size */
 //#define VH_DEFAULT_SIZE  32768     /* default virtual (bin) heap min size (words) */
@@ -92,31 +92,6 @@
 #else
 #  define IS_FORCE_HEAP_FRAGS 0
 #endif
-#endif //0
-
-#if 0
-/*
- * Allocate heap memory, first on the ordinary heap;
- * failing that, in a heap fragment.
- */
-#define HAllocX(p, sz, xtra)                                  \
-  (ASSERT((sz) >= 0),                       \
-     ErtsHAllocLockCheck(p),                \
-     (IS_FORCE_HEAP_FRAGS || (((HEAP_LIMIT(p) - HEAP_TOP(p)) < (sz))) \
-      ? erts_heap_alloc((p),(sz),(xtra))                              \
-      : (INIT_HEAP_MEM(p,sz),                                 \
-         HEAP_TOP(p) = HEAP_TOP(p) + (sz), HEAP_TOP(p) - (sz))))
-
-#define HAlloc(P, SZ) HAllocX(P,SZ,0)
-
-#define HRelease(p, endp, ptr)          \
-  if ((ptr) == (endp)) {          \
-     ;                \
-  } else if (HEAP_START(p) <= (ptr) && (ptr) < HEAP_TOP(p)) { \
-     HEAP_TOP(p) = (ptr);         \
-  } else {              \
-     erts_heap_frag_shrink(p, ptr);         \
-  }
 #endif //0
 
 #define HeapWordsLeft(p) (HEAP_LIMIT(p) - HEAP_TOP(p))

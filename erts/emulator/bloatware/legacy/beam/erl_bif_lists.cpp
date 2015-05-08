@@ -205,7 +205,7 @@ BIF_RETTYPE lists_member_2(BIF_ALIST_2)
   Eterm list;
   Eterm item;
   int non_immed_key;
-  int max_iter = 10 * CONTEXT_REDS;
+  int max_iter = 10 * vm::CONTEXT_REDS;
 
   if (is_nil(BIF_ARG_2)) {
     BIF_RET(am_false);
@@ -226,7 +226,7 @@ BIF_RETTYPE lists_member_2(BIF_ALIST_2)
     item = CAR(list_val(list));
 
     if ((item == term) || (non_immed_key && eq(item, term))) {
-      BIF_RET2(am_true, CONTEXT_REDS - max_iter / 10);
+      BIF_RET2(am_true, vm::CONTEXT_REDS - max_iter / 10);
     }
 
     list = CDR(list_val(list));
@@ -236,7 +236,7 @@ BIF_RETTYPE lists_member_2(BIF_ALIST_2)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  BIF_RET2(am_false, CONTEXT_REDS - max_iter / 10);
+  BIF_RET2(am_false, vm::CONTEXT_REDS - max_iter / 10);
 }
 
 BIF_RETTYPE lists_reverse_2(BIF_ALIST_2)
@@ -283,7 +283,7 @@ error:
   /*
    * Calculate length of remaining list (up to a suitable limit).
    */
-  max_iter = CONTEXT_REDS * 40;
+  max_iter = vm::CONTEXT_REDS * 40;
   n = 0;
   tmp_list = list;
 
@@ -358,7 +358,7 @@ lists_keyfind_3(BIF_ALIST_3)
 static Eterm
 keyfind(int Bif, Process *p, Eterm Key, Eterm Pos, Eterm List)
 {
-  int max_iter = 10 * CONTEXT_REDS;
+  int max_iter = 10 * vm::CONTEXT_REDS;
   ssize_t pos;
   Eterm term;
 

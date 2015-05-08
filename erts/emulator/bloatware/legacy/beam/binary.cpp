@@ -895,7 +895,7 @@ BIF_RETTYPE erts_list_to_binary_bif(Process *c_p, Eterm arg, Export *bif)
         bin = new_binary(c_p, (uint8_t *) nullptr, size);
         buf = (char *) binary_bytes(bin);
 
-        if (size < ERTS_IOLIST_TO_BUF_BYTES_PER_RED * CONTEXT_REDS) {
+        if (size < ERTS_IOLIST_TO_BUF_BYTES_PER_RED * vm::CONTEXT_REDS) {
           /* An (over) estimation of reductions  needed */
           int reds_left = state.buf.iolist.reds_left;
           int to_buf_reds = orig_reds_left - reds_left;
@@ -1021,7 +1021,7 @@ BIF_RETTYPE list_to_bitstring_1(BIF_ALIST_1)
         state.buf.len = size;
         state.buf.iolist.obj = BIF_ARG_1;
 
-        if (size < ERTS_IOLIST_TO_BUF_BYTES_PER_RED * CONTEXT_REDS) {
+        if (size < ERTS_IOLIST_TO_BUF_BYTES_PER_RED * vm::CONTEXT_REDS) {
           /* An (over) estimation of reductions needed */
           int reds_left = state.buf.iolist.reds_left;
           int to_buf_reds = orig_reds_left - reds_left;

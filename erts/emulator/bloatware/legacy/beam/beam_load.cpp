@@ -1342,7 +1342,7 @@ load_import_table(LoaderState *stp)
     func = stp->import[i].function = stp->atom[n];
     GetInt(stp, 4, arity);
 
-    if (arity > MAX_REG) {
+    if (arity > vm::MAX_REG) {
       LoadError2(stp, "import entry %d: invalid arity %d", i, arity);
     }
 
@@ -1399,7 +1399,7 @@ read_export_table(LoaderState *stp)
     stp->export_[i].function = func;
     GetInt(stp, 4, arity);
 
-    if (arity > MAX_REG) {
+    if (arity > vm::MAX_REG) {
       LoadError2(stp, "export_ table entry %d: absurdly high arity %d", i, arity);
     }
 
@@ -1504,7 +1504,7 @@ read_lambda_table(LoaderState *stp)
     GetAtom(stp, n, stp->lambdas[i].function);
     GetInt(stp, 4, arity);
 
-    if (arity > MAX_REG) {
+    if (arity > vm::MAX_REG) {
       LoadError2(stp, "lambda entry %d: absurdly high arity %d", i, arity);
     }
 
@@ -1920,7 +1920,7 @@ get_next_instr:
       case TAG_x:
         if (last_op->a[arg].val == 0) {
           last_op->a[arg].type = TAG_r;
-        } else if (last_op->a[arg].val >= MAX_REG) {
+        } else if (last_op->a[arg].val >= vm::MAX_REG) {
           LoadError1(stp, "invalid x register number: %u",
                      last_op->a[arg].val);
         }
@@ -1928,7 +1928,7 @@ get_next_instr:
         break;
 
       case TAG_y:
-        if (last_op->a[arg].val >= MAX_REG) {
+        if (last_op->a[arg].val >= vm::MAX_REG) {
           LoadError1(stp, "invalid y register number: %u",
                      last_op->a[arg].val);
         }
@@ -2611,7 +2611,7 @@ do_transform:
       stp->labels[last_label].patches = offset;
       function_number++;
 
-      if (stp->arity > MAX_ARG) {
+      if (stp->arity > vm::MAX_ARG) {
         LoadError1(stp, "too many arguments: %d", stp->arity);
       }
 
@@ -5041,7 +5041,7 @@ restart:
 
       if (i >= st->num_imports || st->import[i].module != mod ||
           st->import[i].function != func ||
-          (arity < MAX_ARG && st->import[i].arity != arity)) {
+          (arity < vm::MAX_ARG && st->import[i].arity != arity)) {
         goto restart;
       }
     }
@@ -6145,7 +6145,7 @@ stub_read_export_table(LoaderState *stp)
     GetAtom(stp, n, stp->export_[i].function);
     GetInt(stp, 4, n);
 
-    if (n > MAX_REG) {
+    if (n > vm::MAX_REG) {
       LoadError2(stp, "export_ table entry %d: absurdly high arity %d", i, n);
     }
 

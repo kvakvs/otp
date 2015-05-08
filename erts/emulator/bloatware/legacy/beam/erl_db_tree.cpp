@@ -896,7 +896,7 @@ static BIF_RETTYPE ets_select_reverse(BIF_ALIST_3)
   Eterm *hp;
   Eterm *hend;
 
-  int max_iter = CONTEXT_REDS * 10;
+  int max_iter = vm::CONTEXT_REDS * 10;
 
   if (is_nil(a1)) {
     hp = vm::heap_alloc(p, 3);
@@ -934,7 +934,7 @@ error:
   }
 
   vm::heap_free(p, hend, hp);
-  BUMP_REDS(p, CONTEXT_REDS - max_iter / 10);
+  BUMP_REDS(p, vm::CONTEXT_REDS - max_iter / 10);
   hp = vm::heap_alloc(p, 3);
   BIF_RET(TUPLE2(hp, result, a3));
 }

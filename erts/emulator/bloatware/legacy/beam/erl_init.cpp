@@ -214,16 +214,16 @@ int erts_no_line_info = 0;  /* -L: Don't load line information */
  */
 
 ErtsModifiedTimings erts_modified_timings[] = {
-  /* 0 */ {make_small(0), CONTEXT_REDS, INPUT_REDUCTIONS},
-  /* 1 */ {make_small(0), 2 * CONTEXT_REDS, 2 * INPUT_REDUCTIONS},
-  /* 2 */ {make_small(0), CONTEXT_REDS / 2, INPUT_REDUCTIONS / 2},
-  /* 3 */ {make_small(0), 3 * CONTEXT_REDS, 3 * INPUT_REDUCTIONS},
-  /* 4 */ {make_small(0), CONTEXT_REDS / 3, 3 * INPUT_REDUCTIONS},
-  /* 5 */ {make_small(0), 4 * CONTEXT_REDS, INPUT_REDUCTIONS / 2},
-  /* 6 */ {make_small(1), CONTEXT_REDS / 4, 2 * INPUT_REDUCTIONS},
-  /* 7 */ {make_small(1), 5 * CONTEXT_REDS, INPUT_REDUCTIONS / 3},
-  /* 8 */ {make_small(10), CONTEXT_REDS / 5, 3 * INPUT_REDUCTIONS},
-  /* 9 */ {make_small(10), 6 * CONTEXT_REDS, INPUT_REDUCTIONS / 4}
+  /* 0 */ {make_small(0), vm::CONTEXT_REDS, INPUT_REDUCTIONS},
+  /* 1 */ {make_small(0), 2 * vm::CONTEXT_REDS, 2 * INPUT_REDUCTIONS},
+  /* 2 */ {make_small(0), vm::CONTEXT_REDS / 2, INPUT_REDUCTIONS / 2},
+  /* 3 */ {make_small(0), 3 * vm::CONTEXT_REDS, 3 * INPUT_REDUCTIONS},
+  /* 4 */ {make_small(0), vm::CONTEXT_REDS / 3, 3 * INPUT_REDUCTIONS},
+  /* 5 */ {make_small(0), 4 * vm::CONTEXT_REDS, INPUT_REDUCTIONS / 2},
+  /* 6 */ {make_small(1), vm::CONTEXT_REDS / 4, 2 * INPUT_REDUCTIONS},
+  /* 7 */ {make_small(1), 5 * vm::CONTEXT_REDS, INPUT_REDUCTIONS / 3},
+  /* 8 */ {make_small(10), vm::CONTEXT_REDS / 5, 3 * INPUT_REDUCTIONS},
+  /* 9 */ {make_small(10), 6 * vm::CONTEXT_REDS, INPUT_REDUCTIONS / 4}
 };
 
 #define ERTS_MODIFIED_TIMING_LEVELS \

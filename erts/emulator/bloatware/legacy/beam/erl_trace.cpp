@@ -1704,7 +1704,7 @@ erts_call_trace(Process *p, BeamInstr mfa[3], Binary *match_spec,
 #ifdef ERTS_SMP
   Eterm tracee;
 #endif
-  Eterm transformed_args[MAX_ARG];
+  Eterm transformed_args[vm::MAX_ARG];
   DeclareTypedTmpHeap(ErlSubBin, sub_bin_heap, p);
 
   ASSERT(tracer_pid);
@@ -1797,7 +1797,7 @@ erts_call_trace(Process *p, BeamInstr mfa[3], Binary *match_spec,
 
   if (is_internal_port(*tracer_pid)) {
 #if HEAP_ON_C_STACK
-    Eterm local_heap[64 + MAX_ARG];
+    Eterm local_heap[64 + vm::MAX_ARG];
 #else
     Eterm *local_heap = erts_alloc(ERTS_ALC_T_TEMP_TERM,
                                    sizeof(Eterm) * (64 + MAX_ARG));
@@ -1954,7 +1954,7 @@ erts_call_trace(Process *p, BeamInstr mfa[3], Binary *match_spec,
     Eterm tpid;
 #endif
     unsigned size;
-    unsigned sizes[MAX_ARG];
+    unsigned sizes[vm::MAX_ARG];
     unsigned pam_result_size = 0;
     int invalid_tracer;
 #ifdef DEBUG

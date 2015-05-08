@@ -3057,7 +3057,7 @@ error:
   }
 
   for (lst = BIF_ARG_1; is_list(lst); lst = CDR(list_val(lst))) {
-    if (++i > CONTEXT_REDS) {
+    if (++i > vm::CONTEXT_REDS) {
       BUMP_ALL_REDS(BIF_P);
       BIF_TRAP3(bif_export[BIF_ets_match_spec_run_r_3],
                 BIF_P, lst, BIF_ARG_2, ret);

@@ -2225,7 +2225,7 @@ return_normal:
                          left;
       Binary *result_bin;
       ProcBin *pb;
-      size_t max = (ERTS_BIF_REDS_LEFT(p) *  TERM_TO_BINARY_COMPRESS_CHUNK) / CONTEXT_REDS;
+      size_t max = (ERTS_BIF_REDS_LEFT(p) *  TERM_TO_BINARY_COMPRESS_CHUNK) / vm::CONTEXT_REDS;
 
       if (max < this_time) {
         this_time = max + 1; /* do not set this_time to 0 */
@@ -2266,7 +2266,7 @@ return_normal:
         erts_bin_free(context->s.cc.result_bin);
         context->s.cc.result_bin = nullptr;
         context->alive = 0;
-        BUMP_REDS(p, (this_time * CONTEXT_REDS) / TERM_TO_BINARY_COMPRESS_CHUNK);
+        BUMP_REDS(p, (this_time * vm::CONTEXT_REDS) / TERM_TO_BINARY_COMPRESS_CHUNK);
 
         if (context_b && erts_refc_read(&context_b->refc, 0) == 0) {
           erts_bin_free(context_b);
@@ -2294,7 +2294,7 @@ no_use_compressing:
         erts_bin_free(context->s.cc.destination_bin);
         context->s.cc.destination_bin = nullptr;
         context->alive = 0;
-        BUMP_REDS(p, (this_time * CONTEXT_REDS) / TERM_TO_BINARY_COMPRESS_CHUNK);
+        BUMP_REDS(p, (this_time * vm::CONTEXT_REDS) / TERM_TO_BINARY_COMPRESS_CHUNK);
 
         if (context_b && erts_refc_read(&context_b->refc, 0) == 0) {
           erts_bin_free(context_b);
@@ -4923,7 +4923,7 @@ init_done:
         num_free = get_int32(ep);
         ep += 4;
 
-        if (num_free > MAX_ARG) {
+        if (num_free > vm::MAX_ARG) {
           goto error;
         }
 

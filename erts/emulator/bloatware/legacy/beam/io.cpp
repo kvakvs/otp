@@ -1390,7 +1390,7 @@ try_imm_drv_call(ErtsTryImmDrvCallState *sp)
   sp->sched_flags = act;
 
   if (!c_p) {
-    reds_left_in = CONTEXT_REDS / 10;
+    reds_left_in = vm::CONTEXT_REDS / 10;
   } else {
     if (IS_TRACED_FL(c_p, F_TRACE_SCHED_PROCS)) {
       trace_virtual_sched(c_p, am_out);
@@ -1412,9 +1412,9 @@ try_imm_drv_call(ErtsTryImmDrvCallState *sp)
     erts_smp_proc_unlock(c_p, ERTS_PROC_LOCK_MAIN);
   }
 
-  ASSERT(0 <= reds_left_in && reds_left_in <= CONTEXT_REDS);
+  ASSERT(0 <= reds_left_in && reds_left_in <= vm::CONTEXT_REDS);
   sp->reds_left_in = reds_left_in;
-  prt->reds = CONTEXT_REDS - reds_left_in;
+  prt->reds = vm::CONTEXT_REDS - reds_left_in;
 
   ERTS_SMP_CHK_NO_PROC_LOCKS;
 
@@ -1484,8 +1484,8 @@ finalize_imm_drv_call(ErtsTryImmDrvCallState *sp)
   if (c_p) {
     erts_smp_proc_lock(c_p, ERTS_PROC_LOCK_MAIN);
 
-    if (reds != (CONTEXT_REDS - sp->reds_left_in)) {
-      int bump_reds = reds - (CONTEXT_REDS - sp->reds_left_in);
+    if (reds != (vm::CONTEXT_REDS - sp->reds_left_in)) {
+      int bump_reds = reds - (vm::CONTEXT_REDS - sp->reds_left_in);
       ASSERT(bump_reds > 0);
       BUMP_REDS(c_p, bump_reds);
     }

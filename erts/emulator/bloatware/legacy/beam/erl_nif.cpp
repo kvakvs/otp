@@ -1702,8 +1702,8 @@ int enif_consume_timeslice(ErlNifEnv *env, int percent)
     percent = 100;
   }
 
-  reds = ((CONTEXT_REDS + 99) / 100) * percent;
-  ASSERT(reds > 0 && reds <= CONTEXT_REDS);
+  reds = ((vm::CONTEXT_REDS + 99) / 100) * percent;
+  ASSERT(reds > 0 && reds <= vm::CONTEXT_REDS);
   BUMP_REDS(env->proc, reds);
   return ERTS_BIF_REDS_LEFT(env->proc) == 0;
 }
@@ -2081,7 +2081,7 @@ enif_schedule_nif(ErlNifEnv *env, const char *fun_name, int flags,
   ERL_NIF_TERM fun_name_atom, result;
   int need_save;
 
-  if (argc > MAX_ARG) {
+  if (argc > vm::MAX_ARG) {
     return enif_make_badarg(env);
   }
 
