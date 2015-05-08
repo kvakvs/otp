@@ -84,7 +84,7 @@ void erts_sched_bind_atthrcreate_parent(int unbind);
 
 int erts_sched_bind_atfork_prepare(void);
 int erts_sched_bind_atfork_child(int unbind);
-char *erts_sched_bind_atvfork_child(int unbind);
+const char *erts_sched_bind_atvfork_child(int unbind);
 void erts_sched_bind_atfork_parent(int unbind);
 
 Eterm erts_fake_scheduler_bindings(Process *p, Eterm how);

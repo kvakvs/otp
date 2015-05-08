@@ -1730,7 +1730,7 @@ child_error:
 
     cs_argv[CS_ARGV_PROGNAME_IX] = child_setup_prog;
     cs_argv[CS_ARGV_WD_IX] = (char *)(opts->wd ? opts->wd : ".");
-    cs_argv[CS_ARGV_UNBIND_IX] = erts_sched_bind_atvfork_child(unbind);
+    cs_argv[CS_ARGV_UNBIND_IX] = const_cast<char *>(erts_sched_bind_atvfork_child(unbind));
     cs_argv[CS_ARGV_FD_CR_IX] = fd_close_range;
 
     for (i = 0; i < CS_ARGV_NO_OF_DUP2_OPS; i++) {
@@ -1747,7 +1747,7 @@ child_error:
       }
 
       cs_argv = erts::realloc<char *>(ERTS_ALC_T_TMP, cs_argv, (CS_ARGV_NO_OF_ARGS + 1 + num + 1));
-      cs_argv[CS_ARGV_CMD_IX] = "-";
+      cs_argv[CS_ARGV_CMD_IX] = const_cast<char *>("-");
       cs_argv[CS_ARGV_NO_OF_ARGS] = cmd_line;
 
       if (opts->argv != nullptr) {
@@ -2608,12 +2608,12 @@ void sys_get_pid(char *buffer, size_t buffer_size)
 }
 
 int
-erts_sys_putenv_raw(char *key, char *value)
+erts_sys_putenv_raw(const char *key, char *value)
 {
   return erts_sys_putenv(key, value);
 }
 int
-erts_sys_putenv(char *key, char *value)
+erts_sys_putenv(const char *key, char *value)
 {
   int res;
   char *env;
@@ -2638,7 +2638,7 @@ erts_sys_putenv(char *key, char *value)
 }
 
 int
-erts_sys_getenv__(char *key, char *value, size_t *size)
+erts_sys_getenv__(const char *key, char *value, size_t *size)
 {
   int res;
   char *orig_value = getenv(key);
@@ -2662,7 +2662,7 @@ erts_sys_getenv__(char *key, char *value, size_t *size)
 }
 
 int
-erts_sys_getenv_raw(char *key, char *value, size_t *size)
+erts_sys_getenv_raw(const char *key, char *value, size_t *size)
 {
   return erts_sys_getenv(key, value, size);
 }
@@ -2677,7 +2677,7 @@ erts_sys_getenv_raw(char *key, char *value, size_t *size)
  */
 
 int
-erts_sys_getenv(char *key, char *value, size_t *size)
+erts_sys_getenv(const char *key, char *value, size_t *size)
 {
   int res;
   erts_smp_rwmtx_rlock(&environ_rwmtx);
@@ -2687,7 +2687,7 @@ erts_sys_getenv(char *key, char *value, size_t *size)
 }
 
 int
-erts_sys_unsetenv(char *key)
+erts_sys_unsetenv(const char *key)
 {
   int res;
   erts_smp_rwmtx_rwlock(&environ_rwmtx);

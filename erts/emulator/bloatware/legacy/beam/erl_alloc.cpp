@@ -215,8 +215,8 @@ typedef struct {
   struct {
     int stat;
     int map;
-    char *mtrace;
-    char *nodename;
+    const char *mtrace;
+    const char *nodename;
   } instr;
   struct au_init sl_alloc;
   struct au_init std_alloc;
@@ -1151,7 +1151,7 @@ static void bad_param(char *param_start, char *param_end)
   erts_usage();
 }
 
-static void bad_value(char *param_start, char *param_end, char *value)
+static void bad_value(const char *param_start, const char *param_end, const char *value)
 {
   size_t len = param_end - param_start;
   char param[100];
@@ -1168,8 +1168,8 @@ static void bad_value(char *param_start, char *param_end, char *value)
 
 /* Get arg marks argument as handled by
    putting nullptr in argv */
-static char *
-get_value(char *rest, char **argv, int *ip)
+static const char *
+get_value(const char *rest, char **argv, int *ip)
 {
   char *param = argv[*ip] + 1;
   argv[*ip] = nullptr;
@@ -1208,7 +1208,7 @@ static int
 get_bool_value(char *param_end, char **argv, int *ip)
 {
   char *param = argv[*ip] + 1;
-  char *value = get_value(param_end, argv, ip);
+  const char *value = get_value(param_end, argv, ip);
 
   if (strcmp(value, "true") == 0) {
     return 1;
@@ -1228,7 +1228,7 @@ get_kb_value(char *param_end, char **argv, int *ip)
   size_t max = ((~((size_t) 0)) / 1024) + 1;
   char *rest;
   char *param = argv[*ip] + 1;
-  char *value = get_value(param_end, argv, ip);
+  const char *value = get_value(param_end, argv, ip);
   errno = 0;
   tmp = (ssize_t) ErtsStrToSint(value, &rest, 10);
 
@@ -1250,7 +1250,7 @@ get_mb_value(char *param_end, char **argv, int *ip)
   UWord max = ((~((UWord) 0)) / (1024 * 1024)) + 1;
   char *rest;
   char *param = argv[*ip] + 1;
-  char *value = get_value(param_end, argv, ip);
+  const char *value = get_value(param_end, argv, ip);
   errno = 0;
   tmp = (SWord) ErtsStrToSint(value, &rest, 10);
 
@@ -1291,7 +1291,7 @@ get_amount_value(char *param_end, char **argv, int *ip)
   ssize_t tmp;
   char *rest;
   char *param = argv[*ip] + 1;
-  char *value = get_value(param_end, argv, ip);
+  const char *value = get_value(param_end, argv, ip);
   errno = 0;
   tmp = (ssize_t) ErtsStrToSint(value, &rest, 10);
 
@@ -1308,7 +1308,7 @@ get_acul_value(struct au_init *auip, char *param_end, char **argv, int *ip)
   ssize_t tmp;
   char *rest;
   char *param = argv[*ip] + 1;
-  char *value = get_value(param_end, argv, ip);
+  const char *value = get_value(param_end, argv, ip);
 
   if (sys_strcmp(value, "de") == 0) {
     switch (auip->init.util.alloc_no) {
@@ -1362,7 +1362,7 @@ handle_au_arg(struct au_init *auip,
     } else if (has_prefix("asbcst", sub_param)) {
       auip->init.util.asbcst = get_kb_value(sub_param + 6, argv, ip);
     } else if (has_prefix("as", sub_param)) {
-      char *alg = get_value(sub_param + 2, argv, ip);
+      const char *alg = get_value(sub_param + 2, argv, ip);
 
       if (strcmp("bf", alg) == 0) {
         auip->atype = BESTFIT;
@@ -1509,7 +1509,7 @@ handle_args(int *argc, char **argv, erts_alc_hndl_args_init_t *init)
     &init->temp_alloc
   };
   int aui_sz = (int) sizeof(aui) / sizeof(aui[0]);
-  char *arg;
+  const char *arg;
   char *rest;
   int i, j;
 
@@ -1990,7 +1990,7 @@ erts_alc_fatal_error(int error, int func, ErtsAlcType_t n, ...)
 {
   char buf[10];
   char *t_str;
-  char *allctr_str;
+  const char *allctr_str;
 
   ASSERT(n >= ERTS_ALC_N_MIN);
   ASSERT(n <= ERTS_ALC_N_MAX);
@@ -2017,7 +2017,7 @@ erts_alc_fatal_error(int error, int func, ErtsAlcType_t n, ...)
 
   switch (error) {
   case ERTS_ALC_E_NOTSUP: {
-    char *op_str;
+    const char *op_str;
 
     switch (func) {
     case ERTS_ALC_O_ALLOC:

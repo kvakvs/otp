@@ -957,7 +957,7 @@ erts_sched_bind_atfork_child(int unbind)
   return 0;
 }
 
-char *
+const char *
 erts_sched_bind_atvfork_child(int unbind)
 {
   if (unbind) {

@@ -4321,7 +4321,7 @@ sys_realloc_success:
 
     static Eterm fix_type_atoms[ERTS_ALC_NO_FIXED_SIZES];
 
-    static ERTS_INLINE void atom_init(Eterm *atom, char *name)
+    static ERTS_INLINE void atom_init(Eterm *atom, const char *name)
     {
       *atom = am_atom_put(name, strlen(name));
     }
@@ -4866,7 +4866,7 @@ sys_realloc_success:
 #define PRINT_CC_5(TO, TOA, PRFX, NAME, CC)       \
   erts_print(TO, TOA, "%s%s calls: %b64u\n",PRFX,NAME,CC)
 
-        char *prefix = allctr->name_prefix;
+        const char *prefix = allctr->name_prefix;
         int to = *print_to_p;
         void *arg = print_to_arg;
 

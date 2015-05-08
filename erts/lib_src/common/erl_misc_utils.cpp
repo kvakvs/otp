@@ -480,7 +480,7 @@ erts_get_cpu_available(erts_cpu_info_t *cpuinfo)
     return cpuinfo->available;
 }
 
-char *
+const char *
 erts_get_unbind_from_cpu_str(erts_cpu_info_t *cpuinfo)
 {
 #if defined(ERTS_HAVE_MISC_UTIL_AFFINITY_MASK__)

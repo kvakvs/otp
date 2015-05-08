@@ -36,7 +36,7 @@ typedef struct {
 } AlcUInit_t;
 
 typedef struct {
-  char *name_prefix;
+  const char *name_prefix;
   ErtsAlcType_t alloc_no;
   int force;
   int ix;
@@ -464,7 +464,7 @@ struct Allctr_t_ {
 #endif
 
   /* Allocator name prefix */
-  char     *name_prefix;
+  const char     *name_prefix;
 
   /* Allocator number */
   ErtsAlcType_t alloc_no;
@@ -480,7 +480,7 @@ struct Allctr_t_ {
   } name;
 
   /* Version string */
-  char     *vsn_str;
+  const char     *vsn_str;
 
   /* Options */
   int     t;
@@ -537,7 +537,7 @@ struct Allctr_t_ {
                                 Block_t *, size_t);
   void (*link_free_block)(Allctr_t *, Block_t *);
   void (*unlink_free_block)(Allctr_t *, Block_t *);
-  Eterm(*info_options)(Allctr_t *, char *, int *,
+  Eterm(*info_options)(Allctr_t *, const char *, int *,
                        void *, size_t **, size_t *);
 
   size_t(*get_next_mbc_size)(Allctr_t *);

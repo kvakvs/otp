@@ -103,7 +103,7 @@ static void   bf_link_free_block(Allctr_t *, Block_t *);
 static ERTS_INLINE void bf_unlink_free_block(Allctr_t *, Block_t *);
 
 
-static Eterm    info_options(Allctr_t *, char *, int *,
+static Eterm    info_options(Allctr_t *, const char *, int *,
                              void *, size_t **, size_t *);
 static void   init_atoms(void);
 
@@ -912,7 +912,7 @@ static struct {
 #endif
 } am;
 
-static void ERTS_INLINE atom_init(Eterm *atom, char *name)
+static void ERTS_INLINE atom_init(Eterm *atom, const char *name)
 {
   *atom = am_atom_put(name, strlen(name));
 }
@@ -964,7 +964,7 @@ add_2tup(size_t **hpp, size_t *szp, Eterm *lp, Eterm el1, Eterm el2)
 
 static Eterm
 info_options(Allctr_t *allctr,
-             char *prefix,
+             const char *prefix,
              int *print_to_p,
              void *print_to_arg,
              size_t **hpp,

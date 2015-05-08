@@ -191,7 +191,7 @@ static void doit_print_monitor(ErtsMonitor *mon, void *vpcontext)
   auto pcontext = (PrintMonitorContext *)vpcontext;
   int to = pcontext->to;
   void *to_arg = pcontext->to_arg;
-  char *prefix = ", ";
+  const char *prefix = ", ";
 
   if (pcontext->is_first) {
     pcontext->is_first = 0;
@@ -762,7 +762,7 @@ erl_crash_dump_v(const char *file, int line, const char *fmt, va_list args)
   char env[21]; /* enough to hold any 64-bit integer */
   size_t dumpnamebufsize = MAXPATHLEN;
   char dumpnamebuf[MAXPATHLEN];
-  char *dumpname;
+  const char *dumpname;
   int secs;
   int env_erl_crash_dump_seconds_set = 1;
 

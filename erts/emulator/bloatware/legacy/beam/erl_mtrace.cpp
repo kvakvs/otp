@@ -591,7 +591,7 @@ void erts_mtrace_pre_init(void)
 {
 }
 
-void erts_mtrace_init(char *receiver, char *nodename)
+void erts_mtrace_init(const char *receiver, const char *nodename)
 {
   char hostname[MAXHOSTNAMELEN];
   char pid[21]; /* enough for a 64 bit number */

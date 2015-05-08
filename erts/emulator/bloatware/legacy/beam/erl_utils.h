@@ -124,7 +124,7 @@ uint32_t make_hash(Eterm);
 //Eterm erts_get_emu_args(struct process *c_p);
 Eterm erts_get_ethread_info(struct process *c_p);
 
-Eterm erts_bld_atom(size_t **hpp, size_t *szp, char *str);
+Eterm erts_bld_atom(size_t **hpp, size_t *szp, const char *str);
 Eterm erts_bld_uint(size_t **hpp, size_t *szp, size_t ui);
 Eterm erts_bld_uword(size_t **hpp, size_t *szp, UWord uw);
 Eterm erts_bld_uint64(size_t **hpp, size_t *szp, uint64_t ui64);

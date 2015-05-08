@@ -398,7 +398,7 @@ erts_putc(int to, void *arg, char c)
 \*                                                                           */
 
 Eterm
-erts_bld_atom(size_t **hpp, size_t *szp, char *str)
+erts_bld_atom(size_t **hpp, size_t *szp, const char *str)
 {
   if (hpp) {
     return erts_atom_put((uint8_t *) str, sys_strlen(str), ERTS_ATOM_ENC_LATIN1, 1);
