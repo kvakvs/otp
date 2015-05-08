@@ -55,7 +55,7 @@ badarith:
 
   a1.fd = (*func)(a1.fd);
   ERTS_FP_ERROR_THOROUGH(p, a1.fd, goto badarith);
-  hp = HAlloc(p, FLOAT_SIZE_OBJECT);
+  hp = vm::heap_alloc(p, FLOAT_SIZE_OBJECT);
   res = make_float(hp);
   PUT_DOUBLE(a1, hp);
   return res;
@@ -102,7 +102,7 @@ badarith:
 
   a1.fd = (*func)(a1.fd, a2.fd);
   ERTS_FP_ERROR_THOROUGH(p, a1.fd, goto badarith);
-  hp = HAlloc(p, FLOAT_SIZE_OBJECT);
+  hp = vm::heap_alloc(p, FLOAT_SIZE_OBJECT);
   res = make_float(hp);
   PUT_DOUBLE(a1, hp);
   return res;

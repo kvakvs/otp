@@ -67,7 +67,7 @@ erts_debug_flat_size_1(BIF_ALIST_1)
   if (IS_USMALL(0, size)) {
     BIF_RET(make_small(size));
   } else {
-    Eterm *hp = HAlloc(p, BIG_UINT_HEAP_SIZE);
+    Eterm *hp = (Eterm *)vm::heap_alloc(p, BIG_UINT_HEAP_SIZE);
     BIF_RET(uint_to_big(size, hp));
   }
 }
@@ -204,7 +204,7 @@ erts_debug_instructions_0(BIF_ALIST_0)
     needed += 2 * strlen(opc[i].name);
   }
 
-  hp = HAlloc(BIF_P, needed);
+  hp = vm::heap_alloc(BIF_P, needed);
 
   for (i = num_instructions - 1; i >= 0; i--) {
     Eterm s = erts_bld_string_n(&hp, 0, opc[i].name, strlen(opc[i].name));
@@ -324,7 +324,7 @@ error:
   erts_destroy_tmp_dsbuf(dsbufp);
   hsz = 4 + 4;
   (void) erts_bld_uword(nullptr, &hsz, (BeamInstr) code_ptr);
-  hp = HAlloc(p, hsz);
+  hp = vm::heap_alloc(p, hsz);
   addr = erts_bld_uword(&hp, nullptr, (BeamInstr) code_ptr);
   ASSERT(is_atom(funcinfo[0]));
   ASSERT(is_atom(funcinfo[1]));

@@ -3542,7 +3542,7 @@ store_external_or_ref_in_proc_(Process *proc, Eterm ns)
 
   sz = NC_HEAP_SIZE(ns);
   ASSERT(sz > 0);
-  hp = HAlloc(proc, sz);
+  hp = vm::heap_alloc(proc, sz);
   return store_external_or_ref_(&hp, &MSO(proc), ns);
 }
 
@@ -4556,7 +4556,7 @@ erts_get_emu_args(Process *c_p)
   hsz = g_saved_emu_args.no_bytes * 2;
   hsz += g_saved_emu_args.argc * 2;
 
-  hp = HAlloc(c_p, hsz);
+  hp = vm::heap_alloc(c_p, hsz);
 #ifdef DEBUG
   end_hp = hp + hsz;
 #endif
@@ -4768,11 +4768,11 @@ erts_get_ethread_info(Process *c_p)
     res = erts_bld_cons(hpp, szp, tup, res);
 
     if (hpp) {
-      HRelease(c_p, end_hp, *hpp)
+      vm::heap_free(c_p, end_hp, *hpp);
       return res;
     }
 
-    hp = HAlloc(c_p, sz);
+    hp = vm::heap_alloc(c_p, sz);
     end_hp = hp + sz;
     hpp = &hp;
     szp = nullptr;

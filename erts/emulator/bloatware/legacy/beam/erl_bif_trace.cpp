@@ -1188,7 +1188,7 @@ error:
 #else
 #  define FLAG FLAG0
 #endif
-    hp = HAlloc(p, needed);
+    hp = vm::heap_alloc(p, needed);
     limit = hp + needed;
     FLAG(F_TRACE_SEND, am_send);
     FLAG(F_TRACE_RECEIVE, am_receive);
@@ -1211,10 +1211,10 @@ error:
     FLAG(F_TRACE_SCHED_PROCS, am_running_procs);
 #undef FLAG0
 #undef FLAG
-    HRelease(p, limit, hp + 3);
+    vm::heap_free(p, limit, hp + 3);
     return TUPLE2(hp, key, flag_list);
   } else if (key == am_tracer) {
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
     return TUPLE2(hp, key, tracer); /* Local pid or port */
   } else {
     goto error;
@@ -1367,12 +1367,12 @@ trace_info_func(Process *p, Eterm func_spec, Eterm key)
   switch (r) {
   case FUNC_TRACE_NOEXIST:
     UnUseTmpHeap(3, p);
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
     return TUPLE2(hp, key, am_undefined);
 
   case FUNC_TRACE_UNTRACED:
     UnUseTmpHeap(3, p);
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
     return TUPLE2(hp, key, am_false);
 
   case FUNC_TRACE_GLOBAL_TRACE:
@@ -1458,7 +1458,7 @@ trace_info_func(Process *p, Eterm func_spec, Eterm key)
       ct = call_time;
     }
 
-    hp = HAlloc(p, (3 + 2) * 6);
+    hp = vm::heap_alloc(p, (3 + 2) * 6);
     retval = NIL;
     t = TUPLE2(hp, am_call_count, c);
     hp += 3;
@@ -1492,7 +1492,7 @@ trace_info_func(Process *p, Eterm func_spec, Eterm key)
   }
 
   UnUseTmpHeap(3, p);
-  hp = HAlloc(p, 3);
+  hp = vm::heap_alloc(p, 3);
   return TUPLE2(hp, key, retval);
 
 error:
@@ -1506,7 +1506,7 @@ trace_info_on_load(Process *p, Eterm key)
   Eterm *hp;
 
   if (! erts_default_trace_pattern_is_on) {
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
     return TUPLE2(hp, key, am_false);
   }
 
@@ -1520,7 +1520,7 @@ trace_info_on_load(Process *p, Eterm key)
       traced = am_local;
     }
 
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
     return TUPLE2(hp, key, traced);
   }
 
@@ -1532,20 +1532,20 @@ trace_info_on_load(Process *p, Eterm key)
       if (erts_default_match_spec) {
         match_spec = MatchSetGetSource(erts_default_match_spec);
         match_spec = copy_object(match_spec, p);
-        hp = HAlloc(p, 3);
+        hp = vm::heap_alloc(p, 3);
       } else {
         match_spec = NIL;
-        hp = HAlloc(p, 3);
+        hp = vm::heap_alloc(p, 3);
       }
     } else {
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
     }
 
     return TUPLE2(hp, key, match_spec);
   }
 
   case am_meta:
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
 
     if (erts_default_trace_pattern_flags.meta) {
       return TUPLE2(hp, key, erts_default_meta_tracer_pid);
@@ -1561,20 +1561,20 @@ trace_info_on_load(Process *p, Eterm key)
         match_spec =
           MatchSetGetSource(erts_default_meta_match_spec);
         match_spec = copy_object(match_spec, p);
-        hp = HAlloc(p, 3);
+        hp = vm::heap_alloc(p, 3);
       } else {
         match_spec = NIL;
-        hp = HAlloc(p, 3);
+        hp = vm::heap_alloc(p, 3);
       }
     } else {
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
     }
 
     return TUPLE2(hp, key, match_spec);
   }
 
   case am_call_count:
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
 
     if (erts_default_trace_pattern_flags.call_count) {
       return TUPLE2(hp, key, am_true);
@@ -1583,7 +1583,7 @@ trace_info_on_load(Process *p, Eterm key)
     }
 
   case am_call_time:
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
 
     if (erts_default_trace_pattern_flags.call_time) {
       return TUPLE2(hp, key, am_true);
@@ -1614,7 +1614,7 @@ trace_info_on_load(Process *p, Eterm key)
       meta_match_spec = copy_object(meta_match_spec, p);
     }
 
-    hp = HAlloc(p, (3 + 2) * 5 + 3);
+    hp = vm::heap_alloc(p, (3 + 2) * 5 + 3);
     t = TUPLE2(hp, am_call_count,
                (erts_default_trace_pattern_flags.call_count
                 ? am_true : am_false));
@@ -2153,7 +2153,7 @@ Eterm erts_seq_trace(Process *p, Eterm arg1, Eterm arg2,
     new_seq_trace_token(p);
 
     if (build_result) {
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       old_value = TUPLE2(hp, SEQ_TRACE_TOKEN_LASTCNT(p),
                          SEQ_TRACE_TOKEN_SERIAL(p));
     }
@@ -2197,7 +2197,7 @@ new_seq_trace_token(Process *p)
       || SEQ_TRACE_TOKEN(p) == am_have_dt_utag
 #endif
      ) {
-    hp = HAlloc(p, 6);
+    hp = vm::heap_alloc(p, 6);
     SEQ_TRACE_TOKEN(p) = TUPLE5(hp, make_small(0),    /* Flags  */
                                 make_small(0),    /* Label  */
                                 make_small(0),    /* Serial */
@@ -2223,7 +2223,7 @@ BIF_RETTYPE erl_seq_trace_info(Process *p, Eterm item)
      ) {
     if ((item == am_send) || (item == am_receive) ||
         (item == am_print) || (item == am_timestamp)) {
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       res = TUPLE2(hp, item, am_false);
       BIF_RET(res);
     } else if ((item == am_label) || (item == am_serial)) {
@@ -2251,14 +2251,14 @@ BIF_RETTYPE erl_seq_trace_info(Process *p, Eterm item)
   } else if (item == am_label) {
     res = SEQ_TRACE_TOKEN_LABEL(p);
   } else if (item  == am_serial) {
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
     res = TUPLE2(hp, SEQ_TRACE_TOKEN_LASTCNT(p), SEQ_TRACE_TOKEN_SERIAL(p));
   } else {
 error:
     BIF_ERROR(p, BADARG);
   }
 
-  hp = HAlloc(p, 3);
+  hp = vm::heap_alloc(p, 3);
   res = TUPLE2(hp, item, res);
   BIF_RET(res);
 }
@@ -2381,7 +2381,7 @@ static Eterm system_monitor_get(Process *p)
       (void) erts_bld_uint(nullptr, &hsz, erts_system_monitor_large_heap);
     }
 
-    hp = HAlloc(p, hsz);
+    hp = vm::heap_alloc(p, hsz);
 
     if (erts_system_monitor_long_gc != 0) {
       long_gc = erts_bld_uint(&hp, nullptr, erts_system_monitor_long_gc);
@@ -2611,7 +2611,7 @@ static Eterm system_profile_get(Process *p)
                + (erts_system_profile_flags.exclusive ? 2 : 0)
                + (erts_system_profile_flags.runnable_procs ? 2 : 0);
 
-    hp = HAlloc(p, hsz);
+    hp = vm::heap_alloc(p, hsz);
     res = NIL;
 
     if (erts_system_profile_flags.runnable_ports) {
@@ -2771,7 +2771,7 @@ trace_delivered_1(BIF_ALIST_1)
   hp = &bp->mem[0];
   msg_ref = STORE_NC(&hp, &bp->off_heap, ref);
 #else
-  hp = HAlloc(BIF_P, 4);
+  hp = vm::heap_alloc(BIF_P, 4);
   msg_ref = ref;
 #endif
 

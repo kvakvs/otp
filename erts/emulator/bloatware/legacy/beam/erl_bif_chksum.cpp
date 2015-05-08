@@ -99,7 +99,7 @@ static Eterm do_chksum(ChksumFun sumfun, Process *p, Eterm ioterm, int left,
       size_t offset;
       /* Split the binary in two parts, of which we
          only process the first */
-      hp = HAlloc(p, ERL_SUB_BIN_SIZE);
+      hp = vm::heap_alloc(p, ERL_SUB_BIN_SIZE);
       sb = (ErlSubBin *) hp;
       ERTS_GET_REAL_BIN(ioterm, orig, offset, bitoffs, bitsize);
       sb->thing_word = HEADER_SUB_BIN;
@@ -227,7 +227,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 
           if (rest_term != NIL) {
             Eterm *hp;
-            hp = HAlloc(p, 2);
+            hp = vm::heap_alloc(p, 2);
             obj = CDR(objp);
             ioterm = CONS(hp, rest_term, obj);
             left = 0;
@@ -265,7 +265,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
       if (is_byte(ioterm)) {
         /* inproper list with byte tail*/
         Eterm *hp;
-        hp = HAlloc(p, 2);
+        hp = vm::heap_alloc(p, 2);
         ioterm = CONS(hp, ioterm, NIL);
       }
 
@@ -317,7 +317,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
   c = ESTACK_COUNT(stack);
 
   if (c > 0) {
-    Eterm *hp = HAlloc(p, 2 * c);
+    Eterm *hp = vm::heap_alloc(p, 2 * c);
 
     while (!ESTACK_ISEMPTY(stack)) {
       Eterm st = ESTACK_POP(stack);

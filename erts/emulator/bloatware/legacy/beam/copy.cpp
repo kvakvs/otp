@@ -41,7 +41,7 @@ Eterm
 copy_object(Eterm obj, Process *to)
 {
   size_t size = size_object(obj);
-  Eterm *hp = HAlloc(to, size);
+  Eterm *hp = vm::heap_alloc(to, size);
   Eterm res;
 
 #ifdef USE_VM_PROBES

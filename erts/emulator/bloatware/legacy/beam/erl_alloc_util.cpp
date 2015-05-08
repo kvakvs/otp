@@ -4457,7 +4457,7 @@ sys_realloc_success:
      * change between size check and actual build. This because a value
      * that would fit a small when size check is done may need to be built
      * as a big when the actual build is performed. Caller is required to
-     * HRelease after build.
+     * vm::heap_free after build.
      *
      * Note, bld_unstable_uint() should have been called bld_unstable_uword()
      * but we do not want to rename it...

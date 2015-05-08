@@ -175,7 +175,7 @@ static Eterm make_signed_integer(int x, Process *p)
   if (IS_SSMALL(x)) {
     return make_small(x);
   } else {
-    hp = HAlloc(p, BIG_UINT_HEAP_SIZE);
+    hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE);
 
     if (x >= 0) {
       *hp = make_pos_bignum_header(1);
@@ -512,7 +512,7 @@ build_compile_result(Process *p, Eterm error_tag, pcre *result, int errcode, con
                3 /* tuple of 2 */ +
                (2 * elen) /* The error string list */ +
                ((extra_err_tag != NIL) ? 3 : 0);
-    hp = HAlloc(p, need);
+    hp = vm::heap_alloc(p, need);
     ret = util::buf_to_intlist(&hp, (char *) errstr, elen, NIL);
     ret = TUPLE2(hp, ret, make_small(errofset));
     hp += 3;
@@ -538,7 +538,7 @@ build_compile_result(Process *p, Eterm error_tag, pcre *result, int errcode, con
        be kept across traps w/o need of copying */
     ret = new_binary(p, (uint8_t *) result, pattern_size);
     erts_pcre_free(result);
-    hp = HAlloc(p, (with_ok) ? (3 + 6) : 6);
+    hp = vm::heap_alloc(p, (with_ok) ? (3 + 6) : 6);
     ret = TUPLE5(hp, am_re_pattern, make_small(capture_count), make_small(unicode),
                  make_small(use_crlf), ret);
 
@@ -702,10 +702,10 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
   if (rc <= 0) {
     if (restartp->flags & RESTART_FLAG_REPORT_MATCH_LIMIT) {
       if (rc == PCRE_ERROR_MATCHLIMIT) {
-        hp = HAlloc(p, 3);
+        hp = vm::heap_alloc(p, 3);
         res = TUPLE2(hp, am_error, am_match_limit);
       } else if (rc == PCRE_ERROR_RECURSIONLIMIT) {
-        hp = HAlloc(p, 3);
+        hp = vm::heap_alloc(p, 3);
         res = TUPLE2(hp, am_error, am_match_limit_recursion);
       } else {
         res = am_nomatch;
@@ -740,7 +740,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
                                 p);
         }
 
-        hp = HAlloc(p, 3 + (3 + 2) * (rc + ri->num_spec));
+        hp = vm::heap_alloc(p, 3 + (3 + 2) * (rc + ri->num_spec));
         res = NIL;
 
         for (i = rc - 1 ; i >= -(ri->num_spec); --i) {
@@ -784,7 +784,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
           ++n;
         }
 
-        hp = HAlloc(p, 3 + (3 + 2) * n);
+        hp = vm::heap_alloc(p, 3 + (3 + 2) * n);
         res = NIL;
 
         for (i = n - 1 ; i >= 0; --i) {
@@ -831,7 +831,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
                  with, we can make sub-binaries. */
               ErlSubBin *sb;
               size_t virtual_offset = cp - restartp->subject;
-              hp = HAlloc(p, ERL_SUB_BIN_SIZE);
+              hp = vm::heap_alloc(p, ERL_SUB_BIN_SIZE);
               sb = (ErlSubBin *) hp;
               sb->thing_word = HEADER_SUB_BIN;
               sb->size = len;
@@ -846,12 +846,12 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
             }
           } else {
             Eterm *hp2;
-            hp2 = HAlloc(p, (2 * len));
+            hp2 = vm::heap_alloc(p, (2 * len));
             tmp_vect[i] = util::buf_to_intlist(&hp2, cp, len, NIL);
           }
         }
 
-        hp = HAlloc(p, 3 + 2 * (rc + ri->num_spec));
+        hp = vm::heap_alloc(p, 3 + 2 * (rc + ri->num_spec));
         res = NIL;
 
         for (i = rc - 1 ; i >= -(ri->num_spec); --i) {
@@ -899,7 +899,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
                    with, we could make sub-binaries. */
                 ErlSubBin *sb;
                 size_t virtual_offset = cp - restartp->subject;
-                hp = HAlloc(p, ERL_SUB_BIN_SIZE);
+                hp = vm::heap_alloc(p, ERL_SUB_BIN_SIZE);
                 sb = (ErlSubBin *) hp;
                 sb->thing_word = HEADER_SUB_BIN;
                 sb->size = len;
@@ -914,7 +914,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
               }
             } else {
               Eterm *hp2;
-              hp2 = HAlloc(p, (2 * len));
+              hp2 = vm::heap_alloc(p, (2 * len));
               tmp_vect[n] = util::buf_to_intlist(&hp2, cp, len, NIL);
             }
           } else {
@@ -928,7 +928,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
           ++n;
         }
 
-        hp = HAlloc(p, 3 + 2 * n);
+        hp = vm::heap_alloc(p, 3 + 2 * n);
         res = NIL;
 
         for (i = n - 1 ; i >= 0; --i) {
@@ -1313,7 +1313,7 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
                                0, NIL);
         Eterm *hp, r;
         erts_free(ERTS_ALC_T_RE_TMP_BUF, expr);
-        hp = HAlloc(p, 4);
+        hp = vm::heap_alloc(p, 4);
         /* arg2 is in the tuple just to make exceptions right */
         r = TUPLE3(hp, arg3,
                    ((pflags & PARSE_FLAG_UNIQUE_COMPILE_OPT) ?
@@ -1355,7 +1355,7 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
 
     if (pflags & PARSE_FLAG_GLOBAL) {
       Eterm *hp, r;
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       r = TUPLE2(hp, arg3, am_false);
       BIF_TRAP3(grun_trap_exportp, p, arg1, arg2,
                 r);
@@ -1497,7 +1497,7 @@ handle_iolist:
     Eterm *hp;
     memcpy(restartp, &restart, sizeof(RestartContext));
     BUMP_ALL_REDS(p);
-    hp = HAlloc(p, PROC_BIN_SIZE);
+    hp = vm::heap_alloc(p, PROC_BIN_SIZE);
     magic_bin = erts_mk_magic_binary_term(&hp, &MSO(p), mbp);
     BIF_TRAP3(&re_exec_trap_export,
               p,
@@ -1634,7 +1634,7 @@ re_inspect_2(BIF_ALIST_2)
   ASSERT(infores == 0);
 
   if (top <= 0) {
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, am_namelist, NIL);
     erts_free_aligned_binary_bytes(temp_alloc);
     BIF_RET(res);
@@ -1688,7 +1688,7 @@ re_inspect_2(BIF_ALIST_2)
   }
 
   ASSERT(j == num_names);
-  hp = HAlloc(BIF_P, 3 + 2 * j);
+  hp = vm::heap_alloc(BIF_P, 3 + 2 * j);
   res = NIL;
 
   for (i = j - 1 ; i >= 0; --i) {

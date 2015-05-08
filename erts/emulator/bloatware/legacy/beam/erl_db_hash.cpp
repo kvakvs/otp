@@ -1501,7 +1501,7 @@ done:
                the list may have
                been in user space */
       rest = NIL;
-      hp = HAlloc(p, (got - chunk_size) * 2);
+      hp = vm::heap_alloc(p, (got - chunk_size) * 2);
 
       while (got-- > chunk_size) {
         rest = CONS(hp, CAR(list_val(match_list)), rest);
@@ -1512,7 +1512,7 @@ done:
     }
 
     if (rest != NIL || slot_ix >= 0) {
-      hp = HAlloc(p, 3 + 7);
+      hp = vm::heap_alloc(p, 3 + 7);
       continuation = TUPLE6(hp, tptr[1], make_small(slot_ix),
                             tptr[3], tptr[4], rest,
                             make_small(rest_size));
@@ -1520,7 +1520,7 @@ done:
       RET_TO_BIF(TUPLE2(hp, match_list, continuation), DB_ERROR_NONE);
     } else {
       if (match_list != NIL) {
-        hp = HAlloc(p, 3);
+        hp = vm::heap_alloc(p, 3);
         RET_TO_BIF(TUPLE2(hp, match_list, am_EOT), DB_ERROR_NONE);
       } else {
         RET_TO_BIF(am_EOT, DB_ERROR_NONE);
@@ -1533,7 +1533,7 @@ done:
 trap:
   BUMP_ALL_REDS(p);
 
-  hp = HAlloc(p, 7);
+  hp = vm::heap_alloc(p, 7);
   continuation = TUPLE6(hp, tptr[1], make_small(slot_ix), tptr[3],
                         tptr[4], match_list, make_small(got));
   RET_TO_BIF(bif_trap1(&ets_select_continue_exp, p,
@@ -1712,7 +1712,7 @@ done:
     }
 
     if (rest != NIL || slot_ix >= 0) { /* Need more calls */
-      hp = HAlloc(p, 3 + 7 + PROC_BIN_SIZE);
+      hp = vm::heap_alloc(p, 3 + 7 + PROC_BIN_SIZE);
       mpb = db_make_mp_binary(p, (mpi.mp), &hp);
 
       if (mpi.all_objects) {
@@ -1730,7 +1730,7 @@ done:
       if (match_list != NIL) {
         /* No more data to search but still a
             result to return to the caller */
-        hp = HAlloc(p, 3);
+        hp = vm::heap_alloc(p, 3);
         RET_TO_BIF(TUPLE2(hp, match_list, am_EOT), DB_ERROR_NONE);
       } else { /* Reached the end of the ttable with no data to return */
         RET_TO_BIF(am_EOT, DB_ERROR_NONE);
@@ -1746,7 +1746,7 @@ trap:
     (mpi.mp)->flags |= BIN_FLAG_ALL_OBJECTS;
   }
 
-  hp = HAlloc(p, 7 + PROC_BIN_SIZE);
+  hp = vm::heap_alloc(p, 7 + PROC_BIN_SIZE);
   mpb = db_make_mp_binary(p, (mpi.mp), &hp);
   continuation = TUPLE6(hp, tb->common.id, make_small(slot_ix),
                         make_small(chunk_size),
@@ -1864,10 +1864,10 @@ trap:
   BUMP_ALL_REDS(p);
 
   if (IS_USMALL(0, got)) {
-    hp = HAlloc(p,  PROC_BIN_SIZE + 5);
+    hp = vm::heap_alloc(p,  PROC_BIN_SIZE + 5);
     egot = make_small(got);
   } else {
-    hp = HAlloc(p, BIG_UINT_HEAP_SIZE + PROC_BIN_SIZE + 5);
+    hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE + PROC_BIN_SIZE + 5);
     egot = uint_to_big(got, hp);
     hp += BIG_UINT_HEAP_SIZE;
   }
@@ -2016,10 +2016,10 @@ trap:
   BUMP_ALL_REDS(p);
 
   if (IS_USMALL(0, got)) {
-    hp = HAlloc(p,  PROC_BIN_SIZE + 5);
+    hp = vm::heap_alloc(p,  PROC_BIN_SIZE + 5);
     egot = make_small(got);
   } else {
-    hp = HAlloc(p, BIG_UINT_HEAP_SIZE + PROC_BIN_SIZE + 5);
+    hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE + PROC_BIN_SIZE + 5);
     egot = uint_to_big(got, hp);
     hp += BIG_UINT_HEAP_SIZE;
   }
@@ -2139,10 +2139,10 @@ trap:
   BUMP_ALL_REDS(p);
 
   if (IS_USMALL(0, got)) {
-    hp = HAlloc(p,  5);
+    hp = vm::heap_alloc(p,  5);
     egot = make_small(got);
   } else {
-    hp = HAlloc(p, BIG_UINT_HEAP_SIZE + 5);
+    hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE + 5);
     egot = uint_to_big(got, hp);
     hp += BIG_UINT_HEAP_SIZE;
   }
@@ -2238,10 +2238,10 @@ trap:
   BUMP_ALL_REDS(p);
 
   if (IS_USMALL(0, got)) {
-    hp = HAlloc(p, 5);
+    hp = vm::heap_alloc(p, 5);
     egot = make_small(got);
   } else {
-    hp = HAlloc(p, BIG_UINT_HEAP_SIZE + 5);
+    hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE + 5);
     egot = uint_to_big(got, hp);
     hp += BIG_UINT_HEAP_SIZE;
   }
@@ -2763,7 +2763,7 @@ static Eterm build_term_list(Process *p, HashDbTerm *ptr1, HashDbTerm *ptr2,
     ptr = ptr->next;
   }
 
-  hp = HAlloc(p, sz);
+  hp = vm::heap_alloc(p, sz);
   hend = hp + sz;
 
   ptr = ptr1;
@@ -2778,7 +2778,7 @@ static Eterm build_term_list(Process *p, HashDbTerm *ptr1, HashDbTerm *ptr2,
     ptr = ptr->next;
   }
 
-  HRelease(p, hend, hp);
+  vm::heap_free(p, hend, hp);
 
   return list;
 }

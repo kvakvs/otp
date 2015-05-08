@@ -147,7 +147,7 @@ static Eterm make_magic_bin_for_restart(Process *p, RestartContext *rc)
   auto restartp = ERTS_MAGIC_BIN_DATA<RestartContext *>(mbp);
   Eterm *hp;
   memcpy(restartp, rc, sizeof(RestartContext));
-  hp = HAlloc(p, PROC_BIN_SIZE);
+  hp = vm::heap_alloc(p, PROC_BIN_SIZE);
   return erts_mk_magic_binary_term(&hp, &MSO(p), mbp);
 }
 
@@ -624,7 +624,7 @@ static Eterm do_build_utf8(Process *p, Eterm ioterm, int *left, int latin1,
       size_t offset;
       /* Split the binary in two parts, of which we
          only process the first */
-      hp = HAlloc(p, ERL_SUB_BIN_SIZE);
+      hp = vm::heap_alloc(p, ERL_SUB_BIN_SIZE);
       sb = (ErlSubBin *) hp;
       ERTS_GET_REAL_BIN(ioterm, orig, offset, bitoffs, bitsize);
       sb->thing_word = HEADER_SUB_BIN;
@@ -661,7 +661,7 @@ static Eterm do_build_utf8(Process *p, Eterm ioterm, int *left, int latin1,
         rest_bin_offset = (err_pos - bytes);
         rest_bin_size = orig_size - rest_bin_offset;
 
-        hp = HAlloc(p, ERL_SUB_BIN_SIZE);
+        hp = vm::heap_alloc(p, ERL_SUB_BIN_SIZE);
         sb = (ErlSubBin *) hp;
         ERTS_GET_REAL_BIN(ioterm, orig, offset, bitoffs, bitsize);
         sb->thing_word = HEADER_SUB_BIN;
@@ -808,7 +808,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 
           if ((*err) != 0) {
             Eterm *hp;
-            hp = HAlloc(p, 2);
+            hp = vm::heap_alloc(p, 2);
             obj = CDR(objp);
             ioterm = CONS(hp, rest_term, obj);
             /* (*left) = 0; */
@@ -817,7 +817,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 
           if (rest_term != NIL) {
             Eterm *hp;
-            hp = HAlloc(p, 2);
+            hp = vm::heap_alloc(p, 2);
             obj = CDR(objp);
             ioterm = CONS(hp, rest_term, obj);
             (*left) = 0;
@@ -863,7 +863,7 @@ done:
   c = ESTACK_COUNT(stack);
 
   if (c > 0) {
-    Eterm *hp = HAlloc(p, 2 * c);
+    Eterm *hp = vm::heap_alloc(p, 2 * c);
 
     while (!ESTACK_ISEMPTY(stack)) {
       Eterm st = ESTACK_POP(stack);
@@ -913,13 +913,13 @@ static BIF_RETTYPE build_utf8_return(Process *p, Eterm bin, int pos,
   if (err) {
     if (num_leftovers > 0) {
       Eterm leftover_bin = new_binary(p, leftover, num_leftovers);
-      hp = HAlloc(p, 8);
+      hp = vm::heap_alloc(p, 8);
       rest_term = CONS(hp, rest_term, NIL);
       hp += 2;
       rest_term = CONS(hp, leftover_bin, rest_term);
       hp += 2;
     } else {
-      hp = HAlloc(p, 4);
+      hp = vm::heap_alloc(p, 4);
     }
 
     ret = TUPLE3(hp, am_error, bin, rest_term);
@@ -927,24 +927,24 @@ static BIF_RETTYPE build_utf8_return(Process *p, Eterm bin, int pos,
     Eterm leftover_bin = new_binary(p, leftover, num_leftovers);
 
     if (check_leftovers(leftover, num_leftovers) != 0) {
-      hp = HAlloc(p, 4);
+      hp = vm::heap_alloc(p, 4);
       ret = TUPLE3(hp, am_error, bin, leftover_bin);
     } else {
-      hp = HAlloc(p, 4);
+      hp = vm::heap_alloc(p, 4);
       ret = TUPLE3(hp, am_incomplete, bin, leftover_bin);
     }
   } else { /* All OK */
     if (rest_term != NIL) { /* Trap */
       if (num_leftovers > 0) {
         Eterm rest_bin = new_binary(p, leftover, num_leftovers);
-        hp = HAlloc(p, 2);
+        hp = vm::heap_alloc(p, 2);
         rest_term = CONS(hp, rest_bin, rest_term);
       }
 
       BUMP_ALL_REDS(p);
       BIF_TRAP3(&characters_to_utf8_trap_exp, p, bin, rest_term, latin1);
     } else { /* Success */
-      /*hp = HAlloc(p,5);
+      /*hp = vm::heap_alloc(p,5);
         ret = TUPLE4(hp,bin,rest_term,make_small(pos),make_small(err));*/
       ret = bin;
     }
@@ -1152,7 +1152,7 @@ static BIF_RETTYPE build_list_return(Process *p, uint8_t *bytes, int pos, size_t
   if (err) {
     if (num_leftovers > 0) {
       Eterm leftover_bin = new_binary(p, leftover, num_leftovers);
-      hp = HAlloc(p, 4);
+      hp = vm::heap_alloc(p, 4);
       rest_term = CONS(hp, rest_term, NIL);
       hp += 2;
       rest_term = CONS(hp, leftover_bin, rest_term);
@@ -1176,7 +1176,7 @@ static BIF_RETTYPE build_list_return(Process *p, uint8_t *bytes, int pos, size_t
 
       if (num_leftovers > 0) {
         Eterm rest_bin = new_binary(p, leftover, num_leftovers);
-        hp = HAlloc(p, 2);
+        hp = vm::heap_alloc(p, 2);
         rest_term = CONS(hp, rest_bin, rest_term);
       }
 
@@ -1440,7 +1440,7 @@ static Eterm do_utf8_to_list(Process *p, size_t num, uint8_t *bytes, size_t sz,
 
   *num_built = num; /* Always */
 
-  hp = HAlloc(p, num * 2);
+  hp = vm::heap_alloc(p, num * 2);
   ret = tail;
   source = bytes + sz;
   ssource = source;
@@ -1677,7 +1677,7 @@ static Eterm do_utf8_to_list_normalize(Process *p, size_t num, uint8_t *bytes, s
 
   ASSERT(num > 0);
 
-  hp = HAlloc(p, num * 2); /* May be to much */
+  hp = vm::heap_alloc(p, num * 2); /* May be to much */
   hp_end = hp + num * 2;
   ret = NIL;
   source = bytes + sz;
@@ -1726,7 +1726,7 @@ static Eterm do_utf8_to_list_normalize(Process *p, size_t num, uint8_t *bytes, s
   }
 
   if (hp_end != hp) {
-    HRelease(p, hp_end, hp);
+    vm::heap_free(p, hp_end, hp);
   }
 
   return ret;
@@ -1782,10 +1782,10 @@ static BIF_RETTYPE finalize_list_to_list(Process *p,
   free_restart(bytes);
 
   if (state == ERTS_UTF8_INCOMPLETE) {
-    hp = HAlloc(p, 4);
+    hp = vm::heap_alloc(p, 4);
     ret = TUPLE3(hp, am_incomplete, converted, rest);
   } else if (state == ERTS_UTF8_ERROR) {
-    hp = HAlloc(p, 4);
+    hp = vm::heap_alloc(p, 4);
     ret = TUPLE3(hp, am_error, converted, rest);
   } else {
     ret = converted;
@@ -1911,7 +1911,7 @@ static BIF_RETTYPE do_bif_utf8_to_list(Process *p,
       Eterm newnum_processed_bytes =
         erts_make_integer(num_processed_bytes + num_eaten, p);
       Eterm traptuple;
-      hp = HAlloc(p, 7);
+      hp = vm::heap_alloc(p, 7);
       traptuple = TUPLE6(hp, orig_bin, newnum_processed_bytes,
                          newnum_bytes_to_process,
                          newnum_resulting_chars,
@@ -1935,7 +1935,7 @@ static BIF_RETTYPE do_bif_utf8_to_list(Process *p,
     Eterm orig;
     size_t offset;
     ASSERT(state != ERTS_UTF8_OK);
-    hp = HAlloc(p, ERL_SUB_BIN_SIZE);
+    hp = vm::heap_alloc(p, ERL_SUB_BIN_SIZE);
     sb = (ErlSubBin *) hp;
     ERTS_GET_REAL_BIN(orig_bin, orig, offset, bitoffs, bitsize);
     sb->thing_word = HEADER_SUB_BIN;
@@ -1956,11 +1956,11 @@ static BIF_RETTYPE do_bif_utf8_to_list(Process *p,
       goto error_return;
     }
 
-    hp = HAlloc(p, 4);
+    hp = vm::heap_alloc(p, 4);
     ret = TUPLE3(hp, am_incomplete, converted, rest);
   } else if (state == ERTS_UTF8_ERROR) {
 error_return:
-    hp = HAlloc(p, 4);
+    hp = vm::heap_alloc(p, 4);
     ret = TUPLE3(hp, am_error, converted, rest);
   } else {
     ret = converted;
@@ -2398,11 +2398,11 @@ Eterm erts_convert_native_to_filename(Process *p, uint8_t *bytes)
 
     if ((size % 2) != 0) { /* Panic fixup to avoid crashing the emulator */
       size--;
-      hp = HAlloc(p, size + 2);
+      hp = vm::heap_alloc(p, size + 2);
       ret = CONS(hp, make_small((size_t) bytes[size]), NIL);
       hp += 2;
     } else {
-      hp = HAlloc(p, size);
+      hp = vm::heap_alloc(p, size);
       ret = NIL;
     }
 
@@ -2424,7 +2424,7 @@ Eterm erts_convert_native_to_filename(Process *p, uint8_t *bytes)
 
 noconvert:
   size = strlen((char *) bytes);
-  hp = HAlloc(p, 2 * size);
+  hp = vm::heap_alloc(p, 2 * size);
   return erts_bin_bytes_to_list(NIL, hp, bytes, size, 0);
 }
 
@@ -2954,7 +2954,7 @@ BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
 
   switch (erts_get_native_filename_encoding()) {
   case ERL_FILENAME_LATIN1:
-    hp = HAlloc(BIF_P, 2 * size);
+    hp = vm::heap_alloc(BIF_P, 2 * size);
     bytes = binary_bytes(real_bin) + offset;
 
     BIF_RET(erts_bin_bytes_to_list(NIL, hp, bytes, size, bitoffs));
@@ -2966,7 +2966,7 @@ BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
     bytes = erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc);
 
     if (erts_analyze_utf8(bytes, size, &err_pos, &num_chars, nullptr) != ERTS_UTF8_OK) {
-      Eterm *hp = HAlloc(BIF_P, 3);
+      Eterm *hp = vm::heap_alloc(BIF_P, 3);
       Eterm warn_type = NIL;
       erts_free_aligned_binary_bytes(temp_alloc);
 
@@ -3003,11 +3003,11 @@ BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
 
     if ((size % 2) != 0) { /* Panic fixup to avoid crashing the emulator */
       size--;
-      hp = HAlloc(BIF_P, size + 2);
+      hp = vm::heap_alloc(BIF_P, size + 2);
       ret = CONS(hp, make_small((size_t) bytes[size]), NIL);
       hp += 2;
     } else {
-      hp = HAlloc(BIF_P, size);
+      hp = vm::heap_alloc(BIF_P, size);
       ret = NIL;
     }
 

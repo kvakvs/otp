@@ -155,7 +155,7 @@ void erts_bits_destroy_state(ERL_BITS_PROTO_0);
 #define BIT_OFFSET(ofs) ((ofs) & 7)
 
 /*
- * Return number of Eterm words needed for allocation with HAlloc(),
+ * Return number of Eterm words needed for allocation with vm::heap_alloc(),
  * given a number of bytes.
  */
 #define WSIZE(n) ((n + sizeof(Eterm) - 1) / sizeof(Eterm))

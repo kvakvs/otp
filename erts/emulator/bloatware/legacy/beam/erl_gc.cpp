@@ -309,7 +309,7 @@ erts_heap_sizes(Process *p)
    * We store all big numbers first on the heap, followed
    * by all the cons cells.
    */
-  bigp = HAlloc(p, n + big);
+  bigp = vm::heap_alloc(p, n + big);
   hp = bigp + big;
 
   for (i = num_heap_sizes - 1; i >= 0; i--) {

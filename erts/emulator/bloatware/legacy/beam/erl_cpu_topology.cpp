@@ -1072,7 +1072,7 @@ erts_fake_scheduler_bindings(Process *p, Eterm how)
     erts_fprintf(stderr, "\n");
 #endif
 
-    hp = HAlloc(p, cpudata_size + 1);
+    hp = vm::heap_alloc(p, cpudata_size + 1);
     ERTS_BIF_PREP_RET(res, make_tuple(hp));
     *hp++ = make_arityval((size_t) cpudata_size);
 
@@ -1091,7 +1091,7 @@ erts_get_schedulers_binds(Process *c_p)
 {
   int ix;
   ERTS_DECL_AM(unbound);
-  Eterm *hp = HAlloc(c_p, erts_no_schedulers + 1);
+  Eterm *hp = vm::heap_alloc(c_p, erts_no_schedulers + 1);
   Eterm res = make_tuple(hp);
 
   *(hp++) = make_arityval(erts_no_schedulers);
@@ -1878,7 +1878,7 @@ defined:
   bld_topology_term(nullptr, &hsz,
                     cpudata, size);
 
-  hp = HAlloc(c_p, hsz);
+  hp = vm::heap_alloc(c_p, hsz);
 
 #ifdef DEBUG
   hp_end = hp + hsz;
@@ -2158,7 +2158,7 @@ get_cpu_groups_map(Process *c_p,
   Eterm *hp;
   int i;
 
-  hp = HAlloc(c_p, map->logical_processors * (2 + 3));
+  hp = vm::heap_alloc(c_p, map->logical_processors * (2 + 3));
 #ifdef DEBUG
   endp = hp + map->logical_processors * (2 + 3);
 #endif

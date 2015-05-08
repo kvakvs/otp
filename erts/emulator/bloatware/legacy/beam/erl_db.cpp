@@ -1025,12 +1025,12 @@ BIF_RETTYPE ets_update_counter_3(BIF_ALIST_3)
   if (ret_list_prevp) { /* Prepare to return a list */
     ret = NIL;
     halloc_size += list_size;
-    hstart = HAlloc(BIF_P, halloc_size);
+    hstart = vm::heap_alloc(BIF_P, halloc_size);
     ret_list_currp = hstart;
     htop = hstart + list_size;
     hend = hstart + halloc_size;
   } else {
-    hstart = htop = HAlloc(BIF_P, halloc_size);
+    hstart = htop = vm::heap_alloc(BIF_P, halloc_size);
   }
 
   hend = hstart + halloc_size;
@@ -1079,7 +1079,7 @@ BIF_RETTYPE ets_update_counter_3(BIF_ALIST_3)
          (is_list(ret) && (list_val(ret) + list_size) == ret_list_currp));
   ASSERT(htop <= hend);
 
-  HRelease(BIF_P, hend, htop);
+  vm::heap_free(BIF_P, hend, htop);
 
 finalize:
   tb->common.meth->db_finalize_dbterm(&handle);
@@ -1868,11 +1868,11 @@ BIF_RETTYPE ets_delete_1(BIF_ALIST_1)
      * emulator if this_ BIF is call traced.
      */
 #if HALFWORD_HEAP
-    Eterm *hp = HAlloc(BIF_P, 3);
+    Eterm *hp = vm::heap_alloc(BIF_P, 3);
     hp[0] = make_pos_bignum_header(2);
     *((UWord *)(UWord)(hp + 1)) = (UWord) tb;
 #else
-    Eterm *hp = HAlloc(BIF_P, 2);
+    Eterm *hp = vm::heap_alloc(BIF_P, 2);
     hp[0] = make_pos_bignum_header(1);
     hp[1] = (Eterm) tb;
 #endif
@@ -2270,7 +2270,7 @@ BIF_RETTYPE ets_all_0(BIF_ALIST_0)
   t_top = meta_main_tab_top;
   erts_smp_spin_unlock(&meta_main_tab_main_lock);
 
-  hp = HAlloc(BIF_P, 2 * t_tabs_cnt);
+  hp = vm::heap_alloc(BIF_P, 2 * t_tabs_cnt);
   hendp = hp + 2 * t_tabs_cnt;
 
   previous = NIL;
@@ -2283,7 +2283,7 @@ BIF_RETTYPE ets_all_0(BIF_ALIST_0)
       if (hp == hendp) {
         /* Racing table creator, grab some more heap space */
         t_tabs_cnt = 10;
-        hp = HAlloc(BIF_P, 2 * t_tabs_cnt);
+        hp = vm::heap_alloc(BIF_P, 2 * t_tabs_cnt);
         hendp = hp + 2 * t_tabs_cnt;
       }
 
@@ -2295,7 +2295,7 @@ BIF_RETTYPE ets_all_0(BIF_ALIST_0)
     erts_smp_rwmtx_runlock(mmtl);
   }
 
-  HRelease(BIF_P, hendp, hp);
+  vm::heap_free(BIF_P, hendp, hp);
   BIF_RET(previous);
 }
 
@@ -2959,7 +2959,7 @@ BIF_RETTYPE ets_info_1(BIF_ALIST_1)
   /*if (rp != nullptr && rp != BIF_P)
   erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_MAIN);*/
 
-  hp = HAlloc(BIF_P, 5 * sizeof(fields) / sizeof(Eterm));
+  hp = vm::heap_alloc(BIF_P, 5 * sizeof(fields) / sizeof(Eterm));
   res = NIL;
 
   for (i = 0; i < sizeof(fields) / sizeof(Eterm); i++) {
@@ -3019,7 +3019,7 @@ BIF_RETTYPE ets_match_spec_compile_1(BIF_ALIST_1)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp = HAlloc(BIF_P, PROC_BIN_SIZE);
+  hp = vm::heap_alloc(BIF_P, PROC_BIN_SIZE);
 
   BIF_RET(erts_mk_magic_binary_term(&hp, &MSO(BIF_P), mp));
 }
@@ -3067,7 +3067,7 @@ error:
                         ERTS_PAM_COPY_RESULT, &dummy);
 
     if (is_value(res)) {
-      hp = HAlloc(BIF_P, 2);
+      hp = vm::heap_alloc(BIF_P, 2);
       ret = CONS(hp, res, ret);
       /*hp += 2;*/
     }
@@ -4060,7 +4060,7 @@ static Eterm table_info(Process *p, DbTable *tb, Eterm What)
         need += 5;
       }
 
-      hp = HAlloc(p, need);
+      hp = vm::heap_alloc(p, need);
       lst = NIL;
 
       for (fix = tb->common.fixations; fix != nullptr; fix = fix->next) {
@@ -4091,7 +4091,7 @@ static Eterm table_info(Process *p, DbTable *tb, Eterm What)
       Eterm *hp;
 
       db_calc_stats_hash(&tb->hash, &stats);
-      hp = HAlloc(p, 1 + 7 + FLOAT_SIZE_OBJECT * 3);
+      hp = vm::heap_alloc(p, 1 + 7 + FLOAT_SIZE_OBJECT * 3);
       f.fd = stats.avg_chain_len;
       avg = make_float(hp);
       PUT_DOUBLE(f, hp);
@@ -4206,7 +4206,7 @@ Eterm
 erts_ets_colliding_names(Process *p, Eterm name, size_t cnt)
 {
   Eterm list = NIL;
-  Eterm *hp = HAlloc(p, cnt * 2);
+  Eterm *hp = vm::heap_alloc(p, cnt * 2);
   size_t index = atom_val(name) & meta_name_tab_mask;
 
   while (cnt) {

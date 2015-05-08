@@ -76,7 +76,7 @@ BIF_RETTYPE map_size_1(BIF_ALIST_1)
     size_t n    = map_get_size(mp);
 
     erts_bld_uint(nullptr, &hsz, n);
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     BIF_RET(erts_bld_uint(&hp, nullptr, n));
   }
 
@@ -97,7 +97,7 @@ BIF_RETTYPE maps_to_list_1(BIF_ALIST_1)
     ks  = map_get_keys(mp);
     vs  = map_get_values(mp);
     n   = map_get_size(mp);
-    hp  = HAlloc(BIF_P, (2 + 3) * n);
+    hp  = vm::heap_alloc(BIF_P, (2 + 3) * n);
     res = NIL;
 
     while (n--) {
@@ -145,7 +145,7 @@ BIF_RETTYPE maps_find_2(BIF_ALIST_2)
     Eterm *hp, value, res;
 
     if (erts_maps_find(BIF_ARG_1, BIF_ARG_2, &value)) {
-      hp    = HAlloc(BIF_P, 3);
+      hp    = vm::heap_alloc(BIF_P, 3);
       res   = make_tuple(hp);
       *hp++ = make_arityval(2);
       *hp++ = am_ok;
@@ -213,7 +213,7 @@ BIF_RETTYPE maps_get_2(BIF_ALIST_2)
     s_error = "bad_key";
     error = am_atom_put(s_error, sys_strlen(s_error));
 
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     BIF_P->fvalue = TUPLE2(hp, error, BIF_ARG_1);
     BIF_ERROR(BIF_P, EXC_ERROR_2);
   }
@@ -259,7 +259,7 @@ BIF_RETTYPE maps_from_list_1(BIF_ALIST_1)
       goto error;
     }
 
-    hp    = HAlloc(BIF_P, 3 + 1 + (2 * size));
+    hp    = vm::heap_alloc(BIF_P, 3 + 1 + (2 * size));
     thp   = hp;
     keys  = make_tuple(hp);
     *hp++ = make_arityval(size);
@@ -341,7 +341,7 @@ BIF_RETTYPE maps_from_list_1(BIF_ALIST_1)
       /* release values as normal since they are on the top of the heap */
 
       ks[size] = make_pos_bignum_header(unused_size - 1);
-      HRelease(BIF_P, vs + size + unused_size, vs + size);
+      vm::heap_free(BIF_P, vs + size + unused_size, vs + size);
     }
 
     *thp = make_arityval(size);
@@ -410,7 +410,7 @@ BIF_RETTYPE maps_keys_1(BIF_ALIST_1)
       BIF_RET(res);
     }
 
-    hp  = HAlloc(BIF_P, (2 * n));
+    hp  = vm::heap_alloc(BIF_P, (2 * n));
     ks  = map_get_keys(mp);
 
     while (n--) {
@@ -443,7 +443,7 @@ BIF_RETTYPE maps_merge_2(BIF_ALIST_2)
 
     need = MAP_HEADER_SIZE + 1 + 2 * (n1 + n2);
 
-    hp     = HAlloc(BIF_P, need);
+    hp     = vm::heap_alloc(BIF_P, need);
     thp    = hp;
     tup    = make_tuple(thp);
     ks     = hp + 1;
@@ -505,7 +505,7 @@ BIF_RETTYPE maps_merge_2(BIF_ALIST_2)
        */
 
       *ks = make_pos_bignum_header(unused_size - 1);
-      HRelease(BIF_P, vs + unused_size, vs);
+      vm::heap_free(BIF_P, vs + unused_size, vs);
     }
 
     mp_new->size = n1 + n2 - unused_size;
@@ -525,7 +525,7 @@ BIF_RETTYPE maps_new_0(BIF_ALIST_0)
   Eterm tup;
   map_t *mp;
 
-  hp    = HAlloc(BIF_P, (MAP_HEADER_SIZE + 1));
+  hp    = vm::heap_alloc(BIF_P, (MAP_HEADER_SIZE + 1));
   tup   = make_tuple(hp);
   *hp++ = make_arityval(0);
 
@@ -551,7 +551,7 @@ Eterm erts_maps_put(Process *p, Eterm key, Eterm value, Eterm map)
   n = map_get_size(mp);
 
   if (n == 0) {
-    hp    = HAlloc(p, MAP_HEADER_SIZE + 1 + 2);
+    hp    = vm::heap_alloc(p, MAP_HEADER_SIZE + 1 + 2);
     tup   = make_tuple(hp);
     *hp++ = make_arityval(1);
     *hp++ = key;
@@ -571,7 +571,7 @@ Eterm erts_maps_put(Process *p, Eterm key, Eterm value, Eterm map)
    * assume key-tuple will be intact
    */
 
-  hp  = HAlloc(p, MAP_HEADER_SIZE + n);
+  hp  = vm::heap_alloc(p, MAP_HEADER_SIZE + n);
   shp = hp; /* save hp, used if optimistic update fails */
   res = make_map(hp);
   *hp++ = MAP_HEADER;
@@ -610,7 +610,7 @@ Eterm erts_maps_put(Process *p, Eterm key, Eterm value, Eterm map)
   tup    = make_tuple(shp);
   *shp++ = make_arityval(n + 1);
 
-  hp    = HAlloc(p, 3 + n + 1);
+  hp    = vm::heap_alloc(p, 3 + n + 1);
   res   = make_map(hp);
   *hp++ = MAP_HEADER;
   *hp++ = n + 1;
@@ -683,7 +683,7 @@ int erts_maps_remove(Process *p, Eterm key, Eterm map, Eterm *res)
    */
 
   need   = n + 1 - 1 + 3 + n - 1; /* tuple - 1 + map - 1 */
-  hp_start = HAlloc(p, need);
+  hp_start = vm::heap_alloc(p, need);
   thp    = hp_start;
   mhp    = thp + n;               /* offset with tuple heap size */
 
@@ -722,7 +722,7 @@ int erts_maps_remove(Process *p, Eterm key, Eterm map, Eterm *res)
   /* Not found, remove allocated memory
    * and return previous map.
    */
-  HRelease(p, hp_start + need, hp_start);
+  vm::heap_free(p, hp_start + need, hp_start);
 
   *res = map;
   return 1;
@@ -772,7 +772,7 @@ int erts_maps_update(Process *p, Eterm key, Eterm value, Eterm map, Eterm *res)
    * assume key-tuple will be intact
    */
 
-  hp  = HAlloc(p, MAP_HEADER_SIZE + n);
+  hp  = vm::heap_alloc(p, MAP_HEADER_SIZE + n);
   shp = hp;
   *hp++ = MAP_HEADER;
   *hp++ = n;
@@ -796,7 +796,7 @@ int erts_maps_update(Process *p, Eterm key, Eterm value, Eterm map, Eterm *res)
     }
   }
 
-  HRelease(p, shp + MAP_HEADER_SIZE + n, shp);
+  vm::heap_free(p, shp + MAP_HEADER_SIZE + n, shp);
   return 0;
 
 found_key:
@@ -842,7 +842,7 @@ BIF_RETTYPE maps_values_1(BIF_ALIST_1)
       BIF_RET(res);
     }
 
-    hp  = HAlloc(BIF_P, (2 * n));
+    hp  = vm::heap_alloc(BIF_P, (2 * n));
     vs  = map_get_values(mp);
 
     while (n--) {

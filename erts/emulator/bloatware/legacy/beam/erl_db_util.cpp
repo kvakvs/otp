@@ -1202,7 +1202,7 @@ Binary *db_match_set_compile(Process *p, Eterm matchexpr,
         goto error;
       }
 
-      hp = HAlloc(p, n + 1);
+      hp = vm::heap_alloc(p, n + 1);
       t = make_tuple(hp);
       *hp++ = make_arityval((size_t) n);
       l2 = tp[1];
@@ -1330,7 +1330,7 @@ Eterm db_match_set_lint(Process *p, Eterm matchexpr, size_t flags)
         goto done;
       }
 
-      hp = HAlloc(p, n + 1);
+      hp = vm::heap_alloc(p, n + 1);
       t = make_tuple(hp);
       *hp++ = make_arityval((size_t) n);
       l2 = tp[1];
@@ -1833,7 +1833,7 @@ erts_match_prog_foreach_offheap(Binary *bprog,
 */
 static Eterm dpm_array_to_list(Process *psp, Eterm *arr, int arity)
 {
-  Eterm *hp = HAllocX(psp, arity * 2, HEAP_XTRA);
+  Eterm *hp = vm::heap_alloc(psp, arity * 2, HEAP_XTRA);
   Eterm ret = NIL;
 
   while (--arity >= 0) {
@@ -1910,7 +1910,7 @@ static ERTS_INLINE Eterm copy_object_rel(Process *p, Eterm term, Eterm *base)
 {
   if (!is_immed(term)) {
     size_t sz = size_object_rel(term, base);
-    Eterm *top = HAllocX(p, sz, HEAP_XTRA);
+    Eterm *top = vm::heap_alloc(p, sz, HEAP_XTRA);
     return copy_struct_rel(term, sz, &top, &MSO(p), base, nullptr);
   }
 
@@ -2246,14 +2246,14 @@ restart:
       break;
 
     case matchConsA:
-      ehp = HAllocX(build_proc, 2, HEAP_XTRA);
+      ehp = vm::heap_alloc(build_proc, 2, HEAP_XTRA);
       CDR(ehp) = *--esp;
       CAR(ehp) = esp[-1];
       esp[-1] = make_list(ehp);
       break;
 
     case matchConsB:
-      ehp = HAllocX(build_proc, 2, HEAP_XTRA);
+      ehp = vm::heap_alloc(build_proc, 2, HEAP_XTRA);
       CAR(ehp) = *--esp;
       CDR(ehp) = esp[-1];
       esp[-1] = make_list(ehp);
@@ -2261,7 +2261,7 @@ restart:
 
     case matchMkTuple:
       n = *pc++;
-      ehp = HAllocX(build_proc, n + 1, HEAP_XTRA);
+      ehp = vm::heap_alloc(build_proc, n + 1, HEAP_XTRA);
       t = make_tuple(ehp);
       *ehp++ = make_arityval(n);
 
@@ -2396,7 +2396,7 @@ case_matchPushV:
         size_t sz;
         Eterm *top;
         sz = size_object_rel(term, base);
-        top = HAllocX(build_proc, sz, HEAP_XTRA);
+        top = vm::heap_alloc(build_proc, sz, HEAP_XTRA);
 
         if (in_flags & ERTS_PAM_CONTIGUOUS_TUPLE) {
           ASSERT(is_tuple_rel(term, base));
@@ -2416,7 +2416,7 @@ case_matchPushV:
       ASSERT_HALFWORD(base == nullptr);
       n = arity; /* Only happens when 'term' is an array */
       tp = termp;
-      ehp = HAllocX(build_proc, n * 2, HEAP_XTRA);
+      ehp = vm::heap_alloc(build_proc, n * 2, HEAP_XTRA);
       *esp++  = make_list(ehp);
 
       while (n--) {
@@ -2609,7 +2609,7 @@ case_matchPushV:
       } else {
         Eterm sender = SEQ_TRACE_TOKEN_SENDER(c_p);
         size_t sender_sz = is_immed(sender) ? 0 : size_object(sender);
-        ehp = HAllocX(build_proc, 6 + sender_sz, HEAP_XTRA);
+        ehp = vm::heap_alloc(build_proc, 6 + sender_sz, HEAP_XTRA);
 
         if (sender_sz) {
           sender = copy_struct(sender, sender_sz, &ehp, &MSO(build_proc));
@@ -2689,7 +2689,7 @@ case_matchPushV:
       if (!(c_p->cp) || !(cp = find_function_from_pc(c_p->cp))) {
         *esp++ = am_undefined;
       } else {
-        ehp = HAllocX(build_proc, 4, HEAP_XTRA);
+        ehp = vm::heap_alloc(build_proc, 4, HEAP_XTRA);
         *esp++ = make_tuple(ehp);
         ehp[0] = make_arityval(3);
         ehp[1] = cp[0];
@@ -2895,7 +2895,7 @@ Eterm db_format_dmc_err_info(Process *p, DMCErrInfo *ei)
     }
 
     sl = strlen(buff);
-    shp = HAlloc(p, sl * 2 + 5);
+    shp = vm::heap_alloc(p, sl * 2 + 5);
     sev = (tmp->severity == dmcWarning) ?
           am_atom_put("warning", 7) :
           am_error;
@@ -3452,26 +3452,26 @@ Eterm db_copy_element_from_ets(DbTableCommon *tb, Process *p,
                                Eterm **hpp, size_t extra)
 {
   if (is_immed(obj->tpl[pos])) {
-    *hpp = HAlloc(p, extra);
+    *hpp = vm::heap_alloc(p, extra);
     return obj->tpl[pos];
   }
 
   if (tb->compress && pos != tb->keypos) {
     uint8_t *ext = elem2ext(obj->tpl, pos);
     ssize_t sz = erts_decode_ext_size_ets(ext, db_alloced_size_comp(obj)) + extra;
-    Eterm *hp = HAlloc(p, sz);
+    Eterm *hp = vm::heap_alloc(p, sz);
     Eterm *endp = hp + sz;
     Eterm copy = erts_decode_ext_ets(&hp, &MSO(p), ext);
     *hpp = hp;
     hp += extra;
-    HRelease(p, endp, hp);
+    vm::heap_free(p, endp, hp);
 #ifdef DEBUG_CLONE
     ASSERT(eq_rel(copy, nullptr, obj->debug_clone[pos], obj->debug_clone));
 #endif
     return copy;
   } else {
     size_t sz = size_object_rel(obj->tpl[pos], obj->tpl);
-    *hpp = HAlloc(p, sz + extra);
+    *hpp = vm::heap_alloc(p, sz + extra);
     return copy_struct_rel(obj->tpl[pos], sz, hpp, &MSO(p), obj->tpl, nullptr);
   }
 }
@@ -5714,7 +5714,7 @@ static Eterm match_spec_test(Process *p, Eterm against, Eterm spec, int trace)
   }
 
   if (mps == nullptr) {
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
     ret = TUPLE2(hp, am_error, lint_res);
   } else {
 #ifdef DMC_DEBUG
@@ -5777,7 +5777,7 @@ static Eterm match_spec_test(Process *p, Eterm against, Eterm spec, int trace)
       sz += 2;
     }
 
-    hp = HAlloc(p, 5 + sz);
+    hp = vm::heap_alloc(p, 5 + sz);
     flg = NIL;
 
     if (ret_flags & MATCH_SET_EXCEPTION_TRACE) {
@@ -5858,7 +5858,7 @@ Eterm db_match_dbterm(DbTableCommon *tb, Process *c_p, Binary *bprog,
                       &dummy);
 
   if (is_value(res) && hpp != nullptr) {
-    *hpp = HAlloc(c_p, extra);
+    *hpp = vm::heap_alloc(c_p, extra);
   }
 
   if (tb->compress) {

@@ -795,7 +795,7 @@ erts_ptab_list(Process *c_p, ErtsPTab *ptab)
     Eterm *hp;
     Eterm magic_bin;
     ERTS_PTAB_LIST_DBG_CHK_RESLIST(res_acc);
-    hp = HAlloc(c_p, PROC_BIN_SIZE);
+    hp = vm::heap_alloc(c_p, PROC_BIN_SIZE);
     ERTS_PTAB_LIST_DBG_SAVE_HEAP_ALLOC(ptlbdp, hp, PROC_BIN_SIZE);
     magic_bin = erts_mk_magic_binary_term(&hp, &MSO(c_p), mbp);
     ERTS_PTAB_LIST_DBG_VERIFY_HEAP_ALLOC_USED(ptlbdp, hp);
@@ -1264,7 +1264,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
       }
 
       if (conses) {
-        hp = HAlloc(c_p, conses * 2);
+        hp = vm::heap_alloc(c_p, conses * 2);
         ERTS_PTAB_LIST_DBG_SAVE_HEAP_ALLOC(ptlbdp, hp, conses * 2);
 
         for (ix = ptlbdp->pid_ix - 1; ix >= min_ix; ix--) {
@@ -1545,7 +1545,7 @@ erts_debug_ptab_list(Process *c_p, ErtsPTab *ptab)
 
   res = NIL;
   need = erts_ptab_count(ptab) * 2;
-  hp = HAlloc(c_p, need); /* we need two heap words for each id */
+  hp = vm::heap_alloc(c_p, need); /* we need two heap words for each id */
   hp_end = hp + need;
 
   /* make the list by scanning bakward */
@@ -1562,7 +1562,7 @@ erts_debug_ptab_list(Process *c_p, ErtsPTab *ptab)
 
   erts_ptab_rwunlock(ptab);
 
-  HRelease(c_p, hp_end, hp);
+  vm::heap_free(c_p, hp_end, hp);
 
   return res;
 }
@@ -1586,7 +1586,7 @@ erts_debug_ptab_list_bif_info(Process *c_p, ErtsPTab *ptab)
   size_t sz = 0;
   Eterm *hp;
   (void) erts_bld_tuplev(nullptr, &sz, sizeof(elements) / sizeof(Eterm), elements);
-  hp = HAlloc(c_p, sz);
+  hp = vm::heap_alloc(c_p, sz);
   return erts_bld_tuplev(&hp, nullptr, sizeof(elements) / sizeof(Eterm), elements);
 }
 

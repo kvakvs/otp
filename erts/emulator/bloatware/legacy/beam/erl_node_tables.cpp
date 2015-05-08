@@ -1030,7 +1030,7 @@ erts_get_node_and_dist_references(struct process *proc)
   size = 0;
   (void) reference_table_term(nullptr, &size);
 
-  hp = HAlloc(proc, size);
+  hp = vm::heap_alloc(proc, size);
 #ifdef DEBUG
   ASSERT(size > 0);
   endp = hp + size;

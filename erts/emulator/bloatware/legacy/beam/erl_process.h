@@ -997,7 +997,7 @@ struct process {
 #endif
 
 #ifdef FORCE_HEAP_FRAGS
-  size_t space_verified;        /* Avoid HAlloc forcing heap fragments when */
+  size_t space_verified;        /* Avoid vm::heap_alloc forcing heap fragments when */
   Eterm *space_verified_from; /* we rely on available heap space (TestHeap) */
 #endif
 };
@@ -1158,7 +1158,7 @@ typedef struct {
 
 #define KILL_CATCHES(p) (p)->catches = -1
 
-/* Shrink heap fragment from _last_ HAlloc.
+/* Shrink heap fragment from _last_ vm::heap_alloc.
 */
 ERTS_GLB_INLINE void erts_heap_frag_shrink(Process *p, Eterm *hp);
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF

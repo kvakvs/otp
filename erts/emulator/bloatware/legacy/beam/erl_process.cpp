@@ -8428,7 +8428,7 @@ erts_multi_scheduling_blockers(Process * p) {
     }
 
     ASSERT(max_size);
-    hp = HAlloc(p, max_size);
+    hp = vm::heap_alloc(p, max_size);
     hp_end = hp + max_size;
 
     for (plp1 = erts_proclist_peek_first(schdlr_sspnd.msb.procs);
@@ -8446,7 +8446,7 @@ erts_multi_scheduling_blockers(Process * p) {
       /* else: already in result list */
     }
 
-    HRelease(p, hp_end, hp);
+    vm::heap_free(p, hp_end, hp);
   }
 
   erts_smp_mtx_unlock(&schdlr_sspnd.mtx);
@@ -11409,7 +11409,7 @@ erts_sched_stat_term(Process * p, int total) {
   sz = 0;
   (void) erts_bld_atom_2uint_3tup_list(nullptr, &sz, ERTS_NO_PRIO_LEVELS,
                                        prio, executed, migrated);
-  hp = HAlloc(p, sz);
+  hp = vm::heap_alloc(p, sz);
   return erts_bld_atom_2uint_3tup_list(&hp, nullptr, ERTS_NO_PRIO_LEVELS,
                                        prio, executed, migrated);
 }

@@ -5577,7 +5577,7 @@ erts_module_info_0(Process *p, Eterm module)
 
 #define BUILD_INFO(What) \
     tup = erts_module_info_1(p, module, What); \
-    hp = HAlloc(p, 5); \
+    hp = (Eterm *)vm::heap_alloc(p, 5); \
     tup = TUPLE2(hp, What, tup); \
     hp += 3; \
     list = CONS(hp, tup, list)
@@ -5645,7 +5645,7 @@ functions_in_module(Process *p, /* Process whose heap to use. */
   code = modp->curr.code;
   num_functions = code[MI_NUM_FUNCTIONS];
   need = 5 * num_functions;
-  hp = HAlloc(p, need);
+  hp = vm::heap_alloc(p, need);
   hp_end = hp + need;
 
   for (i = num_functions - 1; i >= 0 ; i--) {
@@ -5668,7 +5668,7 @@ functions_in_module(Process *p, /* Process whose heap to use. */
     }
   }
 
-  HRelease(p, hp_end, hp);
+  vm::heap_free(p, hp_end, hp);
   return result;
 }
 
@@ -5704,7 +5704,7 @@ native_addresses(Process *p, Eterm mod)
   code = modp->curr.code;
   num_functions = code[MI_NUM_FUNCTIONS];
   need = (6 + BIG_UINT_HEAP_SIZE) * num_functions;
-  hp = HAlloc(p, need);
+  hp = vm::heap_alloc(p, need);
   hp_end = hp + need;
 
   for (i = num_functions - 1; i >= 0 ; i--) {
@@ -5724,7 +5724,7 @@ native_addresses(Process *p, Eterm mod)
     }
   }
 
-  HRelease(p, hp_end, hp);
+  vm::heap_free(p, hp_end, hp);
   return result;
 }
 
@@ -5765,7 +5765,7 @@ exported_from_module(Process *p, /* Process whose heap to use. */
 
       if (hp == hend) {
         int need = 10 * 5;
-        hp = HAlloc(p, need);
+        hp = vm::heap_alloc(p, need);
         hend = hp + need;
       }
 
@@ -5776,7 +5776,7 @@ exported_from_module(Process *p, /* Process whose heap to use. */
     }
   }
 
-  HRelease(p, hend, hp);
+  vm::heap_free(p, hend, hp);
   return result;
 }
 
@@ -5812,7 +5812,7 @@ attributes_for_module(Process *p, /* Process whose heap to use. */
   ext = (uint8_t *) code[MI_ATTR_PTR];
 
   if (ext != nullptr) {
-    hp = HAlloc(p, code[MI_ATTR_SIZE_ON_HEAP]);
+    hp = vm::heap_alloc(p, code[MI_ATTR_SIZE_ON_HEAP]);
     end = hp + code[MI_ATTR_SIZE_ON_HEAP];
     result = erts_decode_ext(&hp, &MSO(p), &ext);
 
@@ -5820,7 +5820,7 @@ attributes_for_module(Process *p, /* Process whose heap to use. */
       ASSERT(hp <= end);
     }
 
-    HRelease(p, end, hp);
+    vm::heap_free(p, end, hp);
   }
 
   return result;
@@ -5857,7 +5857,7 @@ compilation_info_for_module(Process *p, /* Process whose heap to use. */
   ext = (uint8_t *) code[MI_COMPILE_PTR];
 
   if (ext != nullptr) {
-    hp = HAlloc(p, code[MI_COMPILE_SIZE_ON_HEAP]);
+    hp = vm::heap_alloc(p, code[MI_COMPILE_SIZE_ON_HEAP]);
     end = hp + code[MI_COMPILE_SIZE_ON_HEAP];
     result = erts_decode_ext(&hp, &MSO(p), &ext);
 
@@ -5865,7 +5865,7 @@ compilation_info_for_module(Process *p, /* Process whose heap to use. */
       ASSERT(hp <= end);
     }
 
-    HRelease(p, end, hp);
+    vm::heap_free(p, end, hp);
   }
 
   return result;
@@ -6016,7 +6016,7 @@ error:
   if (bitoffs) {
     res = new_binary(p, stp->chunks[0].start, stp->chunks[0].size);
   } else {
-    sb = (ErlSubBin *) HAlloc(p, ERL_SUB_BIN_SIZE);
+    sb = (ErlSubBin *) vm::heap_alloc(p, ERL_SUB_BIN_SIZE);
     sb->thing_word = HEADER_SUB_BIN;
     sb->orig = real_bin;
     sb->size = stp->chunks[0].size;

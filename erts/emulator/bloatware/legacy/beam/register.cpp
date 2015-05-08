@@ -740,7 +740,7 @@ BIF_RETTYPE registered_0(BIF_ALIST_0)
     BIF_RET(NIL);
   }
 
-  hp = HAlloc(BIF_P, need);
+  hp = vm::heap_alloc(BIF_P, need);
 
   /* scan through again and make the list */
   res = NIL;

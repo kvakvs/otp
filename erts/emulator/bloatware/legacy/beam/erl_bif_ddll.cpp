@@ -466,10 +466,10 @@ BIF_RETTYPE erl_ddll_try_load_3(BIF_ALIST_3)
 
   if (monitor) {
     Eterm mref = add_monitor(BIF_P, dh, ERL_DE_PROC_AWAIT_LOAD);
-    hp = HAlloc(BIF_P, 4);
+    hp = vm::heap_alloc(BIF_P, 4);
     t = TUPLE3(hp, am_ok, ok_term, mref);
   } else {
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     t = TUPLE2(hp, am_ok, ok_term);
   }
 
@@ -490,7 +490,7 @@ soft_error:
     soft_error_term = build_load_error(BIF_P, build_this_load_error);
   }
 
-  hp = HAlloc(BIF_P, 3);
+  hp = vm::heap_alloc(BIF_P, 3);
   t = TUPLE2(hp, am_error, soft_error_term);
   erts_free(ERTS_ALC_T_DDLL_TMP_BUF, (void *) path);
   erts_free(ERTS_ALC_T_DDLL_TMP_BUF, (void *) name);
@@ -690,10 +690,10 @@ done:
 
   if (monitor > 0) {
     Eterm mref = add_monitor(BIF_P, dh, ERL_DE_PROC_AWAIT_UNLOAD);
-    hp = HAlloc(BIF_P, 4);
+    hp = vm::heap_alloc(BIF_P, 4);
     t = TUPLE3(hp, am_ok, ok_term, mref);
   } else {
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     t = TUPLE2(hp, am_ok, ok_term);
   }
 
@@ -712,7 +712,7 @@ soft_error:
 #endif
   erts_free(ERTS_ALC_T_DDLL_TMP_BUF, (void *) name);
   erts_smp_proc_lock(BIF_P, ERTS_PROC_LOCK_MAIN);
-  hp = HAlloc(BIF_P, 3);
+  hp = vm::heap_alloc(BIF_P, 3);
   t = TUPLE2(hp, am_error, soft_error_term);
   BIF_RET(t);
 
@@ -773,7 +773,7 @@ BIF_RETTYPE erl_ddll_loaded_drivers_0(BIF_ALIST_0)
     need += sys_strlen(drv->name) * 2 + 2;
   }
 
-  hp = HAlloc(BIF_P, need);
+  hp = vm::heap_alloc(BIF_P, need);
 
   for (drv = driver_list; drv; drv = drv->next) {
     Eterm l;
@@ -843,7 +843,7 @@ BIF_RETTYPE erl_ddll_info_2(BIF_ALIST_2)
       /* Cheating, only one flag for now... */
       if (start_flags & ERL_DE_FL_KILL_PORTS) {
         Eterm *myhp;
-        myhp = HAlloc(p, 2);
+        myhp = vm::heap_alloc(p, 2);
         res = CONS(myhp, am_kill_ports, NIL);
       } else {
         res = NIL;
@@ -907,7 +907,7 @@ BIF_RETTYPE erl_ddll_info_2(BIF_ALIST_2)
     goto done;
   }
 
-  hp = HAlloc(p, num_pei * (2 + 3));
+  hp = vm::heap_alloc(p, num_pei * (2 + 3));
 
   for (i = 0; i < num_pei; ++ i) {
     Eterm tpl = TUPLE2(hp, pei[i].pid, make_small(pei[i].count));
@@ -1022,7 +1022,7 @@ BIF_RETTYPE erl_ddll_format_error_int_1(BIF_ALIST_1)
   }
 
   len = sys_strlen(errstring);
-  hp = HAlloc(p, 2 * len);
+  hp = vm::heap_alloc(p, 2 * len);
   ret = util::buf_to_intlist(&hp, errstring, len, NIL);
   BIF_RET(ret);
 error:
@@ -2009,7 +2009,7 @@ static Eterm build_load_error(Process *p, int code)
   ERTS_SMP_LC_ASSERT(ERTS_PROC_LOCK_MAIN & erts_proc_lc_my_proc_locks(p));
 
   if (need) {
-    hp = HAlloc(p, need);
+    hp = vm::heap_alloc(p, need);
   }
 
   return build_load_error_hp(hp, code);

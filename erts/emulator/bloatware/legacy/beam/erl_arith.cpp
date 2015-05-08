@@ -269,7 +269,7 @@ big_shift:
         }
 
         need = BIG_NEED_SIZE(ires + 1);
-        bigp = HAlloc(p, need);
+        bigp = vm::heap_alloc(p, need);
         arg1 = big_lshift(arg1, i, bigp);
         maybe_shrink(p, bigp, arg1, need);
 
@@ -322,7 +322,7 @@ BIF_RETTYPE bnot_1(BIF_ALIST_1)
     ret = make_small(~signed_val(BIF_ARG_1));
   } else if (is_big(BIF_ARG_1)) {
     size_t need = BIG_NEED_SIZE(big_size(BIF_ARG_1) + 1);
-    Eterm *bigp = HAlloc(BIF_P, need);
+    Eterm *bigp = vm::heap_alloc(BIF_P, need);
 
     ret = big_bnot(BIF_ARG_1, bigp);
     maybe_shrink(BIF_P, bigp, ret, need);
@@ -372,7 +372,7 @@ erts_mixed_plus(Process *p, Eterm arg1, Eterm arg2)
           if (MY_IS_SSMALL(ires)) {
             return make_small(ires);
           } else {
-            hp = HAlloc(p, 2);
+            hp = vm::heap_alloc(p, 2);
             res = small_to_big(ires, hp);
             return res;
           }
@@ -442,7 +442,7 @@ do_big:
           sz2 = big_size(arg2);
           sz = MAX(sz1, sz2) + 1;
           need_heap = BIG_NEED_SIZE(sz);
-          hp = HAlloc(p, need_heap);
+          hp = vm::heap_alloc(p, need_heap);
           res = big_plus(arg1, arg2, hp);
           maybe_shrink(p, hp, res, need_heap);
 
@@ -500,7 +500,7 @@ do_big:
 do_float:
           f1.fd = f1.fd + f2.fd;
           ERTS_FP_ERROR(p, f1.fd, goto badarith);
-          hp = HAlloc(p, FLOAT_SIZE_OBJECT);
+          hp = vm::heap_alloc(p, FLOAT_SIZE_OBJECT);
           res = make_float(hp);
           PUT_DOUBLE(f1, hp);
           return res;
@@ -548,7 +548,7 @@ erts_mixed_minus(Process *p, Eterm arg1, Eterm arg2)
           if (MY_IS_SSMALL(ires)) {
             return make_small(ires);
           } else {
-            hp = HAlloc(p, 2);
+            hp = vm::heap_alloc(p, 2);
             res = small_to_big(ires, hp);
             return res;
           }
@@ -603,7 +603,7 @@ do_big:
           sz2 = big_size(arg2);
           sz = MAX(sz1, sz2) + 1;
           need_heap = BIG_NEED_SIZE(sz);
-          hp = HAlloc(p, need_heap);
+          hp = vm::heap_alloc(p, need_heap);
           res = big_minus(arg1, arg2, hp);
           maybe_shrink(p, hp, res, need_heap);
 
@@ -673,7 +673,7 @@ do_big:
 do_float:
           f1.fd = f1.fd - f2.fd;
           ERTS_FP_ERROR(p, f1.fd, goto badarith);
-          hp = HAlloc(p, FLOAT_SIZE_OBJECT);
+          hp = vm::heap_alloc(p, FLOAT_SIZE_OBJECT);
           res = make_float(hp);
           PUT_DOUBLE(f1, hp);
           return res;
@@ -746,7 +746,7 @@ erts_mixed_times(Process *p, Eterm arg1, Eterm arg2)
               hdr = big_res[0];
               arity = bignum_header_arity(hdr);
               ASSERT(arity == 1 || arity == 2);
-              hp = HAlloc(p, arity + 1);
+              hp = vm::heap_alloc(p, arity + 1);
               res = make_big(hp);
               *hp++ = hdr;
               *hp++ = big_res[1];
@@ -836,7 +836,7 @@ badarith:
 
 do_big:
           need_heap = BIG_NEED_SIZE(sz);
-          hp = HAlloc(p, need_heap);
+          hp = vm::heap_alloc(p, need_heap);
           res = big_times(arg1, arg2, hp);
 
           /*
@@ -901,7 +901,7 @@ do_big:
 do_float:
           f1.fd = f1.fd * f2.fd;
           ERTS_FP_ERROR(p, f1.fd, goto badarith);
-          hp = HAlloc(p, FLOAT_SIZE_OBJECT);
+          hp = vm::heap_alloc(p, FLOAT_SIZE_OBJECT);
           res = make_float(hp);
           PUT_DOUBLE(f1, hp);
           return res;
@@ -1056,7 +1056,7 @@ badarith:
 do_float:
           f1.fd = f1.fd / f2.fd;
           ERTS_FP_ERROR(p, f1.fd, goto badarith);
-          hp = HAlloc(p, FLOAT_SIZE_OBJECT);
+          hp = vm::heap_alloc(p, FLOAT_SIZE_OBJECT);
           PUT_DOUBLE(f1, hp);
           return make_float(hp);
 
@@ -1116,7 +1116,7 @@ L_big_div:
 
       ires = big_size(arg2);
       need = BIG_NEED_SIZE(i - ires + 1) + BIG_NEED_SIZE(i);
-      hp = HAlloc(p, need);
+      hp = vm::heap_alloc(p, need);
       arg1 = big_div(arg1, arg2, hp);
       maybe_shrink(p, hp, arg1, need);
 
@@ -1170,7 +1170,7 @@ L_big_rem:
       arg1 = SMALL_ZERO;
     } else if (ires > 0) {
       size_t need = BIG_NEED_SIZE(big_size(arg1));
-      Eterm *hp = HAlloc(p, need);
+      Eterm *hp = vm::heap_alloc(p, need);
 
       arg1 = big_rem(arg1, arg2, hp);
       maybe_shrink(p, hp, arg1, need);
@@ -1214,7 +1214,7 @@ Eterm erts_band(Process *p, Eterm arg1, Eterm arg2)
   }
 
   need = BIG_NEED_SIZE(MAX(big_size(arg1), big_size(arg2)) + 1);
-  hp = HAlloc(p, need);
+  hp = vm::heap_alloc(p, need);
   arg1 = big_band(arg1, arg2, hp);
   ASSERT(is_not_nil(arg1));
   maybe_shrink(p, hp, arg1, need);
@@ -1246,7 +1246,7 @@ Eterm erts_bor(Process *p, Eterm arg1, Eterm arg2)
   }
 
   need = BIG_NEED_SIZE(MAX(big_size(arg1), big_size(arg2)) + 1);
-  hp = HAlloc(p, need);
+  hp = vm::heap_alloc(p, need);
   arg1 = big_bor(arg1, arg2, hp);
   ASSERT(is_not_nil(arg1));
   maybe_shrink(p, hp, arg1, need);
@@ -1278,7 +1278,7 @@ Eterm erts_bxor(Process *p, Eterm arg1, Eterm arg2)
   }
 
   need = BIG_NEED_SIZE(MAX(big_size(arg1), big_size(arg2)) + 1);
-  hp = HAlloc(p, need);
+  hp = vm::heap_alloc(p, need);
   arg1 = big_bxor(arg1, arg2, hp);
   ASSERT(is_not_nil(arg1));
   maybe_shrink(p, hp, arg1, need);
@@ -1291,7 +1291,7 @@ Eterm erts_bnot(Process *p, Eterm arg)
 
   if (is_big(arg)) {
     size_t need = BIG_NEED_SIZE(big_size(arg) + 1);
-    Eterm *bigp = HAlloc(p, need);
+    Eterm *bigp = vm::heap_alloc(p, need);
 
     ret = big_bnot(arg, bigp);
     maybe_shrink(p, bigp, ret, need);

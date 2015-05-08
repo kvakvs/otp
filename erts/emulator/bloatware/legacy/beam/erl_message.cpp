@@ -306,7 +306,7 @@ erts_msg_distext2heap(Process *pp,
 
   if (hp_end != hp) {
     if (!(*bpp)) {
-      HRelease(pp, hp_end, hp);
+      vm::heap_free(pp, hp_end, hp);
     } else {
       size_t final_size = hp - &(*bpp)->mem[0];
       Eterm brefs[2] = {msg, *tokenp};
@@ -332,7 +332,7 @@ decode_error:
     free_message_buffer(*bpp);
     *bpp = nullptr;
   } else if (hp) {
-    HRelease(pp, hp_end, hp);
+    vm::heap_free(pp, hp_end, hp);
   }
 
   return THE_NON_VALUE;

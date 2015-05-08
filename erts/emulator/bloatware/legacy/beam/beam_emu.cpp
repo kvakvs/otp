@@ -255,7 +255,7 @@ extern int count_instructions;
 
 /*
  * Use LIGHT_SWAPOUT when the called function
- * will call HeapOnlyAlloc() (and never HAlloc()).
+ * will call HeapOnlyAlloc() (and never vm::heap_alloc()).
  */
 #ifdef DEBUG
 #  /* The stack pointer is used in an assertion. */
@@ -5646,7 +5646,7 @@ handle_error(Process *c_p, BeamInstr *pc, Eterm *reg, BifFunction bf)
    * Throws that are not caught are turned into 'nocatch' errors
    */
   if ((c_p->freason & EXF_THROWN) && (c_p->catches <= 0)) {
-    hp = HAlloc(c_p, 3);
+    hp = vm::heap_alloc(c_p, 3);
     Value = TUPLE2(hp, am_nocatch, Value);
     c_p->freason = EXC_ERROR;
   }
@@ -5853,7 +5853,7 @@ static Eterm
 add_stacktrace(Process *c_p, Eterm Value, Eterm exc)
 {
   Eterm Where = build_stacktrace(c_p, exc);
-  Eterm *hp = HAlloc(c_p, 3);
+  Eterm *hp = vm::heap_alloc(c_p, 3);
   return TUPLE2(hp, Value, Where);
 }
 
@@ -5883,7 +5883,7 @@ expand_error_value(Process *c_p, size_t freason, Eterm Value)
   case (GET_EXC_INDEX(EXC_BADARITY)):
     /* Some common exceptions: value -> {atom, value} */
     ASSERT(is_value(Value));
-    hp = HAlloc(c_p, 3);
+    hp = vm::heap_alloc(c_p, 3);
     Value = TUPLE2(hp, error_atom[r], Value);
     break;
 
@@ -5949,7 +5949,7 @@ save_stacktrace(Process *c_p, BeamInstr *pc, Eterm *reg, BifFunction bf,
   /* Create a container for the exception data */
   sz = (offsetof(struct StackTrace, trace) + sizeof(BeamInstr *)*depth
         + sizeof(Eterm) - 1) / sizeof(Eterm);
-  s = (struct StackTrace *) HAlloc(c_p, 1 + sz);
+  s = (struct StackTrace *) vm::heap_alloc(c_p, 1 + sz);
   /* The following fields are inside the bignum */
   s->header = make_pos_bignum_header(sz);
   s->freason = c_p->freason;
@@ -6037,7 +6037,7 @@ save_stacktrace(Process *c_p, BeamInstr *pc, Eterm *reg, BifFunction bf,
   /* Package args and stack trace */
   {
     Eterm *hp;
-    hp = HAlloc(c_p, 2);
+    hp = vm::heap_alloc(c_p, 2);
     c_p->ftrace = CONS(hp, args, make_big((Eterm *) s));
   }
 
@@ -6153,7 +6153,7 @@ static Eterm
 make_arglist(Process *c_p, Eterm *reg, int a)
 {
   Eterm args = NIL;
-  Eterm *hp = HAlloc(c_p, 2 * a);
+  Eterm *hp = vm::heap_alloc(c_p, 2 * a);
 
   while (a > 0) {
     args = CONS(hp, reg[a - 1], args);
@@ -6247,7 +6247,7 @@ build_stacktrace(Process *c_p, Eterm exc)
   /*
    * Allocate heap space and build the stacktrace.
    */
-  hp = HAlloc(c_p, heap_size);
+  hp = vm::heap_alloc(c_p, heap_size);
 
   while (stkp > stk) {
     stkp--;
@@ -6719,7 +6719,7 @@ call_fun(Process *p,    /* Current process. */
         /*
          * There is a fun defined, but the call has the wrong arity.
          */
-        hp = HAlloc(p, 3);
+        hp = vm::heap_alloc(p, 3);
         p->freason = EXC_BADARITY;
         p->fvalue = TUPLE2(hp, fun, args);
         return nullptr;
@@ -6785,7 +6785,7 @@ call_fun(Process *p,    /* Current process. */
 
       if (is_non_value(args)) {
         args = NIL;
-        hp = HAlloc(p, arity * 2);
+        hp = vm::heap_alloc(p, arity * 2);
 
         for (i = arity - 1; i >= 0; i--) {
           args = CONS(hp, reg[i], args);
@@ -6793,7 +6793,7 @@ call_fun(Process *p,    /* Current process. */
         }
       }
 
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       p->freason = EXC_BADARITY;
       p->fvalue = TUPLE2(hp, fun, args);
       return nullptr;

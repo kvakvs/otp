@@ -1073,7 +1073,7 @@ init_atoms(ErtsMsegAllctr_t *ma)
  * change between size check and actual build. This because a value
  * that would fit a small when size check is done may need to be built
  * as a big when the actual build is performed. Caller is required to
- * HRelease after build.
+ * vm::heap_free after build.
  */
 static ERTS_INLINE Eterm
 bld_unstable_uint(size_t **hpp, size_t *szp, size_t ui)

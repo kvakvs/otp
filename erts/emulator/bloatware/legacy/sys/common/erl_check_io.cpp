@@ -2117,7 +2117,7 @@ ERTS_CIO_EXPORT(erts_check_io_info)(void *proc)
     res = erts_bld_2tup_list(hpp, szp, i, tags, values);
 
     if (!hpp) {
-	hp = HAlloc(p, sz);
+        hp = vm::heap_alloc(p, sz);
 	hpp = &hp;
 	szp = NULL;
 	goto bld_it;

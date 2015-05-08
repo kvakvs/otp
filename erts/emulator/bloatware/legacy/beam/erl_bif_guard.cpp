@@ -56,7 +56,7 @@ BIF_RETTYPE abs_1(BIF_ALIST_1)
     i = ERTS_SMALL_ABS(i0);
 
     if (i0 == MIN_SMALL) {
-      hp = HAlloc(BIF_P, BIG_UINT_HEAP_SIZE);
+      hp = vm::heap_alloc(BIF_P, BIG_UINT_HEAP_SIZE);
       BIF_RET(uint_to_big(i, hp));
     } else {
       BIF_RET(make_small(i));
@@ -68,7 +68,7 @@ BIF_RETTYPE abs_1(BIF_ALIST_1)
       int sz = big_arity(BIF_ARG_1) + 1;
       size_t *x;
 
-      hp = HAlloc(BIF_P, sz); /* See note at beginning of file */
+      hp = vm::heap_alloc(BIF_P, sz); /* See note at beginning of file */
       sz--;
       res = make_big(hp);
       x = big_val(BIF_ARG_1);
@@ -87,7 +87,7 @@ BIF_RETTYPE abs_1(BIF_ALIST_1)
     GET_DOUBLE(BIF_ARG_1, f);
 
     if (f.fd < 0.0) {
-      hp = HAlloc(BIF_P, FLOAT_SIZE_OBJECT);
+      hp = vm::heap_alloc(BIF_P, FLOAT_SIZE_OBJECT);
       f.fd = fabs(f.fd);
       res = make_float(hp);
       PUT_DOUBLE(f, hp);
@@ -123,7 +123,7 @@ badarg:
     goto badarg;
   }
 
-  hp = HAlloc(BIF_P, FLOAT_SIZE_OBJECT);
+  hp = vm::heap_alloc(BIF_P, FLOAT_SIZE_OBJECT);
   res = make_float(hp);
   PUT_DOUBLE(f, hp);
   BIF_RET(res);
@@ -215,7 +215,7 @@ BIF_RETTYPE size_1(BIF_ALIST_1)
     if (IS_USMALL(0, sz)) {
       return make_small(sz);
     } else {
-      Eterm *hp = HAlloc(BIF_P, BIG_UINT_HEAP_SIZE);
+      Eterm *hp = vm::heap_alloc(BIF_P, BIG_UINT_HEAP_SIZE);
       BIF_RET(uint_to_big(sz, hp));
     }
   }
@@ -241,12 +241,12 @@ BIF_RETTYPE bit_size_1(BIF_ALIST_1)
       if (IS_USMALL(0, low_bits)) {
         BIF_RET(make_small(low_bits));
       } else {
-        Eterm *hp = HAlloc(BIF_P, BIG_UINT_HEAP_SIZE);
+        Eterm *hp = vm::heap_alloc(BIF_P, BIG_UINT_HEAP_SIZE);
         BIF_RET(uint_to_big(low_bits, hp));
       }
     } else {
       size_t sz = BIG_UINT_HEAP_SIZE + 1;
-      Eterm *hp = HAlloc(BIF_P, sz);
+      Eterm *hp = vm::heap_alloc(BIF_P, sz);
       hp[0] = make_pos_bignum_header(sz - 1);
       BIG_DIGIT(hp, 0) = low_bits;
       BIG_DIGIT(hp, 1) = high_bits;
@@ -272,7 +272,7 @@ BIF_RETTYPE byte_size_1(BIF_ALIST_1)
     if (IS_USMALL(0, bytesize)) {
       BIF_RET(make_small(bytesize));
     } else {
-      Eterm *hp = HAlloc(BIF_P, BIG_UINT_HEAP_SIZE);
+      Eterm *hp = vm::heap_alloc(BIF_P, BIG_UINT_HEAP_SIZE);
       BIF_RET(uint_to_big(bytesize, hp));
     }
   } else {
@@ -318,7 +318,7 @@ double_to_integer(Process *p, double x)
 
   sz = BIG_NEED_SIZE(ds);          /* number of words including arity */
 
-  hp = HAlloc(p, sz);
+  hp = vm::heap_alloc(p, sz);
   res = make_big(hp);
   xp = (ErtsDigit *)(hp + 1);
 
@@ -374,7 +374,7 @@ badarg:
 
 /*
  * The following code is used when a guard that may build on the
- * heap is called directly. They must not use HAlloc(), but must
+ * heap is called directly. They must not use vm::heap_alloc(), but must
  * do a garbage collection if there is insufficient heap space.
  *
  * Important note: All error checking MUST be done before doing

@@ -141,7 +141,7 @@ Eterm get_emu_args(Process *c_p)
   hsz = g_saved_emu_args.no_bytes * 2;
   hsz += g_saved_emu_args.argc * 2;
 
-  hp = HAlloc(c_p, hsz);
+  hp = vm::heap_alloc(c_p, hsz);
 #ifdef DEBUG
   end_hp = hp + hsz;
 #endif

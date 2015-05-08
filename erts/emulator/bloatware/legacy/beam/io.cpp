@@ -1559,7 +1559,7 @@ queue_port_sched_op_reply(Process *rp,
   hp += 3;
 
   if (!bp) {
-    HRelease(rp, hp_start + h_size, hp);
+    vm::heap_free(rp, hp_start + h_size, hp);
   } else {
     size_t used_h_size = hp - hp_start;
     ASSERT(h_size >= used_h_size);
@@ -4545,7 +4545,7 @@ erts_port_control(Process *c_p,
                                      resp_bufp,
                                      &resp_size,
                                      &resp_buf[0]);
-      hp = HAlloc(c_p, hsz);
+      hp = vm::heap_alloc(c_p, hsz);
       *retvalp = write_port_control_result(control_flags,
                                            resp_bufp,
                                            resp_size,
@@ -4882,7 +4882,7 @@ erts_port_call(Process *c_p,
       }
 
       hsz += 3;
-      hp = HAlloc(c_p, hsz);
+      hp = vm::heap_alloc(c_p, hsz);
       hp_end = hp + hsz;
       endp = (uint8_t *) resp_bufp;
       term = erts_decode_ext(&hp, &MSO(c_p), &endp);
@@ -4893,7 +4893,7 @@ erts_port_call(Process *c_p,
 
       *retvalp = TUPLE2(hp, am_ok, term);
       hp += 3;
-      HRelease(c_p, hp_end, hp);
+      vm::heap_free(c_p, hp_end, hp);
 
       if (resp_bufp != &resp_buf[0]
           && !(ret_flags & DRIVER_CALL_KEEP_BUFFER)) {
@@ -5097,7 +5097,7 @@ erts_port_info(Process *c_p,
       *retvalp = value;
     } else {
       size_t used_h_size = hp - hp_start;
-      hp = HAlloc(c_p, used_h_size);
+      hp = vm::heap_alloc(c_p, used_h_size);
       *retvalp = copy_struct(value, used_h_size, &hp, &MSO(c_p));
       free_message_buffer(bp);
     }
@@ -6321,7 +6321,7 @@ done:
       bp = erts_resize_message_buffer(bp, hp - hp_start, &mess, 1);
     } else {
       ASSERT(hp);
-      HRelease(rp, hp_end, hp);
+      vm::heap_free(rp, hp_end, hp);
     }
 
     /* send message */
@@ -6342,7 +6342,7 @@ done:
     if (bp) {
       free_message_buffer(bp);
     } else if (hp) {
-      HRelease(rp, hp_end, hp);
+      vm::heap_free(rp, hp_end, hp);
     }
   }
 

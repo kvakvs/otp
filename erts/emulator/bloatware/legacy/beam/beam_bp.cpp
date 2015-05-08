@@ -1295,7 +1295,7 @@ int erts_is_time_break(Process *p, BeamInstr *pc, Eterm *retval)
 
       if (hash.used > 0) {
         size = (5 + 2) * hash.used;
-        hp   = HAlloc(p, size);
+        hp = (Eterm*)vm::heap_alloc(p, size);
 
         for (ix = 0; ix < hash.n; ix++) {
           item = &(hash.item[ix]);

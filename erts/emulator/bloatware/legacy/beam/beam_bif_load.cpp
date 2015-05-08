@@ -135,12 +135,12 @@ error:
   erts_free_aligned_binary_bytes(temp_alloc);
 
   if (reason != NIL) {
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, am_error, reason);
     BIF_RET(res);
   }
 
-  hp = HAlloc(BIF_P, PROC_BIN_SIZE);
+  hp = vm::heap_alloc(BIF_P, PROC_BIN_SIZE);
   res = erts_mk_magic_binary_term(&hp, &MSO(BIF_P), magic);
   erts_refc_dec(&magic->refc, 1);
   BIF_RET(res);
@@ -166,7 +166,7 @@ static struct { /* Protected by code_write_permission */
 static Eterm
 exception_list(Process *p, Eterm tag, struct m *mp, ssize_t exceptions)
 {
-  Eterm *hp = HAlloc(p, 3 + 2 * exceptions);
+  Eterm *hp = vm::heap_alloc(p, 3 + 2 * exceptions);
   Eterm res = NIL;
 
   mp += exceptions - 1;
@@ -649,7 +649,7 @@ BIF_RETTYPE loaded_0(BIF_ALIST_0)
   }
 
   if (j > 0) {
-    hp = HAlloc(BIF_P, j * 2);
+    hp = vm::heap_alloc(BIF_P, j * 2);
 
     for (i = 0; i < module_code_size(code_ix); i++) {
       if ((modp = module_code(i, code_ix)) != nullptr &&

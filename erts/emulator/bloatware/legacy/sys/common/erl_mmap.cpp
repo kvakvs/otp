@@ -1297,13 +1297,13 @@ Eterm build_free_seg_list(Process *p, ErtsFreeSegMap *map)
   const size_t may_need = map->nseg * (2 + 3 + 2 * 2); /* cons + tuple + bigs */
 
   barg.p = p;
-  barg.hp = HAlloc(p, may_need);
+  barg.hp = vm::heap_alloc(p, may_need);
   hp_end = barg.hp + may_need;
   barg.acc = NIL;
   rbt_foreach_node(&map->atree, build_free_seg_tuple, &barg, 1);
 
   RBT_ASSERT(barg.hp <= hp_end);
-  HRelease(p, hp_end, barg.hp);
+  vm::heap_free(p, hp_end, barg.hp);
   return barg.acc;
 }
 
@@ -2705,7 +2705,7 @@ Eterm erts_mmap_debug_info(Process *p)
     erts_smp_mtx_unlock(&mmap_state.mtx);
 
     may_need = 4 * (2 + 3 + PTR_BIG_SZ) + 2 * (2 + 3);
-    hp = HAlloc(p, may_need);
+    hp = vm::heap_alloc(p, may_need);
     hp_end = hp + may_need;
 
     list = erts_bld_atom_uword_2tup_list(&hp, nullptr,
@@ -2722,7 +2722,7 @@ Eterm erts_mmap_debug_info(Process *p)
     hp += 2;
 
     ASSERT(hp <= hp_end);
-    HRelease(p, hp_end, hp);
+    vm::heap_free(p, hp_end, hp);
     return list;
   } else {
     return am_undefined;

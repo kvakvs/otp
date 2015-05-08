@@ -1171,12 +1171,12 @@ BIF_RETTYPE erts_debug_dist_ext_to_term_2(BIF_ALIST_2)
     goto badarg;
   }
 
-  hp = HAlloc(BIF_P, (size_t) hsz);
+  hp = vm::heap_alloc(BIF_P, (size_t) hsz);
   hendp = hp + hsz;
 
   res = erts_decode_dist_ext(&hp, &MSO(BIF_P), &ede);
 
-  HRelease(BIF_P, hendp, hp);
+  vm::heap_free(BIF_P, hendp, hp);
 
   if (is_value(res)) {
     BIF_RET(res);
@@ -1565,7 +1565,7 @@ static B2TContext *b2t_export_context(Process *p, B2TContext *src)
     ctx->u.dc.next = &ctx->u.dc.res;
   }
 
-  hp = HAlloc(p, PROC_BIN_SIZE);
+  hp = vm::heap_alloc(p, PROC_BIN_SIZE);
   ctx->trap_bin = erts_mk_magic_binary_term(&hp, &MSO(p), context_b);
   return ctx;
 }
@@ -1672,7 +1672,7 @@ static BIF_RETTYPE binary_to_term_int(Process *p, uint32_t flags, Eterm bin, Bin
     case B2TDecodeInit:
       if (ctx == &c_buff && ctx->b2ts.extsize > ctx->reds) {
         /* dec_term will maybe trap, allocate space for magic bin
-           before result term to make it easy to trim with HRelease.
+           before result term to make it easy to trim with vm::heap_free.
          */
         ctx = b2t_export_context(p, &c_buff);
       }
@@ -1680,7 +1680,7 @@ static BIF_RETTYPE binary_to_term_int(Process *p, uint32_t flags, Eterm bin, Bin
       ctx->u.dc.ep = ctx->b2ts.extp;
       ctx->u.dc.res = (Eterm)(UWord) nullptr;
       ctx->u.dc.next = &ctx->u.dc.res;
-      ctx->u.dc.hp_start = HAlloc(p, ctx->heap_size);
+      ctx->u.dc.hp_start = vm::heap_alloc(p, ctx->heap_size);
       ctx->u.dc.hp       = ctx->u.dc.hp_start;
       ctx->u.dc.hp_end   = ctx->u.dc.hp_start + ctx->heap_size;
       ctx->u.dc.maps_head = nullptr;
@@ -1699,7 +1699,7 @@ static BIF_RETTYPE binary_to_term_int(Process *p, uint32_t flags, Eterm bin, Bin
     }
 
     case B2TDecodeFail:
-      HRelease(p, ctx->u.dc.hp_end, ctx->u.dc.hp_start);
+      vm::heap_free(p, ctx->u.dc.hp_end, ctx->u.dc.hp_start);
 
     /*fall through*/
     case B2TBadArg:
@@ -1732,7 +1732,7 @@ static BIF_RETTYPE binary_to_term_int(Process *p, uint32_t flags, Eterm bin, Bin
                  __FILE__, __LINE__, ctx->u.dc.hp - ctx->u.dc.hp_end);
       }
 
-      HRelease(p, ctx->u.dc.hp_end, ctx->u.dc.hp);
+      vm::heap_free(p, ctx->u.dc.hp_end, ctx->u.dc.hp);
 
       if (!is_first_call) {
         erts_set_gc_state(p, 1);
@@ -1818,7 +1818,7 @@ external_size_1(BIF_ALIST_1)
   if (IS_USMALL(0, size)) {
     BIF_RET(make_small(size));
   } else {
-    Eterm *hp = HAlloc(p, BIG_UINT_HEAP_SIZE);
+    Eterm *hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE);
     BIF_RET(uint_to_big(size, hp));
   }
 }
@@ -1867,7 +1867,7 @@ error:
   if (IS_USMALL(0, size)) {
     BIF_RET(make_small(size));
   } else {
-    Eterm *hp = HAlloc(BIF_P, BIG_UINT_HEAP_SIZE);
+    Eterm *hp = vm::heap_alloc(BIF_P, BIG_UINT_HEAP_SIZE);
     BIF_RET(uint_to_big(size, hp));
   }
 }
@@ -2085,7 +2085,7 @@ static Eterm erts_term_to_binary_int(Process *p, Eterm Term, int level, size_t f
 
 #define RETURN_STATE()              \
     do {                \
-  hp = HAlloc(p, PROC_BIN_SIZE+3);        \
+  hp = vm::heap_alloc(p, PROC_BIN_SIZE+3);        \
   c_term = erts_mk_magic_binary_term(&hp, &MSO(p), context_b);  \
   res = TUPLE2(hp, Term, c_term);         \
   BUMP_ALL_REDS(p);                                               \
@@ -2172,7 +2172,7 @@ static Eterm erts_term_to_binary_int(Process *p, Eterm Term, int level, size_t f
 return_normal:
         context->s.ec.result_bin = nullptr;
         context->alive = 0;
-        pb = (ProcBin *) HAlloc(p, PROC_BIN_SIZE);
+        pb = (ProcBin *) vm::heap_alloc(p, PROC_BIN_SIZE);
         pb->thing_word = HEADER_PROC_BIN;
         pb->size = real_size;
         pb->next = MSO(p).first;
@@ -2253,7 +2253,7 @@ return_normal:
                                       context->s.cc.dest_len + 6);
         result_bin->orig_size = context->s.cc.dest_len + 6;
         context->s.cc.destination_bin = nullptr;
-        pb = (ProcBin *) HAlloc(p, PROC_BIN_SIZE);
+        pb = (ProcBin *) vm::heap_alloc(p, PROC_BIN_SIZE);
         pb->thing_word = HEADER_PROC_BIN;
         pb->size = context->s.cc.dest_len + 6;
         pb->next = MSO(p).first;
@@ -2280,7 +2280,7 @@ return_normal:
 no_use_compressing:
         result_bin = context->s.cc.result_bin;
         context->s.cc.result_bin = nullptr;
-        pb = (ProcBin *) HAlloc(p, PROC_BIN_SIZE);
+        pb = (ProcBin *) vm::heap_alloc(p, PROC_BIN_SIZE);
         pb->thing_word = HEADER_PROC_BIN;
         pb->size = context->s.cc.real_size;
         pb->next = MSO(p).first;

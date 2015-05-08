@@ -764,7 +764,7 @@ Eterm erts_instr_get_memory_map(Process *proc)
 
   erts_mtx_unlock(&instr_mutex);
 
-  hp = HAlloc(proc, hsz); /* May end up calling map_stat_alloc() */
+  hp = vm::heap_alloc(proc, hsz); /* May end up calling map_stat_alloc() */
 
   erts_mtx_lock(&instr_mutex);
 
@@ -1065,7 +1065,7 @@ restart_bld:
   res = bld_2tup_list(hpp, hszp, len, names, values);
 
   if (!hpp) {
-    hp = HAlloc(proc, hsz);
+    hp = vm::heap_alloc(proc, hsz);
     hszp = nullptr;
     hpp = &hp;
     goto restart_bld;
@@ -1292,7 +1292,7 @@ restart_bld:
   res = bld_tuplev(hpp, hszp, ERTS_ALC_N_MAX - ERTS_ALC_N_MIN + 1, tpls);
 
   if (!hpp) {
-    hp = HAlloc(proc, hsz);
+    hp = vm::heap_alloc(proc, hsz);
     hszp = nullptr;
     hpp = &hp;
     goto restart_bld;

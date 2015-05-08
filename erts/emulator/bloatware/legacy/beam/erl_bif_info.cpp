@@ -238,7 +238,7 @@ make_monitor_list(Process *p, ErtsMonitor *root)
   }
 
   mlc.p = p;
-  mlc.hp = HAlloc(p, sz);
+  mlc.hp = vm::heap_alloc(p, sz);
   mlc.res = NIL;
   mlc.tag = AM_erl_monitor;
   erts_doforall_monitors(root, &do_make_one_mon_element, &mlc);
@@ -314,7 +314,7 @@ make_link_list(Process *p, ErtsLink *root, Eterm tail)
   }
 
   llc.p = p;
-  llc.hp = HAlloc(p, sz);
+  llc.hp = vm::heap_alloc(p, sz);
   llc.res = tail;
   llc.tag = AM_erl_link;
   erts_doforall_links(root, &do_make_one_lnk_element, &llc);
@@ -951,7 +951,7 @@ process_info_list(Process *c_p, Eterm pid, Eterm list, int always_wrap,
     }
   }
 
-  hp = HAlloc(c_p, res_len * 2);
+  hp = vm::heap_alloc(c_p, res_len * 2);
   hp_end = hp + res_len * 2;
   res = NIL;
 
@@ -974,7 +974,7 @@ process_info_list(Process *c_p, Eterm pid, Eterm list, int always_wrap,
   }
 
   if (!always_wrap) {
-    HRelease(c_p, hp_end, hp);
+    vm::heap_free(c_p, hp_end, hp);
   }
 
 done:
@@ -1152,11 +1152,11 @@ process_info_aux(Process *BIF_P,
 
   case am_registered_name:
     if (rp->common.u.alive.reg) {
-      hp = HAlloc(BIF_P, 3);
+      hp = vm::heap_alloc(BIF_P, 3);
       res = rp->common.u.alive.reg->name;
     } else {
       if (always_wrap) {
-        hp = HAlloc(BIF_P, 3);
+        hp = vm::heap_alloc(BIF_P, 3);
         res = NIL;
       } else {
         return NIL;
@@ -1178,7 +1178,7 @@ process_info_aux(Process *BIF_P,
     break;
 
   case am_initial_call:
-    hp = HAlloc(BIF_P, 3 + 4);
+    hp = vm::heap_alloc(BIF_P, 3 + 4);
     res = TUPLE3(hp,
                  rp->initial[INITIAL_MOD],
                  rp->initial[INITIAL_FUN],
@@ -1189,7 +1189,7 @@ process_info_aux(Process *BIF_P,
   case am_status:
     res = erts_process_status(BIF_P, ERTS_PROC_LOCK_MAIN, rp, rpid);
     ASSERT(res != am_undefined);
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     break;
 
   case am_messages: {
@@ -1200,7 +1200,7 @@ process_info_aux(Process *BIF_P,
     n = rp->msg.len;
 
     if (n == 0 || ERTS_TRACE_FLAGS(rp) & F_SENSITIVE) {
-      hp = HAlloc(BIF_P, 3);
+      hp = vm::heap_alloc(BIF_P, 3);
     } else {
       int remove_bad_messages = 0;
       typedef struct mq_t {
@@ -1243,7 +1243,7 @@ process_info_aux(Process *BIF_P,
         i++;
       }
 
-      hp = HAlloc(BIF_P, heap_need);
+      hp = vm::heap_alloc(BIF_P, heap_need);
       hp_end = hp + heap_need;
       ASSERT(i == n);
 
@@ -1314,7 +1314,7 @@ process_info_aux(Process *BIF_P,
         hp += 2;
       }
 
-      HRelease(BIF_P, hp_end, hp + 3);
+      vm::heap_free(BIF_P, hp_end, hp + 3);
       erts_free(ERTS_ALC_T_TMP, mq);
 
       if (remove_bad_messages) {
@@ -1357,7 +1357,7 @@ process_info_aux(Process *BIF_P,
   }
 
   case am_message_queue_len:
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     ERTS_SMP_MSGQ_MV_INQ2PRIVQ(rp);
     res = make_small(rp->msg.len);
     break;
@@ -1371,7 +1371,7 @@ process_info_aux(Process *BIF_P,
 
     erts_doforall_links(ERTS_P_LINKS(rp), &collect_one_link, &mic);
 
-    hp = HAlloc(BIF_P, 3 + mic.sz);
+    hp = vm::heap_alloc(BIF_P, 3 + mic.sz);
     res = NIL;
 
     for (i = 0; i < mic.mi_i; i++) {
@@ -1390,7 +1390,7 @@ process_info_aux(Process *BIF_P,
 
     INIT_MONITOR_INFOS(mic);
     erts_doforall_monitors(ERTS_P_MONITORS(rp), &collect_one_origin_monitor, &mic);
-    hp = HAlloc(BIF_P, 3 + mic.sz);
+    hp = vm::heap_alloc(BIF_P, 3 + mic.sz);
     res = NIL;
 
     for (i = 0; i < mic.mi_i; i++) {
@@ -1428,7 +1428,7 @@ process_info_aux(Process *BIF_P,
 
     INIT_MONITOR_INFOS(mic);
     erts_doforall_monitors(ERTS_P_MONITORS(rp), &collect_one_target_monitor, &mic);
-    hp = HAlloc(BIF_P, 3 + mic.sz);
+    hp = vm::heap_alloc(BIF_P, 3 + mic.sz);
 
     res = NIL;
 
@@ -1459,7 +1459,7 @@ process_info_aux(Process *BIF_P,
     erts_doforall_suspend_monitors(rp->suspend_monitors,
                                    &collect_one_suspend_monitor,
                                    &smic);
-    hp = HAlloc(BIF_P, 3 + smic.sz);
+    hp = vm::heap_alloc(BIF_P, 3 + smic.sz);
 #ifdef DEBUG
     hp_end = hp + smic.sz;
 #endif
@@ -1505,12 +1505,12 @@ process_info_aux(Process *BIF_P,
       res = erts_dictionary_copy(BIF_P, rp->dictionary);
     }
 
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     break;
 
   case am_trap_exit: {
     erts_aint32_t state = erts_smp_atomic32_read_nob(&rp->state);
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
 
     if (state & ERTS_PSFLG_TRAP_EXIT) {
       res = am_true;
@@ -1522,14 +1522,14 @@ process_info_aux(Process *BIF_P,
   }
 
   case am_error_handler:
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = erts_proc_get_error_handler(BIF_P);
     break;
 
   case am_heap_size: {
     size_t hsz = 3;
     (void) erts_bld_uint(nullptr, &hsz, HEAP_SIZE(rp));
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     res = erts_bld_uint(&hp, nullptr, HEAP_SIZE(rp));
     break;
   }
@@ -1537,7 +1537,7 @@ process_info_aux(Process *BIF_P,
   case am_fullsweep_after: {
     size_t hsz = 3;
     (void) erts_bld_uint(nullptr, &hsz, MAX_GEN_GCS(rp));
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     res = erts_bld_uint(&hp, nullptr, MAX_GEN_GCS(rp));
     break;
   }
@@ -1545,7 +1545,7 @@ process_info_aux(Process *BIF_P,
   case am_min_heap_size: {
     size_t hsz = 3;
     (void) erts_bld_uint(nullptr, &hsz, MIN_HEAP_SIZE(rp));
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     res = erts_bld_uint(&hp, nullptr, MIN_HEAP_SIZE(rp));
     break;
   }
@@ -1553,7 +1553,7 @@ process_info_aux(Process *BIF_P,
   case am_min_bin_vheap_size: {
     size_t hsz = 3;
     (void) erts_bld_uint(nullptr, &hsz, MIN_VHEAP_SIZE(rp));
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     res = erts_bld_uint(&hp, nullptr, MIN_VHEAP_SIZE(rp));
     break;
   }
@@ -1579,7 +1579,7 @@ process_info_aux(Process *BIF_P,
       }
 
     (void) erts_bld_uint(nullptr, &hsz, total_heap_size);
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     res = erts_bld_uint(&hp, nullptr, total_heap_size);
     break;
   }
@@ -1588,7 +1588,7 @@ process_info_aux(Process *BIF_P,
     size_t stack_size = STACK_START(rp) - rp->stop;
     size_t hsz = 3;
     (void) erts_bld_uint(nullptr, &hsz, stack_size);
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     res = erts_bld_uint(&hp, nullptr, stack_size);
     break;
   }
@@ -1597,7 +1597,7 @@ process_info_aux(Process *BIF_P,
     size_t hsz = 3;
     size_t size = erts_process_memory(rp);
     (void) erts_bld_uint(nullptr, &hsz, size);
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     res = erts_bld_uint(&hp, nullptr, size);
     break;
   }
@@ -1606,7 +1606,7 @@ process_info_aux(Process *BIF_P,
     DECL_AM(minor_gcs);
     Eterm t;
 
-    hp = HAlloc(BIF_P, 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3); /* last "3" is for outside tuple */
+    hp = vm::heap_alloc(BIF_P, 3 + 2 + 3 + 2 + 3 + 2 + 3 + 2 + 3); /* last "3" is for outside tuple */
 
     t = TUPLE2(hp, AM_minor_gcs, make_small(GEN_GCS(rp)));
     hp += 3;
@@ -1630,7 +1630,7 @@ process_info_aux(Process *BIF_P,
 
   case am_group_leader: {
     int sz = NC_HEAP_SIZE(rp->group_leader);
-    hp = HAlloc(BIF_P, 3 + sz);
+    hp = vm::heap_alloc(BIF_P, 3 + sz);
     res = STORE_NC(&hp, &MSO(BIF_P), rp->group_leader);
     break;
   }
@@ -1639,36 +1639,36 @@ process_info_aux(Process *BIF_P,
     size_t reds = rp->reds + erts_current_reductions(BIF_P, rp);
     size_t hsz = 3;
     (void) erts_bld_uint(nullptr, &hsz, reds);
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     res = erts_bld_uint(&hp, nullptr, reds);
     break;
   }
 
   case am_priority:
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = erts_get_process_priority(rp);
     break;
 
   case am_trace:
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = make_small(ERTS_TRACE_FLAGS(rp) & TRACEE_FLAGS);
     break;
 
   case am_binary: {
     size_t sz = 3;
     (void) bld_bin_list(nullptr, &sz, &MSO(rp));
-    hp = HAlloc(BIF_P, sz);
+    hp = vm::heap_alloc(BIF_P, sz);
     res = bld_bin_list(&hp, nullptr, &MSO(rp));
     break;
   }
 
   case am_sequential_trace_token:
     res = copy_object(rp->seq_trace_token, BIF_P);
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     break;
 
   case am_catchlevel:
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = make_small(catchlevel(BIF_P));
     break;
 
@@ -1677,7 +1677,7 @@ process_info_aux(Process *BIF_P,
     erts_stack_dump(ERTS_PRINT_DSBUF, (void *) dsbufp, rp);
     res = new_binary(BIF_P, (uint8_t *) dsbufp->str, dsbufp->str_len);
     erts_destroy_tmp_dsbuf(dsbufp);
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     break;
   }
 
@@ -1685,20 +1685,20 @@ process_info_aux(Process *BIF_P,
     struct saved_calls *scb = ERTS_PROC_GET_SAVED_CALLS_BUF(BIF_P);
 
     if (!scb) {
-      hp = HAlloc(BIF_P, 3);
+      hp = vm::heap_alloc(BIF_P, 3);
       res = am_false;
     } else {
       /*
        * One cons cell and a 3-struct, and a 2-tuple.
        * Might be less than that, if there are sends, receives or timeouts,
-       * so we must do a HRelease() to avoid creating holes.
+       * so we must do a vm::heap_free() to avoid creating holes.
        */
       size_t needed = scb->n * (2 + 4) + 3;
       Eterm *limit;
       Eterm term, list;
       int i, j;
 
-      hp = HAlloc(BIF_P, needed);
+      hp = vm::heap_alloc(BIF_P, needed);
       limit = hp + needed;
       list = NIL;
 
@@ -1730,7 +1730,7 @@ process_info_aux(Process *BIF_P,
       res = list;
       res = TUPLE2(hp, item, res);
       hp += 3;
-      HRelease(BIF_P, limit, hp);
+      vm::heap_free(BIF_P, limit, hp);
       return res;
     }
 
@@ -1786,13 +1786,13 @@ current_function(Process *BIF_P, Process *rp, Eterm **hpp, int full_info)
    * Return the result.
    */
   if (rp->current == nullptr) {
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = am_undefined;
   } else if (full_info) {
-    hp = HAlloc(BIF_P, 3 + fi.needed);
+    hp = vm::heap_alloc(BIF_P, 3 + fi.needed);
     hp = erts_build_mfa_item(&fi, hp, am_true, &res);
   } else {
-    hp = HAlloc(BIF_P, 3 + 4);
+    hp = vm::heap_alloc(BIF_P, 3 + 4);
     res = TUPLE3(hp, rp->current[0],
                  rp->current[1], make_small(rp->current[2]));
     hp += 4;
@@ -1847,7 +1847,7 @@ current_stacktrace(Process *p, Process *rp, Eterm **hpp)
     }
   }
 
-  hp = HAlloc(p, heap_size);
+  hp = vm::heap_alloc(p, heap_size);
 
   while (stkp > stk) {
     stkp--;
@@ -2359,19 +2359,19 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 
     szp = &size;
     build_snifs_term(nullptr, szp, NIL);
-    hp = HAlloc(BIF_P, size);
+    hp = vm::heap_alloc(BIF_P, size);
     res = build_snifs_term(&hp, nullptr, NIL);
     BIF_RET(res);
   } else if (BIF_ARG_1 == am_sequential_tracer) {
     val = erts_get_system_seq_tracer();
     ASSERT(is_internal_pid(val) || is_internal_port(val) || val == am_false);
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, am_sequential_tracer, val);
     BIF_RET(res);
   } else if (BIF_ARG_1 == am_garbage_collection) {
     size_t val = (size_t) erts_smp_atomic32_read_nob(&erts_max_gen_gcs);
     Eterm tup;
-    hp = HAlloc(BIF_P, 3 + 2 + 3 + 2 + 3 + 2);
+    hp = vm::heap_alloc(BIF_P, 3 + 2 + 3 + 2 + 3 + 2);
 
     tup = TUPLE2(hp, am_fullsweep_after, make_small(val));
     hp += 3;
@@ -2391,15 +2391,15 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
     BIF_RET(res);
   } else if (BIF_ARG_1 == am_fullsweep_after) {
     size_t val = (size_t) erts_smp_atomic32_read_nob(&erts_max_gen_gcs);
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, am_fullsweep_after, make_small(val));
     BIF_RET(res);
   } else if (BIF_ARG_1 == am_min_heap_size) {
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, am_min_heap_size, make_small(H_MIN_SIZE));
     BIF_RET(res);
   } else if (BIF_ARG_1 == am_min_bin_vheap_size) {
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, am_min_bin_vheap_size, make_small(BIN_VH_MIN_SIZE));
     BIF_RET(res);
   } else if (BIF_ARG_1 == am_process_count) {
@@ -2452,7 +2452,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
       ++i;
     }
 
-    hp = HAlloc(BIF_P, i * (3 + 2));
+    hp = vm::heap_alloc(BIF_P, i * (3 + 2));
     res = NIL;
 
     for (dep = erts_hidden_dist_entries; dep; dep = dep->next) {
@@ -2479,12 +2479,12 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
   } else if (BIF_ARG_1 == am_system_version) {
     erts_dsprintf_buf_t *dsbufp = erts_create_tmp_dsbuf(0);
     erts_print_system_version(ERTS_PRINT_DSBUF, (void *) dsbufp, BIF_P);
-    hp = HAlloc(BIF_P, dsbufp->str_len * 2);
+    hp = vm::heap_alloc(BIF_P, dsbufp->str_len * 2);
     res = util::buf_to_intlist(&hp, dsbufp->str, dsbufp->str_len, NIL);
     erts_destroy_tmp_dsbuf(dsbufp);
     BIF_RET(res);
   } else if (BIF_ARG_1 == am_system_architecture) {
-    hp = HAlloc(BIF_P, 2 * (sizeof(ERLANG_ARCHITECTURE) - 1));
+    hp = vm::heap_alloc(BIF_P, 2 * (sizeof(ERLANG_ARCHITECTURE) - 1));
     BIF_RET(util::buf_to_intlist(&hp,
                            ERLANG_ARCHITECTURE,
                            sizeof(ERLANG_ARCHITECTURE) - 1,
@@ -2516,11 +2516,11 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
     BIF_RET(os_version_tuple);
   } else if (BIF_ARG_1 == am_version) {
     int n = strlen(ERLANG_VERSION);
-    hp = HAlloc(BIF_P, ((sizeof ERLANG_VERSION) - 1) * 2);
+    hp = vm::heap_alloc(BIF_P, ((sizeof ERLANG_VERSION) - 1) * 2);
     BIF_RET(util::buf_to_intlist(&hp, ERLANG_VERSION, n, NIL));
   } else if (BIF_ARG_1 == am_machine) {
     int n = strlen(EMULATOR);
-    hp = HAlloc(BIF_P, n * 2);
+    hp = vm::heap_alloc(BIF_P, n * 2);
     BIF_RET(util::buf_to_intlist(&hp, EMULATOR, n, NIL));
   } else if (BIF_ARG_1 == am_garbage_collection) {
     BIF_RET(am_generational);
@@ -2554,7 +2554,7 @@ bld_instruction_counts:
     }
 
     if (!hpp) {
-      hp = HAlloc(BIF_P, hsz);
+      hp = vm::heap_alloc(BIF_P, hsz);
       hpp = &hp;
 #ifdef DEBUG
       endp = hp + hsz;
@@ -2598,7 +2598,7 @@ bld_instruction_counts:
     register unsigned high asm("%l0");
     register unsigned low asm("%l1");
 
-    hp = HAlloc(BIF_P, 5);
+    hp = vm::heap_alloc(BIF_P, 5);
     asm volatile(".word 0xa3410000;"  /* rd %tick, %l1 */
                  ".word 0xa1347020" /* srlx  %l1, 0x20, %l0 */
                  : "=r"(high), "=r"(low));
@@ -2614,7 +2614,7 @@ bld_instruction_counts:
     asm volatile(".word 0xa3410000;"  /* rd %tick, %l1 */
                  ".word 0xa1347020" /* srlx  %l1, 0x20, %l0 */
                  : "=r"(high), "=r"(low));
-    hp = HAlloc(BIF_P, 5);
+    hp = vm::heap_alloc(BIF_P, 5);
     res = TUPLE4(hp, make_small(high >> 16),
                  make_small(high & 0xFFFF),
                  make_small(low >> 16),
@@ -2624,7 +2624,7 @@ bld_instruction_counts:
     register unsigned high asm("%l0");
     register unsigned low asm("%l1");
 
-    hp = HAlloc(BIF_P, 5);
+    hp = vm::heap_alloc(BIF_P, 5);
     asm volatile(".word 0xa3444000;"  /* rd %asr17, %l1 */
                  ".word 0xa1347020" /* srlx  %l1, 0x20, %l0 */
                  : "=r"(high), "=r"(low));
@@ -2640,7 +2640,7 @@ bld_instruction_counts:
     asm volatile(".word 0xa3444000;"  /* rd %asr17, %l1 */
                  ".word 0xa1347020" /* srlx  %l1, 0x20, %l0 */
                  : "=r"(high), "=r"(low));
-    hp = HAlloc(BIF_P, 5);
+    hp = vm::heap_alloc(BIF_P, 5);
     res = TUPLE4(hp, make_small(high >> 16),
                  make_small(high & 0xFFFF),
                  make_small(low >> 16),
@@ -2697,21 +2697,21 @@ bld_instruction_counts:
     }
   } else if (ERTS_IS_ATOM_STR("otp_release", BIF_ARG_1)) {
     int n = sizeof(ERLANG_OTP_RELEASE) - 1;
-    hp = HAlloc(BIF_P, 2 * n);
+    hp = vm::heap_alloc(BIF_P, 2 * n);
     BIF_RET(util::buf_to_intlist(&hp, ERLANG_OTP_RELEASE, n, NIL));
   } else if (ERTS_IS_ATOM_STR("driver_version", BIF_ARG_1)) {
     char buf[42];
     int n = erts_snprintf(buf, 42, "%d.%d",
                           ERL_DRV_EXTENDED_MAJOR_VERSION,
                           ERL_DRV_EXTENDED_MINOR_VERSION);
-    hp = HAlloc(BIF_P, 2 * n);
+    hp = vm::heap_alloc(BIF_P, 2 * n);
     BIF_RET(util::buf_to_intlist(&hp, buf, n, NIL));
   } else if (ERTS_IS_ATOM_STR("nif_version", BIF_ARG_1)) {
     char buf[42];
     int n = erts_snprintf(buf, 42, "%d.%d",
                           ERL_NIF_MAJOR_VERSION,
                           ERL_NIF_MINOR_VERSION);
-    hp = HAlloc(BIF_P, 2 * n);
+    hp = vm::heap_alloc(BIF_P, 2 * n);
     BIF_RET(util::buf_to_intlist(&hp, buf, n, NIL));
   } else if (ERTS_IS_ATOM_STR("smp_support", BIF_ARG_1)) {
 #ifdef ERTS_SMP
@@ -2731,7 +2731,7 @@ bld_instruction_counts:
     BIF_RET(res);
   } else if (ERTS_IS_ATOM_STR("schedulers_state", BIF_ARG_1)) {
 #ifndef ERTS_SMP
-    Eterm *hp = HAlloc(BIF_P, 4);
+    Eterm *hp = vm::heap_alloc(BIF_P, 4);
     res = TUPLE3(hp, make_small(1), make_small(1), make_small(1));
     BIF_RET(res);
 #else
@@ -2745,7 +2745,7 @@ bld_instruction_counts:
                                   nullptr,
                                   1)) {
     case ERTS_SCHDLR_SSPND_DONE: {
-      Eterm *hp = HAlloc(BIF_P, 4);
+      Eterm *hp = vm::heap_alloc(BIF_P, 4);
       res = TUPLE3(hp,
                    make_small(total),
                    make_small(online),
@@ -2832,7 +2832,7 @@ bld_instruction_counts:
     (void) c_compiler_used(nullptr, &sz);
 
     if (sz) {
-      hp = HAlloc(BIF_P, sz);
+      hp = vm::heap_alloc(BIF_P, sz);
     }
 
     BIF_RET(c_compiler_used(&hp, nullptr));
@@ -2899,7 +2899,7 @@ bld_instruction_counts:
     size_t hsz = 0;
 
     (void) erts_bld_uint(nullptr, &hsz, erts_dist_buf_busy_limit);
-    hp = hsz ? HAlloc(BIF_P, hsz) : nullptr;
+    hp = hsz ? vm::heap_alloc(BIF_P, hsz) : nullptr;
     res = erts_bld_uint(&hp, nullptr, erts_dist_buf_busy_limit);
     BIF_RET(res);
   } else if (ERTS_IS_ATOM_STR("ethread_info", BIF_ARG_1)) {
@@ -2936,7 +2936,7 @@ bld_instruction_counts:
   else if (ERTS_IS_ATOM_STR("compile_info", BIF_ARG_1)) {
     size_t  sz;
     Eterm res = NIL, tup, text;
-    Eterm *hp = HAlloc(BIF_P, 3 * (2 + 3) + /* three 2-tuples and three cons */
+    Eterm *hp = vm::heap_alloc(BIF_P, 3 * (2 + 3) + /* three 2-tuples and three cons */
                        2 * (strlen(erts_build_flags_CONFIG_H) +
                             strlen(erts_build_flags_CFLAGS) +
                             strlen(erts_build_flags_LDFLAGS)));
@@ -3232,37 +3232,37 @@ fun_info_2(BIF_ALIST_2)
 
     switch (what) {
     case am_type:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = am_local;
       break;
 
     case am_pid:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = funp->creator;
       break;
 
     case am_module:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = funp->fe->module;
       break;
 
     case am_new_index:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = make_small(funp->fe->index);
       break;
 
     case am_new_uniq:
       val = new_binary(p, funp->fe->uniq, 16);
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       break;
 
     case am_index:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = make_small(funp->fe->old_index);
       break;
 
     case am_uniq:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = make_small(funp->fe->old_uniq);
       break;
 
@@ -3270,7 +3270,7 @@ fun_info_2(BIF_ALIST_2)
       size_t num_free = funp->num_free;
       int i;
 
-      hp = HAlloc(p, 3 + 2 * num_free);
+      hp = vm::heap_alloc(p, 3 + 2 * num_free);
       val = NIL;
 
       for (i = num_free - 1; i >= 0; i--) {
@@ -3282,16 +3282,16 @@ fun_info_2(BIF_ALIST_2)
 
     case am_refc:
       val = erts_make_integer(erts_smp_atomic_read_nob(&funp->fe->refc), p);
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       break;
 
     case am_arity:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = make_small(funp->arity);
       break;
 
     case am_name:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = funp->fe->address[-2];
       break;
 
@@ -3303,57 +3303,57 @@ fun_info_2(BIF_ALIST_2)
 
     switch (what) {
     case am_type:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = am_external;
       break;
 
     case am_pid:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = am_undefined;
       break;
 
     case am_module:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = exp->code[0];
       break;
 
     case am_new_index:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = am_undefined;
       break;
 
     case am_new_uniq:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = am_undefined;
       break;
 
     case am_index:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = am_undefined;
       break;
 
     case am_uniq:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = am_undefined;
       break;
 
     case am_env:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = NIL;
       break;
 
     case am_refc:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = am_undefined;
       break;
 
     case am_arity:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = make_small(exp->code[2]);
       break;
 
     case am_name:
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       val = exp->code[1];
       break;
 
@@ -3377,11 +3377,11 @@ fun_info_mfa_1(BIF_ALIST_1)
 
   if (is_fun(fun)) {
     ErlFunThing *funp = (ErlFunThing *) fun_val(fun);
-    hp = HAlloc(p, 4);
+    hp = vm::heap_alloc(p, 4);
     BIF_RET(TUPLE3(hp, funp->fe->module, funp->fe->address[-2], make_small(funp->arity)));
   } else if (is_export(fun)) {
     Export *exp = (Export *)((UWord)(export_val(fun))[1]);
-    hp = HAlloc(p, 4);
+    hp = vm::heap_alloc(p, 4);
     BIF_RET(TUPLE3(hp, exp->code[0], exp->code[1], make_small(exp->code[2])));
   }
 
@@ -3477,7 +3477,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
     BIF_TRAP1(gather_sched_wall_time_res_trap, BIF_P, res);
   } else if (BIF_ARG_1 == am_context_switches) {
     Eterm cs = erts_make_integer(erts_get_total_context_switches(), BIF_P);
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, cs, SMALL_ZERO);
     BIF_RET(res);
   } else if (BIF_ARG_1 == am_garbage_collection) {
@@ -3497,7 +3497,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
     erts_get_total_reductions(&reds, &diff);
     (void) erts_bld_uint(nullptr, &hsz, reds);
     (void) erts_bld_uint(nullptr, &hsz, diff);
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     b1 = erts_bld_uint(&hp, nullptr, reds);
     b2 = erts_bld_uint(&hp, nullptr, diff);
     res = TUPLE2(hp, b1, b2);
@@ -3511,7 +3511,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
     erts_get_exact_total_reductions(BIF_P, &reds, &diff);
     (void) erts_bld_uint(nullptr, &hsz, reds);
     (void) erts_bld_uint(nullptr, &hsz, diff);
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     b1 = erts_bld_uint(&hp, nullptr, reds);
     b2 = erts_bld_uint(&hp, nullptr, diff);
     res = TUPLE2(hp, b1, b2);
@@ -3522,7 +3522,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
     elapsed_time_both(&u1, &dummy, &u2, &dummy);
     b1 = erts_make_integer(u1, BIF_P);
     b2 = erts_make_integer(u2, BIF_P);
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, b1, b2);
     BIF_RET(res);
   } else if (BIF_ARG_1 ==  am_run_queue) {
@@ -3534,7 +3534,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
     wall_clock_elapsed_time_both(&w1, &w2);
     b1 = erts_make_integer((size_t) w1, BIF_P);
     b2 = erts_make_integer((size_t) w2, BIF_P);
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, b1, b2);
     BIF_RET(res);
   } else if (BIF_ARG_1 == am_io) {
@@ -3546,7 +3546,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
 
     (void) erts_bld_uint(nullptr, &hsz, bytes_in);
     (void) erts_bld_uint(nullptr, &hsz, bytes_out);
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     in = erts_bld_uint(&hp, nullptr, bytes_in);
     out = erts_bld_uint(&hp, nullptr, bytes_out);
 
@@ -3579,7 +3579,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
         BIF_RET(res);
       }
 
-      hp = HAlloc(BIF_P, sz);
+      hp = vm::heap_alloc(BIF_P, sz);
       szp = nullptr;
       hpp = &hp;
     }
@@ -3667,7 +3667,7 @@ BIF_RETTYPE erts_debug_get_internal_state_1(BIF_ALIST_1)
           break;
         }
 
-        hp = HAlloc(BIF_P, sz);
+        hp = vm::heap_alloc(BIF_P, sz);
         szp = nullptr;
         hpp = &hp;
       }
@@ -3677,7 +3677,7 @@ BIF_RETTYPE erts_debug_get_internal_state_1(BIF_ALIST_1)
       /* Used by process_SUITE (emulator) */
       int i;
       Eterm res = NIL;
-      size_t *hp = HAlloc(BIF_P, 2 * ERTS_PI_ARGS);
+      size_t *hp = vm::heap_alloc(BIF_P, 2 * ERTS_PI_ARGS);
 
       for (i = ERTS_PI_ARGS - 1; i >= 0; i--) {
         res = CONS(hp, pi_args[i], res);
@@ -3862,7 +3862,7 @@ BIF_RETTYPE erts_debug_get_internal_state_1(BIF_ALIST_1)
             val = pb->val;
             (void) erts_bld_uint(nullptr, &hsz, pb->size);
             (void) erts_bld_uint(nullptr, &hsz, val->orig_size);
-            hp = HAlloc(BIF_P, hsz);
+            hp = vm::heap_alloc(BIF_P, hsz);
 
             /* Info about the Binary* object */
             SzTerm = erts_bld_uint(&hp, nullptr, val->orig_size);
@@ -4452,7 +4452,7 @@ BIF_RETTYPE erts_debug_lock_counters_1(BIF_ALIST_1)
 
     /* alloc and build */
 
-    hp = HAlloc(BIF_P, hsize);
+    hp = vm::heap_alloc(BIF_P, hsize);
 
     res = lcnt_build_result_term(&hp, nullptr, data, res);
 

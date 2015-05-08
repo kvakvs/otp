@@ -1555,7 +1555,7 @@ static int I_lg(ErtsDigit *x, dsize_t xl)
 
 /*
 ** Create bigint on heap if necessary. Like the previously existing
-** make_small_or_big(), except for a HAlloc() instead of an
+** make_small_or_big(), except for a vm::heap_alloc() instead of an
 ** ArithAlloc().
 ** NOTE: Only use erts_make_integer(), when order of heap fragments is
 **       guaranteed to be correct.
@@ -1568,7 +1568,7 @@ erts_make_integer(size_t x, Process *p)
   if (IS_USMALL(0, x)) {
     return make_small(x);
   } else {
-    hp = HAlloc(p, BIG_UINT_HEAP_SIZE);
+    hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE);
     return uint_to_big(x, hp);
   }
 }
@@ -1583,7 +1583,7 @@ erts_make_integer_from_uword(UWord x, Process *p)
   if (IS_USMALL(0, x)) {
     return make_small(x);
   } else {
-    hp = HAlloc(p, BIG_UWORD_HEAP_SIZE(x));
+    hp = vm::heap_alloc(p, BIG_UWORD_HEAP_SIZE(x));
     return uword_to_big(x, hp);
   }
 }
@@ -2864,7 +2864,7 @@ Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
   m = (lg2 + D_EXP - 1) / D_EXP;
   m = BIG_NEED_SIZE(m);
 
-  hp = HAlloc(BIF_P, m);
+  hp = vm::heap_alloc(BIF_P, m);
   hp_end = hp + m;
 
   if ((i = (size % D_BASE_EXP(base))) == 0) {
@@ -2878,7 +2878,7 @@ Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
     b = *bytes++;
 
     if (IS_VALID_CHARACTER(b, base)) {
-      HRelease(BIF_P, hp_end, hp);
+      vm::heap_free(BIF_P, hp_end, hp);
       goto bytebuf_to_integer_1_error;
     }
 
@@ -2896,7 +2896,7 @@ Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
       b = *bytes++;
 
       if (IS_VALID_CHARACTER(b, base)) {
-        HRelease(BIF_P, hp_end, hp);
+        vm::heap_free(BIF_P, hp_end, hp);
         goto bytebuf_to_integer_1_error;
       }
 
@@ -2933,7 +2933,7 @@ Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
     }
   }
 
-  HRelease(BIF_P, hp_end, hp);
+  vm::heap_free(BIF_P, hp_end, hp);
   goto bytebuf_to_integer_1_done;
 
 bytebuf_to_integer_1_error:

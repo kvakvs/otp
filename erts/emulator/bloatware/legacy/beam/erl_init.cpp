@@ -411,7 +411,7 @@ erl_first_process_otp(char *modname, void *code, unsigned size, int argc,
 
   erts_init_empty_process(&parent);
   erts_smp_proc_lock(&parent, ERTS_PROC_LOCK_MAIN);
-  hp = HAlloc(&parent, argc * 2 + 4);
+  hp = vm::heap_alloc(&parent, argc * 2 + 4);
   args = NIL;
 
   for (i = argc - 1; i >= 0; i--) {
@@ -450,7 +450,7 @@ erts_preloaded(Process *p)
 
   previous = NIL;
   need = 2 * j;
-  hp = HAlloc(p, need);
+  hp = vm::heap_alloc(p, need);
   j = 0;
 
   while ((name = preload[j].name) != nullptr)  {

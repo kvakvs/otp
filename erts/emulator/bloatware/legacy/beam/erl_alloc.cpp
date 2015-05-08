@@ -2626,7 +2626,7 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
       ASSERT(length == 1);
       hsz = 0;
       erts_bld_uword(nullptr, &hsz, *uintps[0]);
-      hp = hsz ? HAlloc((Process *) proc, hsz) : nullptr;
+      hp = hsz ? vm::heap_alloc((Process *) proc, hsz) : nullptr;
       res = erts_bld_uword(&hp, nullptr, *uintps[0]);
     } else {
       size_t **hpp = nullptr;
@@ -2646,7 +2646,7 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
           break;
         }
 
-        hp = HAlloc((Process *) proc, hsz);
+        hp = vm::heap_alloc((Process *) proc, hsz);
         hpp = &hp;
         hszp = nullptr;
       }
@@ -2881,7 +2881,7 @@ erts_allocated_areas(int *print_to_p, void *print_to_arg, void *proc)
         break;
       }
 
-      hp = HAlloc((Process *) proc, hsz);
+      hp = vm::heap_alloc((Process *) proc, hsz);
       hpp = &hp;
       hszp = nullptr;
     }
@@ -2904,7 +2904,7 @@ erts_alloc_util_allocators(void *proc)
    */
   sz = ((ERTS_ALC_A_MAX + 1 - ERTS_ALC_A_MIN) - 1) * 2;
   ASSERT(sz > 0);
-  hp = HAlloc((Process *) proc, sz);
+  hp = vm::heap_alloc((Process *) proc, sz);
   res = NIL;
 
   for (i = ERTS_ALC_A_MAX; i >= ERTS_ALC_A_MIN; i--) {
@@ -3198,7 +3198,7 @@ bld_term:
 
   if (szp) {
     /* ... and then build the term */
-    hp = HAlloc((Process *) proc, sz);
+    hp = vm::heap_alloc((Process *) proc, sz);
     endp = hp + sz;
     hpp = &hp;
     szp = nullptr;
@@ -3206,7 +3206,7 @@ bld_term:
   }
 
   ASSERT(endp >= hp);
-  HRelease((Process *) proc, endp, hp);
+  vm::heap_free((Process *) proc, endp, hp);
 
   return res;
 }
@@ -3486,7 +3486,7 @@ reply_alloc_info(void *vair)
     bp = erts_resize_message_buffer(bp, hp - hp_start, &msg, 1);
   } else {
     ASSERT(hp);
-    HRelease(rp, hp_end, hp);
+    vm::heap_free(rp, hp_end, hp);
   }
 
   erts_queue_message(rp, &rp_locks, bp, msg, NIL

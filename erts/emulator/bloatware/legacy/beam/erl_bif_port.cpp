@@ -662,7 +662,7 @@ BIF_RETTYPE port_get_data_1(BIF_ALIST_1)
     ASSERT(is_immed(res));
   } else {
     ErtsPortDataHeap *pdhp = (ErtsPortDataHeap *) data;
-    Eterm *hp = HAlloc(BIF_P, pdhp->hsize);
+    Eterm *hp = vm::heap_alloc(BIF_P, pdhp->hsize);
     res = copy_struct(pdhp->data, pdhp->hsize, &hp, &MSO(BIF_P));
   }
 
@@ -1262,7 +1262,7 @@ static int http_response_erl(void *arg, int major, int minor,
 #endif
 
   http_bld_string(pca, nullptr, &hsize, phrase, phrase_len);
-  hp = HAlloc(pca->p, hsize);
+  hp = vm::heap_alloc(pca->p, hsize);
 #ifdef DEBUG
   hend = hp + hsize;
 #endif
@@ -1338,7 +1338,7 @@ static int http_request_erl(void *arg, const http_atom_t *meth,
     }
 
     hpp = &hp;
-    hp = HAlloc(pca->p, sz);
+    hp = vm::heap_alloc(pca->p, sz);
     szp = nullptr;
   }
 
@@ -1365,7 +1365,7 @@ http_header_erl(void *arg, const http_atom_t *name, const char *name_ptr,
 
   http_bld_string(pca, nullptr, &sz, value_ptr, value_len);
 
-  hp = HAlloc(pca->p, sz);
+  hp = vm::heap_alloc(pca->p, sz);
 #ifdef DEBUG
   hend = hp + sz;
 #endif
@@ -1404,7 +1404,7 @@ static int http_error_erl(void *arg, const char *buf, int len)
 
   http_bld_string(pca, nullptr, &sz, buf, len);
 
-  hp = HAlloc(pca->p, sz);
+  hp = vm::heap_alloc(pca->p, sz);
 #ifdef DEBUG
   hend = hp + sz;
 #endif
@@ -1431,7 +1431,7 @@ int ssl_tls_erl(void *arg, unsigned type, unsigned major, unsigned minor,
   }
 
   /* {ssl_tls,NIL,ContentType,{Major,Minor},Bin} */
-  hp = HAlloc(pca->p, 3 + 6);
+  hp = vm::heap_alloc(pca->p, 3 + 6);
   ver = TUPLE2(hp, make_small(major), make_small(minor));
   hp += 3;
   pca->res = TUPLE5(hp, am_ssl_tls, NIL, make_small(type), ver, bin);
@@ -1595,7 +1595,7 @@ next_option:
     } else { /* not enough data */
       Eterm plen = (packet_sz == 0) ? am_undefined :
                    erts_make_integer(packet_sz, BIF_P);
-      Eterm *hp = HAlloc(BIF_P, 3);
+      Eterm *hp = vm::heap_alloc(BIF_P, 3);
       res = TUPLE2(hp, am_more, plen);
       goto done;
     }
@@ -1617,7 +1617,7 @@ next_option:
   if (code == 0) { /* no special packet parsing, make plain binary */
     ErlSubBin *body;
     size_t hsz = 2 * ERL_SUB_BIN_SIZE + 4;
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     hend = hp + hsz;
 
     body = (ErlSubBin *) hp;
@@ -1633,11 +1633,11 @@ next_option:
   } else if (code > 0) {
     size_t hsz = ERL_SUB_BIN_SIZE + 4;
     ASSERT(pca.res != THE_NON_VALUE);
-    hp = HAlloc(BIF_P, hsz);
+    hp = vm::heap_alloc(BIF_P, hsz);
     hend = hp + hsz;
   } else {
 error:
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, am_error, am_invalid);
     goto done;
   }

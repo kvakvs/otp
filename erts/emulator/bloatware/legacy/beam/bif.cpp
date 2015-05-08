@@ -1020,7 +1020,7 @@ error:
   if (is_non_value(pid)) {
     BIF_ERROR(BIF_P, so.error_code);
   } else if (so.flags & SPO_MONITOR) {
-    Eterm *hp = HAlloc(BIF_P, 3);
+    Eterm *hp = vm::heap_alloc(BIF_P, 3);
     res = TUPLE2(hp, pid, so.mref);
   } else {
     res = pid;
@@ -1281,7 +1281,7 @@ BIF_RETTYPE error_1(BIF_ALIST_1)
 
 BIF_RETTYPE error_2(BIF_ALIST_2)
 {
-  Eterm *hp = HAlloc(BIF_P, 3);
+  Eterm *hp = vm::heap_alloc(BIF_P, 3);
 
   BIF_P->fvalue = TUPLE2(hp, BIF_ARG_1, BIF_ARG_2);
   BIF_ERROR(BIF_P, EXC_ERROR_2);
@@ -1309,7 +1309,7 @@ BIF_RETTYPE nif_error_1(BIF_ALIST_1)
 
 BIF_RETTYPE nif_error_2(BIF_ALIST_2)
 {
-  Eterm *hp = HAlloc(BIF_P, 3);
+  Eterm *hp = vm::heap_alloc(BIF_P, 3);
 
   BIF_P->fvalue = TUPLE2(hp, BIF_ARG_1, BIF_ARG_2);
   BIF_ERROR(BIF_P, EXC_ERROR_2);
@@ -1445,7 +1445,7 @@ BIF_RETTYPE raise_3(BIF_ALIST_3)
   tp = &c_p->ftrace;
   sz = (offsetof(struct StackTrace, trace) + sizeof(Eterm) - 1)
        / sizeof(Eterm);
-  hp = HAlloc(c_p, sz + (2 + 6) * (cnt + 1));
+  hp = vm::heap_alloc(c_p, sz + (2 + 6) * (cnt + 1));
   hp_end = hp + sz + (2 + 6) * (cnt + 1);
   s = (struct StackTrace *) hp;
   s->header = make_neg_bignum_header(sz - 1);
@@ -1488,7 +1488,7 @@ BIF_RETTYPE raise_3(BIF_ALIST_3)
   c_p->ftrace = CONS(hp, c_p->ftrace, make_big((Eterm *) s));
   hp += 2;
   ASSERT(hp <= hp_end);
-  HRelease(c_p, hp_end, hp);
+  vm::heap_free(c_p, hp_end, hp);
   BIF_ERROR(c_p, reason);
 
 error:
@@ -2623,7 +2623,7 @@ consolidate(Process *p, Eterm acc, size_t size)
     acc = accumulate(acc, size);
     big = big_val(acc);
     sz = BIG_NEED_SIZE(BIG_SIZE(big));
-    hp = HAlloc(p, sz);
+    hp = vm::heap_alloc(p, sz);
     res = make_big(hp);
 
     while (sz--) {
@@ -2780,7 +2780,7 @@ error:
     goto error;
   }
 
-  hp = HAlloc(BIF_P, size);
+  hp = vm::heap_alloc(BIF_P, size);
 
   /* copy the tuple */
   resp = hp;
@@ -2801,7 +2801,7 @@ BIF_RETTYPE make_tuple_2(BIF_ALIST_2)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp = HAlloc(BIF_P, n + 1);
+  hp = vm::heap_alloc(BIF_P, n + 1);
   res = make_tuple(hp);
   *hp++ = make_arityval(n);
 
@@ -2827,7 +2827,7 @@ error:
   }
 
   limit = (size_t) n;
-  hp = HAlloc(BIF_P, n + 1);
+  hp = vm::heap_alloc(BIF_P, n + 1);
   res = make_tuple(hp);
   *hp++ = make_arityval(n);
   tup = hp;
@@ -2893,7 +2893,7 @@ error:
     goto error;
   }
 
-  hp  = HAlloc(BIF_P, arity + 2);
+  hp  = vm::heap_alloc(BIF_P, arity + 2);
   res = make_tuple(hp);
   *hp = make_arityval(arity + 1);
 
@@ -2925,7 +2925,7 @@ BIF_RETTYPE insert_element_3(BIF_ALIST_3)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp  = HAlloc(BIF_P, arity + 1 + 1);
+  hp  = vm::heap_alloc(BIF_P, arity + 1 + 1);
   res = make_tuple(hp);
   *hp = make_arityval(arity + 1);
 
@@ -2965,7 +2965,7 @@ BIF_RETTYPE delete_element_2(BIF_ALIST_3)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp  = HAlloc(BIF_P, arity + 1 - 1);
+  hp  = vm::heap_alloc(BIF_P, arity + 1 - 1);
   res = make_tuple(hp);
   *hp = make_arityval(arity - 1);
 
@@ -3095,7 +3095,7 @@ BIF_RETTYPE integer_to_list_1(BIF_ALIST_1)
     c = Sint_to_buf(signed_val(BIF_ARG_1), &ibuf);
     n = sys_strlen(c);
     need = 2 * n;
-    hp = HAlloc(BIF_P, need);
+    hp = vm::heap_alloc(BIF_P, need);
     BIF_RET(util::buf_to_intlist(&hp, c, n, NIL));
   } else {
     int n = big_decimal_estimate(BIF_ARG_1);
@@ -3103,10 +3103,10 @@ BIF_RETTYPE integer_to_list_1(BIF_ALIST_1)
     Eterm *hp_end;
 
     need = 2 * n;
-    hp = HAlloc(BIF_P, need);
+    hp = vm::heap_alloc(BIF_P, need);
     hp_end = hp + need;
     res = erts_big_to_list(BIF_ARG_1, &hp);
-    HRelease(BIF_P, hp_end, hp);
+    vm::heap_free(BIF_P, hp_end, hp);
     BIF_RET(res);
   }
 }
@@ -3227,7 +3227,7 @@ error:
     m  = (lg2 + D_EXP - 1) / D_EXP; /* number of digits */
     m  = BIG_NEED_SIZE(m);    /* number of words + thing */
 
-    hp = HAlloc(p, m);
+    hp = vm::heap_alloc(p, m);
     hp_end = hp + m;
 
     lst = orig_list;
@@ -3291,7 +3291,7 @@ error:
       }
     }
 
-    HRelease(p, hp_end, hp);
+    vm::heap_free(p, hp_end, hp);
   }
 
   *integer = res;
@@ -3311,18 +3311,18 @@ BIF_RETTYPE string_to_integer_1(BIF_ALIST_1)
 
   /* must be a list */
   switch (do_list_to_integer(BIF_P, BIF_ARG_1, &res, &tail)) {
-  /* HAlloc after do_list_to_integer as it
-     might HAlloc itself (bignum) */
+  /* vm::heap_alloc after do_list_to_integer as it
+     might vm::heap_alloc itself (bignum) */
   case LTI_BAD_STRUCTURE:
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     BIF_RET(TUPLE2(hp, am_error, am_not_a_list));
 
   case LTI_NO_INTEGER:
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     BIF_RET(TUPLE2(hp, am_error, am_no_integer));
 
   default:
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     BIF_RET(TUPLE2(hp, res, tail));
   }
 }
@@ -3471,7 +3471,7 @@ static BIF_RETTYPE do_float_to_list(Process *BIF_P, Eterm arg, Eterm opts)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp = HAlloc(BIF_P, (size_t)used * 2);
+  hp = vm::heap_alloc(BIF_P, (size_t)used * 2);
   BIF_RET(util::buf_to_intlist(&hp, fbuf, (size_t)used, NIL));
 }
 
@@ -3554,7 +3554,7 @@ error:
       erts_free(ERTS_ALC_T_TMP, (void *) buf);
     }
 
-    hp = HAlloc(BIF_P, 3);
+    hp = vm::heap_alloc(BIF_P, 3);
     BIF_RET(TUPLE2(hp, am_error, error_res));
   }
 
@@ -3711,7 +3711,7 @@ back_to_e:
     goto error;
   }
 
-  hp = HAlloc(BIF_P, FLOAT_SIZE_OBJECT + 3);
+  hp = vm::heap_alloc(BIF_P, FLOAT_SIZE_OBJECT + 3);
   tup = TUPLE2(hp + FLOAT_SIZE_OBJECT, make_float(hp), list);
   PUT_DOUBLE(f, hp);
   erts_free(ERTS_ALC_T_TMP, (void *) buf);
@@ -3728,7 +3728,7 @@ static BIF_RETTYPE do_charbuf_to_float(Process *BIF_P, char *buf)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp = HAlloc(BIF_P, FLOAT_SIZE_OBJECT);
+  hp = vm::heap_alloc(BIF_P, FLOAT_SIZE_OBJECT);
   res = make_float(hp);
   PUT_DOUBLE(f, hp);
   BIF_RET(res);
@@ -3847,7 +3847,7 @@ BIF_RETTYPE tuple_to_list_1(BIF_ALIST_1)
 
   tupleptr = tuple_val(BIF_ARG_1);
   n = arityval(*tupleptr);
-  hp = HAlloc(BIF_P, 2 * n);
+  hp = vm::heap_alloc(BIF_P, 2 * n);
   tupleptr++;
 
   while (n--) {
@@ -3874,7 +3874,7 @@ BIF_RETTYPE list_to_tuple_1(BIF_ALIST_1)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp = HAlloc(BIF_P, len + 1);
+  hp = vm::heap_alloc(BIF_P, len + 1);
   res = make_tuple(hp);
   *hp++ = make_arityval(len);
 
@@ -3971,7 +3971,7 @@ Eterm erts_make_ref(Process *p)
 
   ERTS_SMP_LC_ASSERT(ERTS_PROC_LOCK_MAIN & erts_proc_lc_my_proc_locks(p));
 
-  hp = HAlloc(p, REF_THING_SIZE);
+  hp = vm::heap_alloc(p, REF_THING_SIZE);
 
   erts_make_ref_in_array(ref);
   write_ref_thing(hp, ref[0], ref[1], ref[2]);
@@ -3994,7 +3994,7 @@ BIF_RETTYPE time_0(BIF_ALIST_0)
   Eterm *hp;
 
   get_time(&hour, &minute, &second);
-  hp = HAlloc(BIF_P, 4); /* {hour, minute, second}  + arity */
+  hp = vm::heap_alloc(BIF_P, 4); /* {hour, minute, second}  + arity */
   BIF_RET(TUPLE3(hp, make_small(hour), make_small(minute),
                  make_small(second)));
 }
@@ -4008,7 +4008,7 @@ BIF_RETTYPE date_0(BIF_ALIST_0)
   Eterm *hp;
 
   get_date(&year, &month, &day);
-  hp = HAlloc(BIF_P, 4); /* {year, month, day}  + arity */
+  hp = vm::heap_alloc(BIF_P, 4); /* {year, month, day}  + arity */
   BIF_RET(TUPLE3(hp, make_small(year), make_small(month), make_small(day)));
 }
 
@@ -4026,7 +4026,7 @@ BIF_RETTYPE universaltime_0(BIF_ALIST_0)
   /* read the clock */
   get_universaltime(&year, &month, &day, &hour, &minute, &second);
 
-  hp = HAlloc(BIF_P, 4 + 4 + 3);
+  hp = vm::heap_alloc(BIF_P, 4 + 4 + 3);
 
   /* and return the tuple */
   res1 = TUPLE3(hp, make_small(year), make_small(month), make_small(day));
@@ -4050,7 +4050,7 @@ BIF_RETTYPE localtime_0(BIF_ALIST_0)
   /* read the clock */
   get_localtime(&year, &month, &day, &hour, &minute, &second);
 
-  hp = HAlloc(BIF_P, 4 + 4 + 3);
+  hp = vm::heap_alloc(BIF_P, 4 + 4 + 3);
 
   /* and return the tuple */
   res1 = TUPLE3(hp, make_small(year), make_small(month), make_small(day));
@@ -4138,7 +4138,7 @@ localtime_to_universaltime_2(BIF_ALIST_2)
     goto error;
   }
 
-  hp = HAlloc(p, 4 + 4 + 3);
+  hp = vm::heap_alloc(p, 4 + 4 + 3);
   res1 = TUPLE3(hp, make_small(year), make_small(month),
                 make_small(day));
   hp += 4;
@@ -4172,7 +4172,7 @@ BIF_RETTYPE universaltime_to_localtime_1(BIF_ALIST_1)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp = HAlloc(BIF_P, 4 + 4 + 3);
+  hp = vm::heap_alloc(BIF_P, 4 + 4 + 3);
   res1 = TUPLE3(hp, make_small(year), make_small(month),
                 make_small(day));
   hp += 4;
@@ -4203,7 +4203,7 @@ BIF_RETTYPE universaltime_to_posixtime_1(BIF_ALIST_1)
   }
 
   erts_bld_sint64(nullptr, &hsz, seconds);
-  hp = HAlloc(BIF_P, hsz);
+  hp = vm::heap_alloc(BIF_P, hsz);
   BIF_RET(erts_bld_sint64(&hp, nullptr, seconds));
 }
 
@@ -4227,7 +4227,7 @@ BIF_RETTYPE posixtime_to_universaltime_1(BIF_ALIST_1)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp = HAlloc(BIF_P, 4 + 4 + 3);
+  hp = vm::heap_alloc(BIF_P, 4 + 4 + 3);
   res1 = TUPLE3(hp, make_small(year), make_small(month),
                 make_small(day));
   hp += 4;
@@ -4248,7 +4248,7 @@ BIF_RETTYPE now_0(BIF_ALIST_0)
   Eterm *hp;
 
   get_now(&megasec, &sec, &microsec);
-  hp = HAlloc(BIF_P, 4);
+  hp = vm::heap_alloc(BIF_P, 4);
   BIF_RET(TUPLE3(hp, make_small(megasec), make_small(sec),
                  make_small(microsec)));
 }
@@ -4320,7 +4320,7 @@ BIF_RETTYPE erts_debug_display_1(BIF_ALIST_1)
     erl::exit(1, "Failed to convert term to string: %d (%s)\n",
              -pres, erl_errno_id(-pres));
 
-  hp = HAlloc(BIF_P, 2 * dsbufp->str_len); /* we need length * 2 heap words */
+  hp = vm::heap_alloc(BIF_P, 2 * dsbufp->str_len); /* we need length * 2 heap words */
   res = util::buf_to_intlist(&hp, dsbufp->str, dsbufp->str_len, NIL);
   erts_printf("%s", dsbufp->str);
   erts_destroy_tmp_dsbuf(dsbufp);
@@ -4541,7 +4541,7 @@ term2list_dsprintf(Process *p, Eterm term)
     erl::exit(1, "Failed to convert term to list: %d (%s)\n",
              -pres, erl_errno_id(-pres));
 
-  hp = HAlloc(p, 2 * dsbufp->str_len); /* we need length * 2 heap words */
+  hp = vm::heap_alloc(p, 2 * dsbufp->str_len); /* we need length * 2 heap words */
   res = util::buf_to_intlist(&hp, dsbufp->str, dsbufp->str_len, NIL);
   erts_destroy_tmp_dsbuf(dsbufp);
   return res;
@@ -4573,12 +4573,12 @@ error:
   }
 
 #if HALFWORD_HEAP
-  hp = HAlloc(BIF_P, 3);
+  hp = vm::heap_alloc(BIF_P, 3);
   hp[0] = HEADER_EXPORT;
   /* Yes, May be misaligned, but X86_64 will fix it... */
   *((Export **)(hp + 1)) = erts_export_get_or_make_stub(BIF_ARG_1, BIF_ARG_2, (size_t) arity);
 #else
-  hp = HAlloc(BIF_P, 2);
+  hp = vm::heap_alloc(BIF_P, 2);
   hp[0] = HEADER_EXPORT;
   hp[1] = (Eterm) erts_export_get_or_make_stub(BIF_ARG_1, BIF_ARG_2, (size_t) arity);
 #endif
@@ -4726,7 +4726,7 @@ BIF_RETTYPE list_to_pid_1(BIF_ALIST_1)
 
     enp = erts_find_or_insert_node(dep->sysname, dep->creation);
 
-    etp = (ExternalThing *) HAlloc(BIF_P, EXTERNAL_THING_HEAD_SIZE + 1);
+    etp = (ExternalThing *) vm::heap_alloc(BIF_P, EXTERNAL_THING_HEAD_SIZE + 1);
     etp->header = make_external_pid_header(1);
     etp->next = MSO(BIF_P).first;
     etp->node = enp;
@@ -5261,7 +5261,7 @@ BIF_RETTYPE phash2_2(BIF_ALIST_2)
   if (IS_USMALL(0, final_hash)) {
     BIF_RET(make_small(final_hash));
   } else {
-    Eterm *hp = HAlloc(BIF_P, BIG_UINT_HEAP_SIZE);
+    Eterm *hp = vm::heap_alloc(BIF_P, BIG_UINT_HEAP_SIZE);
     BIF_RET(uint_to_big(final_hash, hp));
   }
 
@@ -5398,7 +5398,7 @@ erts_bif_prep_await_proc_exit_apply_trap(Process *c_p,
     Eterm *hp;
     int i;
 
-    hp = HAlloc(c_p, 4 + 2 * nargs);
+    hp = vm::heap_alloc(c_p, 4 + 2 * nargs);
     term = NIL;
 
     for (i = nargs - 1; i >= 0; i--) {
@@ -5631,7 +5631,7 @@ BIF_RETTYPE dt_prepend_vm_tag_data_1(BIF_ALIST_1)
     b = new_binary(BIF_P, (uint8_t *)"\0", 1);
   }
 
-  hp = HAlloc(BIF_P, 2);
+  hp = vm::heap_alloc(BIF_P, 2);
   BIF_RET(CONS(hp, b, BIF_ARG_1));
 #else
   BIF_RET(BIF_ARG_1);
@@ -5662,7 +5662,7 @@ BIF_RETTYPE dt_append_vm_tag_data_1(BIF_ALIST_1)
     b = new_binary(BIF_P, (uint8_t *)"\0", 1);
   }
 
-  hp = HAlloc(BIF_P, 2);
+  hp = vm::heap_alloc(BIF_P, 2);
   BIF_RET(CONS(hp, BIF_ARG_1, b));
 #else
   BIF_RET(BIF_ARG_1);
@@ -5680,7 +5680,7 @@ BIF_RETTYPE dt_spread_tag_1(BIF_ALIST_1)
   }
 
 #ifdef USE_VM_PROBES
-  hp = HAlloc(BIF_P, 3);
+  hp = vm::heap_alloc(BIF_P, 3);
   ret = TUPLE2(hp, make_small(DT_UTAG_FLAGS(BIF_P)), DT_UTAG(BIF_P));
 
   if (DT_UTAG(BIF_P) != NIL) {

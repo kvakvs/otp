@@ -54,7 +54,7 @@ static BIF_RETTYPE append(Process *p, Eterm A, Eterm B)
   }
 
   need = 2 * i;
-  hp = HAlloc(p, need);
+  hp = vm::heap_alloc(p, need);
   list = A;
   copy = last = CONS(hp, CAR(list_val(list)), make_list(hp + 2));
   list = CDR(list_val(list));
@@ -169,7 +169,7 @@ static Eterm subtract(Process *p, Eterm A, Eterm B)
   } else {    /* REBUILD LIST */
     res = NIL;
     need = 2 * (n - m);
-    hp = HAlloc(p, need);
+    hp = vm::heap_alloc(p, need);
     vp = vec_p + n - 1;
 
     while (vp >= vec_p) {
@@ -297,9 +297,9 @@ error:
   }
 
   /*
-   * Now do one HAlloc() and continue reversing.
+   * Now do one vm::heap_alloc() and continue reversing.
    */
-  hp = HAlloc(BIF_P, 2 * n);
+  hp = vm::heap_alloc(BIF_P, 2 * n);
 
   while (n != 0 && is_list(list)) {
     Eterm *pair = list_val(list);
@@ -343,7 +343,7 @@ lists_keysearch_3(BIF_ALIST_3)
   if (is_non_value(res) || is_not_tuple(res)) {
     return res;
   } else {      /* Tuple */
-    Eterm *hp = HAlloc(BIF_P, 3);
+    Eterm *hp = vm::heap_alloc(BIF_P, 3);
     return TUPLE2(hp, am_value, res);
   }
 }

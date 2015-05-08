@@ -285,7 +285,7 @@ ERTS_GLB_INLINE Eterm db_copy_key(Process *p, DbTable *tb, DbTerm *obj)
     return key;
   } else {
     size_t size = size_object_rel(key, obj->tpl);
-    Eterm *hp = HAlloc(p, size);
+    Eterm *hp = (Eterm *)vm::heap_alloc(p, size);
     Eterm res = copy_struct_rel(key, size, &hp, &MSO(p), obj->tpl, nullptr);
     ASSERT(eq_rel(res, nullptr, key, obj->tpl));
     return res;

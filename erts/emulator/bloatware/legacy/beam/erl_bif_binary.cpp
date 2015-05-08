@@ -1089,7 +1089,7 @@ BIF_RETTYPE binary_compile_pattern_1(BIF_ALIST_1)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp = HAlloc(BIF_P, PROC_BIN_SIZE + 3);
+  hp = vm::heap_alloc(BIF_P, PROC_BIN_SIZE + 3);
   ret = erts_mk_magic_binary_term(&hp, &MSO(BIF_P), bin);
   ret = TUPLE2(hp, tag, ret);
   BIF_RET(ret);
@@ -1157,7 +1157,7 @@ static int do_binary_match(Process *p, Eterm subject, size_t hsstart, size_t hse
 #ifdef HARDDEBUG
       erts_printf("Trap bm!\n");
 #endif
-      hp = HAlloc(p, x + 2);
+      hp = vm::heap_alloc(p, x + 2);
       hp[0] = make_pos_bignum_header(x + 1);
       hp[1] = type;
       memcpy(hp + 2, &state, sizeof(state));
@@ -1167,7 +1167,7 @@ static int do_binary_match(Process *p, Eterm subject, size_t hsstart, size_t hse
     } else {
       Eterm erlen = erts_make_integer((size_t) bm->len, p);
       ret = erts_make_integer(pos, p);
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       ret = TUPLE2(hp, ret, erlen);
     }
 
@@ -1207,7 +1207,7 @@ static int do_binary_match(Process *p, Eterm subject, size_t hsstart, size_t hse
 #ifdef HARDDEBUG
       erts_printf("Trap ac!\n");
 #endif
-      hp = HAlloc(p, x + 2);
+      hp = vm::heap_alloc(p, x + 2);
       hp[0] = make_pos_bignum_header(x + 1);
       hp[1] = type;
       memcpy(hp + 2, &state, sizeof(state));
@@ -1217,7 +1217,7 @@ static int do_binary_match(Process *p, Eterm subject, size_t hsstart, size_t hse
     } else {
       Eterm epos = erts_make_integer(pos, p);
       Eterm erlen = erts_make_integer(rlen, p);
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       ret = TUPLE2(hp, epos, erlen);
     }
 
@@ -1286,7 +1286,7 @@ static int do_binary_matches(Process *p, Eterm subject, size_t hsstart,
 #ifdef HARDDEBUG
       erts_printf("Trap bm!\n");
 #endif
-      hp = HAlloc(p, x + 2);
+      hp = vm::heap_alloc(p, x + 2);
       hp[0] = make_pos_bignum_header(x + 1);
       hp[1] = type;
       bm_serialize_find_all(&state, (char *)(hp + 2));
@@ -1303,7 +1303,7 @@ static int do_binary_matches(Process *p, Eterm subject, size_t hsstart,
         fad[i].elen = erts_make_integer(fad[i].len, p);
       }
 
-      hp = HAlloc(p, state.m * (3 + 2));
+      hp = vm::heap_alloc(p, state.m * (3 + 2));
       ret = NIL;
 
       for (i = state.m - 1; i >= 0; --i) {
@@ -1351,7 +1351,7 @@ static int do_binary_matches(Process *p, Eterm subject, size_t hsstart,
 #ifdef HARDDEBUG
       erts_printf("Trap ac!\n");
 #endif
-      hp = HAlloc(p, x + 2);
+      hp = vm::heap_alloc(p, x + 2);
       hp[0] = make_pos_bignum_header(x + 1);
       hp[1] = type;
       ac_serialize_find_all(&state, (char *)(hp + 2));
@@ -1368,7 +1368,7 @@ static int do_binary_matches(Process *p, Eterm subject, size_t hsstart,
         fad[i].elen = erts_make_integer(fad[i].len, p);
       }
 
-      hp = HAlloc(p, state.m * (3 + 2));
+      hp = vm::heap_alloc(p, state.m * (3 + 2));
       ret = NIL;
 
       for (i = state.m - 1; i >= 0; --i) {
@@ -1564,7 +1564,7 @@ binary_match(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
   runres = do_binary_match(p, arg1, hsstart, hsend, type, bin, NIL, &result);
 
   if (runres == DO_BIN_MATCH_RESTART && bin_term == NIL) {
-    Eterm *hp = HAlloc(p, PROC_BIN_SIZE);
+    Eterm *hp = vm::heap_alloc(p, PROC_BIN_SIZE);
     bin_term = erts_mk_magic_binary_term(&hp, &MSO(p), bin);
   } else if (bin_term == NIL) {
     erts_bin_free(bin);
@@ -1648,7 +1648,7 @@ binary_matches(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
                              NIL, &result);
 
   if (runres == DO_BIN_MATCH_RESTART && bin_term == NIL) {
-    Eterm *hp = HAlloc(p, PROC_BIN_SIZE);
+    Eterm *hp = vm::heap_alloc(p, PROC_BIN_SIZE);
     bin_term = erts_mk_magic_binary_term(&hp, &MSO(p), bin);
   } else if (bin_term == NIL) {
     erts_bin_free(bin);
@@ -1737,7 +1737,7 @@ BIF_RETTYPE erts_binary_part(Process *p, Eterm binary, Eterm epos, Eterm elen)
 
 
 
-  hp = HAlloc(p, ERL_SUB_BIN_SIZE);
+  hp = vm::heap_alloc(p, ERL_SUB_BIN_SIZE);
 
   ERTS_GET_REAL_BIN(binary, orig, offset, bit_offset, bit_size);
   sb = (ErlSubBin *) hp;
@@ -2154,7 +2154,7 @@ static BIF_RETTYPE do_longest_common(Process *p, Eterm list, int direction)
       }
     }
 
-    hp = HAlloc(p, PROC_BIN_SIZE);
+    hp = vm::heap_alloc(p, PROC_BIN_SIZE);
     bin_term = erts_mk_magic_binary_term(&hp, &MSO(p), mb);
     BUMP_ALL_REDS(p);
     BIF_TRAP3(trapper, p, bin_term, epos, list);
@@ -2367,7 +2367,7 @@ static int do_bin_to_list(Process *p, uint8_t *bytes, size_t bit_offs,
 
   BUMP_REDS(p, loops / BIN_TO_LIST_LOOP_FACTOR);
 
-  hp = HAlloc(p, 2 * loops);
+  hp = vm::heap_alloc(p, 2 * loops);
 
   while (loops--) {
     --len;
@@ -2401,7 +2401,7 @@ static BIF_RETTYPE do_trap_bin_to_list(Process *p, Eterm binary,
   Eterm *hp;
   Eterm blob;
 
-  hp = HAlloc(p, 3);
+  hp = vm::heap_alloc(p, 3);
   hp[0] = make_pos_bignum_header(2);
   hp[1] = start;
   hp[2] = (size_t) len;
@@ -2717,7 +2717,7 @@ static BIF_RETTYPE do_binary_copy(Process *p, Eterm bin, Eterm en)
     cbs->source_size = size;
     cbs->result_pos = pos;
     cbs->times_left = n - i;
-    hp = HAlloc(p, PROC_BIN_SIZE);
+    hp = vm::heap_alloc(p, PROC_BIN_SIZE);
     trap_term = erts_mk_magic_binary_term(&hp, &MSO(p), mb);
     BUMP_ALL_REDS(p);
     BIF_TRAP2(&binary_copy_trap_export, p, bin, trap_term);
@@ -2794,7 +2794,7 @@ BIF_RETTYPE binary_copy_trap(BIF_ALIST_2)
     save =  cbs->result;
     cbs->result = nullptr;
     cleanup_copy_bin_state(mb); /* now cbs is dead */
-    pb = (ProcBin *) HAlloc(BIF_P, PROC_BIN_SIZE);
+    pb = (ProcBin *) vm::heap_alloc(BIF_P, PROC_BIN_SIZE);
     pb->thing_word = HEADER_PROC_BIN;
     pb->size = target_size;
     pb->next = MSO(BIF_P).first;
@@ -3085,7 +3085,7 @@ static BIF_RETTYPE do_decode_unsigned(Process *p, Eterm uns, Eterm endianess)
     dsize_t num_parts = size / sizeof(ErtsDigit) + !!(size % sizeof(ErtsDigit));
     Eterm *bigp;
 
-    bigp = HAlloc(p, BIG_NEED_SIZE(num_parts));
+    bigp = vm::heap_alloc(p, BIG_NEED_SIZE(num_parts));
     *bigp = make_pos_bignum_header(num_parts);
     res = make_big(bigp);
 

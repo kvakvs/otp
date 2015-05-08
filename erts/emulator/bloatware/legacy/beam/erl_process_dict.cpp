@@ -464,7 +464,7 @@ static Eterm pd_hash_get_keys(Process *p, Eterm value)
       ASSERT(is_tuple(tmp));
 
       if (EQ(tuple_val(tmp)[2], value)) {
-        hp = HAlloc(p, 2);
+        hp = vm::heap_alloc(p, 2);
         res = CONS(hp, tuple_val(tmp)[1], res);
       }
     } else if (is_list(tmp)) {
@@ -472,7 +472,7 @@ static Eterm pd_hash_get_keys(Process *p, Eterm value)
         tmp2 = TCAR(tmp);
 
         if (EQ(tuple_val(tmp2)[2], value)) {
-          hp = HAlloc(p, 2);
+          hp = vm::heap_alloc(p, 2);
           res = CONS(hp, tuple_val(tmp2)[1], res);
         }
 
@@ -499,7 +499,7 @@ pd_hash_get_all(Process *p, ProcDict *pd)
   }
 
   num = HASH_RANGE(pd);
-  hp = HAlloc(p, pd->numElements * 2);
+  hp = vm::heap_alloc(p, pd->numElements * 2);
 
   for (i = 0; i < num; ++i) {
     tmp = ARRAY_GET(pd, i);

@@ -70,7 +70,7 @@ new_binary(Process *p, uint8_t *buf, size_t len)
   Binary *bptr;
 
   if (len <= ERL_ONHEAP_BIN_LIMIT) {
-    ErlHeapBin *hb = (ErlHeapBin *) HAlloc(p, heap_bin_size(len));
+    ErlHeapBin *hb = (ErlHeapBin *)vm::heap_alloc(p, heap_bin_size(len));
     hb->thing_word = header_heap_bin(len);
     hb->size = len;
 
@@ -96,7 +96,7 @@ new_binary(Process *p, uint8_t *buf, size_t len)
   /*
    * Now allocate the ProcBin on the heap.
    */
-  pb = (ProcBin *) HAlloc(p, PROC_BIN_SIZE);
+  pb = (ProcBin *) vm::heap_alloc(p, PROC_BIN_SIZE);
   pb->thing_word = HEADER_PROC_BIN;
   pb->size = len;
   pb->next = MSO(p).first;
@@ -136,7 +136,7 @@ Eterm erts_new_mso_binary(Process *p, uint8_t *buf, int len)
   /*
    * Now allocate the ProcBin on the heap.
    */
-  pb = (ProcBin *) HAlloc(p, PROC_BIN_SIZE);
+  pb = (ProcBin *) vm::heap_alloc(p, PROC_BIN_SIZE);
   pb->thing_word = HEADER_PROC_BIN;
   pb->size = len;
   pb->next = MSO(p).first;
@@ -159,7 +159,7 @@ Eterm erts_new_mso_binary(Process *p, uint8_t *buf, int len)
 Eterm
 erts_new_heap_binary(Process *p, uint8_t *buf, int len, uint8_t **datap)
 {
-  ErlHeapBin *hb = (ErlHeapBin *) HAlloc(p, heap_bin_size(len));
+  ErlHeapBin *hb = (ErlHeapBin *) vm::heap_alloc(p, heap_bin_size(len));
 
   hb->thing_word = header_heap_bin(len);
   hb->size = len;
@@ -471,7 +471,7 @@ binary_to_list(Process *c_p, Eterm *hp, Eterm tail, uint8_t *bytes, size_t size,
     sp->size = size;
     sp->bitoffs = bitoffs;
 
-    hp = HAlloc(c_p, PROC_BIN_SIZE);
+    hp = vm::heap_alloc(c_p, PROC_BIN_SIZE);
     mb = erts_mk_magic_binary_term(&hp, &MSO(c_p), mbp);
     return binary_to_list_chunk(c_p, mb, sp, reds_left, 0);
   }
@@ -516,7 +516,7 @@ BIF_RETTYPE binary_to_list_1(BIF_ALIST_1)
   if (size == 0) {
     BIF_RET(NIL);
   } else {
-    Eterm *hp = HAlloc(BIF_P, 2 * size);
+    Eterm *hp = vm::heap_alloc(BIF_P, 2 * size);
     uint8_t *bytes = binary_bytes(real_bin) + offset;
     return binary_to_list(BIF_P, hp, NIL, bytes, size, bitoffs);
   }
@@ -555,7 +555,7 @@ BIF_RETTYPE binary_to_list_3(BIF_ALIST_3)
   }
 
   i = stop - start + 1;
-  hp = HAlloc(BIF_P, 2 * i);
+  hp = vm::heap_alloc(BIF_P, 2 * i);
   return binary_to_list(BIF_P, hp, NIL, bytes + start - 1, i, bitoffs);
 error:
   BIF_ERROR(BIF_P, BADARG);
@@ -583,14 +583,14 @@ BIF_RETTYPE bitstring_to_list_1(BIF_ALIST_1)
   bytes = binary_bytes(real_bin) + offset;
 
   if (bitsize == 0) {
-    hp = HAlloc(BIF_P, 2 * size);
+    hp = vm::heap_alloc(BIF_P, 2 * size);
   } else if (size == 0) {
-    hp = HAlloc(BIF_P, 2);
+    hp = vm::heap_alloc(BIF_P, 2);
     BIF_RET(CONS(hp, BIF_ARG_1, NIL));
   } else {
     ErlSubBin *last;
 
-    hp = HAlloc(BIF_P, ERL_SUB_BIN_SIZE + 2 + 2 * size);
+    hp = vm::heap_alloc(BIF_P, ERL_SUB_BIN_SIZE + 2 + 2 * size);
     last = (ErlSubBin *) hp;
     last->thing_word = HEADER_SUB_BIN;
     last->size = 0;
@@ -736,7 +736,7 @@ l2b_final_touch(Process *c_p, ErtsL2BState *sp)
     return sp->bin;
   }
 
-  hp = HAlloc(c_p, ERL_SUB_BIN_SIZE);
+  hp = vm::heap_alloc(c_p, ERL_SUB_BIN_SIZE);
   ASSERT(sp->buf.offset > 0);
   sbin = (ErlSubBin *) hp;
   sbin->thing_word = HEADER_SUB_BIN;
@@ -787,7 +787,7 @@ list_to_binary_chunk(Eterm mb_eterm,
       ERTS_L2B_STATE_MOVE(new_sp, sp);
       sp = new_sp;
 
-      hp = HAlloc(c_p, PROC_BIN_SIZE);
+      hp = vm::heap_alloc(c_p, PROC_BIN_SIZE);
       mb_eterm = erts_mk_magic_binary_term(&hp, &MSO(c_p), mbp);
 
       ASSERT(is_value(mb_eterm));
@@ -1107,7 +1107,7 @@ BIF_RETTYPE split_binary_2(BIF_ALIST_2)
     goto error;
   }
 
-  hp = HAlloc(BIF_P, 2 * ERL_SUB_BIN_SIZE + 3);
+  hp = vm::heap_alloc(BIF_P, 2 * ERL_SUB_BIN_SIZE + 3);
   ERTS_GET_REAL_BIN(BIF_ARG_1, orig, offset, bit_offset, bit_size);
   sb1 = (ErlSubBin *) hp;
   sb1->thing_word = HEADER_SUB_BIN;

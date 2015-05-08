@@ -49,7 +49,7 @@ BIF_RETTYPE os_timestamp_0(BIF_ALIST_0)
   Eterm *hp;
 
   get_sys_now(&megasec, &sec, &microsec);
-  hp = HAlloc(BIF_P, 4);
+  hp = vm::heap_alloc(BIF_P, 4);
   BIF_RET(TUPLE3(hp, make_small(megasec), make_small(sec),
                  make_small(microsec)));
 }
@@ -62,7 +62,7 @@ BIF_RETTYPE os_getpid_0(BIF_ALIST_0)
   Eterm *hp;
   sys_get_pid(pid_string, sizeof(pid_string)); /* In sys.c */
   n = sys_strlen(pid_string);
-  hp = HAlloc(BIF_P, n * 2);
+  hp = vm::heap_alloc(BIF_P, n * 2);
   BIF_RET(util::buf_to_intlist(&hp, pid_string, n, NIL));
 }
 
@@ -80,7 +80,7 @@ BIF_RETTYPE os_getenv_0(BIF_ALIST_0)
 
   while ((cp = getenv_string(&state)) != nullptr) {
     str = erts_convert_native_to_filename(BIF_P, (uint8_t *)cp);
-    hp = HAlloc(BIF_P, 2);
+    hp = vm::heap_alloc(BIF_P, 2);
     ret = CONS(hp, str, ret);
   }
 

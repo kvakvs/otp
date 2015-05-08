@@ -3234,7 +3234,7 @@ BIF_RETTYPE nodes_1(BIF_ALIST_1)
     goto done;
   }
 
-  hp = HAlloc(BIF_P, 2 * length);
+  hp = vm::heap_alloc(BIF_P, 2 * length);
 
 #ifdef DEBUG
   endp = hp + length * 2;
@@ -4005,7 +4005,7 @@ bld_result:
   }
 
   if (!hpp) {
-    hp = HAlloc(c_p, sz);
+    hp = vm::heap_alloc(c_p, sz);
 #ifdef DEBUG
     hend = hp + sz;
 #endif

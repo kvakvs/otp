@@ -754,12 +754,12 @@ static int db_get_tree(Process *p, DbTable *tbl, Eterm key, Eterm *ret)
   if (this_ == nullptr) {
     *ret = NIL;
   } else {
-    hp = HAlloc(p, this_->dbterm.size + 2);
+    hp = vm::heap_alloc(p, this_->dbterm.size + 2);
     hend = hp + this_->dbterm.size + 2;
     copy = db_copy_object_from_ets(&tb->common, &this_->dbterm, &hp, &MSO(p));
     *ret = CONS(hp, copy, NIL);
     hp += 2;
-    HRelease(p, hend, hp);
+    vm::heap_free(p, hend, hp);
   }
 
   return DB_ERROR_NONE;
@@ -874,12 +874,12 @@ static int db_slot_tree(Process *p, DbTable *tbl,
     return DB_ERROR_UNSPEC;
   }
 
-  hp = HAlloc(p, st->dbterm.size + 2);
+  hp = vm::heap_alloc(p, st->dbterm.size + 2);
   hend = hp + st->dbterm.size + 2;
   copy = db_copy_object_from_ets(&tb->common, &st->dbterm, &hp, &MSO(p));
   *ret = CONS(hp, copy, NIL);
   hp += 2;
-  HRelease(p, hend, hp);
+  vm::heap_free(p, hend, hp);
   return DB_ERROR_NONE;
 }
 
@@ -899,7 +899,7 @@ static BIF_RETTYPE ets_select_reverse(BIF_ALIST_3)
   int max_iter = CONTEXT_REDS * 10;
 
   if (is_nil(a1)) {
-    hp = HAlloc(p, 3);
+    hp = vm::heap_alloc(p, 3);
     BIF_RET(TUPLE2(hp, a2, a3));
   } else if (is_not_list(a1)) {
 error:
@@ -915,12 +915,12 @@ error:
 
     if (--max_iter == 0) {
       BUMP_ALL_REDS(p);
-      HRelease(p, hend, hp);
+      vm::heap_free(p, hend, hp);
       BIF_TRAP3(&ets_select_reverse_exp, p, list, result, a3);
     }
 
     if (hp == hend) {
-      hp = HAlloc(p, 64);
+      hp = vm::heap_alloc(p, 64);
       hend = hp + 64;
     }
 
@@ -933,9 +933,9 @@ error:
     goto error;
   }
 
-  HRelease(p, hend, hp);
+  vm::heap_free(p, hend, hp);
   BUMP_REDS(p, CONTEXT_REDS - max_iter / 10);
-  hp = HAlloc(p, 3);
+  hp = vm::heap_alloc(p, 3);
   BIF_RET(TUPLE2(hp, result, a3));
 }
 
@@ -1063,7 +1063,7 @@ static int db_select_continue_tree(Process *p,
 
       key = GETKEY(tb, sc.lastobj);
       sz = size_object_rel(key, sc.lastobj);
-      hp = HAlloc(p, 9 + sz);
+      hp = vm::heap_alloc(p, 9 + sz);
       key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
       continuation = TUPLE8
                      (hp,
@@ -1109,7 +1109,7 @@ static int db_select_continue_tree(Process *p,
 
   /* Not done yet, let's trap. */
   sz = size_object_rel(key, sc.lastobj);
-  hp = HAlloc(p, 9 + sz);
+  hp = vm::heap_alloc(p, 9 + sz);
   key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
   continuation = TUPLE8
                  (hp,
@@ -1223,7 +1223,7 @@ static int db_select_tree(Process *p, DbTable *tbl,
 
   key = GETKEY(tb, sc.lastobj);
   sz = size_object_rel(key, sc.lastobj);
-  hp = HAlloc(p, 9 + sz + PROC_BIN_SIZE);
+  hp = vm::heap_alloc(p, 9 + sz + PROC_BIN_SIZE);
   key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
 
   if (mpi.all_objects) {
@@ -1336,10 +1336,10 @@ static int db_select_count_continue_tree(Process *p,
   sz = size_object_rel(key, sc.lastobj);
 
   if (IS_USMALL(0, sc.got)) {
-    hp = HAlloc(p, sz + 6);
+    hp = vm::heap_alloc(p, sz + 6);
     egot = make_small(sc.got);
   } else {
-    hp = HAlloc(p, BIG_UINT_HEAP_SIZE + sz + 6);
+    hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE + sz + 6);
     egot = uint_to_big(sc.got, hp);
     hp += BIG_UINT_HEAP_SIZE;
   }
@@ -1436,10 +1436,10 @@ static int db_select_count_tree(Process *p, DbTable *tbl,
   sz = size_object_rel(key, sc.lastobj);
 
   if (IS_USMALL(0, sc.got)) {
-    hp = HAlloc(p, sz + PROC_BIN_SIZE + 6);
+    hp = vm::heap_alloc(p, sz + PROC_BIN_SIZE + 6);
     egot = make_small(sc.got);
   } else {
-    hp = HAlloc(p, BIG_UINT_HEAP_SIZE + sz + PROC_BIN_SIZE + 6);
+    hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE + sz + PROC_BIN_SIZE + 6);
     egot = uint_to_big(sc.got, hp);
     hp += BIG_UINT_HEAP_SIZE;
   }
@@ -1524,7 +1524,7 @@ static int db_select_chunk_tree(Process *p, DbTable *tbl,
     doit_select(tb, mpi.save_term, &sc, 0 /* direction doesn't matter */);
 
     if (sc.accum != NIL) {
-      hp = HAlloc(p, 3);
+      hp = vm::heap_alloc(p, 3);
       RET_TO_BIF(TUPLE2(hp, sc.accum, am_EOT), DB_ERROR_NONE);
     } else {
       RET_TO_BIF(am_EOT, DB_ERROR_NONE);
@@ -1582,7 +1582,7 @@ static int db_select_chunk_tree(Process *p, DbTable *tbl,
 
     key = GETKEY(tb, sc.lastobj);
     sz = size_object_rel(key, sc.lastobj);
-    hp = HAlloc(p, 9 + sz + PROC_BIN_SIZE);
+    hp = vm::heap_alloc(p, 9 + sz + PROC_BIN_SIZE);
     key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
 
     if (mpi.all_objects) {
@@ -1610,7 +1610,7 @@ static int db_select_chunk_tree(Process *p, DbTable *tbl,
 
   key = GETKEY(tb, sc.lastobj);
   sz = size_object_rel(key, sc.lastobj);
-  hp = HAlloc(p, 9 + sz + PROC_BIN_SIZE);
+  hp = vm::heap_alloc(p, 9 + sz + PROC_BIN_SIZE);
   key = copy_struct_rel(key, sz, &hp, &MSO(p), sc.lastobj, nullptr);
 
   if (mpi.all_objects) {
@@ -1710,10 +1710,10 @@ static int db_select_delete_continue_tree(Process *p,
   sz = size_object_rel(key, sc.lastterm->dbterm.tpl);
 
   if (IS_USMALL(0, sc.accum)) {
-    hp = HAlloc(p, sz + 6);
+    hp = vm::heap_alloc(p, sz + 6);
     eaccsum = make_small(sc.accum);
   } else {
-    hp = HAlloc(p, BIG_UINT_HEAP_SIZE + sz + 6);
+    hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE + sz + 6);
     eaccsum = uint_to_big(sc.accum, hp);
     hp += BIG_UINT_HEAP_SIZE;
   }
@@ -1809,10 +1809,10 @@ static int db_select_delete_tree(Process *p, DbTable *tbl,
   sz = size_object_rel(key, sc.lastterm->dbterm.tpl);
 
   if (IS_USMALL(0, sc.accum)) {
-    hp = HAlloc(p, sz + PROC_BIN_SIZE + 6);
+    hp = vm::heap_alloc(p, sz + PROC_BIN_SIZE + 6);
     eaccsum = make_small(sc.accum);
   } else {
-    hp = HAlloc(p, BIG_UINT_HEAP_SIZE + sz + PROC_BIN_SIZE + 6);
+    hp = vm::heap_alloc(p, BIG_UINT_HEAP_SIZE + sz + PROC_BIN_SIZE + 6);
     eaccsum = uint_to_big(sc.accum, hp);
     hp += BIG_UINT_HEAP_SIZE;
   }
@@ -3068,7 +3068,7 @@ BIF_ADECL_2
               BIF_ARG_2));
     Eterm r2 = make_small(partly_bound_can_match_greater(BIF_ARG_1,
                BIF_ARG_2));
-    Eterm *hp = HAlloc(BIF_P,3);
+    Eterm *hp = vm::heap_alloc(BIF_P,3);
     Eterm ret;
 
     ret = TUPLE2(hp,r1,r2);

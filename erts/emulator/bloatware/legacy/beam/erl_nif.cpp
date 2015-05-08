@@ -188,7 +188,7 @@ static void post_nif_noproc(ErlNifEnv *env)
 }
 
 
-/* Flush out our cached heap pointers to allow an ordinary HAlloc
+/* Flush out our cached heap pointers to allow an ordinary vm::heap_alloc
 */
 static void flush_env(ErlNifEnv *env)
 {
@@ -2405,7 +2405,7 @@ Eterm erts_nif_taints(Process *p)
     cnt++;
   }
 
-  hp = HAlloc(p, cnt * 2);
+  hp = vm::heap_alloc(p, cnt * 2);
 
   for (t = first_tainted_module ; t != nullptr; t = t->next) {
     list = CONS(hp, t->module_atom, list);
@@ -2453,7 +2453,7 @@ static Eterm load_nif_error(Process *p, const char *atom, const char *format, ..
       break;
     }
 
-    hp = HAlloc(p, sz);
+    hp = vm::heap_alloc(p, sz);
     hpp = &hp;
     szp = nullptr;
   }
