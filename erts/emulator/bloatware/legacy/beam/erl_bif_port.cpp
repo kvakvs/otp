@@ -47,13 +47,13 @@ static uint8_t *convert_environment(Process *p, Eterm env);
 static char **convert_args(Eterm);
 static void free_args(char **);
 
-char *erts_default_arg0 = "default";
+const char *erts_default_arg0 = "default";
 
 BIF_RETTYPE open_port_2(BIF_ALIST_2)
 {
   Port *port;
   Eterm port_id;
-  char *str;
+  const char *str;
   int err_type, err_num;
 
   port = open_port(BIF_P, BIF_ARG_1, BIF_ARG_2, &err_type, &err_num);
@@ -764,8 +764,8 @@ open_port(Process *p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 
           opts.envir = (char *) bytes;
         } else if (option == am_args) {
-          char **av;
-          char **oav = opts.argv;
+          const char **av;
+          const char **oav = opts.argv;
 
           if ((av = convert_args(*tp)) == nullptr) {
             goto badarg;
@@ -1056,9 +1056,9 @@ badarg:
 }
 
 /* Arguments can be given i unicode and as raw binaries, convert filename is used to convert */
-static char **convert_args(Eterm l)
+static const char **convert_args(Eterm l)
 {
-  char **pp;
+  const char **pp;
   char *b;
   int n;
   int i = 0;
@@ -1070,7 +1070,7 @@ static char **convert_args(Eterm l)
 
   n = erts_list_length(l);
   /* We require at least one element in argv[0] + nullptr at end */
-  pp = (char **)erts_alloc(ERTS_ALC_T_TMP, (n + 2) * sizeof(char **));
+  pp = (const char **)erts_alloc(ERTS_ALC_T_TMP, (n + 2) * sizeof(char **));
   pp[i++] = erts_default_arg0;
 
   while (is_list(l)) {
@@ -1096,7 +1096,7 @@ static char **convert_args(Eterm l)
   return pp;
 }
 
-static void free_args(char **av)
+static void free_args(const char **av)
 {
   int i;
 

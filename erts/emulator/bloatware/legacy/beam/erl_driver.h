@@ -457,7 +457,7 @@ EXTERN char *erl_errno_id(int error);
  * from a driver.
  */
 EXTERN int driver_failure_eof(ErlDrvPort port);
-EXTERN int driver_failure_atom(ErlDrvPort port, char *string);
+EXTERN int driver_failure_atom(ErlDrvPort port, const char *string);
 EXTERN int driver_failure_posix(ErlDrvPort port, int error);
 EXTERN int driver_failure(ErlDrvPort port, int error);
 EXTERN int driver_exit(ErlDrvPort port, int err);

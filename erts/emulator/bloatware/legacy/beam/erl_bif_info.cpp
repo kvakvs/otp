@@ -325,7 +325,7 @@ int
 erts_print_system_version(int to, void *arg, Process *c_p)
 {
   int i, rc = -1;
-  char *rc_str = "";
+  const char *rc_str = "";
   char rc_buf[100];
   char *ov = otp_version;
 #ifdef ERTS_SMP
@@ -1203,10 +1203,10 @@ process_info_aux(Process *BIF_P,
       hp = vm::heap_alloc(BIF_P, 3);
     } else {
       int remove_bad_messages = 0;
-      typedef struct mq_t {
+      typedef struct {
         size_t copy_struct_size;
         ErlMessage *msgp;
-      };
+      } mq_t;
       mq_t *mq = (mq_t *)erts_alloc(ERTS_ALC_T_TMP, n * sizeof(*mq));
       ssize_t i = 0;
       size_t heap_need = 3;

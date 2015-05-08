@@ -258,7 +258,7 @@ static ERTS_INLINE void port_init_instr(Port *prt
   ASSERT(prt->drv_ptr && prt->lock);
 
   if (!prt->drv_ptr->lock) {
-    char *lock_str = "port_lock";
+    const char *lock_str = "port_lock";
     erts_mtx_init_locked_x(prt->lock, lock_str, id,
 #ifdef ERTS_ENABLE_LOCK_COUNT
                            (erts_lcnt_rt_options & ERTS_LCNT_OPT_PORTLOCK)
@@ -7905,7 +7905,7 @@ int driver_failure(ErlDrvPort ix, int code)
   return driver_failure_term(ix, make_small(code), code == 0);
 }
 
-int driver_failure_atom(ErlDrvPort ix, char *string)
+int driver_failure_atom(ErlDrvPort ix, const char *string)
 {
   return driver_failure_term(ix,
                              erts_atom_put((uint8_t *) string,

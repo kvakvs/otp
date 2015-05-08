@@ -364,7 +364,7 @@ erts_ptab_init_table(ErtsPTab *ptab,
                      ErtsPTabElementCommon *invalid_element,
                      int size,
                      UWord element_size,
-                     char *name,
+                     const char *name,
                      int legacy)
 {
   size_t tab_sz, alloc_sz;

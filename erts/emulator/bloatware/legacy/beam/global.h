@@ -179,7 +179,7 @@ extern void erts_ddll_reference_driver(DE_Handle *dh);
 extern void erts_ddll_reference_referenced_driver(DE_Handle *dh);
 extern void erts_ddll_dereference_driver(DE_Handle *dh);
 
-extern char *erts_ddll_error(int code);
+extern const char *erts_ddll_error(int code);
 extern void erts_ddll_proc_dead(Process *p, ErtsProcLocks plocks);
 extern int erts_ddll_driver_ok(DE_Handle *dh);
 extern void erts_ddll_remove_monitor(Process *p,

@@ -277,7 +277,7 @@ static void schedule_free_dbtable(DbTable *tb)
 }
 
 static ERTS_INLINE void db_init_lock(DbTable *tb, int use_frequent_read_lock,
-                                     char *rwname, char *fixname)
+                                     const char *rwname, const char *fixname)
 {
 #ifdef ERTS_SMP
   erts_smp_rwmtx_opt_t rwmtx_opt = ERTS_SMP_RWMTX_OPT_DEFAULT_INITER;

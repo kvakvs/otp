@@ -4595,7 +4595,7 @@ sys_realloc_success:
     static Eterm
     sz_info_carriers(Allctr_t *allctr,
                      CarriersStats_t *cs,
-                     char *prefix,
+                     const char *prefix,
                      int *print_to_p,
                      void *print_to_arg,
                      size_t **hpp,
@@ -4645,7 +4645,7 @@ sys_realloc_success:
     static Eterm
     info_cpool(Allctr_t *allctr,
                int sz_only,
-               char *prefix,
+               const char *prefix,
                int *print_to_p,
                void *print_to_arg,
                size_t **hpp,
@@ -4710,7 +4710,7 @@ sys_realloc_success:
     static Eterm
     info_carriers(Allctr_t *allctr,
                   CarriersStats_t *cs,
-                  char *prefix,
+                  const char *prefix,
                   int *print_to_p,
                   void *print_to_arg,
                   size_t **hpp,

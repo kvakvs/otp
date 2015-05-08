@@ -634,14 +634,14 @@ typedef struct _SysDriverOpts {
   int overlapped_io;          /* Only has effect on windows NT et al */
   char *envir;    /* Environment of the port process, */
   /* in Windows format. */
-  char **argv;                /* Argument vector in Unix'ish format. */
+  const char **argv;                /* Argument vector in Unix'ish format. */
   char *wd;     /* Working directory. */
   unsigned spawn_type;        /* Bitfield of ERTS_SPAWN_DRIVER |
            ERTS_SPAWN_EXTERNAL | both*/
   int parallelism;            /* Optimize for parallelism */
 } SysDriverOpts;
 
-extern char *erts_default_arg0;
+extern const char *erts_default_arg0;
 
 extern char os_type[];
 

@@ -951,7 +951,7 @@ BIF_RETTYPE erl_ddll_format_error_int_1(BIF_ALIST_1)
 {
   Process *p = BIF_P;
   Eterm code_term = BIF_ARG_1;
-  char *errstring = nullptr;
+  const char *errstring = nullptr;
   int errint;
   int len;
   Eterm ret = NIL;
@@ -1391,7 +1391,7 @@ static void ddll_no_more_references(void *vdh)
   unlock_drv_list();
 }
 
-char *erts_ddll_error(int code)
+const char *erts_ddll_error(int code)
 {
   switch (code) {
   case ERL_DE_NO_ERROR:
@@ -1953,7 +1953,7 @@ static void notify_all(DE_Handle *dh, const char *name, size_t awaiting, Eterm t
 
 
 typedef struct errcode_entry {
-  char *atm;
+  const char *atm;
   int code;
 } ErrcodeEntry;
 
