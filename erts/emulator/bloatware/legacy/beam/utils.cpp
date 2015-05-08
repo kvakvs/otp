@@ -1993,7 +1993,7 @@ tail_recur:
 #undef MAKE_HASH_CDR_POST_OP
 }
 
-static int do_send_to_logger(Eterm tag, Eterm gleader, char *buf, int len)
+static int do_send_to_logger(Eterm tag, Eterm gleader, const char *buf, int len)
 {
   /* error_logger !
      {notify,{info_msg,gleader,{emulator,"~s~n",[<message as list>]}}} |
@@ -2102,13 +2102,13 @@ static int do_send_to_logger(Eterm tag, Eterm gleader, char *buf, int len)
 }
 
 static ERTS_INLINE int
-send_info_to_logger(Eterm gleader, char *buf, int len)
+send_info_to_logger(Eterm gleader, const char *buf, int len)
 {
   return do_send_to_logger(am_info_msg, gleader, buf, len);
 }
 
 static ERTS_INLINE int
-send_warning_to_logger(Eterm gleader, char *buf, int len)
+send_warning_to_logger(Eterm gleader, const char *buf, int len)
 {
   Eterm tag;
 
@@ -2130,7 +2130,7 @@ send_warning_to_logger(Eterm gleader, char *buf, int len)
 }
 
 static ERTS_INLINE int
-send_error_to_logger(Eterm gleader, char *buf, int len)
+send_error_to_logger(Eterm gleader, const char *buf, int len)
 {
   return do_send_to_logger(am_error, gleader, buf, len);
 }
@@ -2211,19 +2211,19 @@ erts_send_error_to_logger(Eterm gleader, erts_dsprintf_buf_t *dsbufp)
 }
 
 int
-erts_send_info_to_logger_str(Eterm gleader, char *str)
+erts_send_info_to_logger_str(Eterm gleader, const char *str)
 {
   return send_info_to_logger(gleader, str, sys_strlen(str));
 }
 
 int
-erts_send_warning_to_logger_str(Eterm gleader, char *str)
+erts_send_warning_to_logger_str(Eterm gleader, const char *str)
 {
   return send_warning_to_logger(gleader, str, sys_strlen(str));
 }
 
 int
-erts_send_error_to_logger_str(Eterm gleader, char *str)
+erts_send_error_to_logger_str(Eterm gleader, const char *str)
 {
   return send_error_to_logger(gleader, str, sys_strlen(str));
 }

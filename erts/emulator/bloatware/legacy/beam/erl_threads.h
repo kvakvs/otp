@@ -614,14 +614,14 @@ ERTS_GLB_INLINE erts_aint64_t erts_no_atomic64_read_bset(erts_no_atomic64_t *var
     erts_aint64_t set);
 
 ERTS_GLB_INLINE void erts_spinlock_init_x_opt(erts_spinlock_t *lock,
-    char *name,
+    const char *name,
     Eterm extra,
     uint16_t opt);
 ERTS_GLB_INLINE void erts_spinlock_init_x(erts_spinlock_t *lock,
-    char *name,
+    const char *name,
     Eterm extra);
 ERTS_GLB_INLINE void erts_spinlock_init(erts_spinlock_t *lock,
-                                        char *name);
+                                        const char *name);
 ERTS_GLB_INLINE void erts_spinlock_destroy(erts_spinlock_t *lock);
 ERTS_GLB_INLINE void erts_spin_unlock(erts_spinlock_t *lock);
 #ifdef ERTS_ENABLE_LOCK_POSITION
@@ -631,10 +631,10 @@ ERTS_GLB_INLINE void erts_spin_lock(erts_spinlock_t *lock);
 #endif
 ERTS_GLB_INLINE int erts_lc_spinlock_is_locked(erts_spinlock_t *lock);
 ERTS_GLB_INLINE void erts_rwlock_init_x(erts_rwlock_t *lock,
-                                        char *name,
+                                        const char *name,
                                         Eterm extra);
 ERTS_GLB_INLINE void erts_rwlock_init(erts_rwlock_t *lock,
-                                      char *name);
+                                      const char *name);
 ERTS_GLB_INLINE void erts_rwlock_destroy(erts_rwlock_t *lock);
 ERTS_GLB_INLINE void erts_read_unlock(erts_rwlock_t *lock);
 #ifdef ERTS_ENABLE_LOCK_POSITION
@@ -3158,7 +3158,7 @@ erts_no_atomic64_read_bset(erts_no_atomic64_t *var,
 /* spinlock */
 
 ERTS_GLB_INLINE void
-erts_spinlock_init_x(erts_spinlock_t *lock, char *name, Eterm extra)
+erts_spinlock_init_x(erts_spinlock_t *lock, const char *name, Eterm extra)
 {
 #ifdef USE_THREADS
   int res = ethr_spinlock_init(&lock->slck);
@@ -3179,7 +3179,7 @@ erts_spinlock_init_x(erts_spinlock_t *lock, char *name, Eterm extra)
 }
 
 ERTS_GLB_INLINE void
-erts_spinlock_init_x_opt(erts_spinlock_t *lock, char *name, Eterm extra,
+erts_spinlock_init_x_opt(erts_spinlock_t *lock, const char *name, Eterm extra,
                          uint16_t opt)
 {
 #ifdef USE_THREADS
@@ -3202,7 +3202,7 @@ erts_spinlock_init_x_opt(erts_spinlock_t *lock, char *name, Eterm extra,
 
 
 ERTS_GLB_INLINE void
-erts_spinlock_init(erts_spinlock_t *lock, char *name)
+erts_spinlock_init(erts_spinlock_t *lock, const char *name)
 {
 #ifdef USE_THREADS
   int res = ethr_spinlock_init(&lock->slck);
@@ -3312,7 +3312,7 @@ erts_lc_spinlock_is_locked(erts_spinlock_t *lock)
 /* rwspinlock */
 
 ERTS_GLB_INLINE void
-erts_rwlock_init_x(erts_rwlock_t *lock, char *name, Eterm extra)
+erts_rwlock_init_x(erts_rwlock_t *lock, const char *name, Eterm extra)
 {
 #ifdef USE_THREADS
   int res = ethr_rwlock_init(&lock->rwlck);
@@ -3333,7 +3333,7 @@ erts_rwlock_init_x(erts_rwlock_t *lock, char *name, Eterm extra)
 }
 
 ERTS_GLB_INLINE void
-erts_rwlock_init(erts_rwlock_t *lock, char *name)
+erts_rwlock_init(erts_rwlock_t *lock, const char *name)
 {
 #ifdef USE_THREADS
   int res = ethr_rwlock_init(&lock->rwlck);

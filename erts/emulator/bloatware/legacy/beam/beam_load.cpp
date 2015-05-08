@@ -253,7 +253,7 @@ typedef struct LoaderState {
    * The current logical file within the binary.
    */
 
-  char *file_name;    /* Name of file we are reading (usually chunk name). */
+  const char *file_name; /* Name of file we are reading (usually chunk name). */
   uint8_t *file_p;    /* Current pointer within file. */
   unsigned file_left;   /* Number of bytes left in file. */
   ErlDrvBinary *bin;    /* Binary holding BEAM file (or nullptr) */
@@ -328,7 +328,7 @@ typedef struct LoaderState {
   int lambdas_allocated;  /* Size of allocated lambda table. */
   Lambda *lambdas;    /* Pointer to lambdas. */
   Lambda def_lambdas[16]; /* Default storage for lambda table. */
-  char *lambda_error;   /* Delayed missing 'FunT' error. */
+  const char *lambda_error;   /* Delayed missing 'FunT' error. */
 
   /*
    * Literals (constant pool).
@@ -521,7 +521,7 @@ static int freeze_code(LoaderState *stp);
 
 static void final_touch(LoaderState *stp);
 static void short_file(int line, LoaderState *stp, unsigned needed);
-static void load_printf(int line, LoaderState *context, char *fmt, ...);
+static void load_printf(int line, LoaderState *context, const char *fmt, ...);
 static int transform_engine(LoaderState *st);
 static void id_to_string(size_t id, char *s);
 static void new_genop(LoaderState *stp);
@@ -561,7 +561,7 @@ void init_load(void)
 }
 
 static void
-define_file(LoaderState *stp, char *name, int idx)
+define_file(LoaderState *stp, const char *name, int idx)
 {
   stp->file_name = name;
   stp->file_p = stp->chunks[idx].start;
@@ -5233,7 +5233,7 @@ short_file(int line, LoaderState *stp, unsigned needed)
 }
 
 static void
-load_printf(int line, LoaderState *context, char *fmt, ...)
+load_printf(int line, LoaderState *context, const char *fmt, ...)
 {
   erts_dsprintf_buf_t *dsbufp;
   va_list va;

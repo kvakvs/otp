@@ -126,7 +126,8 @@ hash_table_sz(Hash *h)
 ** init a pre allocated or static hash structure
 ** and allocate buckets.
 */
-Hash *hash_init(ErtsAlcType_t type, Hash *h, char *name, int size, HashFunctions fun)
+Hash *hash_init(ErtsAlcType_t type, Hash *h, const char *name,
+                int size, HashFunctions fun)
 {
   int sz;
   int ix = 0;
@@ -161,7 +162,7 @@ Hash *hash_init(ErtsAlcType_t type, Hash *h, char *name, int size, HashFunctions
 /*
 ** Create a new_ hash table
 */
-Hash *hash_new(ErtsAlcType_t type, char *name, int size, HashFunctions fun)
+Hash *hash_new(ErtsAlcType_t type, const char *name, int size, HashFunctions fun)
 {
   Hash *h;
 
