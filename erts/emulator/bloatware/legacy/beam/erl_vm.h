@@ -86,12 +86,15 @@
 #endif /* DEBUG */
 
 
+#if 0
 #ifdef FORCE_HEAP_FRAGS
 #  define IS_FORCE_HEAP_FRAGS 1
 #else
 #  define IS_FORCE_HEAP_FRAGS 0
 #endif
+#endif //0
 
+#if 0
 /*
  * Allocate heap memory, first on the ordinary heap;
  * failing that, in a heap fragment.
@@ -114,6 +117,7 @@
   } else {              \
      erts_heap_frag_shrink(p, ptr);         \
   }
+#endif //0
 
 #define HeapWordsLeft(p) (HEAP_LIMIT(p) - HEAP_TOP(p))
 

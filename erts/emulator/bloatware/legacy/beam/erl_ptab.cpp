@@ -269,7 +269,7 @@ struct ErtsPTabListBifData_ {
 #endif
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_HALLOC
     Eterm *heap;
-    Uint heap_size;
+    size_t heap_size;
 #endif
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_PIDS
     int correct_pids_verified;
@@ -1402,11 +1402,11 @@ static void assert_ptab_consistency(ErtsPTab *ptab)
 #endif
 }
 
-Sint
-erts_ptab_test_next_id(ErtsPTab *ptab, int set, Uint next)
+ssize_t
+erts_ptab_test_next_id(ErtsPTab *ptab, int set, size_t next)
 {
   uint64_t ld;
-  Sint res;
+  ssize_t res;
   Eterm data;
   int first_pix = -1;
 
@@ -1463,7 +1463,7 @@ erts_ptab_test_next_id(ErtsPTab *ptab, int set, Uint next)
 
     id_ix = (uint32_t) erts_smp_atomic32_read_nob(&ptab->vola.tile.aid_ix) + 1;
     dix = ix_to_free_id_data_ix(ptab, id_ix);
-    res = (Sint) erts_smp_atomic32_read_nob(&ptab->r.o.free_id_data[dix]);
+    res = (ssize_t) erts_smp_atomic32_read_nob(&ptab->r.o.free_id_data[dix]);
   } else {
     /* Deprecated legacy algorithm... */
     if (!set) {
@@ -1536,7 +1536,7 @@ Eterm
 erts_debug_ptab_list(Process *c_p, ErtsPTab *ptab)
 {
   int i;
-  Uint need;
+  size_t need;
   Eterm res;
   Eterm *hp;
   Eterm *hp_end;
@@ -1573,17 +1573,17 @@ erts_debug_ptab_list_bif_info(Process *c_p, ErtsPTab *ptab)
   ERTS_DECL_AM(ptab_list_bif_info);
   Eterm elements[] = {
     AM_ptab_list_bif_info,
-    make_small((Uint) ERTS_PTAB_LIST_BIF_MIN_START_REDS),
-    make_small((Uint) ptab->list.data.chunks),
-    make_small((Uint) ERTS_PTAB_LIST_BIF_TAB_CHUNK_SIZE),
-    make_small((Uint) ERTS_PTAB_LIST_BIF_TAB_INSPECT_INDICES_PER_RED),
-    make_small((Uint) ERTS_PTAB_LIST_BIF_TAB_FREE_DELETED_REDS),
-    make_small((Uint) ERTS_PTAB_LIST_BIF_INSPECT_DELETED_PER_RED),
-    make_small((Uint) ERTS_PTAB_LIST_INSPECT_DELETED_MAX_REDS),
-    make_small((Uint) ERTS_PTAB_LIST_BIF_BUILD_RESULT_CONSES_PER_RED),
-    make_small((Uint) ERTS_PTAB_LIST_BIF_DEBUGLEVEL)
+    make_small((size_t) ERTS_PTAB_LIST_BIF_MIN_START_REDS),
+    make_small((size_t) ptab->list.data.chunks),
+    make_small((size_t) ERTS_PTAB_LIST_BIF_TAB_CHUNK_SIZE),
+    make_small((size_t) ERTS_PTAB_LIST_BIF_TAB_INSPECT_INDICES_PER_RED),
+    make_small((size_t) ERTS_PTAB_LIST_BIF_TAB_FREE_DELETED_REDS),
+    make_small((size_t) ERTS_PTAB_LIST_BIF_INSPECT_DELETED_PER_RED),
+    make_small((size_t) ERTS_PTAB_LIST_INSPECT_DELETED_MAX_REDS),
+    make_small((size_t) ERTS_PTAB_LIST_BIF_BUILD_RESULT_CONSES_PER_RED),
+    make_small((size_t) ERTS_PTAB_LIST_BIF_DEBUGLEVEL)
   };
-  Uint sz = 0;
+  size_t sz = 0;
   Eterm *hp;
   (void) erts_bld_tuplev(nullptr, &sz, sizeof(elements) / sizeof(Eterm), elements);
   hp = HAlloc(c_p, sz);

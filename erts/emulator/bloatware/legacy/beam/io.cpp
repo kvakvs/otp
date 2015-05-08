@@ -23,6 +23,8 @@
 
 #define ERL_IO_C__
 
+#include "bw_misc_utils.h"
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -133,7 +135,7 @@ erts_is_port_ioq_empty(Port *pp)
   return is_port_ioq_empty(pp);
 }
 
-Uint
+size_t
 erts_port_ioq_size(Port *pp)
 {
   int res;
@@ -148,7 +150,7 @@ erts_port_ioq_size(Port *pp)
     erts_mtx_unlock(&pdl->mtx);
   }
 
-  return (Uint) res;
+  return (size_t) res;
 }
 
 /*
@@ -1026,8 +1028,8 @@ io_list_to_vec(Eterm obj, /* io-list */
   DECLARE_ESTACK(s);
   Eterm *objp;
   char *buf  = cbin->orig_bytes;
-  Uint len = cbin->orig_size;
-  Uint csize  = 0;
+  size_t len = cbin->orig_size;
+  size_t csize  = 0;
   int vlen   = 0;
   char *cptr = buf;
 
@@ -1071,7 +1073,7 @@ L_iter_list:
       }
     } else if (is_binary(obj)) {
       Eterm real_bin;
-      Uint offset;
+      size_t offset;
       Eterm *bptr;
       ErlDrvSizeT size;
       int bitoffs;
@@ -1156,9 +1158,9 @@ L_overflow:
 
 #define IO_LIST_VEC_COUNT(obj)            \
 do {                  \
-    Uint _size = binary_size(obj);          \
+    size_t _size = binary_size(obj);          \
     Eterm _real;              \
-    ERTS_DECLARE_DUMMY(Uint _offset);         \
+    ERTS_DECLARE_DUMMY(size_t _offset);         \
     int _bitoffs;             \
     int _bitsize;             \
     ERTS_GET_REAL_BIN(obj, _real, _offset, _bitoffs, _bitsize);   \
@@ -1207,20 +1209,20 @@ do {                  \
  */
 
 static int
-io_list_vec_len(Eterm obj, int *vsize, Uint *csize,
-                Uint *pvsize, Uint *pcsize,
+io_list_vec_len(Eterm obj, int *vsize, size_t *csize,
+                size_t *pvsize, size_t *pcsize,
                 ErlDrvSizeT *total_size)
 {
   DECLARE_ESTACK(s);
   Eterm *objp;
-  Uint v_size = 0;
-  Uint c_size = 0;
-  Uint b_size = 0;
-  Uint in_clist = 0;
-  Uint p_v_size = 0;
-  Uint p_c_size = 0;
-  Uint p_in_clist = 0;
-  Uint total; /* Uint due to halfword emulator */
+  size_t v_size = 0;
+  size_t c_size = 0;
+  size_t b_size = 0;
+  size_t in_clist = 0;
+  size_t p_v_size = 0;
+  size_t p_c_size = 0;
+  size_t p_in_clist = 0;
+  size_t total; /* size_t due to halfword emulator */
 
   goto L_jump_start;  /* avoid a push */
 
@@ -1544,7 +1546,7 @@ queue_port_sched_op_reply(Process *rp,
                           ErtsProcLocks *rp_locksp,
                           Eterm *hp_start,
                           Eterm *hp,
-                          Uint h_size,
+                          size_t h_size,
                           ErlHeapFragment *bp,
                           uint32_t *ref_num,
                           Eterm msg)
@@ -1559,7 +1561,7 @@ queue_port_sched_op_reply(Process *rp,
   if (!bp) {
     HRelease(rp, hp_start + h_size, hp);
   } else {
-    Uint used_h_size = hp - hp_start;
+    size_t used_h_size = hp - hp_start;
     ASSERT(h_size >= used_h_size);
 
     if (h_size > used_h_size) {
@@ -1587,7 +1589,7 @@ port_sched_op_reply(Eterm to, uint32_t *ref_num, Eterm msg)
     ErlOffHeap *ohp;
     ErlHeapFragment *bp;
     Eterm msg_copy;
-    Uint hsz, msg_sz;
+    size_t hsz, msg_sz;
     Eterm *hp, *hp_start;
     ErtsProcLocks rp_locks = 0;
 
@@ -2125,10 +2127,10 @@ erts_port_output(Process *c_p,
     SysIOVec *ivp;
     ErlDrvBinary  **bvp;
     int vsize;
-    Uint csize;
-    Uint pvsize;
-    Uint pcsize;
-    Uint blimit;
+    size_t csize;
+    size_t pvsize;
+    size_t pcsize;
+    size_t blimit;
     size_t iov_offset, binv_offset, alloc_size;
 
     if (io_list_vec_len(list, &vsize, &csize, &pvsize, &pcsize, &size)) {
@@ -2689,7 +2691,7 @@ erts_port_exit(Process *c_p,
     sigdp->u.exit.bp = nullptr;
   } else {
     Eterm *hp;
-    Uint hsz = size_object(reason);
+    size_t hsz = size_object(reason);
     bp = new_message_buffer(hsz);
     sigdp->u.exit.bp = bp;
     hp = bp->mem;
@@ -3415,7 +3417,7 @@ deliver_result(Eterm sender, Eterm pid, Eterm res)
     ErlHeapFragment *bp;
     ErlOffHeap *ohp;
     Eterm *hp;
-    Uint sz_res;
+    size_t sz_res;
 
     sz_res = size_object(res);
     hp = erts_alloc_message_heap(sz_res + 3, &bp, &ohp, rp, &rp_locks);
@@ -3489,7 +3491,7 @@ static void deliver_read_message(Port *prt, erts_aint32_t state, Eterm to,
   listp = NIL;
 
   if ((state & ERTS_PORT_SFLG_BINARY_IO) == 0) {
-    listp = buf_to_intlist(&hp, buf, len, listp);
+    listp = util::buf_to_intlist(&hp, buf, len, listp);
   } else if (buf != nullptr) {
     ProcBin *pb;
     Binary *bptr;
@@ -3516,7 +3518,7 @@ static void deliver_read_message(Port *prt, erts_aint32_t state, Eterm to,
 
   /* Prepend the header */
   if (hlen > 0) {
-    listp = buf_to_intlist(&hp, hbuf, hlen, listp);
+    listp = util::buf_to_intlist(&hp, hbuf, hlen, listp);
   }
 
   if (state & ERTS_PORT_SFLG_LINEBUF_IO) {
@@ -3664,7 +3666,7 @@ deliver_vec_message(Port *prt,      /* Port */
 
     while (vsize--) {
       iov--;
-      listp = buf_to_intlist(&thp, (const char *)iov->iov_base, iov->iov_len, listp);
+      listp = util::buf_to_intlist(&thp, (const char *)iov->iov_base, iov->iov_len, listp);
     }
 
     hp = thp;
@@ -3711,7 +3713,7 @@ deliver_vec_message(Port *prt,      /* Port */
 
   if (hlen != 0) {    /* Prepend the header */
     Eterm *thp = hp;
-    listp = buf_to_intlist(&thp, hbuf, hlen, listp);
+    listp = util::buf_to_intlist(&thp, hbuf, hlen, listp);
     hp = thp;
   }
 
@@ -4240,14 +4242,14 @@ cleanup_scheduled_control(Binary *binp, char *bufp)
 }
 
 
-static ERTS_INLINE Uint
+static ERTS_INLINE size_t
 port_control_result_size(int control_flags,
                          char *resp_bufp,
                          ErlDrvSizeT *resp_size,
                          char *pre_alloc_buf)
 {
   if (!resp_bufp) {
-    return (Uint) 0;
+    return (size_t) 0;
   }
 
   if (control_flags & PORT_CONTROL_FLAG_BINARY) {
@@ -4261,10 +4263,10 @@ port_control_result_size(int control_flags,
     }
 
     ASSERT(*resp_size <= ERL_ONHEAP_BIN_LIMIT);
-    return (Uint) heap_bin_size((*resp_size));
+    return (size_t) heap_bin_size((*resp_size));
   }
 
-  return (Uint) 2 * (*resp_size);
+  return (size_t) 2 * (*resp_size);
 }
 
 static ERTS_INLINE Eterm
@@ -4325,7 +4327,7 @@ write_port_control_result(int control_flags,
   }
 
   /* List result */
-  res = buf_to_intlist(hpp, resp_bufp, resp_size, NIL);
+  res = util::buf_to_intlist(hpp, resp_bufp, resp_size, NIL);
 
   if (resp_bufp != pre_alloc_buf) {
     driver_free(resp_bufp);
@@ -4363,7 +4365,7 @@ port_sig_control(Port *prt,
       ErlOffHeap *ohp;
       Process *rp;
       ErtsProcLocks rp_locks = 0;
-      Uint hsz;
+      size_t hsz;
       int control_flags;
 
       rp = erts_proc_lookup_raw(sigdp->caller);
@@ -4451,8 +4453,8 @@ erts_port_control(Process *c_p,
 
   if (is_binary(data) && binary_bitoffset(data) == 0) {
     uint8_t *bytep;
-    ERTS_DECLARE_DUMMY(Uint bitoffs);
-    ERTS_DECLARE_DUMMY(Uint bitsize);
+    ERTS_DECLARE_DUMMY(size_t bitoffs);
+    ERTS_DECLARE_DUMMY(size_t bitsize);
     ERTS_GET_BINARY_BYTES(data, bytep, bitoffs, bitsize);
     bufp = (char *) bytep;
     size = binary_size(data);
@@ -4516,7 +4518,7 @@ erts_port_control(Process *c_p,
     switch (try_call_res) {
     case ERTS_TRY_IMM_DRV_CALL_OK: {
       Eterm *hp;
-      Uint hsz;
+      size_t hsz;
       int control_flags;
 
       res = call_driver_control(c_p->common.id,
@@ -4718,7 +4720,7 @@ port_sig_call(Port *prt,
       ErlOffHeap *ohp;
       Process *rp;
       ErtsProcLocks rp_locks = 0;
-      Sint hsz;
+      ssize_t hsz;
 
       rp = erts_proc_lookup_raw(sigdp->caller);
 
@@ -4850,7 +4852,7 @@ erts_port_call(Process *c_p,
     switch (try_call_res) {
     case ERTS_TRY_IMM_DRV_CALL_OK: {
       Eterm *hp, *hp_end;
-      Sint hsz;
+      ssize_t hsz;
       unsigned ret_flags = 0U;
       Eterm term;
 
@@ -4954,7 +4956,7 @@ erts_port_call(Process *c_p,
 static Eterm
 make_port_info_term(Eterm **hpp_start,
                     Eterm **hpp,
-                    Uint *hszp,
+                    size_t *hszp,
                     ErlHeapFragment **bpp,
                     Port *prt,
                     Eterm item)
@@ -5023,7 +5025,7 @@ port_sig_info(Port *prt,
     port_sched_op_reply(sigdp->caller, sigdp->ref, am_undefined);
   } else {
     Eterm *hp, *hp_start;
-    Uint hsz;
+    size_t hsz;
     ErlHeapFragment *bp;
     Eterm value;
     Process *rp;
@@ -5085,7 +5087,7 @@ erts_port_info(Process *c_p,
   case ERTS_TRY_IMM_DRV_CALL_OK: {
     Eterm *hp, *hp_start;
     ErlHeapFragment *bp;
-    Uint hsz = 0;
+    size_t hsz = 0;
     Eterm value = make_port_info_term(&hp_start, &hp, &hsz, &bp, prt, item);
     finalize_imm_drv_call(&try_call_state);
 
@@ -5094,7 +5096,7 @@ erts_port_info(Process *c_p,
     } else if (is_immed(value)) {
       *retvalp = value;
     } else {
-      Uint used_h_size = hp - hp_start;
+      size_t used_h_size = hp - hp_start;
       hp = HAlloc(c_p, used_h_size);
       *retvalp = copy_struct(value, used_h_size, &hp, &MSO(c_p));
       free_message_buffer(bp);
@@ -5357,14 +5359,14 @@ int get_port_flags(ErlDrvPort ix)
   return flags;
 }
 
-void erts_raw_port_command(Port *p, uint8_t *buf, Uint len)
+void erts_raw_port_command(Port *p, uint8_t *buf, size_t len)
 {
   int fpe_was_unmasked;
 
   ERTS_SMP_CHK_NO_PROC_LOCKS;
   ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(p));
 
-  if (len > (Uint) INT_MAX)
+  if (len > (size_t) INT_MAX)
     erl::exit(erts::ABORT_EXIT,
              "Absurdly large data buffer (%beu bytes) passed to"
              "output callback of %s driver.\n",
@@ -5734,7 +5736,7 @@ static int
 driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 {
 #define ERTS_DDT_FAIL do { res = -1; goto done; } while (0)
-  Uint need = 0;
+  size_t need = 0;
   int depth = 0;
   int res;
   Eterm *hp = nullptr, *hp_start = nullptr, *hp_end = nullptr;
@@ -5792,7 +5794,7 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 #else
 
       /* check for bignum */
-      if (!IS_SSMALL((Sint)ptr[0])) {
+      if (!IS_SSMALL((ssize_t)ptr[0])) {
         need += BIG_UINT_HEAP_SIZE;  /* use small_to_big */
       }
 
@@ -5808,7 +5810,7 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 #else
 
       /* check for bignum */
-      if (!IS_USMALL(0, (Uint)ptr[0])) {
+      if (!IS_USMALL(0, (size_t)ptr[0])) {
         need += BIG_UINT_HEAP_SIZE;  /* use small_to_big */
       }
 
@@ -5844,8 +5846,8 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 
     case ERL_DRV_BINARY: { /* ErlDrvBinary*, size, offs */
       ErlDrvBinary *b;
-      Uint size;
-      Uint offset;
+      size_t size;
+      size_t offset;
       ERTS_DDT_CHK_ENOUGH_ARGS(3);
       b = (ErlDrvBinary *) ptr[0];
       size = ptr[1];
@@ -5865,10 +5867,10 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 
     case ERL_DRV_BUF2BINARY: { /* char*, size */
       uint8_t *bufp;
-      Uint size;
+      size_t size;
       ERTS_DDT_CHK_ENOUGH_ARGS(2);
       bufp = (uint8_t *) ptr[0];
-      size = (Uint) ptr[1];
+      size = (size_t) ptr[1];
 
       if (!bufp && size > 0) {
         ERTS_DDT_FAIL;
@@ -5967,12 +5969,12 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 
     case ERL_DRV_EXT2TERM: { /* char *ext, int size */
       uint8_t *ext;
-      Sint size;
-      Sint hsz;
+      ssize_t size;
+      ssize_t hsz;
 
       ERTS_DDT_CHK_ENOUGH_ARGS(2);
       ext = (uint8_t *) ptr[0];
-      size = (Sint) ptr[1];
+      size = (ssize_t) ptr[1];
 
       if (!ext || size <= 0) {
         ERTS_DDT_FAIL;
@@ -6073,10 +6075,10 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
       mess = erts_bld_sint64(&hp, nullptr, (int64_t)ptr[0]);
 #else
 
-      if (IS_SSMALL((Sint)ptr[0])) {
-        mess = make_small((Sint)ptr[0]);
+      if (IS_SSMALL((ssize_t)ptr[0])) {
+        mess = make_small((ssize_t)ptr[0]);
       } else {
-        mess = small_to_big((Sint)ptr[0], hp);
+        mess = small_to_big((ssize_t)ptr[0], hp);
         hp += BIG_UINT_HEAP_SIZE;
       }
 
@@ -6089,10 +6091,10 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
       mess = erts_bld_uint64(&hp, nullptr, (uint64_t)ptr[0]);
 #else
 
-      if (IS_USMALL(0, (Uint)ptr[0])) {
-        mess = make_small((Uint)ptr[0]);
+      if (IS_USMALL(0, (size_t)ptr[0])) {
+        mess = make_small((size_t)ptr[0]);
       } else {
-        mess = uint_to_big((Uint)ptr[0], hp);
+        mess = uint_to_big((size_t)ptr[0], hp);
         hp += BIG_UINT_HEAP_SIZE;
       }
 
@@ -6117,8 +6119,8 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 
     case ERL_DRV_BINARY: { /* ErlDrvBinary*, size, offs */
       ErlDrvBinary *b = (ErlDrvBinary *) ptr[0];
-      Uint size = ptr[1];
-      Uint offset = ptr[2];
+      size_t size = ptr[1];
+      size_t offset = ptr[2];
 
       erts_smp_atomic_add_nob(&erts_bytes_in, (erts_aint_t) size);
 
@@ -6154,7 +6156,7 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 
     case ERL_DRV_BUF2BINARY: { /* char*, size */
       uint8_t *bufp = (uint8_t *) ptr[0];
-      Uint size = (Uint) ptr[1];
+      size_t size = (size_t) ptr[1];
 
       erts_smp_atomic_add_nob(&erts_bytes_in, (erts_aint_t) size);
 
@@ -6197,18 +6199,18 @@ driver_deliver_term(Eterm to, ErlDrvTermData *data, int len)
 
     case ERL_DRV_STRING: /* char*, length */
       erts_smp_atomic_add_nob(&erts_bytes_in, (erts_aint_t) ptr[1]);
-      mess = buf_to_intlist(&hp, (char *)ptr[0], ptr[1], NIL);
+      mess = util::buf_to_intlist(&hp, (char *)ptr[0], ptr[1], NIL);
       ptr += 2;
       break;
 
     case ERL_DRV_STRING_CONS:  /* char*, length */
       mess = ESTACK_POP(stack);
-      mess = buf_to_intlist(&hp, (char *)ptr[0], ptr[1], mess);
+      mess = util::buf_to_intlist(&hp, (char *)ptr[0], ptr[1], mess);
       ptr += 2;
       break;
 
     case ERL_DRV_LIST: { /* unsigned */
-      Uint i = (int) ptr[0]; /* i > 0 */
+      size_t i = (int) ptr[0]; /* i > 0 */
 
       mess = ESTACK_POP(stack);
       i--;
@@ -6734,7 +6736,7 @@ driver_alloc_binary(ErlDrvSizeT size)
 {
   Binary *bin;
 
-  bin = erts_bin_drv_alloc_fnf((Uint) size);
+  bin = erts_bin_drv_alloc_fnf((size_t) size);
 
   if (!bin) {
     return nullptr;  /* The driver write must take action */
@@ -6810,12 +6812,12 @@ void driver_free_binary(ErlDrvBinary *dbin)
 
 void *driver_alloc(ErlDrvSizeT size)
 {
-  return erts_alloc_fnf(ERTS_ALC_T_DRV, (Uint) size);
+  return erts_alloc_fnf(ERTS_ALC_T_DRV, (size_t) size);
 }
 
 void *driver_realloc(void *ptr, ErlDrvSizeT size)
 {
-  return erts_realloc_fnf(ERTS_ALC_T_DRV, ptr, (Uint) size);
+  return erts_realloc_fnf(ERTS_ALC_T_DRV, ptr, (size_t) size);
 }
 
 void driver_free(void *ptr)
@@ -7512,7 +7514,7 @@ driver_read_timer(ErlDrvPort ix, unsigned long *t)
 int
 driver_get_now(ErlDrvNowData *now_data)
 {
-  Uint mega, secs, micro;
+  size_t mega, secs, micro;
   ERTS_SMP_CHK_NO_PROC_LOCKS;
 
   if (now_data == nullptr) {

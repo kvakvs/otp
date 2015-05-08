@@ -20,6 +20,7 @@
 #  include "config.h"
 #endif
 
+#include "bw_erl_vm.h"
 #include "sys.h"
 #include "erl_process.h"
 #include "erl_smp.h"
@@ -131,7 +132,7 @@ typedef struct {
 #  define HARD_CHECK_IS_MEMBER(ROOT,NODE) rbt_assert_is_member(ROOT,NODE)
 #  define HARD_CHECK_TREE(TREE,SZ) check_tree(TREE, SZ)
 static int rbt_assert_is_member(RBTNode *root, RBTNode *node);
-static RBTNode *check_tree(RBTree *tree, Uint);
+static RBTNode *check_tree(RBTree *tree, size_t);
 #else
 #  define HARD_CHECK_IS_MEMBER(ROOT,NODE)
 #  define HARD_CHECK_TREE(TREE,SZ)
@@ -290,7 +291,7 @@ typedef struct {
 typedef struct {
   RBTree stree;       /* size ordered tree */
   RBTree atree;       /* address ordered tree */
-  Uint nseg;
+  size_t nseg;
 } ErtsFreeSegMap;
 
 static struct {
@@ -323,7 +324,7 @@ static struct {
     char *unused_start;
     char *unused_end;
     char *new_area_hint;
-    Uint reserved;
+    size_t reserved;
   } desc;
   struct {
     UWord free_seg_descs;
@@ -735,7 +736,7 @@ tree_insert_fixup(RBTNode **root, RBTNode *node)
 static void
 rbt_delete(RBTree *tree, RBTNode *del)
 {
-  Uint spliced_is_black;
+  size_t spliced_is_black;
   RBTNode *x, *y, *z = del, *papa_y;
   RBTNode null_x; /* null_x is used to get the fixup started when we
       splice out a node without children. */
@@ -996,11 +997,11 @@ rbt_foreach_node(RBTree *tree,
                  void *arg, int reverse)
 {
 #ifdef HARD_DEBUG
-  Sint blacks = -1;
-  Sint curr_blacks = 1;
-  Uint depth = 1;
-  Uint max_depth = 0;
-  Uint node_cnt = 0;
+  ssize_t blacks = -1;
+  ssize_t curr_blacks = 1;
+  size_t depth = 1;
+  size_t max_depth = 0;
+  size_t node_cnt = 0;
 #endif
   enum { RECURSE_LEFT, DO_NODE, RECURSE_RIGHT, RETURN_TO_PARENT } state;
   RBTNode *x = tree->root;
@@ -1293,7 +1294,7 @@ Eterm build_free_seg_list(Process *p, ErtsFreeSegMap *map)
 {
   struct build_arg_t barg;
   Eterm *hp_end;
-  const Uint may_need = map->nseg * (2 + 3 + 2 * 2); /* cons + tuple + bigs */
+  const size_t may_need = map->nseg * (2 + 3 + 2 * 2); /* cons + tuple + bigs */
 
   barg.p = p;
   barg.hp = HAlloc(p, may_need);
@@ -2538,14 +2539,14 @@ erts_mmap_init(ErtsMMapInit *init)
 
 
 static ERTS_INLINE void
-add_2tup(Uint **hpp, Uint *szp, Eterm *lp, Eterm el1, Eterm el2)
+add_2tup(size_t **hpp, size_t *szp, Eterm *lp, Eterm el1, Eterm el2)
 {
   *lp = erts_bld_cons(hpp, szp, erts_bld_tuple(hpp, szp, 2, el1, el2), *lp);
 }
 
 Eterm erts_mmap_info(int *print_to_p,
                      void *print_to_arg,
-                     Eterm **hpp, Uint *szp,
+                     Eterm **hpp, size_t *szp,
                      struct erts_mmap_info_struct *emis)
 {
   Eterm size_tags[] = { am.total, am.total_sa, am.total_sua, am.used, am.used_sa, am.used_sua };
@@ -2639,8 +2640,8 @@ Eterm erts_mmap_info(int *print_to_p,
 Eterm erts_mmap_info_options(char *prefix,
                              int *print_to_p,
                              void *print_to_arg,
-                             Uint **hpp,
-                             Uint *szp)
+                             size_t **hpp,
+                             size_t *szp)
 {
   const UWord scs = mmap_state.sua.top - mmap_state.sa.bot;
   const Eterm sco = mmap_state.no_os_mmap ? am_true : am_false;
@@ -2691,8 +2692,8 @@ Eterm erts_mmap_debug_info(Process *p)
     Eterm tags[] = { AM_sabot, AM_satop, AM_suabot, AM_suatop };
     UWord values[4];
     Eterm *hp, *hp_end;
-    Uint may_need;
-    const Uint PTR_BIG_SZ = HALFWORD_HEAP ? 3 : 2;
+    size_t may_need;
+    const size_t PTR_BIG_SZ = HALFWORD_HEAP ? 3 : 2;
 
     erts_smp_mtx_lock(&mmap_state.mtx);
     values[0] = (UWord)mmap_state.sa.bot;
@@ -2775,14 +2776,14 @@ static void print_tree(enum SortOrder order, RBTNode *);
 struct check_arg_t {
   RBTree *tree;
   ErtsFreeSegDesc *prev_seg;
-  Uint size;
+  size_t size;
   RBTNode *res;
 };
 static void check_node_callback(RBTNode *x, void *arg);
 
 
 static RBTNode *
-check_tree(RBTree *tree, Uint size)
+check_tree(RBTree *tree, size_t size)
 {
   struct check_arg_t carg;
   carg.tree = tree;

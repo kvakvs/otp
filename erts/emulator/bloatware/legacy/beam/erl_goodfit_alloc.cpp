@@ -125,7 +125,7 @@ do {                  \
 #ifdef DEBUG
 
 static int
-BKT_IX(GFAllctr_t *gfallctr, Uint size)
+BKT_IX(GFAllctr_t *gfallctr, size_t size)
 {
   int ix;
   ASSERT(size >= MIN_BLK_SZ);
@@ -137,10 +137,10 @@ BKT_IX(GFAllctr_t *gfallctr, Uint size)
   return ix;
 }
 
-static Uint
+static size_t
 BKT_MIN_SZ(GFAllctr_t *gfallctr, int ix)
 {
-  Uint size;
+  size_t size;
   ASSERT(0 <= ix && ix <= BKT_MAX_IX_D);
 
   size = BKT_MIN_SZ_(gfallctr, ix);
@@ -162,13 +162,13 @@ BKT_MIN_SZ(GFAllctr_t *gfallctr, int ix)
 
 
 /* Prototypes of callback functions */
-static Block_t   *get_free_block(Allctr_t *, Uint,
-                                 Block_t *, Uint);
+static Block_t   *get_free_block(Allctr_t *, size_t,
+                                 Block_t *, size_t);
 static void   link_free_block(Allctr_t *, Block_t *);
 static void   unlink_free_block(Allctr_t *, Block_t *);
 static void   update_last_aux_mbc(Allctr_t *, Carrier_t *);
 static Eterm    info_options(Allctr_t *, char *, int *,
-                             void *, Uint **, Uint *);
+                             void *, size_t **, size_t *);
 static void   init_atoms(void);
 
 #ifdef ERTS_ALLOC_UTIL_HARD_DEBUG
@@ -247,7 +247,7 @@ erts_gfalc_start(GFAllctr_t *gfallctr,
                               + BKT_MIN_SIZE_D
                               - 1);
 
-  gfallctr->max_blk_search    = (Uint) MAX(1, gfinit->mbsd);
+  gfallctr->max_blk_search    = (size_t) MAX(1, gfinit->mbsd);
 
   if (!erts_alcu_start(allctr, init)) {
     return nullptr;
@@ -344,12 +344,12 @@ find_sub_bkt_ix:
 }
 
 static Block_t *
-search_bucket(Allctr_t *allctr, int ix, Uint size)
+search_bucket(Allctr_t *allctr, int ix, size_t size)
 {
   int i;
-  Uint min_sz;
-  Uint blk_sz;
-  Uint cand_sz = 0;
+  size_t min_sz;
+  size_t blk_sz;
+  size_t cand_sz = 0;
   UWord max_blk_search;
   GFFreeBlock_t *blk;
   GFFreeBlock_t *cand = nullptr;
@@ -398,8 +398,8 @@ search_bucket(Allctr_t *allctr, int ix, Uint size)
 }
 
 static Block_t *
-get_free_block(Allctr_t *allctr, Uint size,
-               Block_t *cand_blk, Uint cand_size)
+get_free_block(Allctr_t *allctr, size_t size,
+               Block_t *cand_blk, size_t cand_size)
 {
   GFAllctr_t *gfallctr = (GFAllctr_t *) allctr;
   int unsafe_bi, min_bi;
@@ -459,7 +459,7 @@ link_free_block(Allctr_t *allctr, Block_t *block)
 {
   GFAllctr_t *gfallctr = (GFAllctr_t *) allctr;
   GFFreeBlock_t *blk = (GFFreeBlock_t *) block;
-  Uint sz = MBC_FBLK_SZ(&blk->block_head);
+  size_t sz = MBC_FBLK_SZ(&blk->block_head);
   int i = BKT_IX(gfallctr, sz);
 
   ASSERT(sz >= MIN_BLK_SZ);
@@ -482,7 +482,7 @@ unlink_free_block(Allctr_t *allctr, Block_t *block)
 {
   GFAllctr_t *gfallctr = (GFAllctr_t *) allctr;
   GFFreeBlock_t *blk = (GFFreeBlock_t *) block;
-  Uint sz = MBC_FBLK_SZ(&blk->block_head);
+  size_t sz = MBC_FBLK_SZ(&blk->block_head);
   int i = BKT_IX(gfallctr, sz);
 
   if (!blk->prev) {
@@ -575,7 +575,7 @@ init_atoms(void)
 #define bld_tuple erts_bld_tuple
 
 static ERTS_INLINE void
-add_2tup(Uint **hpp, Uint *szp, Eterm *lp, Eterm el1, Eterm el2)
+add_2tup(size_t **hpp, size_t *szp, Eterm *lp, Eterm el1, Eterm el2)
 {
   *lp = bld_cons(hpp, szp, bld_tuple(hpp, szp, 2, el1, el2), *lp);
 }
@@ -585,8 +585,8 @@ info_options(Allctr_t *allctr,
              char *prefix,
              int *print_to_p,
              void *print_to_arg,
-             Uint **hpp,
-             Uint *szp)
+             size_t **hpp,
+             size_t *szp)
 {
   GFAllctr_t *gfallctr = (GFAllctr_t *) allctr;
   Eterm res = THE_NON_VALUE;
@@ -628,7 +628,7 @@ erts_gfalc_test(UWord op, UWord a1, UWord a2)
 {
   switch (op) {
   case 0x100:
-    return (UWord) BKT_IX((GFAllctr_t *) a1, (Uint) a2);
+    return (UWord) BKT_IX((GFAllctr_t *) a1, (size_t) a2);
 
   case 0x101:
     return (UWord) BKT_MIN_SZ((GFAllctr_t *) a1, (int) a2);
@@ -661,7 +661,7 @@ check_block(Allctr_t *allctr, Block_t *blk, int free_block)
   GFFreeBlock_t *fblk;
 
   if (free_block) {
-    Uint blk_sz = is_sbc_blk(blk) ? SBC_BLK_SZ(blk) : MBC_BLK_SZ(blk);
+    size_t blk_sz = is_sbc_blk(blk) ? SBC_BLK_SZ(blk) : MBC_BLK_SZ(blk);
     bi = BKT_IX(gfallctr, blk_sz);
 
     ASSERT(gfallctr->bucket_mask.main & (((UWord) 1) << IX2SMIX(bi)));

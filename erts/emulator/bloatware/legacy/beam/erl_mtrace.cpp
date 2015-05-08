@@ -189,7 +189,7 @@ check_alloc_entry(uint8_t *sp, uint8_t *ep,
                   uint16_t ct_no, int ct_no_n,
                   uint16_t type, int type_n,
                   UWord res, int res_n,
-                  Uint size, int size_n,
+                  size_t size, int size_n,
                   uint32_t ti, int ti_n);
 void
 check_realloc_entry(uint8_t *sp, uint8_t *ep,
@@ -198,7 +198,7 @@ check_realloc_entry(uint8_t *sp, uint8_t *ep,
                     uint16_t type, int type_n,
                     UWord res, int res_n,
                     UWord ptr, int ptr_n,
-                    Uint size, int size_n,
+                    size_t size, int size_n,
                     uint32_t ti, int ti_n);
 void
 check_free_entry(uint8_t *sp, uint8_t *ep,
@@ -581,8 +581,8 @@ write_trace_header(const char *nodename, const char *pid, const char *hostname)
 
 static void mtrace_pre_lock(void);
 static void mtrace_pre_unlock(void);
-static void *mtrace_alloc(ErtsAlcType_t, void *, Uint);
-static void *mtrace_realloc(ErtsAlcType_t, void *, void *, Uint);
+static void *mtrace_alloc(ErtsAlcType_t, void *, size_t);
+static void *mtrace_realloc(ErtsAlcType_t, void *, void *, size_t);
 static void mtrace_free(ErtsAlcType_t, void *, void *);
 
 static ErtsAllocatorFunctions_t real_allctrs[ERTS_ALC_A_MAX + 1];
@@ -760,7 +760,7 @@ write_alloc_entry(uint8_t tag,
                   void *res,
                   ErtsAlcType_t x,
                   ErtsAlcType_t y,
-                  Uint size)
+                  size_t size)
 {
   erts_mtx_lock(&mtrace_buf_mutex);
 
@@ -809,7 +809,7 @@ write_alloc_entry(uint8_t tag,
       print_trace_entry(tag,
                         ct_no, ct_no_n,
                         t_no, t_no_n,
-                        (Uint) res, res_n,
+                        (size_t) res, res_n,
                         0, 0,
                         size, size_n,
                         ti, ti_n);
@@ -839,7 +839,7 @@ write_realloc_entry(uint8_t tag,
                     ErtsAlcType_t x,
                     ErtsAlcType_t y,
                     void *ptr,
-                    Uint size)
+                    size_t size)
 {
   erts_mtx_lock(&mtrace_buf_mutex);
 
@@ -892,8 +892,8 @@ write_realloc_entry(uint8_t tag,
       print_trace_entry(tag,
                         ct_no, ct_no_n,
                         t_no, t_no_n,
-                        (Uint) res, res_n,
-                        (Uint) ptr, ptr_n,
+                        (size_t) res, res_n,
+                        (size_t) ptr, ptr_n,
                         size, size_n,
                         ti, ti_n);
 #endif
@@ -964,8 +964,8 @@ write_free_entry(uint8_t tag,
       print_trace_entry(tag,
                         ct_no, ct_no_n,
                         t_no, t_no_n,
-                        (Uint) 0, 0,
-                        (Uint) ptr, ptr_n,
+                        (size_t) 0, 0,
+                        (size_t) ptr, ptr_n,
                         0, 0,
                         ti, ti_n);
 #endif
@@ -997,7 +997,7 @@ static void mtrace_pre_unlock(void)
 
 
 static void *
-mtrace_alloc(ErtsAlcType_t n, void *extra, Uint size)
+mtrace_alloc(ErtsAlcType_t n, void *extra, size_t size)
 {
   ErtsAllocatorFunctions_t *real_af = (ErtsAllocatorFunctions_t *) extra;
   void *res;
@@ -1017,7 +1017,7 @@ mtrace_alloc(ErtsAlcType_t n, void *extra, Uint size)
 }
 
 static void *
-mtrace_realloc(ErtsAlcType_t n, void *extra, void *ptr, Uint size)
+mtrace_realloc(ErtsAlcType_t n, void *extra, void *ptr, size_t size)
 {
   ErtsAllocatorFunctions_t *real_af = (ErtsAllocatorFunctions_t *) extra;
   void *res;
@@ -1057,14 +1057,14 @@ mtrace_free(ErtsAlcType_t n, void *extra, void *ptr)
 
 
 void
-erts_mtrace_crr_alloc(void *res, ErtsAlcType_t n, ErtsAlcType_t m, Uint size)
+erts_mtrace_crr_alloc(void *res, ErtsAlcType_t n, ErtsAlcType_t m, size_t size)
 {
   write_alloc_entry(ERTS_MT_CRR_ALLOC_BDY_TAG, res, n, m, size);
 }
 
 void
 erts_mtrace_crr_realloc(void *res, ErtsAlcType_t n, ErtsAlcType_t m, void *ptr,
-                        Uint size)
+                        size_t size)
 {
   write_realloc_entry(ERTS_MT_CRR_REALLOC_BDY_TAG, res, n, m, ptr, size);
 }
@@ -1081,9 +1081,9 @@ static void
 print_trace_entry(uint8_t tag,
                   uint16_t t_no, int t_no_n,
                   uint16_t ct_no, int ct_no_n,
-                  Uint res, int res_n,
-                  Uint ptr, int ptr_n,
-                  Uint size, int size_n,
+                  size_t res, int res_n,
+                  size_t ptr, int ptr_n,
+                  size_t size, int size_n,
                   uint32_t ti, int ti_n)
 {
   switch (tag) {
@@ -1169,10 +1169,10 @@ print_trace_entry(uint8_t tag,
          (((uint16_t) (*((P) - 2) << 8)) | ((uint16_t) (*((P) - 1)))))
 
 static void
-check_ui(uint16_t *hdrp, uint8_t **pp, Uint ui, int msb,
+check_ui(uint16_t *hdrp, uint8_t **pp, size_t ui, int msb,
          uint16_t f_mask, uint16_t f_size)
 {
-  Uint x;
+  size_t x;
   int n;
 
   ASSERT((msb & ~f_mask) == 0);
@@ -1235,7 +1235,7 @@ check_alloc_entry(uint8_t *sp, uint8_t *ep,
                   uint16_t ct_no, int ct_no_n,
                   uint16_t t_no, int t_no_n,
                   UWord res, int res_n,
-                  Uint size, int size_n,
+                  size_t size, int size_n,
                   uint32_t ti, int ti_n)
 {
   uint8_t *p = sp;
@@ -1266,7 +1266,7 @@ check_realloc_entry(uint8_t *sp, uint8_t *ep,
                     uint16_t t_no, int t_no_n,
                     UWord res, int res_n,
                     UWord ptr, int ptr_n,
-                    Uint size, int size_n,
+                    size_t size, int size_n,
                     uint32_t ti, int ti_n)
 {
   uint8_t *p = sp;

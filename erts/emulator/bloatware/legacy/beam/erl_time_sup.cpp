@@ -699,8 +699,8 @@ static int erl_mktime(time_t *c, struct tm *tm)
  */
 static time_t gregday(int year, int month, int day)
 {
-  Sint ndays = 0;
-  Sint gyear, pyear, m;
+  ssize_t ndays = 0;
+  ssize_t gyear, pyear, m;
 
   /* number of days in previous years */
   gyear = year - 1600;
@@ -728,14 +728,14 @@ static time_t gregday(int year, int month, int day)
 #define SECONDS_PER_HOUR    (60 * SECONDS_PER_MINUTE)
 #define SECONDS_PER_DAY     (24 * SECONDS_PER_HOUR)
 
-int seconds_to_univ(int64_t time, Sint *year, Sint *month, Sint *day,
-                    Sint *hour, Sint *minute, Sint *second)
+int seconds_to_univ(int64_t time, ssize_t *year, ssize_t *month, ssize_t *day,
+                    ssize_t *hour, ssize_t *minute, ssize_t *second)
 {
 
-  Sint y, mi;
-  Sint days = time / SECONDS_PER_DAY;
-  Sint secs = time % SECONDS_PER_DAY;
-  Sint tmp;
+  ssize_t y, mi;
+  ssize_t days = time / SECONDS_PER_DAY;
+  ssize_t secs = time % SECONDS_PER_DAY;
+  ssize_t tmp;
 
   if (secs < 0) {
     days--;
@@ -765,10 +765,10 @@ int seconds_to_univ(int64_t time, Sint *year, Sint *month, Sint *day,
   return 1;
 }
 
-int univ_to_seconds(Sint year, Sint month, Sint day, Sint hour, Sint minute, Sint second,
+int univ_to_seconds(ssize_t year, ssize_t month, ssize_t day, ssize_t hour, ssize_t minute, ssize_t second,
                     int64_t *time)
 {
-  Sint days;
+  ssize_t days;
 
   if (!(IN_RANGE(1600, year, INT_MAX - 1) &&
         IN_RANGE(1, month, 12) &&
@@ -798,8 +798,8 @@ extern time_t time2posix(time_t);
 #endif
 
 int
-local_to_univ(Sint *year, Sint *month, Sint *day,
-              Sint *hour, Sint *minute, Sint *second, int isdst)
+local_to_univ(ssize_t *year, ssize_t *month, ssize_t *day,
+              ssize_t *hour, ssize_t *minute, ssize_t *second, int isdst)
 {
   time_t the_clock;
   struct tm *tm, t;
@@ -876,8 +876,8 @@ extern time_t posix2time(time_t);
 #endif
 
 int
-univ_to_local(Sint *year, Sint *month, Sint *day,
-              Sint *hour, Sint *minute, Sint *second)
+univ_to_local(ssize_t *year, ssize_t *month, ssize_t *day,
+              ssize_t *hour, ssize_t *minute, ssize_t *second)
 {
   time_t the_clock;
   struct tm *tm;
@@ -936,7 +936,7 @@ univ_to_local(Sint *year, Sint *month, Sint *day,
 
 /* get a timestamp */
 void
-get_now(Uint *megasec, Uint *sec, Uint *microsec)
+get_now(size_t *megasec, size_t *sec, size_t *microsec)
 {
   SysTimeval now;
 
@@ -962,23 +962,23 @@ get_now(Uint *megasec, Uint *sec, Uint *microsec)
 
   erts_smp_mtx_unlock(&erts_timeofday_mtx);
 
-  *megasec = (Uint)(now.tv_sec / 1000000);
-  *sec = (Uint)(now.tv_sec % 1000000);
-  *microsec = (Uint)(now.tv_usec);
+  *megasec = (size_t)(now.tv_sec / 1000000);
+  *sec = (size_t)(now.tv_sec % 1000000);
+  *microsec = (size_t)(now.tv_usec);
 
   update_approx_time(&now);
 }
 
 void
-get_sys_now(Uint *megasec, Uint *sec, Uint *microsec)
+get_sys_now(size_t *megasec, size_t *sec, size_t *microsec)
 {
   SysTimeval now;
 
   sys_gettimeofday(&now);
 
-  *megasec = (Uint)(now.tv_sec / 1000000);
-  *sec = (Uint)(now.tv_sec % 1000000);
-  *microsec = (Uint)(now.tv_usec);
+  *megasec = (size_t)(now.tv_sec / 1000000);
+  *sec = (size_t)(now.tv_sec % 1000000);
+  *microsec = (size_t)(now.tv_usec);
 
   update_approx_time(&now);
 }
@@ -1070,15 +1070,15 @@ erts_get_time(void)
 }
 
 #ifdef HAVE_ERTS_NOW_CPU
-void erts_get_now_cpu(Uint *megasec, Uint *sec, Uint *microsec)
+void erts_get_now_cpu(size_t *megasec, size_t *sec, size_t *microsec)
 {
   SysCpuTime t;
   SysTimespec tp;
 
   sys_get_proc_cputime(t, tp);
-  *microsec = (Uint)(tp.tv_nsec / 1000);
+  *microsec = (size_t)(tp.tv_nsec / 1000);
   t = (tp.tv_sec / 1000000);
-  *megasec = (Uint)(t % 1000000);
-  *sec = (Uint)(tp.tv_sec % 1000000);
+  *megasec = (size_t)(t % 1000000);
+  *sec = (size_t)(tp.tv_sec % 1000000);
 }
 #endif

@@ -35,8 +35,8 @@ int driver_select_kp(ErlDrvPort, ErlDrvEvent, int, int);
 int driver_select_nkp(ErlDrvPort, ErlDrvEvent, int, int);
 int driver_event_kp(ErlDrvPort, ErlDrvEvent, ErlDrvEventData);
 int driver_event_nkp(ErlDrvPort, ErlDrvEvent, ErlDrvEventData);
-Uint erts_check_io_size_kp(void);
-Uint erts_check_io_size_nkp(void);
+size_t erts_check_io_size_kp(void);
+size_t erts_check_io_size_nkp(void);
 Eterm erts_check_io_info_kp(void *);
 Eterm erts_check_io_info_nkp(void *);
 int erts_check_io_max_files_kp(void);
@@ -58,7 +58,7 @@ int erts_check_io_debug_nkp(ErtsCheckIoDebugInfo *);
 
 #else /* !ERTS_ENABLE_KERNEL_POLL */
 
-Uint erts_check_io_size(void);
+size_t erts_check_io_size(void);
 Eterm erts_check_io_info(void *);
 int erts_check_io_max_files(void);
 #ifdef ERTS_POLL_NEED_ASYNC_INTERRUPT_SUPPORT

@@ -89,7 +89,7 @@
 #endif
 
 #ifdef DEBUG
-static Uint install_debug_functions(void);
+static size_t install_debug_functions(void);
 #if 0
 #define HARD_DEBUG
 #ifdef __GNUC__
@@ -138,7 +138,7 @@ typedef struct {
   erts_smp_atomic32_t refc;
   int only_sz;
   int internal;
-  Uint req_sched;
+  size_t req_sched;
   Process *proc;
   Eterm ref;
   Eterm ref_heap[REF_THING_SIZE];
@@ -575,9 +575,9 @@ erts_alloc_init(int *argc, char **argv, ErtsAllocInitOpts *eaiop)
     = sizeof(Process);
 #if !HALFWORD_HEAP
   fix_type_sizes[ERTS_ALC_FIX_TYPE_IX(ERTS_ALC_T_MONITOR_SH)]
-    = ERTS_MONITOR_SH_SIZE * sizeof(Uint);
+    = ERTS_MONITOR_SH_SIZE * sizeof(size_t);
   fix_type_sizes[ERTS_ALC_FIX_TYPE_IX(ERTS_ALC_T_NLINK_SH)]
-    = ERTS_LINK_SH_SIZE * sizeof(Uint);
+    = ERTS_LINK_SH_SIZE * sizeof(size_t);
 #endif
   fix_type_sizes[ERTS_ALC_FIX_TYPE_IX(ERTS_ALC_T_DRV_EV_D_STATE)]
     = sizeof(ErtsDrvEventDataState);
@@ -867,7 +867,7 @@ erts_alloc_late_init(void)
 }
 
 static void *
-erts_realloc_fixed_size(ErtsAlcType_t type, void *extra, void *p, Uint size)
+erts_realloc_fixed_size(ErtsAlcType_t type, void *extra, void *p, size_t size)
 {
   erl::exit(erts::ABORT_EXIT,
            "Attempt to reallocate a block of the fixed size type %s\n",
@@ -1221,25 +1221,25 @@ get_bool_value(char *param_end, char **argv, int *ip)
   return -1;
 }
 
-static Uint
+static size_t
 get_kb_value(char *param_end, char **argv, int *ip)
 {
-  Sint tmp;
-  Uint max = ((~((Uint) 0)) / 1024) + 1;
+  ssize_t tmp;
+  size_t max = ((~((size_t) 0)) / 1024) + 1;
   char *rest;
   char *param = argv[*ip] + 1;
   char *value = get_value(param_end, argv, ip);
   errno = 0;
-  tmp = (Sint) ErtsStrToSint(value, &rest, 10);
+  tmp = (ssize_t) ErtsStrToSint(value, &rest, 10);
 
-  if (errno != 0 || rest == value || tmp < 0 || max < ((Uint) tmp)) {
+  if (errno != 0 || rest == value || tmp < 0 || max < ((size_t) tmp)) {
     bad_value(param, param_end, value);
   }
 
-  if (max == (Uint) tmp) {
-    return ~((Uint) 0);
+  if (max == (size_t) tmp) {
+    return ~((size_t) 0);
   } else {
-    return ((Uint) tmp) * 1024;
+    return ((size_t) tmp) * 1024;
   }
 }
 
@@ -1267,45 +1267,45 @@ get_mb_value(char *param_end, char **argv, int *ip)
 
 
 #if 0
-static Uint
+static size_t
 get_byte_value(char *param_end, char **argv, int *ip)
 {
-  Sint tmp;
+  ssize_t tmp;
   char *rest;
   char *param = argv[*ip] + 1;
   char *value = get_value(param_end, argv, ip);
   errno = 0;
-  tmp = (Sint) ErtsStrToSint(value, &rest, 10);
+  tmp = (ssize_t) ErtsStrToSint(value, &rest, 10);
 
   if (errno != 0 || rest == value || tmp < 0) {
     bad_value(param, param_end, value);
   }
 
-  return (Uint) tmp;
+  return (size_t) tmp;
 }
 #endif
 
-static Uint
+static size_t
 get_amount_value(char *param_end, char **argv, int *ip)
 {
-  Sint tmp;
+  ssize_t tmp;
   char *rest;
   char *param = argv[*ip] + 1;
   char *value = get_value(param_end, argv, ip);
   errno = 0;
-  tmp = (Sint) ErtsStrToSint(value, &rest, 10);
+  tmp = (ssize_t) ErtsStrToSint(value, &rest, 10);
 
   if (errno != 0 || rest == value || tmp < 0) {
     bad_value(param, param_end, value);
   }
 
-  return (Uint) tmp;
+  return (size_t) tmp;
 }
 
-static Uint
+static size_t
 get_acul_value(struct au_init *auip, char *param_end, char **argv, int *ip)
 {
-  Sint tmp;
+  ssize_t tmp;
   char *rest;
   char *param = argv[*ip] + 1;
   char *value = get_value(param_end, argv, ip);
@@ -1327,13 +1327,13 @@ get_acul_value(struct au_init *auip, char *param_end, char **argv, int *ip)
   }
 
   errno = 0;
-  tmp = (Sint) ErtsStrToSint(value, &rest, 10);
+  tmp = (ssize_t) ErtsStrToSint(value, &rest, 10);
 
   if (errno != 0 || rest == value || tmp < 0 || 100 < tmp) {
     bad_value(param, param_end, value);
   }
 
-  return (Uint) tmp;
+  return (size_t) tmp;
 }
 
 static void
@@ -2044,13 +2044,13 @@ erts_alc_fatal_error(int error, int func, ErtsAlcType_t n, ...)
   }
 
   case ERTS_ALC_E_NOMEM: {
-    Uint size;
+    size_t size;
     va_list argp;
     const char *op = (func == ERTS_ALC_O_REALLOC) ? "reallocate" : "allocate";
 
 
     va_start(argp, n);
-    size = va_arg(argp, Uint);
+    size = va_arg(argp, size_t);
     va_end(argp);
     erl::exit(1,
              "%s: Cannot %s %lu bytes of memory (of type \"%s\", thread %d).\n",
@@ -2071,25 +2071,25 @@ erts_alc_fatal_error(int error, int func, ErtsAlcType_t n, ...)
 }
 
 __decl_noreturn void
-erts_alloc_enomem(ErtsAlcType_t type, Uint size)
+erts_alloc_enomem(ErtsAlcType_t type, size_t size)
 {
   erts_alloc_n_enomem(ERTS_ALC_T2N(type), size);
 }
 
 __decl_noreturn void
-erts_alloc_n_enomem(ErtsAlcType_t n, Uint size)
+erts_alloc_n_enomem(ErtsAlcType_t n, size_t size)
 {
   erts_alc_fatal_error(ERTS_ALC_E_NOMEM, ERTS_ALC_O_ALLOC, n, size);
 }
 
 __decl_noreturn void
-erts_realloc_enomem(ErtsAlcType_t type, void *ptr, Uint size)
+erts_realloc_enomem(ErtsAlcType_t type, void *ptr, size_t size)
 {
   erts_realloc_n_enomem(ERTS_ALC_T2N(type), ptr, size);
 }
 
 __decl_noreturn void
-erts_realloc_n_enomem(ErtsAlcType_t n, void *ptr, Uint size)
+erts_realloc_n_enomem(ErtsAlcType_t n, void *ptr, size_t size)
 {
   erts_alc_fatal_error(ERTS_ALC_E_NOMEM, ERTS_ALC_O_REALLOC, n, size);
 }
@@ -2557,7 +2557,7 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
   }
 
   if (want.atom || want.atom_used) {
-    Uint reserved_atom_space, atom_space;
+    size_t reserved_atom_space, atom_space;
     erts_atom_get_text_space_sizes(&reserved_atom_space, &atom_space);
     size.atom = size.atom_used = atom_table_sz();
 
@@ -2617,8 +2617,8 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 
   if (proc) {
     /* Build erlang term result... */
-    Uint *hp;
-    Uint hsz;
+    size_t *hp;
+    size_t hsz;
 
     erts_smp_proc_lock((Process *)proc, ERTS_PROC_LOCK_MAIN);
 
@@ -2629,8 +2629,8 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
       hp = hsz ? HAlloc((Process *) proc, hsz) : nullptr;
       res = erts_bld_uword(&hp, nullptr, *uintps[0]);
     } else {
-      Uint **hpp = nullptr;
-      Uint *hszp = &hsz;
+      size_t **hpp = nullptr;
+      size_t *hszp = &hsz;
       hsz = 0;
 
       while (1) {
@@ -2659,9 +2659,9 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 }
 
 struct aa_values {
-  Uint arity;
+  size_t arity;
   const char *name;
-  Uint ui[2];
+  size_t ui[2];
 };
 
 Eterm
@@ -2671,7 +2671,7 @@ erts_allocated_areas(int *print_to_p, void *print_to_arg, void *proc)
   struct aa_values values[MAX_AA_VALUES];
   Eterm res = THE_NON_VALUE;
   int i, length;
-  Uint reserved_atom_space, atom_space;
+  size_t reserved_atom_space, atom_space;
 
   if (proc) {
     ERTS_SMP_LC_ASSERT(ERTS_PROC_LOCK_MAIN
@@ -2828,10 +2828,10 @@ erts_allocated_areas(int *print_to_p, void *print_to_arg, void *proc)
   if (proc) {
     /* Build erlang term result... */
     Eterm tuples[MAX_AA_VALUES];
-    Uint *hp;
-    Uint **hpp;
-    Uint hsz;
-    Uint *hszp;
+    size_t *hp;
+    size_t **hpp;
+    size_t hsz;
+    size_t *hszp;
 
     erts_smp_proc_lock((Process *)proc, ERTS_PROC_LOCK_MAIN);
 
@@ -2895,8 +2895,8 @@ Eterm
 erts_alloc_util_allocators(void *proc)
 {
   Eterm res;
-  Uint *hp;
-  Uint sz;
+  size_t *hp;
+  size_t sz;
   int i;
   /*
    * Currently all allocators except sys_alloc are
@@ -3029,13 +3029,13 @@ erts_allocator_options(void *proc)
 #if HAVE_ERTS_MSEG
   int use_mseg = 0;
 #endif
-  Uint sz, *szp, *hp, **hpp;
+  size_t sz, *szp, *hp, **hpp;
   Eterm res, features, settings;
   Eterm atoms[ERTS_ALC_A_MAX - ERTS_ALC_A_MIN + 7];
-  Uint terms[ERTS_ALC_A_MAX - ERTS_ALC_A_MIN + 7];
+  size_t terms[ERTS_ALC_A_MAX - ERTS_ALC_A_MIN + 7];
   int a, length;
   SysAllocStat sas;
-  Uint *endp = nullptr;
+  size_t *endp = nullptr;
 
   sys_alloc_stat(&sas);
 
@@ -3085,12 +3085,12 @@ bld_term:
           if (sas.trim_threshold >= 0) {
             as[l] = am_atom_put("tt", 2);
             ts[l++] = erts_bld_uint(hpp, szp,
-                                    (Uint) sas.trim_threshold);
+                                    (size_t) sas.trim_threshold);
           }
 
           if (sas.top_pad >= 0) {
             as[l] = am_atom_put("tp", 2);
-            ts[l++] = erts_bld_uint(hpp, szp, (Uint) sas.top_pad);
+            ts[l++] = erts_bld_uint(hpp, szp, (size_t) sas.top_pad);
           }
 
           break;
@@ -3211,7 +3211,7 @@ bld_term:
   return res;
 }
 
-void *erts_alloc_permanent_cache_aligned(ErtsAlcType_t type, Uint size)
+void *erts_alloc_permanent_cache_aligned(ErtsAlcType_t type, size_t size)
 {
   UWord v = (UWord) erts_alloc(type, size + (ERTS_CACHE_LINE_SIZE - 1)
 #ifdef VALGRIND
@@ -3240,14 +3240,14 @@ static void
 reply_alloc_info(void *vair)
 {
   ErtsAllocInfoReq *air = (ErtsAllocInfoReq *) vair;
-  Uint sched_id = erts_get_scheduler_id();
+  size_t sched_id = erts_get_scheduler_id();
   int global_instances = air->req_sched == sched_id;
   ErtsProcLocks rp_locks;
   Process *rp = air->proc;
   Eterm ref_copy = NIL, ai_list, msg;
   Eterm *hp = nullptr, *hp_end = nullptr, *hp_start = nullptr;
   Eterm **hpp;
-  Uint sz, *szp;
+  size_t sz, *szp;
   ErlOffHeap *ohp = nullptr;
   ErlHeapFragment *bp = nullptr;
   struct erts_mmap_info_struct emis;
@@ -3257,8 +3257,8 @@ reply_alloc_info(void *vair)
                     int,
                     int *,
                     void *,
-                    Uint **,
-                    Uint *) = (air->only_sz
+                    size_t **,
+                    size_t *) = (air->only_sz
                                ? erts_alcu_sz_info
                                : erts_alcu_info);
 
@@ -3313,7 +3313,7 @@ reply_alloc_info(void *vair)
                           erts_bld_atom(hpp, szp, "tp"),
                           erts_bld_uint(
                             hpp, szp,
-                            (Uint) sas.top_pad)),
+                            (size_t) sas.top_pad)),
                         ainfo);
             }
 
@@ -3325,7 +3325,7 @@ reply_alloc_info(void *vair)
                           erts_bld_atom(hpp, szp, "tt"),
                           erts_bld_uint(
                             hpp, szp,
-                            (Uint) sas.trim_threshold)),
+                            (size_t) sas.trim_threshold)),
                         ainfo);
             }
 
@@ -3663,11 +3663,11 @@ void erts_allctr_wrapper_pre_unlock(void)
 
 /* --- DO *NOT* USE THESE FUNCTIONS --- */
 
-void *sys_alloc(Uint sz)
+void *sys_alloc(size_t sz)
 {
   return erts_alloc_fnf(ERTS_ALC_T_UNDEF, sz);
 }
-void *sys_realloc(void *ptr, Uint sz)
+void *sys_realloc(void *ptr, size_t sz)
 {
   return erts_realloc_fnf(ERTS_ALC_T_UNDEF, ptr, sz);
 }
@@ -3675,11 +3675,11 @@ void sys_free(void *ptr)
 {
   erts_free(ERTS_ALC_T_UNDEF, ptr);
 }
-void *safe_alloc(Uint sz)
+void *safe_alloc(size_t sz)
 {
   return erts_alloc(ERTS_ALC_T_UNDEF, sz);
 }
-void *safe_realloc(void *ptr, Uint sz)
+void *safe_realloc(void *ptr, size_t sz)
 {
   return erts_realloc(ERTS_ALC_T_UNDEF, ptr, sz);
 }
@@ -3721,12 +3721,12 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
       if (((Allctr_t *) a1)->thread_safe)
         return (UWord) erts_alcu_alloc_ts(ERTS_ALC_T_UNDEF,
                                           (void *) a1,
-                                          (Uint) a2);
+                                          (size_t) a2);
       else
 #endif
         return (UWord) erts_alcu_alloc(ERTS_ALC_T_UNDEF,
                                        (void *) a1,
-                                       (Uint) a2);
+                                       (size_t) a2);
 
     case 0xf01:
 #ifdef USE_THREADS
@@ -3734,13 +3734,13 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
         return (UWord) erts_alcu_realloc_ts(ERTS_ALC_T_UNDEF,
                                             (void *) a1,
                                             (void *) a2,
-                                            (Uint) a3);
+                                            (size_t) a3);
       else
 #endif
         return (UWord) erts_alcu_realloc(ERTS_ALC_T_UNDEF,
                                          (void *) a1,
                                          (void *) a2,
-                                         (Uint) a3);
+                                         (size_t) a3);
 
     case 0xf02:
 #ifdef USE_THREADS
@@ -4004,7 +4004,7 @@ struct hdbg_mblk_ {
   hdbg_mblk *next;
   hdbg_mblk *prev;
   void *p;
-  Uint s;
+  size_t s;
   ErtsAlcType_t n;
 };
 
@@ -4030,7 +4030,7 @@ hdbg_init(void)
 }
 
 static void *check_memory_fence(void *ptr,
-                                Uint *size,
+                                size_t *size,
                                 ErtsAlcType_t n,
                                 int func);
 void erts_hdbg_chk_blks(void);
@@ -4043,7 +4043,7 @@ erts_hdbg_chk_blks(void)
   erts_mtx_lock(&hdbg_mblk_mtx);
 
   for (mblk = used_hdbg_mblks; mblk; mblk = mblk->next) {
-    Uint sz;
+    size_t sz;
     check_memory_fence(mblk->p, &sz, mblk->n, ERTS_ALC_O_CHECK);
     ASSERT(sz == mblk->s);
   }
@@ -4052,7 +4052,7 @@ erts_hdbg_chk_blks(void)
 }
 
 static hdbg_mblk *
-hdbg_alloc(void *p, Uint s, ErtsAlcType_t n)
+hdbg_alloc(void *p, size_t s, ErtsAlcType_t n)
 {
   hdbg_mblk *mblk;
 
@@ -4108,11 +4108,11 @@ hdbg_free(hdbg_mblk *mblk)
 #endif
 
 #ifdef  ERTS_ALLOC_UTIL_HARD_DEBUG
-static void *check_memory_fence(void *ptr, Uint *size, ErtsAlcType_t n, int func);
+static void *check_memory_fence(void *ptr, size_t *size, ErtsAlcType_t n, int func);
 
-void check_allocated_block(Uint type, void *blk)
+void check_allocated_block(size_t type, void *blk)
 {
-  Uint dummy;
+  size_t dummy;
   check_memory_fence(blk, &dummy, ERTS_ALC_T2N(type), ERTS_ALC_O_FREE);
 }
 
@@ -4157,7 +4157,7 @@ void check_allocators(void)
 #endif
 
 static void *
-set_memory_fence(void *ptr, Uint sz, ErtsAlcType_t n)
+set_memory_fence(void *ptr, size_t sz, ErtsAlcType_t n)
 {
   UWord *ui_ptr;
   UWord pattern;
@@ -4188,10 +4188,10 @@ set_memory_fence(void *ptr, Uint sz, ErtsAlcType_t n)
 }
 
 static void *
-check_memory_fence(void *ptr, Uint *size, ErtsAlcType_t n, int func)
+check_memory_fence(void *ptr, size_t *size, ErtsAlcType_t n, int func)
 {
-  Uint sz;
-  Uint found_type;
+  size_t sz;
+  size_t found_type;
   UWord pre_pattern;
   UWord post_pattern;
   UWord *ui_ptr;
@@ -4300,10 +4300,10 @@ check_memory_fence(void *ptr, Uint *size, ErtsAlcType_t n, int func)
 static ErtsAllocatorFunctions_t real_allctrs[ERTS_ALC_A_MAX + 1];
 
 static void *
-debug_alloc(ErtsAlcType_t n, void *extra, Uint size)
+debug_alloc(ErtsAlcType_t n, void *extra, size_t size)
 {
   ErtsAllocatorFunctions_t *real_af = (ErtsAllocatorFunctions_t *) extra;
-  Uint dsize;
+  size_t dsize;
   void *res;
 
 #ifdef HARD_DEBUG
@@ -4318,7 +4318,7 @@ debug_alloc(ErtsAlcType_t n, void *extra, Uint size)
 
 #ifdef PRINT_OPS
   fprintf(stderr, "0x%lx = alloc(%s, %lu)\r\n",
-          (Uint) res, ERTS_ALC_N2TD(n), size);
+          (size_t) res, ERTS_ALC_N2TD(n), size);
 #endif
 
   return res;
@@ -4326,11 +4326,11 @@ debug_alloc(ErtsAlcType_t n, void *extra, Uint size)
 
 
 static void *
-debug_realloc(ErtsAlcType_t n, void *extra, void *ptr, Uint size)
+debug_realloc(ErtsAlcType_t n, void *extra, void *ptr, size_t size)
 {
   ErtsAllocatorFunctions_t *real_af = (ErtsAllocatorFunctions_t *) extra;
-  Uint dsize;
-  Uint old_size;
+  size_t dsize;
+  size_t old_size;
   void *dptr;
   void *res;
 
@@ -4346,7 +4346,7 @@ debug_realloc(ErtsAlcType_t n, void *extra, void *ptr, Uint size)
   if (old_size > size)
     sys_memset((void *)(((char *) ptr) + size),
                0xf,
-               sizeof(Uint) + old_size - size);
+               sizeof(size_t) + old_size - size);
 
   res = (*real_af->realloc)(n, real_af->extra, dptr, dsize);
 
@@ -4354,7 +4354,7 @@ debug_realloc(ErtsAlcType_t n, void *extra, void *ptr, Uint size)
 
 #ifdef PRINT_OPS
   fprintf(stderr, "0x%lx = realloc(%s, 0x%lx, %lu)\r\n",
-          (Uint) res, ERTS_ALC_N2TD(n), (Uint) ptr, size);
+          (size_t) res, ERTS_ALC_N2TD(n), (size_t) ptr, size);
 #endif
 
   return res;
@@ -4365,7 +4365,7 @@ debug_free(ErtsAlcType_t n, void *extra, void *ptr)
 {
   ErtsAllocatorFunctions_t *real_af = (ErtsAllocatorFunctions_t *) extra;
   void *dptr;
-  Uint size;
+  size_t size;
 
   ASSERT(ERTS_ALC_N_MIN <= n && n <= ERTS_ALC_N_MAX);
 
@@ -4376,7 +4376,7 @@ debug_free(ErtsAlcType_t n, void *extra, void *ptr)
   (*real_af->free)(n, real_af->extra, dptr);
 
 #ifdef PRINT_OPS
-  fprintf(stderr, "free(%s, 0x%lx)\r\n", ERTS_ALC_N2TD(n), (Uint) ptr);
+  fprintf(stderr, "free(%s, 0x%lx)\r\n", ERTS_ALC_N2TD(n), (size_t) ptr);
 #endif
 
 #ifdef HARD_DEBUG
@@ -4385,7 +4385,7 @@ debug_free(ErtsAlcType_t n, void *extra, void *ptr)
 
 }
 
-static Uint
+static size_t
 install_debug_functions(void)
 {
   int i;

@@ -40,8 +40,8 @@ static Eterm check_process_code(Process *rp, Module *modp, int allow_gc, int *re
 static void delete_code(Module *modp);
 static void decrement_refc(BeamInstr *code);
 static int is_native(BeamInstr *code);
-static int any_heap_ref_ptrs(Eterm *start, Eterm *end, char *mod_start, Uint mod_size);
-static int any_heap_refs(Eterm *start, Eterm *end, char *mod_start, Uint mod_size);
+static int any_heap_ref_ptrs(Eterm *start, Eterm *end, char *mod_start, size_t mod_size);
+static int any_heap_refs(Eterm *start, Eterm *end, char *mod_start, size_t mod_size);
 
 
 
@@ -112,7 +112,7 @@ prepare_loading_2(BIF_ALIST_2)
 {
   uint8_t *temp_alloc = nullptr;
   uint8_t *code;
-  Uint sz;
+  size_t sz;
   Binary *magic;
   Eterm reason;
   Eterm *hp;
@@ -150,7 +150,7 @@ struct m {
   Binary *code;
   Eterm module;
   Module *modp;
-  Uint exception;
+  size_t exception;
 };
 
 static Eterm staging_epilogue(Process *c_p, int, Eterm res, int, struct m *, int);
@@ -164,7 +164,7 @@ static struct { /* Protected by code_write_permission */
 #endif
 
 static Eterm
-exception_list(Process *p, Eterm tag, struct m *mp, Sint exceptions)
+exception_list(Process *p, Eterm tag, struct m *mp, ssize_t exceptions)
 {
   Eterm *hp = HAlloc(p, 3 + 2 * exceptions);
   Eterm res = NIL;
@@ -191,7 +191,7 @@ finish_loading_1(BIF_ALIST_1)
   int i;
   int n;
   struct m *p = nullptr;
-  Uint exceptions;
+  size_t exceptions;
   Eterm res;
   int is_blocking = 0;
   int do_commit = 0;
@@ -788,7 +788,7 @@ check_process_code(Process *rp, Module *modp, int allow_gc, int *redsp)
 {
   BeamInstr *start;
   char *mod_start;
-  Uint mod_size;
+  size_t mod_size;
   BeamInstr *end;
   Eterm *sp;
   struct erl_off_heap_header *oh;
@@ -943,7 +943,7 @@ need_gc:
       return am_true;
     } else {
       Eterm *literals;
-      Uint lit_size;
+      size_t lit_size;
       struct erl_off_heap_header *oh;
 
       if (!allow_gc) {
@@ -977,7 +977,7 @@ need_gc:
     ((UWord)((char*)(ptr) - (char*)(start)) < (nbytes))
 
 static int
-any_heap_ref_ptrs(Eterm *start, Eterm *end, char *mod_start, Uint mod_size)
+any_heap_ref_ptrs(Eterm *start, Eterm *end, char *mod_start, size_t mod_size)
 {
   Eterm *p;
   Eterm val;
@@ -1000,7 +1000,7 @@ any_heap_ref_ptrs(Eterm *start, Eterm *end, char *mod_start, Uint mod_size)
 }
 
 static int
-any_heap_refs(Eterm *start, Eterm *end, char *mod_start, Uint mod_size)
+any_heap_refs(Eterm *start, Eterm *end, char *mod_start, size_t mod_size)
 {
   Eterm *p;
   Eterm val;
@@ -1194,7 +1194,7 @@ beam_make_current_old(Process *c_p, ErtsProcLocks c_p_locks, Eterm module)
 static int
 is_native(BeamInstr *code)
 {
-  Uint i, num_functions = code[MI_NUM_FUNCTIONS];
+  size_t i, num_functions = code[MI_NUM_FUNCTIONS];
 
   /* Check NativeAdress of first real function in module
    */

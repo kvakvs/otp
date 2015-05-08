@@ -71,9 +71,9 @@ BIF_RETTYPE map_size_1(BIF_ALIST_1)
 {
   if (is_map(BIF_ARG_1)) {
     Eterm *hp;
-    Uint hsz  = 0;
+    size_t hsz  = 0;
     map_t *mp = (map_t *)map_val(BIF_ARG_1);
-    Uint n    = map_get_size(mp);
+    size_t n    = map_get_size(mp);
 
     erts_bld_uint(nullptr, &hsz, n);
     hp = HAlloc(BIF_P, hsz);
@@ -89,7 +89,7 @@ BIF_RETTYPE map_size_1(BIF_ALIST_1)
 BIF_RETTYPE maps_to_list_1(BIF_ALIST_1)
 {
   if (is_map(BIF_ARG_1)) {
-    Uint n;
+    size_t n;
     Eterm *hp;
     Eterm *ks, *vs, res, tup;
     map_t *mp = (map_t *)map_val(BIF_ARG_1);
@@ -122,7 +122,7 @@ int erts_maps_find(Eterm key, Eterm map, Eterm *value)
 
   Eterm *ks, *vs;
   map_t *mp;
-  Uint n, i;
+  size_t n, i;
 
   mp  = (map_t *)map_val(map);
   n   = map_get_size(mp);
@@ -168,7 +168,7 @@ int erts_maps_get(Eterm key, Eterm map, Eterm *value)
 {
   Eterm *ks, *vs;
   map_t *mp;
-  Uint n, i;
+  size_t n, i;
 
   mp  = (map_t *)map_val(map);
   n   = map_get_size(mp);
@@ -230,9 +230,9 @@ BIF_RETTYPE maps_from_list_1(BIF_ALIST_1)
   Eterm *kv, item = BIF_ARG_1;
   Eterm *hp, *thp, *vs, *ks, keys, res;
   map_t *mp;
-  Uint  size = 0, unused_size = 0;
-  Sint  c = 0;
-  Sint  idx = 0;
+  size_t  size = 0, unused_size = 0;
+  ssize_t  c = 0;
+  ssize_t  idx = 0;
 
   if (is_list(item) || is_nil(item)) {
 
@@ -318,7 +318,7 @@ BIF_RETTYPE maps_from_list_1(BIF_ALIST_1)
         vs[idx - 1] = kv[2];
         unused_size++;
       } else {
-        Uint i = size;
+        size_t i = size;
 
         while (i > idx) {
           ks[i] = ks[i - 1];
@@ -362,7 +362,7 @@ BIF_RETTYPE maps_is_key_2(BIF_ALIST_2)
   if (is_map(BIF_ARG_2)) {
     Eterm *ks, key;
     map_t *mp;
-    Uint n, i;
+    size_t n, i;
 
     mp  = (map_t *)map_val(BIF_ARG_2);
     key = BIF_ARG_1;
@@ -401,7 +401,7 @@ BIF_RETTYPE maps_keys_1(BIF_ALIST_1)
   if (is_map(BIF_ARG_1)) {
     Eterm *hp, *ks, res = NIL;
     map_t *mp;
-    Uint n;
+    size_t n;
 
     mp  = (map_t *)map_val(BIF_ARG_1);
     n   = map_get_size(mp);
@@ -433,8 +433,8 @@ BIF_RETTYPE maps_merge_2(BIF_ALIST_2)
     Eterm tup;
     Eterm *ks, *vs, *ks1, *vs1, *ks2, *vs2;
     map_t *mp1, *mp2, *mp_new;
-    Uint n1, n2, i1, i2, need, unused_size = 0;
-    Sint c = 0;
+    size_t n1, n2, i1, i2, need, unused_size = 0;
+    ssize_t c = 0;
 
     mp1  = (map_t *)map_val(BIF_ARG_1);
     mp2  = (map_t *)map_val(BIF_ARG_2);
@@ -542,8 +542,8 @@ BIF_RETTYPE maps_new_0(BIF_ALIST_0)
 
 Eterm erts_maps_put(Process *p, Eterm key, Eterm value, Eterm map)
 {
-  Sint n, i;
-  Sint c = 0;
+  ssize_t n, i;
+  ssize_t c = 0;
   Eterm *hp, *shp;
   Eterm *ks, *vs, res, tup;
   map_t *mp = (map_t *)map_val(map);
@@ -660,8 +660,8 @@ BIF_RETTYPE maps_put_3(BIF_ALIST_3)
 
 int erts_maps_remove(Process *p, Eterm key, Eterm map, Eterm *res)
 {
-  Sint n;
-  Uint need;
+  ssize_t n;
+  size_t need;
   Eterm *hp_start;
   Eterm *thp, *mhp;
   Eterm *ks, *vs, tup;
@@ -756,7 +756,7 @@ BIF_RETTYPE maps_remove_2(BIF_ALIST_2)
 
 int erts_maps_update(Process *p, Eterm key, Eterm value, Eterm map, Eterm *res)
 {
-  Sint n, i;
+  ssize_t n, i;
   Eterm *hp, *shp;
   Eterm *ks, *vs;
   map_t *mp = (map_t *)map_val(map);
@@ -833,7 +833,7 @@ BIF_RETTYPE maps_values_1(BIF_ALIST_1)
   if (is_map(BIF_ARG_1)) {
     Eterm *hp, *vs, res = NIL;
     map_t *mp;
-    Uint n;
+    size_t n;
 
     mp  = (map_t *)map_val(BIF_ARG_1);
     n   = map_get_size(mp);
@@ -860,10 +860,10 @@ int erts_validate_and_sort_map(map_t *mp)
 {
   Eterm *ks  = map_get_keys(mp);
   Eterm *vs  = map_get_values(mp);
-  Uint   sz  = map_get_size(mp);
-  Uint   ix, jx;
+  size_t   sz  = map_get_size(mp);
+  size_t   ix, jx;
   Eterm  tmp;
-  Sint c;
+  ssize_t c;
 
   /* sort */
 

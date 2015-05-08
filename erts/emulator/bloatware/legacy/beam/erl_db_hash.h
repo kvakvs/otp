@@ -75,7 +75,7 @@ typedef struct db_table_hash {
 */
 void db_initialize_hash(void);
 void db_unfix_table_hash(DbTableHash *tb /* [in out] */);
-Uint db_kept_items_hash(DbTableHash *tb);
+size_t db_kept_items_hash(DbTableHash *tb);
 
 /* Interface for meta pid table */
 int db_create_hash(Process *p,

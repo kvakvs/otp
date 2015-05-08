@@ -27,7 +27,7 @@ typedef struct ErtsBifTimer_ ErtsBifTimer;
 #include "erl_process.h"
 #include "erl_message.h"
 
-Uint erts_bif_timer_memory_size(void);
+size_t erts_bif_timer_memory_size(void);
 void erts_print_bif_timer_info(int to, void *to_arg);
 void erts_cancel_bif_timers(Process *p, ErtsProcLocks plocks);
 void erts_bif_timer_init(void);

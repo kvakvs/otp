@@ -17,6 +17,8 @@
  * %CopyrightEnd%
  */
 
+#include "bw_misc_utils.h"
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -38,7 +40,7 @@
 
 
 static const uint8_t *default_table;
-static Uint max_loop_limit;
+static size_t max_loop_limit;
 static Export re_exec_trap_export;
 static Export *grun_trap_exportp = nullptr;
 static Export *urun_trap_exportp = nullptr;
@@ -86,14 +88,14 @@ void erts_init_bif_re(void)
   return;
 }
 
-Sint erts_re_set_loop_limit(Sint limit)
+ssize_t erts_re_set_loop_limit(ssize_t limit)
 {
-  Sint save = (Sint) max_loop_limit;
+  ssize_t save = (ssize_t) max_loop_limit;
 
   if (limit <= 0) {
     max_loop_limit = CONTEXT_REDS * LOOP_FACTOR;
   } else {
-    max_loop_limit = (Uint) limit;
+    max_loop_limit = (size_t) limit;
   }
 
   return save;
@@ -108,7 +110,7 @@ static int term_to_int(Eterm term, int *sp)
 #if defined(ARCH_64) && !HALFWORD_HEAP
 
   if (is_small(term)) {
-    Uint x = signed_val(term);
+    size_t x = signed_val(term);
 
     if (x > INT_MAX) {
       return 0;
@@ -511,7 +513,7 @@ build_compile_result(Process *p, Eterm error_tag, pcre *result, int errcode, con
                (2 * elen) /* The error string list */ +
                ((extra_err_tag != NIL) ? 3 : 0);
     hp = HAlloc(p, need);
-    ret = buf_to_intlist(&hp, (char *) errstr, elen, NIL);
+    ret = util::buf_to_intlist(&hp, (char *) errstr, elen, NIL);
     ret = TUPLE2(hp, ret, make_small(errofset));
     hp += 3;
 
@@ -799,9 +801,9 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
       Eterm *tmp_vect;
       int i;
       Eterm orig = NIL;
-      Uint offset = 0;
-      Uint bitoffs = 0;
-      Uint bitsize = 0;
+      size_t offset = 0;
+      size_t bitoffs = 0;
+      size_t bitsize = 0;
 
       if (restartp->flags & RESTART_FLAG_SUBJECT_IN_BINARY) {
         ERTS_GET_REAL_BIN(orig_subject, orig, offset, bitoffs, bitsize);
@@ -828,7 +830,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
               /* Optimized - if subject was binary to begin
                  with, we can make sub-binaries. */
               ErlSubBin *sb;
-              Uint virtual_offset = cp - restartp->subject;
+              size_t virtual_offset = cp - restartp->subject;
               hp = HAlloc(p, ERL_SUB_BIN_SIZE);
               sb = (ErlSubBin *) hp;
               sb->thing_word = HEADER_SUB_BIN;
@@ -845,7 +847,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
           } else {
             Eterm *hp2;
             hp2 = HAlloc(p, (2 * len));
-            tmp_vect[i] = buf_to_intlist(&hp2, cp, len, NIL);
+            tmp_vect[i] = util::buf_to_intlist(&hp2, cp, len, NIL);
           }
         }
 
@@ -896,7 +898,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
                 /* Optimized - if subject was binary to begin
                    with, we could make sub-binaries. */
                 ErlSubBin *sb;
-                Uint virtual_offset = cp - restartp->subject;
+                size_t virtual_offset = cp - restartp->subject;
                 hp = HAlloc(p, ERL_SUB_BIN_SIZE);
                 sb = (ErlSubBin *) hp;
                 sb->thing_word = HEADER_SUB_BIN;
@@ -913,7 +915,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
             } else {
               Eterm *hp2;
               hp2 = HAlloc(p, (2 * len));
-              tmp_vect[n] = buf_to_intlist(&hp2, cp, len, NIL);
+              tmp_vect[n] = util::buf_to_intlist(&hp2, cp, len, NIL);
             }
           } else {
             if (ri->type == RetBin) {
@@ -1231,7 +1233,7 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
   int rc;
   Eterm res;
   size_t code_size;
-  Uint loop_limit_tmp;
+  size_t loop_limit_tmp;
   unsigned long loop_count;
   Eterm capture[CAPSPEC_SIZE] = CAPSPEC_INIT;
   int is_list_cap;
@@ -1417,7 +1419,7 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
 
   if (is_binary(arg1)) {
     Eterm real_bin;
-    Uint offset;
+    size_t offset;
     Eterm *bptr;
     int bitoffs;
     int bitsize;
@@ -1535,7 +1537,7 @@ code and subject */
   RestartContext *restartp;
   int rc;
   unsigned long loop_count;
-  Uint loop_limit_tmp;
+  size_t loop_limit_tmp;
   Eterm res;
 
   ASSERT(ERTS_TERM_IS_MAGIC_BINARY(BIF_ARG_3));

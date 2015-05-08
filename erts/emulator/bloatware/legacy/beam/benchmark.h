@@ -304,7 +304,7 @@ extern unsigned long long message_sizes[1000];
     words_prealloc += size;      }
 
 #define BM_MESSAGE(mess,send,rec) {  \
-    Uint msize = size_object(mess);  \
+    size_t msize = size_object(mess);  \
     words_sent += msize;             \
     if (msize < 1000)                \
         message_sizes[msize]++;      \

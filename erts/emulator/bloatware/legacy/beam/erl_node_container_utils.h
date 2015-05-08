@@ -105,10 +105,10 @@
  */
 #define dist_entry_channel_no(x)        \
   ((x) == erts_this_dist_entry          \
-   ? ((Uint) 0)             \
+   ? ((size_t) 0)             \
    : (ASSERT(is_atom((x)->sysname)),              \
-      (Uint) atom_val((x)->sysname)))
-#define internal_channel_no(x) ((Uint) ERST_INTERNAL_CHANNEL_NO)
+      (size_t) atom_val((x)->sysname)))
+#define internal_channel_no(x) ((size_t) ERST_INTERNAL_CHANNEL_NO)
 #define external_channel_no(x) \
   (dist_entry_channel_no(external_dist_entry((x))))
 

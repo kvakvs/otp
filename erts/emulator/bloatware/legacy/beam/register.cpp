@@ -705,7 +705,7 @@ BIF_RETTYPE registered_0(BIF_ALIST_0)
 {
   int i;
   Eterm res;
-  Uint need;
+  size_t need;
   Eterm *hp;
   HashBucket **bucket;
 #ifdef ERTS_SMP

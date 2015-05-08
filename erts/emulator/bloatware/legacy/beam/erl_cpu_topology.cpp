@@ -1074,10 +1074,10 @@ erts_fake_scheduler_bindings(Process *p, Eterm how)
 
     hp = HAlloc(p, cpudata_size + 1);
     ERTS_BIF_PREP_RET(res, make_tuple(hp));
-    *hp++ = make_arityval((Uint) cpudata_size);
+    *hp++ = make_arityval((size_t) cpudata_size);
 
     for (i = 0; i < cpudata_size; i++) {
-      *hp++ = make_small((Uint) cpudata[i].logical);
+      *hp++ = make_small((size_t) cpudata[i].logical);
     }
   }
 
@@ -1637,7 +1637,7 @@ error:
       Eterm *lp = list_val(list);
       Eterm cpu = CAR(lp);
       Eterm *tp;
-      Sint id;
+      ssize_t id;
 
       if (is_not_tuple(cpu)) {
         goto error;
@@ -1786,7 +1786,7 @@ destroy_tmp_cpu_topology_copy(erts_cpu_topology_t *cpudata)
 
 static Eterm
 bld_topology_term(Eterm **hpp,
-                  Uint *hszp,
+                  size_t *hszp,
                   erts_cpu_topology_t *cpudata,
                   int size)
 {
@@ -1823,7 +1823,7 @@ get_cpu_topology_term(Process *c_p, int type)
   Eterm *hp_end;
 #endif
   Eterm *hp;
-  Uint hsz;
+  size_t hsz;
   Eterm res = THE_NON_VALUE;
   erts_cpu_topology_t *cpudata = nullptr;
   int size = 0;

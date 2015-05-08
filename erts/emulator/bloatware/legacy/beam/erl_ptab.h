@@ -26,6 +26,7 @@
 #ifndef ERL_PTAB_H__
 #define ERL_PTAB_H__
 
+#include "bw_types.h"
 #include "sys.h"
 #include "erl_term.h"
 #include "erl_time.h"
@@ -55,7 +56,7 @@ typedef struct {
   erts_atomic32_t refc;
 #endif
   Eterm tracer_proc;
-  Uint trace_flags;
+  size_t trace_flags;
   union {
     /* --- While being alive --- */
     struct {
@@ -194,13 +195,13 @@ UWord erts_ptab_mem_size(ErtsPTab *ptab);
 ERTS_GLB_INLINE erts_interval_t *erts_ptab_interval(ErtsPTab *ptab);
 ERTS_GLB_INLINE int erts_ptab_max(ErtsPTab *ptab);
 ERTS_GLB_INLINE int erts_ptab_count(ErtsPTab *ptab);
-ERTS_GLB_INLINE Uint erts_ptab_pixdata2data(ErtsPTab *ptab, Eterm pixdata);
+ERTS_GLB_INLINE size_t erts_ptab_pixdata2data(ErtsPTab *ptab, Eterm pixdata);
 ERTS_GLB_INLINE uint32_t erts_ptab_pixdata2pix(ErtsPTab *ptab, Eterm pixdata);
 ERTS_GLB_INLINE uint32_t erts_ptab_data2pix(ErtsPTab *ptab, Eterm data);
-ERTS_GLB_INLINE Uint erts_ptab_data2pixdata(ErtsPTab *ptab, Eterm data);
+ERTS_GLB_INLINE size_t erts_ptab_data2pixdata(ErtsPTab *ptab, Eterm data);
 ERTS_GLB_INLINE Eterm erts_ptab_make_id(ErtsPTab *ptab, Eterm data, Eterm tag);
 ERTS_GLB_INLINE int erts_ptab_id2pix(ErtsPTab *ptab, Eterm id);
-ERTS_GLB_INLINE Uint erts_ptab_id2data(ErtsPTab *ptab, Eterm id);
+ERTS_GLB_INLINE size_t erts_ptab_id2data(ErtsPTab *ptab, Eterm id);
 ERTS_GLB_INLINE erts_aint_t erts_ptab_pix2intptr_nob(ErtsPTab *ptab, int ix);
 ERTS_GLB_INLINE erts_aint_t erts_ptab_pix2intptr_ddrb(ErtsPTab *ptab, int ix);
 ERTS_GLB_INLINE erts_aint_t erts_ptab_pix2intptr_rb(ErtsPTab *ptab, int ix);
@@ -253,7 +254,7 @@ erts_ptab_count(ErtsPTab *ptab)
 
 }
 
-ERTS_GLB_INLINE Uint erts_ptab_pixdata2data(ErtsPTab *ptab, Eterm pixdata)
+ERTS_GLB_INLINE size_t erts_ptab_pixdata2data(ErtsPTab *ptab, Eterm pixdata)
 {
   uint32_t data = ((uint32_t) pixdata) & ~ptab->r.o.pix_mask;
   data |= (pixdata >> ptab->r.o.pix_cl_shift) & ptab->r.o.pix_cl_mask;
@@ -276,10 +277,10 @@ ERTS_GLB_INLINE uint32_t erts_ptab_data2pix(ErtsPTab *ptab, Eterm data)
   return pix;
 }
 
-ERTS_GLB_INLINE Uint erts_ptab_data2pixdata(ErtsPTab *ptab, Eterm data)
+ERTS_GLB_INLINE size_t erts_ptab_data2pixdata(ErtsPTab *ptab, Eterm data)
 {
-  Uint pixdata = data & ~((Uint) ptab->r.o.pix_mask);
-  pixdata |= (Uint) erts_ptab_data2pix(ptab, data);
+  size_t pixdata = data & ~((size_t) ptab->r.o.pix_mask);
+  pixdata |= (size_t) erts_ptab_data2pix(ptab, data);
   ASSERT(data == erts_ptab_pixdata2data(ptab, pixdata));
   return pixdata;
 }
@@ -306,12 +307,12 @@ erts_ptab_id2pix(ErtsPTab *ptab, Eterm id)
   return (int) huint.hval[ERTS_HUINT_HVAL_HIGH];
 }
 
-ERTS_GLB_INLINE Uint
+ERTS_GLB_INLINE size_t
 erts_ptab_id2data(ErtsPTab *ptab, Eterm id)
 {
   HUint huint;
   huint.val = id;
-  return (Uint)(huint.hval[ERTS_HUINT_HVAL_LOW] >> ERTS_PTAB_ID_DATA_SHIFT);
+  return (size_t)(huint.hval[ERTS_HUINT_HVAL_LOW] >> ERTS_PTAB_ID_DATA_SHIFT);
 }
 
 #elif ERTS_SIZEOF_TERM == 4
@@ -328,15 +329,15 @@ erts_ptab_make_id(ErtsPTab *ptab, Eterm data, Eterm tag)
 ERTS_GLB_INLINE int
 erts_ptab_id2pix(ErtsPTab *ptab, Eterm id)
 {
-  Uint pixdata = (Uint) id;
+  size_t pixdata = (size_t) id;
   pixdata >>= ERTS_PTAB_ID_DATA_SHIFT;
   return (int) erts_ptab_pixdata2pix(ptab, pixdata);
 }
 
-ERTS_GLB_INLINE Uint
+ERTS_GLB_INLINE size_t
 erts_ptab_id2data(ErtsPTab *ptab, Eterm id)
 {
-  Uint pixdata = (Uint) id;
+  size_t pixdata = (size_t) id;
   pixdata >>= ERTS_PTAB_ID_DATA_SHIFT;
   return erts_ptab_pixdata2data(ptab, pixdata);
 }
@@ -476,7 +477,7 @@ BIF_RETTYPE erts_ptab_list(struct process *c_p, ErtsPTab *ptab);
 #include "erl_process.h"
 
 /* Debug functions */
-Sint erts_ptab_test_next_id(ErtsPTab *ptab, int set, Uint next);
+ssize_t erts_ptab_test_next_id(ErtsPTab *ptab, int set, size_t next);
 Eterm erts_debug_ptab_list(Process *c_p, ErtsPTab *ptab);
 Eterm erts_debug_ptab_list_bif_info(Process *c_p, ErtsPTab *ptab);
 

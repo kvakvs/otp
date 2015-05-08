@@ -62,15 +62,15 @@
              | ERTS_DE_QFLG_EXIT)
 
 #if defined(ARCH_64) && !HALFWORD_HEAP
-#define ERTS_DIST_OUTPUT_BUF_DBG_PATTERN ((Uint) 0xf713f713f713f713UL)
+#define ERTS_DIST_OUTPUT_BUF_DBG_PATTERN ((size_t) 0xf713f713f713f713UL)
 #else
-#define ERTS_DIST_OUTPUT_BUF_DBG_PATTERN ((Uint) 0xf713f713)
+#define ERTS_DIST_OUTPUT_BUF_DBG_PATTERN ((size_t) 0xf713f713)
 #endif
 
 typedef struct ErtsDistOutputBuf_ ErtsDistOutputBuf;
 struct ErtsDistOutputBuf_ {
 #ifdef DEBUG
-  Uint dbg_pattern;
+  size_t dbg_pattern;
 #endif
   ErtsDistOutputBuf *next;
   uint8_t *extp;
@@ -128,7 +128,7 @@ typedef struct dist_entry_ {
 
   erts_smp_mtx_t qlock;       /* Protects qflgs and out_queue */
   uint32_t qflgs;
-  Sint qsize;
+  ssize_t qsize;
   ErtsDistOutputQueue out_queue;
   struct ErtsProcList_ *suspended;
 
@@ -136,7 +136,7 @@ typedef struct dist_entry_ {
   erts_smp_atomic_t dist_cmd_scheduled;
   ErtsPortTaskHandle dist_cmd;
 
-  Uint(*send)(Port *prt, ErtsDistOutputBuf *obuf);
+  size_t(*send)(Port *prt, ErtsDistOutputBuf *obuf);
 
   struct cache *cache;  /* The atom cache */
 } DistEntry;
@@ -158,27 +158,27 @@ extern erts_smp_rwmtx_t erts_node_table_rwmtx;
 extern DistEntry *erts_hidden_dist_entries;
 extern DistEntry *erts_visible_dist_entries;
 extern DistEntry *erts_not_connected_dist_entries;
-extern Sint erts_no_of_hidden_dist_entries;
-extern Sint erts_no_of_visible_dist_entries;
-extern Sint erts_no_of_not_connected_dist_entries;
+extern ssize_t erts_no_of_hidden_dist_entries;
+extern ssize_t erts_no_of_visible_dist_entries;
+extern ssize_t erts_no_of_not_connected_dist_entries;
 
 extern DistEntry *erts_this_dist_entry;
 extern ErlNode *erts_this_node;
 extern char *erts_this_node_sysname; /* must match erl_node_tables.c */
 
-DistEntry *erts_channel_no_to_dist_entry(Uint);
+DistEntry *erts_channel_no_to_dist_entry(size_t);
 DistEntry *erts_sysname_to_connected_dist_entry(Eterm);
 DistEntry *erts_find_or_insert_dist_entry(Eterm);
 DistEntry *erts_find_dist_entry(Eterm);
 void erts_delete_dist_entry(DistEntry *);
-Uint erts_dist_table_size(void);
+size_t erts_dist_table_size(void);
 void erts_dist_table_info(int, void *);
 void erts_set_dist_entry_not_connected(DistEntry *);
-void erts_set_dist_entry_connected(DistEntry *, Eterm, Uint);
-ErlNode *erts_find_or_insert_node(Eterm, Uint);
+void erts_set_dist_entry_connected(DistEntry *, Eterm, size_t);
+ErlNode *erts_find_or_insert_node(Eterm, size_t);
 void erts_delete_node(ErlNode *);
-void erts_set_this_node(Eterm, Uint);
-Uint erts_node_table_size(void);
+void erts_set_this_node(Eterm, size_t);
+size_t erts_node_table_size(void);
 void erts_init_node_tables(void);
 void erts_node_table_info(int, void *);
 void erts_print_node_info(int, void *, Eterm, int *, int *);

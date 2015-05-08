@@ -68,7 +68,7 @@ free_message(ErlMessage *mp)
 
 /* Allocate message buffer (size in words) */
 ErlHeapFragment *
-new_message_buffer(Uint size)
+new_message_buffer(size_t size)
 {
   ErlHeapFragment *bp;
   bp = (ErlHeapFragment *) ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP_FRAG,
@@ -78,8 +78,8 @@ new_message_buffer(Uint size)
 }
 
 ErlHeapFragment *
-erts_resize_message_buffer(ErlHeapFragment *bp, Uint size,
-                           Eterm *brefs, Uint brefs_size)
+erts_resize_message_buffer(ErlHeapFragment *bp, size_t size,
+                           Eterm *brefs, size_t brefs_size)
 {
 #ifdef DEBUG
   int i;
@@ -87,8 +87,8 @@ erts_resize_message_buffer(ErlHeapFragment *bp, Uint size,
 #ifdef HARD_DEBUG
   ErlHeapFragment *dbg_bp;
   Eterm *dbg_brefs;
-  Uint dbg_size;
-  Uint dbg_tot_size;
+  size_t dbg_size;
+  size_t dbg_tot_size;
   Eterm *dbg_hp;
 #endif
   ErlHeapFragment *nbp;
@@ -98,7 +98,7 @@ erts_resize_message_buffer(ErlHeapFragment *bp, Uint size,
 
 #ifdef DEBUG
   {
-    Uint off_sz = size < bp->used_size ? size : bp->used_size;
+    size_t off_sz = size < bp->used_size ? size : bp->used_size;
 
     for (i = 0; i < brefs_size; i++) {
       Eterm *ptr;
@@ -140,10 +140,10 @@ erts_resize_message_buffer(ErlHeapFragment *bp, Uint size,
         ERTS_HEAP_FRAG_SIZE(size));
 
   if (bp != nbp) {
-    Uint off_sz = size < nbp->used_size ? size : nbp->used_size;
+    size_t off_sz = size < nbp->used_size ? size : nbp->used_size;
     Eterm *sp = &bp->mem[0];
     Eterm *ep = sp + off_sz;
-    Sint offs = &nbp->mem[0] - sp;
+    ssize_t offs = &nbp->mem[0] - sp;
     erts_offset_off_heap(&nbp->off_heap, offs, sp, ep);
     erts_offset_heap(&nbp->mem[0], off_sz, offs, sp, ep);
 
@@ -262,11 +262,11 @@ erts_msg_distext2heap(Process *pp,
                       ErtsDistExternal *dist_extp)
 {
   Eterm msg;
-  Uint tok_sz = 0;
+  size_t tok_sz = 0;
   Eterm *hp = nullptr;
   Eterm *hp_end = nullptr;
   ErlOffHeap *ohp;
-  Sint sz;
+  ssize_t sz;
 
   *bpp = nullptr;
   sz = erts_decode_dist_ext_size(dist_extp);
@@ -308,7 +308,7 @@ erts_msg_distext2heap(Process *pp,
     if (!(*bpp)) {
       HRelease(pp, hp_end, hp);
     } else {
-      Uint final_size = hp - &(*bpp)->mem[0];
+      size_t final_size = hp - &(*bpp)->mem[0];
       Eterm brefs[2] = {msg, *tokenp};
       ASSERT(sz - (hp_end - hp) == final_size);
       *bpp = erts_resize_message_buffer(*bpp, final_size, &brefs[0], 2);
@@ -346,9 +346,9 @@ erts_queue_dist_message(Process *rcvr,
 {
   ErlMessage *mp;
 #ifdef USE_VM_PROBES
-  Sint tok_label = 0;
-  Sint tok_lastcnt = 0;
-  Sint tok_serial = 0;
+  ssize_t tok_label = 0;
+  ssize_t tok_lastcnt = 0;
+  ssize_t tok_serial = 0;
 #endif
 #ifdef ERTS_SMP
   erts_aint_t state;
@@ -484,7 +484,7 @@ erts_queue_dist_message(Process *rcvr,
 }
 
 /* Add a message last in message queue */
-static Sint
+static ssize_t
 queue_message(Process *c_p,
               Process *receiver,
               ErtsProcLocks *receiver_locks,
@@ -497,7 +497,7 @@ queue_message(Process *c_p,
 #endif
              )
 {
-  Sint res;
+  ssize_t res;
   ErlMessage *mp;
   int locked_msgq = 0;
   erts_aint_t state;
@@ -597,9 +597,9 @@ exiting:
 
   if (DTRACE_ENABLED(message_queued)) {
     DTRACE_CHARBUF(receiver_name, DTRACE_TERM_BUF_SIZE);
-    Sint tok_label = 0;
-    Sint tok_lastcnt = 0;
-    Sint tok_serial = 0;
+    ssize_t tok_label = 0;
+    ssize_t tok_lastcnt = 0;
+    ssize_t tok_serial = 0;
 
     dtrace_proc_str(receiver, receiver_name);
 
@@ -684,8 +684,8 @@ erts_move_msg_mbuf_to_heap(Eterm **hpp, ErlOffHeap *off_heap, ErlMessage *msg)
 {
   struct erl_off_heap_header *oh;
   Eterm term, token, *fhp, *hp;
-  Sint offs;
-  Uint sz;
+  ssize_t offs;
+  size_t sz;
   ErlHeapFragment *bp;
 #ifdef USE_VM_PROBES
   Eterm utag;
@@ -695,11 +695,11 @@ erts_move_msg_mbuf_to_heap(Eterm **hpp, ErlOffHeap *off_heap, ErlMessage *msg)
   struct erl_off_heap_header *dbg_oh_start = off_heap->first;
   Eterm dbg_term, dbg_token;
   ErlHeapFragment *dbg_bp;
-  Uint *dbg_hp, *dbg_thp_start;
-  Uint dbg_term_sz, dbg_token_sz;
+  size_t *dbg_hp, *dbg_thp_start;
+  size_t dbg_term_sz, dbg_token_sz;
 #ifdef USE_VM_PROBES
   Eterm dbg_utag;
-  Uint dbg_utag_sz;
+  size_t dbg_utag_sz;
 #endif
 #endif
 
@@ -764,7 +764,7 @@ erts_move_msg_mbuf_to_heap(Eterm **hpp, ErlOffHeap *off_heap, ErlMessage *msg)
   oh = nullptr;
 
   while (sz--) {
-    Uint cpy_sz;
+    size_t cpy_sz;
     Eterm val = *fhp++;
 
     switch (primary_tag(val)) {
@@ -935,10 +935,10 @@ copy_done:
 }
 
 
-Uint
+size_t
 erts_msg_attached_data_size_aux(ErlMessage *msg)
 {
-  Sint sz;
+  ssize_t sz;
   ASSERT(is_non_value(ERL_MESSAGE_TERM(msg)));
   ASSERT(msg->data.dist_ext);
   ASSERT(msg->data.dist_ext->heap_size < 0);
@@ -998,23 +998,23 @@ erts_move_msg_attached_data_to_heap(Eterm **hpp, ErlOffHeap *ohp, ErlMessage *ms
  * Send a local message when sender & receiver processes are known.
  */
 
-Sint
+ssize_t
 erts_send_message(Process *sender,
                   Process *receiver,
                   ErtsProcLocks *receiver_locks,
                   Eterm message,
                   unsigned flags)
 {
-  Uint msize;
+  size_t msize;
   ErlHeapFragment *bp = nullptr;
   Eterm token = NIL;
-  Sint res = 0;
+  ssize_t res = 0;
 #ifdef USE_VM_PROBES
   DTRACE_CHARBUF(sender_name, 64);
   DTRACE_CHARBUF(receiver_name, 64);
-  Sint tok_label = 0;
-  Sint tok_lastcnt = 0;
-  Sint tok_serial = 0;
+  ssize_t tok_label = 0;
+  ssize_t tok_lastcnt = 0;
+  ssize_t tok_serial = 0;
 #endif
   BM_STOP_TIMER(system);
   BM_MESSAGE(message, sender, receiver);
@@ -1035,9 +1035,9 @@ erts_send_message(Process *sender,
   if (SEQ_TRACE_TOKEN(sender) != NIL && !(flags & ERTS_SND_FLG_NO_SEQ_TRACE)) {
     Eterm *hp;
     Eterm stoken = SEQ_TRACE_TOKEN(sender);
-    Uint seq_trace_size = 0;
+    size_t seq_trace_size = 0;
 #ifdef USE_VM_PROBES
-    Uint dt_utag_size = 0;
+    size_t dt_utag_size = 0;
     Eterm utag = NIL;
 #endif
 
@@ -1223,9 +1223,9 @@ erts_deliver_exit_message(Eterm from, Process *to, ErtsProcLocks *to_locksp,
   Eterm mess;
   Eterm save;
   Eterm from_copy;
-  Uint sz_reason;
-  Uint sz_token;
-  Uint sz_from;
+  size_t sz_reason;
+  size_t sz_token;
+  size_t sz_from;
   Eterm *hp;
   Eterm temptoken;
   ErlHeapFragment *bp = nullptr;

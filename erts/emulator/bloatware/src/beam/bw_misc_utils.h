@@ -1,11 +1,16 @@
 #pragma once
 
+#include "bw_types.h"
+
 #include <stdint.h>
 #include <stdlib.h>
+
+#include "erl_process.h"
 
 namespace util {
 
 ssize_t read_file(const char *path, char *buf, size_t size);
+Eterm buf_to_intlist(Eterm **hpp, const char *buf, size_t len, Eterm tail);
 
 } // ns util
 
@@ -23,5 +28,6 @@ typedef struct {
 } EmuArgs;
 
 void save_emu_args(int argc, const char *argv[]);
+Eterm get_emu_args(Process *c_p);
 
 } // ns erts

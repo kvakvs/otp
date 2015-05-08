@@ -32,7 +32,7 @@
 #include "erl_bits.h"
 #include "dtrace-wrapper.h"
 
-static void move_one_frag(Eterm **hpp, Eterm *src, Uint src_sz, ErlOffHeap *);
+static void move_one_frag(Eterm **hpp, Eterm *src, size_t src_sz, ErlOffHeap *);
 
 /*
  *  Copy object "obj" to process p.
@@ -40,7 +40,7 @@ static void move_one_frag(Eterm **hpp, Eterm *src, Uint src_sz, ErlOffHeap *);
 Eterm
 copy_object(Eterm obj, Process *to)
 {
-  Uint size = size_object(obj);
+  size_t size = size_object(obj);
   Eterm *hp = HAlloc(to, size);
   Eterm res;
 
@@ -71,12 +71,12 @@ copy_object(Eterm obj, Process *to)
  */
 
 #if HALFWORD_HEAP
-Uint size_object_rel(Eterm obj, Eterm *base)
+size_t size_object_rel(Eterm obj, Eterm *base)
 #else
-Uint size_object(Eterm obj)
+size_t size_object(Eterm obj)
 #endif
 {
-  Uint sum = 0;
+  size_t sum = 0;
   Eterm *ptr;
   int arity;
 
@@ -143,10 +143,10 @@ Uint size_object(Eterm obj)
 
       case SUB_BINARY_SUBTAG: {
         Eterm real_bin;
-        ERTS_DECLARE_DUMMY(Uint offset); /* Not used. */
-        Uint bitsize;
-        Uint bitoffs;
-        Uint extra_bytes;
+        ERTS_DECLARE_DUMMY(size_t offset); /* Not used. */
+        size_t bitsize;
+        size_t bitoffs;
+        size_t extra_bytes;
         Eterm hdr;
         ERTS_GET_REAL_BIN_REL(obj, real_bin, offset, bitoffs, bitsize, base);
 
@@ -173,7 +173,7 @@ Uint size_object(Eterm obj)
       break;
 
       case MAP_SUBTAG: {
-        Uint n;
+        size_t n;
         map_t *mp;
         mp  = (map_t *)map_val_rel(obj, base);
         ptr = (Eterm *)mp;
@@ -224,14 +224,14 @@ pop_next:
  *  Copy a structure to a heap.
  */
 #if HALFWORD_HEAP
-Eterm copy_struct_rel(Eterm obj, Uint sz, Eterm **hpp, ErlOffHeap *off_heap,
+Eterm copy_struct_rel(Eterm obj, size_t sz, Eterm **hpp, ErlOffHeap *off_heap,
                       Eterm *src_base, Eterm *dst_base)
 #else
-Eterm copy_struct(Eterm obj, Uint sz, Eterm **hpp, ErlOffHeap *off_heap)
+Eterm copy_struct(Eterm obj, size_t sz, Eterm **hpp, ErlOffHeap *off_heap)
 #endif
 {
   char *hstart;
-  Uint hsize;
+  size_t hsize;
   Eterm *htop;
   Eterm *hbot;
   Eterm *hp;
@@ -246,7 +246,7 @@ Eterm copy_struct(Eterm obj, Uint sz, Eterm **hpp, ErlOffHeap *off_heap)
   int i;
 #ifdef DEBUG
   Eterm org_obj = obj;
-  Uint org_sz = sz;
+  size_t org_sz = sz;
 #endif
 
   if (IS_CONST(obj)) {
@@ -431,12 +431,12 @@ L_copy_boxed:
       case SUB_BINARY_SUBTAG: {
         ErlSubBin *sb = (ErlSubBin *) objp;
         Eterm real_bin = sb->orig;
-        Uint bit_offset = sb->bitoffs;
-        Uint bit_size = sb -> bitsize;
-        Uint offset = sb->offs;
+        size_t bit_offset = sb->bitoffs;
+        size_t bit_size = sb -> bitsize;
+        size_t offset = sb->offs;
         size_t size = sb->size;
-        Uint extra_bytes;
-        Uint real_size;
+        size_t extra_bytes;
+        size_t real_size;
 
         if ((bit_size + bit_offset) > 8) {
           extra_bytes = 2;
@@ -597,19 +597,19 @@ L_copy_boxed:
  * NOTE: Assumes that term is a tuple (ptr is an untagged tuple ptr).
  */
 #if HALFWORD_HEAP
-Eterm copy_shallow_rel(Eterm *ptr, Uint sz, Eterm **hpp, ErlOffHeap *off_heap,
+Eterm copy_shallow_rel(Eterm *ptr, size_t sz, Eterm **hpp, ErlOffHeap *off_heap,
                        Eterm *src_base)
 #else
-Eterm copy_shallow(Eterm *ptr, Uint sz, Eterm **hpp, ErlOffHeap *off_heap)
+Eterm copy_shallow(Eterm *ptr, size_t sz, Eterm **hpp, ErlOffHeap *off_heap)
 #endif
 {
   Eterm *tp = ptr;
   Eterm *hp = *hpp;
   const Eterm res = make_tuple(hp);
 #if HALFWORD_HEAP
-  const Sint offs = COMPRESS_POINTER(hp - (tp - src_base));
+  const ssize_t offs = COMPRESS_POINTER(hp - (tp - src_base));
 #else
-  const Sint offs = (hp - tp) * sizeof(Eterm);
+  const ssize_t offs = (hp - tp) * sizeof(Eterm);
 #endif
 
   while (sz--) {
@@ -758,7 +758,7 @@ void move_multi_frags(Eterm **hpp, ErlOffHeap *off_heap, ErlHeapFragment *first,
 }
 
 static void
-move_one_frag(Eterm **hpp, Eterm *src, Uint src_sz, ErlOffHeap *off_heap)
+move_one_frag(Eterm **hpp, Eterm *src, size_t src_sz, ErlOffHeap *off_heap)
 {
   Eterm *ptr = src;
   Eterm *end = ptr + src_sz;

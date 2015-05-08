@@ -74,7 +74,7 @@ struct ErlDrvTid_ {
   void *(*func)(void *);
   void *arg;
   int drv_thr;
-  Uint tsd_len;
+  size_t tsd_len;
   void **tsd;
   char *name;
 };
@@ -82,7 +82,7 @@ struct ErlDrvTid_ {
 static ethr_tsd_key tid_key;
 
 #else /* USE_THREADS */
-static Uint tsd_len;
+static size_t tsd_len;
 static void **tsd;
 #endif
 
@@ -497,7 +497,7 @@ int
 erl_drv_tsd_key_create(char *name, ErlDrvTSDKey *key)
 {
   char *name_copy;
-  Uint old_used_tsd_keys_len;
+  size_t old_used_tsd_keys_len;
   ErlDrvTSDKey res;
 
   if (!key) {

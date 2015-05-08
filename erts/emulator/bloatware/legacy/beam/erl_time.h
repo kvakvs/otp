@@ -35,8 +35,8 @@ extern SysTimeval erts_first_emu_time;
 typedef struct erl_timer {
   struct erl_timer *next; /* next entry tiw slot or chain */
   struct erl_timer *prev; /* prev entry tiw slot or chain */
-  Uint slot;      /* slot in timer wheel */
-  Uint count;     /* number of loops remaining */
+  size_t slot;      /* slot in timer wheel */
+  size_t count;     /* number of loops remaining */
   int    active;    /* 1=activated, 0=deactivated */
   /* called when timeout */
   void (*timeout)(void *);
@@ -68,18 +68,18 @@ union ErtsSmpPTimer_ {
 void erts_create_smp_ptimer(ErtsSmpPTimer **timer_ref,
                             Eterm id,
                             ErlTimeoutProc timeout_func,
-                            Uint timeout);
+                            size_t timeout);
 void erts_cancel_smp_ptimer(ErtsSmpPTimer *ptimer);
 #endif
 
 /* timer-wheel api */
 
 void erts_init_time(void);
-void erts_set_timer(ErlTimer *, ErlTimeoutProc, ErlCancelProc, void *, Uint);
+void erts_set_timer(ErlTimer *, ErlTimeoutProc, ErlCancelProc, void *, size_t);
 void erts_cancel_timer(ErlTimer *);
 void erts_bump_timer(erts_short_time_t);
-Uint erts_timer_wheel_memory_size(void);
-Uint erts_time_left(ErlTimer *);
+size_t erts_timer_wheel_memory_size(void);
+size_t erts_time_left(ErlTimer *);
 erts_short_time_t erts_next_time(void);
 
 #ifdef DEBUG
@@ -120,7 +120,7 @@ ERTS_GLB_INLINE void erts_do_time_add(erts_short_time_t elapsed)
 #      define erts_stop_now_cpu()  sys_stop_hrvtime()
 #    endif
 #  endif
-void erts_get_now_cpu(Uint *megasec, Uint *sec, Uint *microsec);
+void erts_get_now_cpu(size_t *megasec, size_t *sec, size_t *microsec);
 #endif
 
 typedef UWord erts_approx_time_t;

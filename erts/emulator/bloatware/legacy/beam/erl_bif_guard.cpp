@@ -35,7 +35,7 @@
 #include "erl_binary.h"
 #include "erl_map.h"
 
-static Eterm gc_double_to_integer(Process *p, double x, Eterm *reg, Uint live);
+static Eterm gc_double_to_integer(Process *p, double x, Eterm *reg, size_t live);
 
 static Eterm double_to_integer(Process *p, double x);
 
@@ -47,7 +47,7 @@ static Eterm double_to_integer(Process *p, double x);
 BIF_RETTYPE abs_1(BIF_ALIST_1)
 {
   Eterm res;
-  Sint i0, i;
+  ssize_t i0, i;
   Eterm *hp;
 
   /* integer arguments */
@@ -66,7 +66,7 @@ BIF_RETTYPE abs_1(BIF_ALIST_1)
       BIF_RET(BIF_ARG_1);
     } else {
       int sz = big_arity(BIF_ARG_1) + 1;
-      Uint *x;
+      size_t *x;
 
       hp = HAlloc(BIF_P, sz); /* See note at beginning of file */
       sz--;
@@ -117,7 +117,7 @@ badarg:
   }
 
   if (is_small(BIF_ARG_1)) {
-    Sint i = signed_val(BIF_ARG_1);
+    ssize_t i = signed_val(BIF_ARG_1);
     f.fd = i;   /* use "C"'s auto casting */
   } else if (big_to_double(BIF_ARG_1, &f.fd) < 0) {
     goto badarg;
@@ -176,7 +176,7 @@ BIF_RETTYPE round_1(BIF_ALIST_1)
 BIF_RETTYPE length_1(BIF_ALIST_1)
 {
   Eterm list;
-  Uint i;
+  size_t i;
 
   if (is_nil(BIF_ARG_1)) {
     BIF_RET(SMALL_ZERO);
@@ -210,7 +210,7 @@ BIF_RETTYPE size_1(BIF_ALIST_1)
 
     BIF_RET(make_small(arityval(*tupleptr)));
   } else if (is_binary(BIF_ARG_1)) {
-    Uint sz = binary_size(BIF_ARG_1);
+    size_t sz = binary_size(BIF_ARG_1);
 
     if (IS_USMALL(0, sz)) {
       return make_small(sz);
@@ -228,13 +228,13 @@ BIF_RETTYPE size_1(BIF_ALIST_1)
 
 BIF_RETTYPE bit_size_1(BIF_ALIST_1)
 {
-  Uint low_bits;
-  Uint bytesize;
-  Uint high_bits;
+  size_t low_bits;
+  size_t bytesize;
+  size_t high_bits;
 
   if (is_binary(BIF_ARG_1)) {
     bytesize = binary_size(BIF_ARG_1);
-    high_bits = bytesize >> ((sizeof(Uint) * 8) - 3);
+    high_bits = bytesize >> ((sizeof(size_t) * 8) - 3);
     low_bits = (bytesize << 3) + binary_bitsize(BIF_ARG_1);
 
     if (high_bits == 0) {
@@ -245,7 +245,7 @@ BIF_RETTYPE bit_size_1(BIF_ALIST_1)
         BIF_RET(uint_to_big(low_bits, hp));
       }
     } else {
-      Uint sz = BIG_UINT_HEAP_SIZE + 1;
+      size_t sz = BIG_UINT_HEAP_SIZE + 1;
       Eterm *hp = HAlloc(BIF_P, sz);
       hp[0] = make_pos_bignum_header(sz - 1);
       BIG_DIGIT(hp, 0) = low_bits;
@@ -263,7 +263,7 @@ BIF_RETTYPE bit_size_1(BIF_ALIST_1)
 BIF_RETTYPE byte_size_1(BIF_ALIST_1)
 {
   if (is_binary(BIF_ARG_1)) {
-    Uint bytesize = binary_size(BIF_ARG_1);
+    size_t bytesize = binary_size(BIF_ARG_1);
 
     if (binary_bitsize(BIF_ARG_1) > 0) {
       bytesize++;
@@ -296,7 +296,7 @@ double_to_integer(Process *p, double x)
   double dbase;
 
   if ((x < (double)(MAX_SMALL + 1)) && (x > (double)(MIN_SMALL - 1))) {
-    Sint xi = x;
+    ssize_t xi = x;
     return make_small(xi);
   }
 
@@ -384,7 +384,7 @@ badarg:
 
 #define ERTS_NEED_GC(p, need) ((HEAP_LIMIT((p)) - HEAP_TOP((p))) <= (need))
 
-Eterm erts_gc_length_1(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_length_1(Process *p, Eterm *reg, size_t live)
 {
   Eterm list = reg[live];
   int i;
@@ -407,7 +407,7 @@ Eterm erts_gc_length_1(Process *p, Eterm *reg, Uint live)
   return make_small(i);
 }
 
-Eterm erts_gc_size_1(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_size_1(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg = reg[live];
 
@@ -415,7 +415,7 @@ Eterm erts_gc_size_1(Process *p, Eterm *reg, Uint live)
     Eterm *tupleptr = tuple_val(arg);
     return make_small(arityval(*tupleptr));
   } else if (is_binary(arg)) {
-    Uint sz = binary_size(arg);
+    size_t sz = binary_size(arg);
 
     if (IS_USMALL(0, sz)) {
       return make_small(sz);
@@ -435,16 +435,16 @@ Eterm erts_gc_size_1(Process *p, Eterm *reg, Uint live)
   BIF_ERROR(p, BADARG);
 }
 
-Eterm erts_gc_bit_size_1(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_bit_size_1(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg = reg[live];
 
   if (is_binary(arg)) {
-    Uint low_bits;
-    Uint bytesize;
-    Uint high_bits;
+    size_t low_bits;
+    size_t bytesize;
+    size_t high_bits;
     bytesize = binary_size(arg);
-    high_bits = bytesize >> ((sizeof(Uint) * 8) - 3);
+    high_bits = bytesize >> ((sizeof(size_t) * 8) - 3);
     low_bits = (bytesize << 3) + binary_bitsize(arg);
 
     if (high_bits == 0) {
@@ -462,7 +462,7 @@ Eterm erts_gc_bit_size_1(Process *p, Eterm *reg, Uint live)
         return uint_to_big(low_bits, hp);
       }
     } else {
-      Uint sz = BIG_UINT_HEAP_SIZE + 1;
+      size_t sz = BIG_UINT_HEAP_SIZE + 1;
       Eterm *hp;
 
       if (ERTS_NEED_GC(p, sz)) {
@@ -481,12 +481,12 @@ Eterm erts_gc_bit_size_1(Process *p, Eterm *reg, Uint live)
   }
 }
 
-Eterm erts_gc_byte_size_1(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_byte_size_1(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg = reg[live];
 
   if (is_binary(arg)) {
-    Uint bytesize = binary_size(arg);
+    size_t bytesize = binary_size(arg);
 
     if (binary_bitsize(arg) > 0) {
       bytesize++;
@@ -510,13 +510,13 @@ Eterm erts_gc_byte_size_1(Process *p, Eterm *reg, Uint live)
   }
 }
 
-Eterm erts_gc_map_size_1(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_map_size_1(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg = reg[live];
 
   if (is_map(arg)) {
     map_t *mp = (map_t *)map_val(arg);
-    Uint size = map_get_size(mp);
+    size_t size = map_get_size(mp);
 
     if (IS_USMALL(0, size)) {
       return make_small(size);
@@ -536,11 +536,11 @@ Eterm erts_gc_map_size_1(Process *p, Eterm *reg, Uint live)
   }
 }
 
-Eterm erts_gc_abs_1(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_abs_1(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg;
   Eterm res;
-  Sint i0, i;
+  ssize_t i0, i;
   Eterm *hp;
 
   arg = reg[live];
@@ -567,7 +567,7 @@ Eterm erts_gc_abs_1(Process *p, Eterm *reg, Uint live)
       return arg;
     } else {
       int sz = big_arity(arg) + 1;
-      Uint *x;
+      size_t *x;
 
       if (ERTS_NEED_GC(p, sz)) {
         erts_garbage_collect(p, sz, reg, live + 1);
@@ -613,7 +613,7 @@ Eterm erts_gc_abs_1(Process *p, Eterm *reg, Uint live)
   BIF_ERROR(p, BADARG);
 }
 
-Eterm erts_gc_float_1(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_float_1(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg;
   Eterm res;
@@ -633,7 +633,7 @@ badarg:
   }
 
   if (is_small(arg)) {
-    Sint i = signed_val(arg);
+    ssize_t i = signed_val(arg);
     f.fd = i;   /* use "C"'s auto casting */
   } else if (big_to_double(arg, &f.fd) < 0) {
     goto badarg;
@@ -651,7 +651,7 @@ badarg:
   return res;
 }
 
-Eterm erts_gc_round_1(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_round_1(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg;
   FloatDef f;
@@ -672,7 +672,7 @@ Eterm erts_gc_round_1(Process *p, Eterm *reg, Uint live)
                               reg, live);
 }
 
-Eterm erts_gc_trunc_1(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_trunc_1(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg;
   FloatDef f;
@@ -696,7 +696,7 @@ Eterm erts_gc_trunc_1(Process *p, Eterm *reg, Uint live)
 }
 
 static Eterm
-gc_double_to_integer(Process *p, double x, Eterm *reg, Uint live)
+gc_double_to_integer(Process *p, double x, Eterm *reg, size_t live)
 {
   int is_negative;
   int ds;
@@ -708,7 +708,7 @@ gc_double_to_integer(Process *p, double x, Eterm *reg, Uint live)
   double dbase;
 
   if ((x < (double)(MAX_SMALL + 1)) && (x > (double)(MIN_SMALL - 1))) {
-    Sint xi = x;
+    ssize_t xi = x;
     return make_small(xi);
   }
 
@@ -764,12 +764,12 @@ gc_double_to_integer(Process *p, double x, Eterm *reg, Uint live)
 /********************************************************************************
  * binary_part guards. The actual implementation is in erl_bif_binary.c
  ********************************************************************************/
-Eterm erts_gc_binary_part_3(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_binary_part_3(Process *p, Eterm *reg, size_t live)
 {
   return erts_gc_binary_part(p, reg, live, 0);
 }
 
-Eterm erts_gc_binary_part_2(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_binary_part_2(Process *p, Eterm *reg, size_t live)
 {
   return erts_gc_binary_part(p, reg, live, 1);
 }

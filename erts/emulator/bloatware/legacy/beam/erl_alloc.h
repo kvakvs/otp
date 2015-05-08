@@ -51,8 +51,8 @@
   (ERTS_ALC_N_MAX_A_FIXED_SIZE - ERTS_ALC_N_MIN_A_FIXED_SIZE + 1)
 
 void erts_sys_alloc_init(void);
-void *erts_sys_alloc(ErtsAlcType_t, void *, Uint);
-void *erts_sys_realloc(ErtsAlcType_t, void *, void *, Uint);
+void *erts_sys_alloc(ErtsAlcType_t, void *, size_t);
+void *erts_sys_realloc(ErtsAlcType_t, void *, void *, size_t);
 void erts_sys_free(ErtsAlcType_t, void *, void *);
 #if ERTS_HAVE_ERTS_SYS_ALIGNED_ALLOC
 /*
@@ -118,8 +118,8 @@ typedef struct {
 } ErtsAllocatorInfo_t;
 
 typedef struct {
-  void   *(*alloc)(ErtsAlcType_t, void *, Uint);
-  void   *(*realloc)(ErtsAlcType_t, void *, void *, Uint);
+  void   *(*alloc)(ErtsAlcType_t, void *, size_t);
+  void   *(*realloc)(ErtsAlcType_t, void *, void *, size_t);
   void (*free)(ErtsAlcType_t, void *, void *);
   void *extra;
 } ErtsAllocatorFunctions_t;
@@ -158,23 +158,23 @@ void erts_alloc_scheduler_handle_delayed_dealloc(void *vesdp,
 #endif
 erts_aint32_t erts_alloc_fix_alloc_shrink(int ix, erts_aint32_t flgs);
 
-__decl_noreturn void erts_alloc_enomem(ErtsAlcType_t, Uint)
+__decl_noreturn void erts_alloc_enomem(ErtsAlcType_t, size_t)
 __noreturn;
-__decl_noreturn void erts_alloc_n_enomem(ErtsAlcType_t, Uint)
+__decl_noreturn void erts_alloc_n_enomem(ErtsAlcType_t, size_t)
 __noreturn;
-__decl_noreturn void erts_realloc_enomem(ErtsAlcType_t, void *, Uint)
+__decl_noreturn void erts_realloc_enomem(ErtsAlcType_t, void *, size_t)
 __noreturn;
-__decl_noreturn void erts_realloc_n_enomem(ErtsAlcType_t, void *, Uint)
+__decl_noreturn void erts_realloc_n_enomem(ErtsAlcType_t, void *, size_t)
 __noreturn;
 __decl_noreturn void erts_alc_fatal_error(int, int, ErtsAlcType_t, ...)
 __noreturn;
 
 /* --- DO *NOT* USE THESE DEPRECATED FUNCTIONS ---    Instead use:       */
-void *safe_alloc(Uint)               __deprecated; /* erts_alloc()       */
-void *safe_realloc(void *, Uint)     __deprecated; /* erts_realloc()     */
+void *safe_alloc(size_t)               __deprecated; /* erts_alloc()       */
+void *safe_realloc(void *, size_t)     __deprecated; /* erts_realloc()     */
 void  sys_free(void *)               __deprecated; /* erts_free()        */
-void *sys_alloc(Uint)               __deprecated;  /* erts_alloc_fnf()   */
-void *sys_realloc(void *, Uint)      __deprecated; /* erts_realloc_fnf() */
+void *sys_alloc(size_t)               __deprecated;  /* erts_alloc_fnf()   */
+void *sys_realloc(void *, size_t)      __deprecated; /* erts_realloc_fnf() */
 
 /*
  * erts_alloc[_fnf](), erts_realloc[_fnf](), erts_free() works as
@@ -197,16 +197,16 @@ void *sys_realloc(void *, Uint)      __deprecated; /* erts_realloc_fnf() */
 
 #if !ERTS_ALC_DO_INLINE
 
-void *erts_alloc(ErtsAlcType_t type, Uint size);
-void *erts_realloc(ErtsAlcType_t type, void *ptr, Uint size);
+void *erts_alloc(ErtsAlcType_t type, size_t size);
+void *erts_realloc(ErtsAlcType_t type, void *ptr, size_t size);
 void erts_free(ErtsAlcType_t type, void *ptr);
-void *erts_alloc_fnf(ErtsAlcType_t type, Uint size);
-void *erts_realloc_fnf(ErtsAlcType_t type, void *ptr, Uint size);
+void *erts_alloc_fnf(ErtsAlcType_t type, size_t size);
+void *erts_realloc_fnf(ErtsAlcType_t type, void *ptr, size_t size);
 int erts_is_allctr_wrapper_prelocked(void);
 
 #endif /* #if !ERTS_ALC_DO_INLINE */
 
-void *erts_alloc_permanent_cache_aligned(ErtsAlcType_t type, Uint size);
+void *erts_alloc_permanent_cache_aligned(ErtsAlcType_t type, size_t size);
 
 #ifndef ERTS_CACHE_LINE_SIZE
 /* Assumed cache line size */
@@ -218,7 +218,7 @@ void *erts_alloc_permanent_cache_aligned(ErtsAlcType_t type, Uint size);
 
 // TODO: Template this and replace size with count/alternate templated version
 ERTS_ALC_INLINE
-void *erts_alloc(ErtsAlcType_t type, Uint size)
+void *erts_alloc(ErtsAlcType_t type, size_t size)
 {
   void *res;
   res = (*erts_allctrs[ERTS_ALC_T2A(type)].alloc)(
@@ -249,7 +249,7 @@ template <typename T> T *alloc_bytes(ErtsAlcType_t type, size_t bytes)
 #endif
 
 ERTS_ALC_INLINE
-void *erts_realloc(ErtsAlcType_t type, void *ptr, Uint size)
+void *erts_realloc(ErtsAlcType_t type, void *ptr, size_t size)
 {
   void *res;
   res = (*erts_allctrs[ERTS_ALC_T2A(type)].realloc)(
@@ -291,7 +291,7 @@ void erts_free(ErtsAlcType_t type, void *ptr)
 
 
 ERTS_ALC_INLINE
-void *erts_alloc_fnf(ErtsAlcType_t type, Uint size)
+void *erts_alloc_fnf(ErtsAlcType_t type, size_t size)
 {
   return (*erts_allctrs[ERTS_ALC_T2A(type)].alloc)(
            ERTS_ALC_T2N(type),
@@ -301,7 +301,7 @@ void *erts_alloc_fnf(ErtsAlcType_t type, Uint size)
 
 
 ERTS_ALC_INLINE
-void *erts_realloc_fnf(ErtsAlcType_t type, void *ptr, Uint size)
+void *erts_realloc_fnf(ErtsAlcType_t type, void *ptr, size_t size)
 {
   return (*erts_allctrs[ERTS_ALC_T2A(type)].realloc)(
            ERTS_ALC_T2N(type),

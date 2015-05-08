@@ -22,6 +22,7 @@
 
 #include "config.h"
 #include "bw_beam_init.h"
+#include "bw_types.h"
 
 #if defined(VALGRIND) && !defined(NO_FPE_SIGNALS)
 #  define NO_FPE_SIGNALS
@@ -284,7 +285,7 @@ typedef int          Sint;
 #define ERTS_SIZEOF_ETERM SIZEOF_INT
 #define ErtsStrToSint strtol
 #else
-#error Found no appropriate type to use for 'Eterm', 'Uint' and 'Sint'
+#error Found no appropriate type to use for 'Eterm', 'size_t' and 'ssize_t'
 #endif
 
 #if SIZEOF_VOID_P == SIZEOF_LONG
@@ -309,51 +310,52 @@ typedef long long          SWord;
 #define ERTS_UWORD_MAX ULLONG_MAX
 #define ERTS_SWORD_MAX LLONG_MAX
 #else
-#error Found no appropriate type to use for 'Eterm', 'Uint' and 'Sint'
+#error Found no appropriate type to use for 'Eterm', 'size_t' and 'ssize_t'
 #endif
 
 #else /* !HALFWORD_HEAP */
 
-#if SIZEOF_VOID_P == SIZEOF_LONG
-typedef unsigned long Eterm;
-typedef unsigned long Uint;
-typedef long          Sint;
-#define SWORD_CONSTANT(Const) Const##L
-#define UWORD_CONSTANT(Const) Const##UL
-#define ERTS_UWORD_MAX ULONG_MAX
-#define ERTS_SWORD_MAX LONG_MAX
-#define ERTS_SIZEOF_ETERM SIZEOF_LONG
-#define ErtsStrToSint strtol
-#elif SIZEOF_VOID_P == SIZEOF_INT
-typedef unsigned int Eterm;
-typedef unsigned int Uint;
-typedef int          Sint;
-#define SWORD_CONSTANT(Const) Const
-#define UWORD_CONSTANT(Const) Const##U
-#define ERTS_UWORD_MAX UINT_MAX
-#define ERTS_SWORD_MAX INT_MAX
-#define ERTS_SIZEOF_ETERM SIZEOF_INT
-#define ErtsStrToSint strtol
-#elif SIZEOF_VOID_P == SIZEOF_LONG_LONG
-typedef unsigned long long Eterm;
-typedef unsigned long long Uint;
-typedef long long          Sint;
-#define SWORD_CONSTANT(Const) Const##LL
-#define UWORD_CONSTANT(Const) Const##ULL
-#define ERTS_UWORD_MAX ULLONG_MAX
-#define ERTS_SWORD_MAX LLONG_MAX
-#define ERTS_SIZEOF_ETERM SIZEOF_LONG_LONG
-#if defined(__WIN32__)
-#define ErtsStrToSint _strtoi64
-#else
-#define ErtsStrToSint strtoll
-#endif
-#else
-#error Found no appropriate type to use for 'Eterm', 'Uint' and 'Sint'
-#endif
+//#if SIZEOF_VOID_P == SIZEOF_LONG
+//typedef unsigned long Eterm;
+//typedef unsigned long size_t;
+//typedef long          ssize_t;
+//#define SWORD_CONSTANT(Const) Const##L
+//#define UWORD_CONSTANT(Const) Const##UL
+//#define ERTS_UWORD_MAX ULONG_MAX
+//#define ERTS_SWORD_MAX LONG_MAX
+//#define ERTS_SIZEOF_ETERM SIZEOF_LONG
+//#define ErtsStrToSint strtol
 
-typedef Uint UWord;
-typedef Sint SWord;
+//#elif SIZEOF_VOID_P == SIZEOF_INT
+//typedef unsigned int Eterm;
+//typedef unsigned int size_t;
+//typedef int          ssize_t;
+//#define SWORD_CONSTANT(Const) Const
+//#define UWORD_CONSTANT(Const) Const##U
+//#define ERTS_UWORD_MAX UINT_MAX
+//#define ERTS_SWORD_MAX INT_MAX
+//#define ERTS_SIZEOF_ETERM SIZEOF_INT
+//#define ErtsStrToSint strtol
+//#elif SIZEOF_VOID_P == SIZEOF_LONG_LONG
+//typedef unsigned long long Eterm;
+//typedef unsigned long long size_t;
+//typedef long long          ssize_t;
+//#define SWORD_CONSTANT(Const) Const##LL
+//#define UWORD_CONSTANT(Const) Const##ULL
+//#define ERTS_UWORD_MAX ULLONG_MAX
+//#define ERTS_SWORD_MAX LLONG_MAX
+//#define ERTS_SIZEOF_ETERM SIZEOF_LONG_LONG
+//#if defined(__WIN32__)
+//#define ErtsStrToSint _strtoi64
+//#else
+//#define ErtsStrToSint strtoll
+//#endif
+//#else
+//#error Found no appropriate type to use for 'Eterm', 'size_t' and 'ssize_t'
+//#endif
+
+typedef size_t UWord;
+typedef ssize_t SWord;
 #define ERTS_UINT_MAX ERTS_UWORD_MAX
 
 #endif /* HALFWORD_HEAP */
@@ -413,12 +415,12 @@ typedef short          int16_t;
 #endif
 #if ERTS_SIZEOF_TERM == 8
 typedef union {
-  Uint val;
+  size_t val;
   uint32_t hval[2];
 } HUint;
 #elif ERTS_SIZEOF_TERM == 4
 typedef union {
-  Uint val;
+  size_t val;
   uint16_t hval[2];
 } HUint;
 #else
@@ -572,7 +574,7 @@ __decl_noreturn void __noreturn erl_exit(int n, const char *, ...);
 Eterm erts_check_io_info(void *p);
 
 /* Size of misc memory allocated from system dependent code */
-Uint erts_sys_misc_mem_sz(void);
+size_t erts_sys_misc_mem_sz(void);
 
 /* print stuff is declared here instead of in global.h, so sys stuff won't
    have to include global.h */
@@ -621,8 +623,8 @@ int erts_send_error_to_logger_str_nogl(char *);
  */
 
 typedef struct _SysDriverOpts {
-  Uint ifd;     /* Input file descriptor (fd driver). */
-  Uint ofd;     /* Outputfile descriptor (fd driver). */
+  size_t ifd;     /* Input file descriptor (fd driver). */
+  size_t ofd;     /* Outputfile descriptor (fd driver). */
   int packet_bytes;   /* Number of bytes in packet header. */
   int read_write;   /* Read and write bits. */
   int use_stdio;    /* Use standard I/O: TRUE or FALSE. */
@@ -727,18 +729,18 @@ void get_localtime(int *year, int *month, int *day,
 void get_universaltime(int *year, int *month, int *day,
                        int *hour, int *minute, int *second);
 int seconds_to_univ(int64_t seconds,
-                    Sint *year, Sint *month, Sint *day,
-                    Sint *hour, Sint *minute, Sint *second);
-int univ_to_seconds(Sint year, Sint month, Sint day,
-                    Sint hour, Sint minute, Sint second,
+                    ssize_t *year, ssize_t *month, ssize_t *day,
+                    ssize_t *hour, ssize_t *minute, ssize_t *second);
+int univ_to_seconds(ssize_t year, ssize_t month, ssize_t day,
+                    ssize_t hour, ssize_t minute, ssize_t second,
                     int64_t *seconds);
 int univ_to_local(
-  Sint *year, Sint *month, Sint *day,
-  Sint *hour, Sint *minute, Sint *second);
-int local_to_univ(Sint *year, Sint *month, Sint *day,
-                  Sint *hour, Sint *minute, Sint *second, int isdst);
-void get_now(Uint *, Uint *, Uint *);
-void get_sys_now(Uint *, Uint *, Uint *);
+  ssize_t *year, ssize_t *month, ssize_t *day,
+  ssize_t *hour, ssize_t *minute, ssize_t *second);
+int local_to_univ(ssize_t *year, ssize_t *month, ssize_t *day,
+                  ssize_t *hour, ssize_t *minute, ssize_t *second, int isdst);
+void get_now(size_t *, size_t *, size_t *);
+void get_sys_now(size_t *, size_t *, size_t *);
 void set_break_quit(void (*)(void), void (*)(void));
 
 void os_flavor(char *, unsigned);

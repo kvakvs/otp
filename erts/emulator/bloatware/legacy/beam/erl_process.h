@@ -107,12 +107,12 @@ extern Export exp_send, exp_receive, exp_timeout;
 extern int erts_eager_check_io;
 extern int erts_sched_compact_load;
 extern int erts_sched_balance_util;
-extern Uint erts_no_schedulers;
+extern size_t erts_no_schedulers;
 #ifdef ERTS_DIRTY_SCHEDULERS
-extern Uint erts_no_dirty_cpu_schedulers;
-extern Uint erts_no_dirty_io_schedulers;
+extern size_t erts_no_dirty_cpu_schedulers;
+extern size_t erts_no_dirty_io_schedulers;
 #endif
-extern Uint erts_no_run_queues;
+extern size_t erts_no_run_queues;
 extern int erts_sched_thread_suggested_stack_size;
 #define ERTS_SCHED_THREAD_MIN_STACK_SIZE 4  /* Kilo words */
 #define ERTS_SCHED_THREAD_MAX_STACK_SIZE 8192 /* Kilo words */
@@ -419,8 +419,8 @@ struct ErtsRunQueue_ {
 
   struct {
     ErtsProcList *pending_exiters;
-    Uint context_switches;
-    Uint reductions;
+    size_t context_switches;
+    size_t reductions;
 
     ErtsRunQueueInfo prio_info[ERTS_NO_PROC_PRIO_LEVELS];
 
@@ -549,7 +549,7 @@ typedef union {
     ErtsDirtySchedulerType type: 1;
     unsigned num: 31;
   } s;
-  Uint no;
+  size_t no;
 } ErtsDirtySchedId;
 #endif
 
@@ -577,7 +577,7 @@ struct ErtsSchedulerData_ {
 #endif
   ErtsSchedulerSleepInfo *ssi;
   Process *current_process;
-  Uint no;      /* Scheduler number for normal schedulers */
+  size_t no;      /* Scheduler number for normal schedulers */
 #ifdef ERTS_DIRTY_SCHEDULERS
   ErtsDirtySchedId dirty_no;  /* Scheduler number for dirty schedulers */
 #endif
@@ -791,10 +791,10 @@ typedef struct {
   int enabled;
   struct {
     Eterm name;
-    Uint total_executed;
-    Uint executed;
-    Uint total_migrated;
-    Uint migrated;
+    size_t total_executed;
+    size_t executed;
+    size_t total_migrated;
+    size_t migrated;
   } prio[ERTS_NO_PRIO_LEVELS];
 } erts_sched_stat_t;
 
@@ -866,9 +866,9 @@ struct process {
   Eterm *stop;    /* Stack top */
   Eterm *heap;    /* Heap start */
   Eterm *hend;    /* Heap end */
-  Uint heap_sz;   /* Size of heap in words */
-  Uint min_heap_size;         /* Minimum size of heap (in words). */
-  Uint min_vheap_size;        /* Minimum size of virtual heap (in words). */
+  size_t heap_sz;   /* Size of heap in words */
+  size_t min_heap_size;         /* Minimum size of heap (in words). */
+  size_t min_vheap_size;        /* Minimum size of virtual heap (in words). */
 
 #if !defined(NO_FPE_SIGNALS) || defined(HIPE)
   volatile unsigned long fp_exception;
@@ -883,7 +883,7 @@ struct process {
   /*
    * Saved x registers.
    */
-  Uint arity;     /* Number of live argument registers (only valid
+  size_t arity;     /* Number of live argument registers (only valid
          * when process is *not* running).
          */
   Eterm *arg_reg;   /* Pointer to argument registers. */
@@ -892,19 +892,19 @@ struct process {
 
   BeamInstr *cp;    /* (untagged) Continuation pointer (for threaded code). */
   BeamInstr *i;   /* Program counter for threaded code. */
-  Sint catches;   /* Number of catches on stack */
-  Sint fcalls;    /*
+  ssize_t catches;   /* Number of catches on stack */
+  ssize_t fcalls;    /*
          * Number of reductions left to execute.
          * Only valid for the current process.
          */
   uint32_t rcount;    /* suspend count */
   int  schedule_count;  /* Times left to reschedule a low prio process */
-  Uint reds;      /* No of reductions for this_ process  */
+  size_t reds;      /* No of reductions for this_ process  */
   Eterm group_leader;   /* Pid in charge
            (can be boxed) */
-  Uint flags;     /* Trap exit, etc (no trace flags anymore) */
+  size_t flags;     /* Trap exit, etc (no trace flags anymore) */
   Eterm fvalue;   /* Exit & Throw value (failure reason) */
-  Uint freason;   /* Reason for detected failure */
+  size_t freason;   /* Reason for detected failure */
   Eterm ftrace;   /* Latest exception stack trace dump */
 
   Process *next;    /* Pointer to next process in run queue */
@@ -924,13 +924,13 @@ struct process {
 
   ProcDict  *dictionary;       /* Process dictionary, may be nullptr */
 
-  Uint seq_trace_clock;
-  Uint seq_trace_lastcnt;
+  size_t seq_trace_clock;
+  size_t seq_trace_lastcnt;
   Eterm seq_trace_token;  /* Sequential trace token (tuple size 5 see below) */
 
 #ifdef USE_VM_PROBES
   Eterm dt_utag;              /* Place to store the dynamc trace user tag */
-  Uint dt_utag_flags;         /* flag field for the dt_utag */
+  size_t dt_utag_flags;         /* flag field for the dt_utag */
 #endif
   BeamInstr initial[3]; /* Initial module(0), function(1), arity(2), often used instead
            of pointer to funcinfo instruction, hence the BeamInstr datatype */
@@ -958,7 +958,7 @@ struct process {
   uint16_t max_gen_gcs;   /* Max minor gen GCs before fullsweep. */
   ErlOffHeap off_heap;  /* Off-heap data updated by copy_struct(). */
   ErlHeapFragment *mbuf;  /* Pointer to message buffer list */
-  Uint mbuf_sz;   /* Size of all message buffers */
+  size_t mbuf_sz;   /* Size of all message buffers */
   ErtsPSD *psd;   /* Rarely used process specific data */
 
   uint64_t bin_vheap_sz;  /* Virtual heap block size for binaries */
@@ -997,7 +997,7 @@ struct process {
 #endif
 
 #ifdef FORCE_HEAP_FRAGS
-  Uint space_verified;        /* Avoid HAlloc forcing heap fragments when */
+  size_t space_verified;        /* Avoid HAlloc forcing heap fragments when */
   Eterm *space_verified_from; /* we rely on available heap space (TestHeap) */
 #endif
 };
@@ -1137,16 +1137,16 @@ void erts_check_for_holes(Process *p);
  * The following struct contains options for a process to be spawned.
  */
 typedef struct {
-  Uint flags;
+  size_t flags;
   int error_code;   /* Error code returned from create_process(). */
   Eterm mref;     /* Monitor ref returned (if SPO_MONITOR was given). */
 
   /*
    * The following items are only initialized if the SPO_USE_ARGS flag is set.
    */
-  Uint min_heap_size;   /* Minimum heap size (must be a valued returned
+  size_t min_heap_size;   /* Minimum heap size (must be a valued returned
          * from next_heap_size()).  */
-  Uint min_vheap_size;  /* Minimum virtual heap size  */
+  size_t min_vheap_size;  /* Minimum virtual heap size  */
   int priority;   /* Priority for process. */
   uint16_t max_gen_gcs;   /* Maximum number of gen GCs before fullsweep. */
   int scheduler;
@@ -1172,21 +1172,21 @@ ERTS_GLB_INLINE void erts_heap_frag_shrink(Process *p, Eterm *hp)
 }
 #endif /* inline */
 
-Eterm *erts_heap_alloc(Process *p, Uint need, Uint xtra);
+Eterm *erts_heap_alloc(Process *p, size_t need, size_t xtra);
 #ifdef CHECK_FOR_HOLES
-Eterm *erts_set_hole_marker(Eterm *ptr, Uint sz);
+Eterm *erts_set_hole_marker(Eterm *ptr, size_t sz);
 #endif
 
-extern Uint erts_default_process_flags;
+extern size_t erts_default_process_flags;
 extern erts_smp_rwmtx_t erts_cpu_bind_rwmtx;
 /* If any of the erts_system_monitor_* variables are set (enabled),
 ** erts_system_monitor must be != NIL, to allow testing on just
 ** the erts_system_monitor_* variables.
 */
 extern Eterm erts_system_monitor;
-extern Uint erts_system_monitor_long_gc;
-extern Uint erts_system_monitor_long_schedule;
-extern Uint erts_system_monitor_large_heap;
+extern size_t erts_system_monitor_long_gc;
+extern size_t erts_system_monitor_long_schedule;
+extern size_t erts_system_monitor_large_heap;
 struct erts_system_monitor_flags_t {
   unsigned int busy_port : 1;
   unsigned int busy_dist_port : 1;
@@ -1576,14 +1576,14 @@ void erts_dbg_multi_scheduling_return_trap(Process *, Eterm);
 int erts_get_max_no_executing_schedulers(void);
 #if defined(ERTS_SMP) || defined(ERTS_DIRTY_SCHEDULERS)
 ErtsSchedSuspendResult
-erts_schedulers_state(Uint *, Uint *, Uint *, Uint *, Uint *, Uint *, int);
+erts_schedulers_state(size_t *, size_t *, size_t *, size_t *, size_t *, size_t *, int);
 #endif
 #ifdef ERTS_SMP
 ErtsSchedSuspendResult
 erts_set_schedulers_online(Process *p,
                            ErtsProcLocks plocks,
-                           Sint new_no,
-                           Sint *old_no
+                           ssize_t new_no,
+                           ssize_t *old_no
 #ifdef ERTS_DIRTY_SCHEDULERS
                            , int dirty_only
 #endif
@@ -1613,26 +1613,26 @@ void erts_schedule_multi_misc_aux_work(int ignore_self,
                                        void *arg);
 erts_aint32_t erts_set_aux_work_timeout(int, erts_aint32_t, int);
 void erts_sched_notify_check_cpu_bind(void);
-Uint erts_active_schedulers(void);
+size_t erts_active_schedulers(void);
 void erts_init_process(int, int, int);
 Eterm erts_process_status(Process *, ErtsProcLocks, Process *, Eterm);
-Uint erts_run_queues_len(Uint *);
+size_t erts_run_queues_len(size_t *);
 void erts_add_to_runq(Process *);
 Eterm erts_bound_schedulers_term(Process *c_p);
 Eterm erts_get_cpu_topology_term(Process *c_p, Eterm which);
 Eterm erts_get_schedulers_binds(Process *c_p);
 Eterm erts_set_cpu_topology(Process *c_p, Eterm term);
 Eterm erts_bind_schedulers(Process *c_p, Eterm how);
-ErtsRunQueue *erts_schedid2runq(Uint);
+ErtsRunQueue *erts_schedid2runq(size_t);
 Process *schedule(Process *, int);
 void erts_schedule_misc_op(void (*)(void *), void *);
 Eterm erl_create_process(Process *, Eterm, Eterm, Eterm, ErlSpawnOpts *);
 void erts_do_exit_process(Process *, Eterm);
 void erts_continue_exit_process(Process *);
-void set_timer(Process *, Uint);
+void set_timer(Process *, size_t);
 void cancel_timer(Process *);
 /* Begin System profile */
-Uint erts_runnable_process_count(void);
+size_t erts_runnable_process_count(void);
 /* End System profile */
 void erts_init_empty_process(Process *p);
 void erts_cleanup_empty_process(Process *p);
@@ -1645,9 +1645,9 @@ void erts_program_counter_info(int to, void *to_arg, Process *);
 Eterm erts_get_process_priority(Process *p);
 Eterm erts_set_process_priority(Process *p, Eterm prio);
 
-Uint erts_get_total_context_switches(void);
-void erts_get_total_reductions(Uint *, Uint *);
-void erts_get_exact_total_reductions(Process *, Uint *, Uint *);
+size_t erts_get_total_context_switches(void);
+void erts_get_total_reductions(size_t *, size_t *);
+void erts_get_exact_total_reductions(Process *, size_t *, size_t *);
 
 Eterm erts_fake_scheduler_bindings(Process *p, Eterm how);
 
@@ -1681,10 +1681,10 @@ void erts_deep_process_dump(int, void *);
 Eterm erts_get_reader_groups_map(Process *c_p);
 Eterm erts_debug_reader_groups_map(Process *c_p, int groups);
 
-Uint erts_debug_nbalance(void);
+size_t erts_debug_nbalance(void);
 int erts_debug_wait_deallocations(Process *c_p);
 
-Uint erts_process_memory(Process *c_p);
+size_t erts_process_memory(Process *c_p);
 
 #ifdef ERTS_SMP
 #  define ERTS_GET_SCHEDULER_DATA_FROM_PROC(PROC) ((PROC)->scheduler_data)
@@ -2006,7 +2006,7 @@ erts_check_emigration_need(ErtsRunQueue *c_rq, int prio)
 ERTS_GLB_INLINE int erts_is_scheduler_bound(ErtsSchedulerData *esdp);
 ERTS_GLB_INLINE Process *erts_get_current_process(void);
 ERTS_GLB_INLINE Eterm erts_get_current_pid(void);
-ERTS_GLB_INLINE Uint erts_get_scheduler_id(void);
+ERTS_GLB_INLINE size_t erts_get_scheduler_id(void);
 ERTS_GLB_INLINE ErtsRunQueue *erts_get_runq_proc(Process *p);
 ERTS_GLB_INLINE ErtsRunQueue *erts_get_runq_current(ErtsSchedulerData *esdp);
 #ifndef ERTS_ENABLE_LOCK_COUNT
@@ -2049,7 +2049,7 @@ Eterm erts_get_current_pid(void)
 }
 
 ERTS_GLB_INLINE
-Uint erts_get_scheduler_id(void)
+size_t erts_get_scheduler_id(void)
 {
 #ifdef ERTS_SMP
   ErtsSchedulerData *esdp = erts_get_scheduler_data();
@@ -2059,10 +2059,10 @@ Uint erts_get_scheduler_id(void)
     return 0;
   } else
 #endif
-    return esdp ? esdp->no : (Uint) 0;
+    return esdp ? esdp->no : (size_t) 0;
 
 #else
-  return erts_get_scheduler_data() ? (Uint) 1 : (Uint) 0;
+  return erts_get_scheduler_data() ? (size_t) 1 : (size_t) 0;
 #endif
 }
 

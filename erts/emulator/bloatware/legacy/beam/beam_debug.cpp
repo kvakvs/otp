@@ -62,7 +62,7 @@ erts_debug_flat_size_1(BIF_ALIST_1)
 {
   Process *p = BIF_P;
   Eterm term = BIF_ARG_1;
-  Uint size = size_object(term);
+  size_t size = size_object(term);
 
   if (IS_USMALL(0, size)) {
     BIF_RET(make_small(size));
@@ -196,7 +196,7 @@ BIF_RETTYPE
 erts_debug_instructions_0(BIF_ALIST_0)
 {
   int i = 0;
-  Uint needed = num_instructions * 2;
+  size_t needed = num_instructions * 2;
   Eterm *hp;
   Eterm res = NIL;
 
@@ -229,7 +229,7 @@ erts_debug_disassemble_1(BIF_ALIST_1)
   BeamInstr *code_ptr = nullptr;  /* Initialized to eliminate warning. */
   BeamInstr instr;
   BeamInstr uaddr;
-  Uint hsz;
+  size_t hsz;
   int i;
 
   if (term_to_UWord(addr, &uaddr)) {
@@ -244,7 +244,7 @@ erts_debug_disassemble_1(BIF_ALIST_1)
     Eterm mod;
     Eterm name;
     Export *ep;
-    Sint arity;
+    ssize_t arity;
     int n;
 
     tp = tuple_val(addr);
@@ -617,7 +617,7 @@ print_op(int to, void *to_arg, int op, int size, BeamInstr *addr)
       }
 
       if (i == BIF_SIZE) {
-        erts_print(to, to_arg, "b(%d)", (Uint) *ap);
+        erts_print(to, to_arg, "b(%d)", (size_t) *ap);
       } else {
         Eterm name = bif_table[i].name;
         unsigned arity = bif_table[i].arity;
@@ -676,7 +676,7 @@ print_op(int to, void *to_arg, int op, int size, BeamInstr *addr)
     int n = ap[-1];
 
     while (n > 0) {
-      Uint arity = arityval(ap[0]);
+      size_t arity = arityval(ap[0]);
       erts_print(to, to_arg, " {%d} f(" HEXF ")", arity, ap[1]);
       ap += 2;
       size += 2;

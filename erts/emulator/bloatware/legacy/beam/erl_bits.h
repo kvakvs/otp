@@ -27,7 +27,7 @@
 typedef struct erl_bin_match_buffer {
   Eterm orig;     /* Original binary term. */
   uint8_t *base;      /* Current position in binary. */
-  Uint offset;    /* Offset in bits. */
+  size_t offset;    /* Offset in bits. */
   size_t size;    /* Size of binary in bits. */
 } ErlBinMatchBuffer;
 
@@ -45,7 +45,7 @@ struct erl_bits_state {
    * Offset in bits into the current binary (new_ instruction set) or
    * buffer (old instruction set).
    */
-  Uint erts_bin_offset_;
+  size_t erts_bin_offset_;
   /*
    * Whether the current binary is writable.
    */
@@ -151,7 +151,7 @@ void erts_bits_destroy_state(ERL_BITS_PROTO_0);
  */
 
 #define NBYTES(x)  (((uint64_t)(x) + (uint64_t) 7) >> 3)
-#define BYTE_OFFSET(ofs) ((Uint) (ofs) >> 3)
+#define BYTE_OFFSET(ofs) ((size_t) (ofs) >> 3)
 #define BIT_OFFSET(ofs) ((ofs) & 7)
 
 /*
@@ -164,32 +164,32 @@ void erts_bits_destroy_state(ERL_BITS_PROTO_0);
  * Binary matching.
  */
 
-Eterm erts_bs_start_match_2(Process *p, Eterm Bin, Uint Max);
-Eterm erts_bs_get_integer_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatchBuffer *mb);
-Eterm erts_bs_get_binary_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatchBuffer *mb);
-Eterm erts_bs_get_float_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatchBuffer *mb);
+Eterm erts_bs_start_match_2(Process *p, Eterm Bin, size_t Max);
+Eterm erts_bs_get_integer_2(Process *p, size_t num_bits, unsigned flags, ErlBinMatchBuffer *mb);
+Eterm erts_bs_get_binary_2(Process *p, size_t num_bits, unsigned flags, ErlBinMatchBuffer *mb);
+Eterm erts_bs_get_float_2(Process *p, size_t num_bits, unsigned flags, ErlBinMatchBuffer *mb);
 Eterm erts_bs_get_binary_all_2(Process *p, ErlBinMatchBuffer *mb);
 
 /*
  * Binary construction, new_ instruction set.
  */
 
-int erts_new_bs_put_integer(ERL_BITS_PROTO_3(Eterm Integer, Uint num_bits, unsigned flags));
+int erts_new_bs_put_integer(ERL_BITS_PROTO_3(Eterm Integer, size_t num_bits, unsigned flags));
 int erts_bs_put_utf8(ERL_BITS_PROTO_1(Eterm Integer));
-int erts_bs_put_utf16(ERL_BITS_PROTO_2(Eterm Integer, Uint flags));
-int erts_new_bs_put_binary(ERL_BITS_PROTO_2(Eterm Bin, Uint num_bits));
-int erts_new_bs_put_binary_all(ERL_BITS_PROTO_2(Eterm Bin, Uint unit));
-int erts_new_bs_put_float(Process *c_p, Eterm Float, Uint num_bits, int flags);
-void erts_new_bs_put_string(ERL_BITS_PROTO_2(uint8_t *iptr, Uint num_bytes));
+int erts_bs_put_utf16(ERL_BITS_PROTO_2(Eterm Integer, size_t flags));
+int erts_new_bs_put_binary(ERL_BITS_PROTO_2(Eterm Bin, size_t num_bits));
+int erts_new_bs_put_binary_all(ERL_BITS_PROTO_2(Eterm Bin, size_t unit));
+int erts_new_bs_put_float(Process *c_p, Eterm Float, size_t num_bits, int flags);
+void erts_new_bs_put_string(ERL_BITS_PROTO_2(uint8_t *iptr, size_t num_bytes));
 
-Uint erts_bits_bufs_size(void);
+size_t erts_bits_bufs_size(void);
 uint32_t erts_bs_get_unaligned_uint32(ErlBinMatchBuffer *mb);
 void erts_align_utf8_bytes(ErlBinMatchBuffer *mb, uint8_t *buf);
 Eterm erts_bs_get_utf8(ErlBinMatchBuffer *mb);
-Eterm erts_bs_get_utf16(ErlBinMatchBuffer *mb, Uint flags);
-Eterm erts_bs_append(Process *p, Eterm *reg, Uint live, Eterm build_size_term,
-                     Uint extra_words, Uint unit);
-Eterm erts_bs_private_append(Process *p, Eterm bin, Eterm sz, Uint unit);
+Eterm erts_bs_get_utf16(ErlBinMatchBuffer *mb, size_t flags);
+Eterm erts_bs_append(Process *p, Eterm *reg, size_t live, Eterm build_size_term,
+                     size_t extra_words, size_t unit);
+Eterm erts_bs_private_append(Process *p, Eterm bin, Eterm sz, size_t unit);
 Eterm erts_bs_init_writable(Process *p, Eterm sz);
 
 /*

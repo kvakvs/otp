@@ -35,9 +35,9 @@
 
 typedef struct _restart_context {
   uint8_t *bytes;
-  Uint num_processed_bytes;
-  Uint num_bytes_to_process;
-  Uint num_resulting_chars;
+  size_t num_processed_bytes;
+  size_t num_bytes_to_process;
+  size_t num_resulting_chars;
   int state;
 } RestartContext;
 
@@ -45,15 +45,15 @@ typedef struct _restart_context {
 #define LOOP_FACTOR 10
 #define LOOP_FACTOR_SIMPLE 50 /* When just counting */
 
-static Uint max_loop_limit;
+static size_t max_loop_limit;
 
 static BIF_RETTYPE utf8_to_list(Process *p, Eterm arg1);
 static BIF_RETTYPE finalize_list_to_list(Process *p,
     uint8_t *bytes,
     Eterm rest,
-    Uint num_processed_bytes,
-    Uint num_bytes_to_process,
-    Uint num_resulting_chars,
+    size_t num_processed_bytes,
+    size_t num_bytes_to_process,
+    size_t num_resulting_chars,
     int state, int left,
     Eterm tail);
 static BIF_RETTYPE characters_to_utf8_trap(BIF_ALIST_3);
@@ -152,14 +152,14 @@ static Eterm make_magic_bin_for_restart(Process *p, RestartContext *rc)
 }
 
 
-Sint erts_unicode_set_loop_limit(Sint limit)
+ssize_t erts_unicode_set_loop_limit(ssize_t limit)
 {
-  Sint save = (Sint) max_loop_limit;
+  ssize_t save = (ssize_t) max_loop_limit;
 
   if (limit <= 0) {
     max_loop_limit = CONTEXT_REDS * LOOP_FACTOR;
   } else {
-    max_loop_limit = (Uint) limit;
+    max_loop_limit = (size_t) limit;
   }
 
   return save;
@@ -188,35 +188,35 @@ static ERTS_INLINE int simple_loops_to_common(int cost)
   return (cost / factor);
 }
 
-static Sint aligned_binary_size(Eterm binary)
+static ssize_t aligned_binary_size(Eterm binary)
 {
   ERTS_DECLARE_DUMMY(uint8_t *bytes);
-  ERTS_DECLARE_DUMMY(Uint bitoffs);
-  Uint bitsize;
+  ERTS_DECLARE_DUMMY(size_t bitoffs);
+  size_t bitsize;
 
   ERTS_GET_BINARY_BYTES(binary, bytes, bitoffs, bitsize);
 
   if (bitsize != 0) {
-    return (Sint) - 1;
+    return (ssize_t) - 1;
   }
 
   return binary_size(binary);
 }
 
-static Sint latin1_binary_need(Eterm binary)
+static ssize_t latin1_binary_need(Eterm binary)
 {
   uint8_t *bytes;
   uint8_t *temp_alloc = nullptr;
-  Uint bitoffs;
-  Uint bitsize;
-  Uint size;
-  Sint need = 0;
-  Sint i;
+  size_t bitoffs;
+  size_t bitsize;
+  size_t size;
+  ssize_t need = 0;
+  ssize_t i;
 
   ERTS_GET_BINARY_BYTES(binary, bytes, bitoffs, bitsize);
 
   if (bitsize != 0) {
-    return (Sint) - 1;
+    return (ssize_t) - 1;
   }
 
   if (bitoffs != 0) {
@@ -254,9 +254,9 @@ static int utf8_len(uint8_t first)
   return -1;
 }
 
-static int copy_utf8_bin(uint8_t *target, uint8_t *source, Uint size,
+static int copy_utf8_bin(uint8_t *target, uint8_t *source, size_t size,
                          uint8_t *leftover, int *num_leftovers,
-                         uint8_t **err_pos, Uint *characters)
+                         uint8_t **err_pos, size_t *characters)
 {
   int copied = 0;
 
@@ -378,13 +378,13 @@ static int copy_utf8_bin(uint8_t *target, uint8_t *source, Uint size,
 
 
 
-static Sint utf8_need(Eterm ioterm, int latin1, Uint *costp)
+static ssize_t utf8_need(Eterm ioterm, int latin1, size_t *costp)
 {
   Eterm *objp;
   Eterm obj;
   DECLARE_ESTACK(stack);
-  Sint need = 0;
-  Uint cost = 0;
+  ssize_t need = 0;
+  size_t cost = 0;
 
   if (is_nil(ioterm)) {
     DESTROY_ESTACK(stack);
@@ -396,7 +396,7 @@ static Sint utf8_need(Eterm ioterm, int latin1, Uint *costp)
     DESTROY_ESTACK(stack);
 
     if (latin1) {
-      Sint x = latin1_binary_need(ioterm);
+      ssize_t x = latin1_binary_need(ioterm);
       *costp = x;
       return x;
     } else {
@@ -408,7 +408,7 @@ static Sint utf8_need(Eterm ioterm, int latin1, Uint *costp)
   if (!is_list(ioterm)) {
     DESTROY_ESTACK(stack);
     *costp = 0;
-    return (Sint) - 1;
+    return (ssize_t) - 1;
   }
 
   /* OK a list, needs to be processed in order, handling each flat list-level
@@ -433,7 +433,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
                until sublist or list end is encountered */
         if (is_small(obj)) { /* Always small */
           for (;;) {
-            Uint x = unsigned_val(obj);
+            size_t x = unsigned_val(obj);
 
             if (x < 0x80) {
               need += 1;
@@ -477,7 +477,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
           ioterm = obj;
           goto L_Again;
         } else if (is_binary(obj)) {
-          Sint x;
+          ssize_t x;
 
           if (latin1) {
             x = latin1_binary_need(obj);
@@ -513,7 +513,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
         } else {
           DESTROY_ESTACK(stack);
           *costp = cost;
-          return ((Sint) - 1);
+          return ((ssize_t) - 1);
         }
 
         if (is_nil(ioterm) || !is_list(ioterm)) {
@@ -525,7 +525,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
     if (!is_list(ioterm) && !is_nil(ioterm)) {
       /* inproper list end */
       if (is_binary(ioterm)) {
-        Sint x;
+        ssize_t x;
 
         if (latin1) {
           x = latin1_binary_need(ioterm);
@@ -553,7 +553,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
       } else {
         DESTROY_ESTACK(stack);
         *costp = cost;
-        return ((Sint) - 1);
+        return ((ssize_t) - 1);
       }
     }
   } /* while  not estack empty */
@@ -565,7 +565,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 
 
 static Eterm do_build_utf8(Process *p, Eterm ioterm, int *left, int latin1,
-                           uint8_t *target, int *pos, Uint *characters, int *err,
+                           uint8_t *target, int *pos, size_t *characters, int *err,
                            uint8_t *leftover, int *num_leftovers)
 {
   int c;
@@ -581,14 +581,14 @@ static Eterm do_build_utf8(Process *p, Eterm ioterm, int *left, int latin1,
   }
 
   if (is_binary(ioterm)) {
-    Uint bitoffs;
-    Uint bitsize;
-    Uint size;
-    Uint i;
+    size_t bitoffs;
+    size_t bitsize;
+    size_t size;
+    size_t i;
     Eterm res_term = NIL;
     uint8_t *bytes;
     uint8_t *temp_alloc = nullptr;
-    Uint orig_size;
+    size_t orig_size;
 
     ERTS_GET_BINARY_BYTES(ioterm, bytes, bitoffs, bitsize);
 
@@ -621,7 +621,7 @@ static Eterm do_build_utf8(Process *p, Eterm ioterm, int *left, int latin1,
       Eterm *hp;
       ErlSubBin *sb;
       Eterm orig;
-      Uint offset;
+      size_t offset;
       /* Split the binary in two parts, of which we
          only process the first */
       hp = HAlloc(p, ERL_SUB_BIN_SIZE);
@@ -651,7 +651,7 @@ static Eterm do_build_utf8(Process *p, Eterm ioterm, int *left, int latin1,
         Eterm *hp;
         ErlSubBin *sb;
         Eterm orig;
-        Uint offset;
+        size_t offset;
 
         *err = 1;
         /* we have no real stack, just build a list of the binaries
@@ -730,7 +730,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
           }
 
           for (;;) {
-            Uint x = unsigned_val(obj);
+            size_t x = unsigned_val(obj);
 
             if (latin1 && x > 255) {
               *err = 1;
@@ -968,7 +968,7 @@ static BIF_RETTYPE characters_to_utf8_trap(BIF_ALIST_3)
        otherwise 3 bytes would have been enough */
   int num_leftovers = 0;
   int latin1 = 0;
-  Uint characters = 0;
+  size_t characters = 0;
 
   /*erts_printf("Trap %T!\r\n",BIF_ARG_2);*/
   ASSERT(is_binary(BIF_ARG_1));
@@ -994,7 +994,7 @@ static BIF_RETTYPE characters_to_utf8_trap(BIF_ALIST_3)
 
 BIF_RETTYPE unicode_bin_is_7bit_1(BIF_ALIST_1)
 {
-  Sint need;
+  ssize_t need;
 
   if (!is_binary(BIF_ARG_1)) {
     BIF_RET(am_false);
@@ -1011,12 +1011,12 @@ BIF_RETTYPE unicode_bin_is_7bit_1(BIF_ALIST_1)
 
 static int is_valid_utf8(Eterm orig_bin)
 {
-  Uint bitoffs;
-  Uint bitsize;
-  Uint size;
+  size_t bitoffs;
+  size_t bitsize;
+  size_t size;
   uint8_t *temp_alloc = nullptr;
   uint8_t *endpos;
-  Uint numchar;
+  size_t numchar;
   uint8_t *bytes;
   int ret;
 
@@ -1040,8 +1040,8 @@ static int is_valid_utf8(Eterm orig_bin)
 
 BIF_RETTYPE unicode_characters_to_binary_2(BIF_ALIST_2)
 {
-  Sint need;
-  Uint characters;
+  ssize_t need;
+  size_t characters;
   int latin1;
   Eterm bin;
   uint8_t *bytes;
@@ -1052,7 +1052,7 @@ BIF_RETTYPE unicode_characters_to_binary_2(BIF_ALIST_2)
   uint8_t leftover[4]; /* used for temp buffer too, o
        therwise 3 bytes would have been enough */
   int num_leftovers = 0;
-  Uint cost_of_utf8_need;
+  size_t cost_of_utf8_need;
 
 
   if (BIF_ARG_2 == am_latin1) {
@@ -1116,7 +1116,7 @@ BIF_RETTYPE unicode_characters_to_binary_2(BIF_ALIST_2)
 
     if (is_binary(bin)) {
       uint8_t *t = nullptr;
-      Uint sz = binary_size(bin);
+      size_t sz = binary_size(bin);
       uint8_t *by = erts_get_aligned_binary_bytes(bin, &t);
       int i;
       erts_printf("<<");
@@ -1138,7 +1138,7 @@ BIF_RETTYPE unicode_characters_to_binary_2(BIF_ALIST_2)
                            leftover, num_leftovers, BIF_ARG_2);
 }
 
-static BIF_RETTYPE build_list_return(Process *p, uint8_t *bytes, int pos, Uint characters,
+static BIF_RETTYPE build_list_return(Process *p, uint8_t *bytes, int pos, size_t characters,
                                      Eterm rest_term, int err,
                                      uint8_t *leftover, int num_leftovers,
                                      Eterm latin1, int left)
@@ -1199,7 +1199,7 @@ static BIF_RETTYPE characters_to_list_trap_1(BIF_ALIST_3)
   RestartContext *rc;
   uint8_t *bytes;
   int pos;
-  Uint characters;
+  size_t characters;
   int err;
   Eterm rest_term;
   int left, sleft;
@@ -1233,9 +1233,9 @@ static BIF_RETTYPE characters_to_list_trap_1(BIF_ALIST_3)
 
 BIF_RETTYPE unicode_characters_to_list_2(BIF_ALIST_2)
 {
-  Sint need;
+  ssize_t need;
   int latin1;
-  Uint characters = 0;
+  size_t characters = 0;
   uint8_t *bytes;
   int pos;
   int err;
@@ -1244,7 +1244,7 @@ BIF_RETTYPE unicode_characters_to_list_2(BIF_ALIST_2)
   uint8_t leftover[4]; /* used for temp buffer too, o
        therwise 3 bytes would have been enough */
   int num_leftovers = 0;
-  Uint cost_of_utf8_need;
+  size_t cost_of_utf8_need;
 
   if (BIF_ARG_2 == am_latin1) {
     latin1 = 1;
@@ -1292,10 +1292,10 @@ BIF_RETTYPE unicode_characters_to_list_2(BIF_ALIST_2)
  * a faster analyze and size count with this_ function.
  */
 static ERTS_INLINE int
-analyze_utf8(uint8_t *source, Uint size, uint8_t **err_pos, Uint *num_chars, int *left,
-             Sint *num_latin1_chars, Uint max_chars)
+analyze_utf8(uint8_t *source, size_t size, uint8_t **err_pos, size_t *num_chars, int *left,
+             ssize_t *num_latin1_chars, size_t max_chars)
 {
-  Uint latin1_count;
+  size_t latin1_count;
   int is_latin1;
   *err_pos = source;
 
@@ -1403,15 +1403,15 @@ analyze_utf8(uint8_t *source, Uint size, uint8_t **err_pos, Uint *num_chars, int
   return ERTS_UTF8_OK;
 }
 
-int erts_analyze_utf8(uint8_t *source, Uint size,
-                      uint8_t **err_pos, Uint *num_chars, int *left)
+int erts_analyze_utf8(uint8_t *source, size_t size,
+                      uint8_t **err_pos, size_t *num_chars, int *left)
 {
   return analyze_utf8(source, size, err_pos, num_chars, left, nullptr, 0);
 }
 
-int erts_analyze_utf8_x(uint8_t *source, Uint size,
-                        uint8_t **err_pos, Uint *num_chars, int *left,
-                        Sint *num_latin1_chars, Uint max_chars)
+int erts_analyze_utf8_x(uint8_t *source, size_t size,
+                        uint8_t **err_pos, size_t *num_chars, int *left,
+                        ssize_t *num_latin1_chars, size_t max_chars)
 {
   return analyze_utf8(source, size, err_pos, num_chars, left, num_latin1_chars, max_chars);
 }
@@ -1419,14 +1419,14 @@ int erts_analyze_utf8_x(uint8_t *source, Uint size,
 /*
  * No errors should be able to occur - no overlongs, no malformed, no nothing
  */
-static Eterm do_utf8_to_list(Process *p, Uint num, uint8_t *bytes, Uint sz,
-                             Uint left,
-                             Uint *num_built, Uint *num_eaten, Eterm tail)
+static Eterm do_utf8_to_list(Process *p, size_t num, uint8_t *bytes, size_t sz,
+                             size_t left,
+                             size_t *num_built, size_t *num_eaten, Eterm tail)
 {
   Eterm *hp;
   Eterm ret;
   uint8_t *source, *ssource;
-  Uint unipoint;
+  size_t unipoint;
 
   ASSERT(num > 0);
 
@@ -1447,22 +1447,22 @@ static Eterm do_utf8_to_list(Process *p, Uint num, uint8_t *bytes, Uint sz,
 
   while (--source >= bytes) {
     if (((*source) & ((uint8_t) 0x80)) == 0) {
-      unipoint = (Uint) * source;
+      unipoint = (size_t) * source;
     } else if (((*source) & ((uint8_t) 0xE0)) == 0xC0) {
       unipoint =
-        (((Uint)((*source) & ((uint8_t) 0x1F))) << 6) |
-        ((Uint)(source[1] & ((uint8_t) 0x3F)));
+        (((size_t)((*source) & ((uint8_t) 0x1F))) << 6) |
+        ((size_t)(source[1] & ((uint8_t) 0x3F)));
     } else if (((*source) & ((uint8_t) 0xF0)) == 0xE0) {
       unipoint =
-        (((Uint)((*source) & ((uint8_t) 0xF))) << 12) |
-        (((Uint)(source[1] & ((uint8_t) 0x3F))) << 6) |
-        ((Uint)(source[2] & ((uint8_t) 0x3F)));
+        (((size_t)((*source) & ((uint8_t) 0xF))) << 12) |
+        (((size_t)(source[1] & ((uint8_t) 0x3F))) << 6) |
+        ((size_t)(source[2] & ((uint8_t) 0x3F)));
     } else if (((*source) & ((uint8_t) 0xF8)) == 0xF0) {
       unipoint =
-        (((Uint)((*source) & ((uint8_t) 0x7))) << 18) |
-        (((Uint)(source[1] & ((uint8_t) 0x3F))) << 12) |
-        (((Uint)(source[2] & ((uint8_t) 0x3F))) << 6) |
-        ((Uint)(source[3] & ((uint8_t) 0x3F)));
+        (((size_t)((*source) & ((uint8_t) 0x7))) << 18) |
+        (((size_t)(source[1] & ((uint8_t) 0x3F))) << 12) |
+        (((size_t)(source[2] & ((uint8_t) 0x3F))) << 6) |
+        ((size_t)(source[3] & ((uint8_t) 0x3F)));
     } else {
       /* ignore 2#10XXXXXX */
       continue;
@@ -1480,13 +1480,13 @@ static Eterm do_utf8_to_list(Process *p, Uint num, uint8_t *bytes, Uint sz,
   return ret;
 }
 
-Eterm erts_utf8_to_list(Process *p, Uint num, uint8_t *bytes, Uint sz, Uint left,
-                        Uint *num_built, Uint *num_eaten, Eterm tail)
+Eterm erts_utf8_to_list(Process *p, size_t num, uint8_t *bytes, size_t sz, size_t left,
+                        size_t *num_built, size_t *num_eaten, Eterm tail)
 {
   return do_utf8_to_list(p, num, bytes, sz, left, num_built, num_eaten, tail);
 }
 
-static int is_candidate(Uint cp)
+static int is_candidate(size_t cp)
 {
   int index, pos;
 
@@ -1552,7 +1552,7 @@ static int translate(uint16_t *s, int slen, uint16_t *res)
   return TRANSLATE_MAYBE;
 }
 
-static void handle_first_norm(uint16_t *savepoints, int *numpointsp, Uint unipoint)
+static void handle_first_norm(uint16_t *savepoints, int *numpointsp, size_t unipoint)
 {
   /*erts_fprintf(stderr,"CP = %d, numpoints = %d\n",(int) unipoint,(int) *numpointsp);*/
   *numpointsp = 1;
@@ -1566,17 +1566,17 @@ static void cleanup_norm(Eterm **hpp, uint16_t *savepoints, int numpoints, Eterm
   uint16_t newpoint;
   Eterm ret = *retp;
 
-  ret = CONS(hp, make_small((Uint) savepoints[0]), ret);
+  ret = CONS(hp, make_small((size_t) savepoints[0]), ret);
   hp += 2;
 
   for (i = 1; i < numpoints;) {
     if (!is_candidate(savepoints[i]) ||
         ((res = translate(savepoints + i, numpoints - i, &newpoint)) <= 0)) {
-      ret = CONS(hp, make_small((Uint) savepoints[i]), ret);
+      ret = CONS(hp, make_small((size_t) savepoints[i]), ret);
       hp += 2;
       ++i;
     } else {
-      ret = CONS(hp, make_small((Uint) newpoint), ret);
+      ret = CONS(hp, make_small((size_t) newpoint), ret);
       hp += 2;
       i += res;
     }
@@ -1585,7 +1585,7 @@ static void cleanup_norm(Eterm **hpp, uint16_t *savepoints, int numpoints, Eterm
   *retp = ret;
 }
 
-static void handle_potential_norm(Eterm **hpp, uint16_t *savepoints, int *numpointsp, Uint unipoint,
+static void handle_potential_norm(Eterm **hpp, uint16_t *savepoints, int *numpointsp, size_t unipoint,
                                   Eterm *retp)
 {
   Eterm *hp = *hpp;
@@ -1600,17 +1600,17 @@ static void handle_potential_norm(Eterm **hpp, uint16_t *savepoints, int *numpoi
     res = translate(savepoints, numpoints, &newpoint);
 
     if (res == TRANSLATE_NO) {
-      ret = CONS(hp, make_small((Uint) savepoints[0]), ret);
+      ret = CONS(hp, make_small((size_t) savepoints[0]), ret);
       hp += 2;
 
       for (i = 1; i < numpoints;) {
         if (!is_candidate(savepoints[i]) ||
             ((res = translate(savepoints + i, numpoints - i, &newpoint)) == 0)) {
-          ret = CONS(hp, make_small((Uint) savepoints[i]), ret);
+          ret = CONS(hp, make_small((size_t) savepoints[i]), ret);
           hp += 2;
           ++i;
         } else if (res > 0) {
-          ret = CONS(hp, make_small((Uint) newpoint), ret);
+          ret = CONS(hp, make_small((size_t) newpoint), ret);
           hp += 2;
           i += res;
         } else { /* res < 0 */
@@ -1631,22 +1631,22 @@ breakaway:
       ;
     } else if (res > 0) {
       numpoints = 0;
-      ret = CONS(hp, make_small((Uint) newpoint), ret);
+      ret = CONS(hp, make_small((size_t) newpoint), ret);
       hp += 2;
     } /* < 0 means go on */
   } else {
     /* Unconditional rollup, this_ character is larger than 16 bit */
-    ret = CONS(hp, make_small((Uint) savepoints[0]), ret);
+    ret = CONS(hp, make_small((size_t) savepoints[0]), ret);
     hp += 2;
 
     for (i = 1; i < numpoints;) {
       if (!is_candidate(savepoints[i]) ||
           ((res = translate(savepoints + i, numpoints - i, &newpoint)) <= 0)) {
-        ret = CONS(hp, make_small((Uint) savepoints[i]), ret);
+        ret = CONS(hp, make_small((size_t) savepoints[i]), ret);
         hp += 2;
         ++i;
       } else {
-        ret = CONS(hp, make_small((Uint) newpoint), ret);
+        ret = CONS(hp, make_small((size_t) newpoint), ret);
         hp += 2;
         i += res;
       }
@@ -1662,12 +1662,12 @@ breakaway:
   *retp = ret;
 }
 
-static Eterm do_utf8_to_list_normalize(Process *p, Uint num, uint8_t *bytes, Uint sz)
+static Eterm do_utf8_to_list_normalize(Process *p, size_t num, uint8_t *bytes, size_t sz)
 {
   Eterm *hp, *hp_end;
   Eterm ret;
   uint8_t *source;
-  Uint unipoint;
+  size_t unipoint;
   uint16_t savepoints[4];
   int numpoints = 0;
 
@@ -1684,22 +1684,22 @@ static Eterm do_utf8_to_list_normalize(Process *p, Uint num, uint8_t *bytes, Uin
 
   while (--source >= bytes) {
     if (((*source) & ((uint8_t) 0x80)) == 0) {
-      unipoint = (Uint) * source;
+      unipoint = (size_t) * source;
     } else if (((*source) & ((uint8_t) 0xE0)) == 0xC0) {
       unipoint =
-        (((Uint)((*source) & ((uint8_t) 0x1F))) << 6) |
-        ((Uint)(source[1] & ((uint8_t) 0x3F)));
+        (((size_t)((*source) & ((uint8_t) 0x1F))) << 6) |
+        ((size_t)(source[1] & ((uint8_t) 0x3F)));
     } else if (((*source) & ((uint8_t) 0xF0)) == 0xE0) {
       unipoint =
-        (((Uint)((*source) & ((uint8_t) 0xF))) << 12) |
-        (((Uint)(source[1] & ((uint8_t) 0x3F))) << 6) |
-        ((Uint)(source[2] & ((uint8_t) 0x3F)));
+        (((size_t)((*source) & ((uint8_t) 0xF))) << 12) |
+        (((size_t)(source[1] & ((uint8_t) 0x3F))) << 6) |
+        ((size_t)(source[2] & ((uint8_t) 0x3F)));
     } else if (((*source) & ((uint8_t) 0xF8)) == 0xF0) {
       unipoint =
-        (((Uint)((*source) & ((uint8_t) 0x7))) << 18) |
-        (((Uint)(source[1] & ((uint8_t) 0x3F))) << 12) |
-        (((Uint)(source[2] & ((uint8_t) 0x3F))) << 6) |
-        ((Uint)(source[3] & ((uint8_t) 0x3F)));
+        (((size_t)((*source) & ((uint8_t) 0x7))) << 18) |
+        (((size_t)(source[1] & ((uint8_t) 0x3F))) << 12) |
+        (((size_t)(source[2] & ((uint8_t) 0x3F))) << 6) |
+        ((size_t)(source[3] & ((uint8_t) 0x3F)));
     } else {
       /* ignore 2#10XXXXXX */
       continue;
@@ -1740,14 +1740,14 @@ static Eterm do_utf8_to_list_normalize(Process *p, Uint num, uint8_t *bytes, Uin
 static BIF_RETTYPE finalize_list_to_list(Process *p,
     uint8_t *bytes,
     Eterm rest,
-    Uint num_processed_bytes,
-    Uint num_bytes_to_process,
-    Uint num_resulting_chars,
+    size_t num_processed_bytes,
+    size_t num_bytes_to_process,
+    size_t num_resulting_chars,
     int state, int left,
     Eterm tail)
 {
-  Uint num_built; /* characters */
-  Uint num_eaten; /* bytes */
+  size_t num_built; /* characters */
+  size_t num_eaten; /* bytes */
   Eterm *hp;
   Eterm converted, ret;
 
@@ -1831,16 +1831,16 @@ static BIF_RETTYPE characters_to_list_trap_2(BIF_ALIST_3)
  */
 static BIF_RETTYPE do_bif_utf8_to_list(Process *p,
                                        Eterm orig_bin,
-                                       Uint num_processed_bytes,
-                                       Uint num_bytes_to_process,
-                                       Uint num_resulting_chars,
+                                       size_t num_processed_bytes,
+                                       size_t num_bytes_to_process,
+                                       size_t num_resulting_chars,
                                        int state,
                                        Eterm tail)
 {
   int left;
-  Uint bitoffs;
-  Uint bitsize;
-  Uint size;
+  size_t bitoffs;
+  size_t bitsize;
+  size_t size;
   uint8_t *bytes;
   Eterm converted = NIL;
   Eterm rest = NIL;
@@ -1848,11 +1848,11 @@ static BIF_RETTYPE do_bif_utf8_to_list(Process *p,
   Eterm ret;
   uint8_t *temp_alloc = nullptr;
   uint8_t *endpos;
-  Uint numchar;
+  size_t numchar;
 
-  Uint b_sz; /* size of the non analyzed tail */
-  Uint num_built; /* characters */
-  Uint num_eaten; /* bytes */
+  size_t b_sz; /* size of the non analyzed tail */
+  size_t num_built; /* characters */
+  size_t num_eaten; /* bytes */
 
   ERTS_GET_BINARY_BYTES(orig_bin, bytes, bitoffs, bitsize);
 
@@ -1933,7 +1933,7 @@ static BIF_RETTYPE do_bif_utf8_to_list(Process *p,
   if (b_sz) {
     ErlSubBin *sb;
     Eterm orig;
-    Uint offset;
+    size_t offset;
     ASSERT(state != ERTS_UTF8_OK);
     hp = HAlloc(p, ERL_SUB_BIN_SIZE);
     sb = (ErlSubBin *) hp;
@@ -1978,8 +1978,8 @@ error_return:
 
 static BIF_RETTYPE characters_to_list_trap_3(BIF_ALIST_3)
 {
-  Uint num_bytes_to_process;
-  Uint num_resulting_chars;
+  size_t num_bytes_to_process;
+  size_t num_resulting_chars;
 
   term_to_Uint(BIF_ARG_2, &num_bytes_to_process); /* The number of already
                    analyzed and accepted
@@ -2007,9 +2007,9 @@ static BIF_RETTYPE characters_to_list_trap_3(BIF_ALIST_3)
  */
 static BIF_RETTYPE characters_to_list_trap_4(BIF_ALIST_1)
 {
-  Uint num_processed_bytes;
-  Uint num_bytes_to_process;
-  Uint num_resulting_chars;
+  size_t num_processed_bytes;
+  size_t num_bytes_to_process;
+  size_t num_resulting_chars;
   Eterm orig_bin, tail;
   int last_state;
   Eterm *tplp = tuple_val(BIF_ARG_1);
@@ -2097,7 +2097,7 @@ binary_to_atom(Process *proc, Eterm bin, Eterm enc, int must_exist)
 {
   uint8_t *bytes;
   uint8_t *temp_alloc = nullptr;
-  Uint bin_size;
+  size_t bin_size;
 
   if ((bytes = erts_get_aligned_binary_bytes(bin, &temp_alloc)) == 0) {
     BIF_ERROR(proc, BADARG);
@@ -2134,9 +2134,9 @@ system_limit:
     }
   } else if (enc == am_utf8 || enc == am_unicode) {
     Eterm res;
-    Uint num_chars = 0;
+    size_t num_chars = 0;
     const uint8_t *p = bytes;
-    Uint left = bin_size;
+    size_t left = bin_size;
 
     while (left) {
       if (++num_chars > MAX_ATOM_CHARACTERS) {
@@ -2208,7 +2208,7 @@ BIF_RETTYPE binary_to_existing_atom_2(BIF_ALIST_2)
 
 char *erts_convert_filename_to_native(Eterm name, char *statbuf, size_t statbuf_size,
                                       ErtsAlcType_t alloc_type, int allow_empty,
-                                      int allow_atom, Sint *used)
+                                      int allow_atom, ssize_t *used)
 {
   int encoding = erts_get_native_filename_encoding();
   return erts_convert_filename_to_encoding(name, statbuf, statbuf_size, alloc_type,
@@ -2218,15 +2218,15 @@ char *erts_convert_filename_to_native(Eterm name, char *statbuf, size_t statbuf_
 
 char *erts_convert_filename_to_encoding(Eterm name, char *statbuf, size_t statbuf_size,
                                         ErtsAlcType_t alloc_type, int allow_empty,
-                                        int allow_atom, int encoding, Sint *used,
-                                        Uint extra)
+                                        int allow_atom, int encoding, ssize_t *used,
+                                        size_t extra)
 {
   char *name_buf = nullptr;
 
   if ((allow_atom && is_atom(name)) ||
       is_list(name) ||
       (allow_empty && is_nil(name))) {
-    Sint need;
+    ssize_t need;
 
     if ((need = erts_native_filename_need(name, encoding)) < 0) {
       return nullptr;
@@ -2240,7 +2240,7 @@ char *erts_convert_filename_to_encoding(Eterm name, char *statbuf, size_t statbu
     }
 
     if (used) {
-      *used = (Sint) need;
+      *used = (ssize_t) need;
     }
 
     if (need + extra > statbuf_size) {
@@ -2258,7 +2258,7 @@ char *erts_convert_filename_to_encoding(Eterm name, char *statbuf, size_t statbu
   } else if (is_binary(name)) {
     uint8_t *temp_alloc = nullptr;
     uint8_t *bytes;
-    Uint size;
+    size_t size;
 
     size = binary_size(name);
     bytes = erts_get_aligned_binary_bytes(name, &temp_alloc);
@@ -2266,7 +2266,7 @@ char *erts_convert_filename_to_encoding(Eterm name, char *statbuf, size_t statbu
     if (encoding != ERL_FILENAME_WIN_WCHAR) {
       /*Add 0 termination only*/
       if (used) {
-        *used = (Sint) size + 1;
+        *used = (ssize_t) size + 1;
       }
 
       if (size + 1 + extra > statbuf_size) {
@@ -2291,22 +2291,22 @@ char *erts_convert_filename_to_encoding(Eterm name, char *statbuf, size_t statbu
   return name_buf;
 }
 
-char *erts_convert_filename_to_wchar(uint8_t *bytes, Uint size,
+char *erts_convert_filename_to_wchar(uint8_t *bytes, size_t size,
                                      char *statbuf, size_t statbuf_size,
-                                     ErtsAlcType_t alloc_type, Sint *used,
-                                     Uint extra_wchars)
+                                     ErtsAlcType_t alloc_type, ssize_t *used,
+                                     size_t extra_wchars)
 {
   uint8_t *err_pos;
-  Uint num_chars;
+  size_t num_chars;
   char *name_buf = nullptr;
-  Sint need;
+  ssize_t need;
   char *p;
 
   if (erts_analyze_utf8(bytes, size, &err_pos, &num_chars, nullptr) != ERTS_UTF8_OK ||
       erts_get_user_requested_filename_encoding() ==  ERL_FILENAME_LATIN1) {
 
     /* What to do now? Maybe latin1, so just take byte for byte instead */
-    need = (Sint)(size + extra_wchars + 1) * 2;
+    need = (ssize_t)(size + extra_wchars + 1) * 2;
 
     if (need > statbuf_size) {
       name_buf = (char *) erts_alloc(alloc_type, need);
@@ -2321,7 +2321,7 @@ char *erts_convert_filename_to_wchar(uint8_t *bytes, Uint size,
       *p++ = 0;
     }
   } else { /* WIN_WCHAR and valid UTF8 */
-    need = (Sint)(num_chars + extra_wchars + 1) * 2;
+    need = (ssize_t)(num_chars + extra_wchars + 1) * 2;
 
     if (need > statbuf_size) {
       name_buf = (char *) erts_alloc(alloc_type, need);
@@ -2356,11 +2356,11 @@ static int filename_len_16bit(uint8_t *str)
 }
 Eterm erts_convert_native_to_filename(Process *p, uint8_t *bytes)
 {
-  Uint size, num_chars;
+  size_t size, num_chars;
   Eterm *hp;
   uint8_t *err_pos;
-  Uint num_built; /* characters */
-  Uint num_eaten; /* bytes */
+  size_t num_built; /* characters */
+  size_t num_eaten; /* bytes */
   Eterm ret;
   int mac = 0;
 
@@ -2399,7 +2399,7 @@ Eterm erts_convert_native_to_filename(Process *p, uint8_t *bytes)
     if ((size % 2) != 0) { /* Panic fixup to avoid crashing the emulator */
       size--;
       hp = HAlloc(p, size + 2);
-      ret = CONS(hp, make_small((Uint) bytes[size]), NIL);
+      ret = CONS(hp, make_small((size_t) bytes[size]), NIL);
       hp += 2;
     } else {
       hp = HAlloc(p, size);
@@ -2409,8 +2409,8 @@ Eterm erts_convert_native_to_filename(Process *p, uint8_t *bytes)
     bytes += size - 1;
 
     while (size > 0) {
-      Uint x = ((Uint) * bytes--) << 8;
-      x |= ((Uint) * bytes--);
+      size_t x = ((size_t) * bytes--) << 8;
+      x |= ((size_t) * bytes--);
       size -= 2;
       ret = CONS(hp, make_small(x), ret);
       hp += 2;
@@ -2429,12 +2429,12 @@ noconvert:
 }
 
 
-Sint erts_native_filename_need(Eterm ioterm, int encoding)
+ssize_t erts_native_filename_need(Eterm ioterm, int encoding)
 {
   Eterm *objp;
   Eterm obj;
   DECLARE_ESTACK(stack);
-  Sint need = 0;
+  ssize_t need = 0;
 
   if (is_atom(ioterm)) {
     Atom *ap;
@@ -2488,7 +2488,7 @@ Sint erts_native_filename_need(Eterm ioterm, int encoding)
 
   if (!is_list(ioterm)) {
     DESTROY_ESTACK(stack);
-    return (Sint) - 1;
+    return (ssize_t) - 1;
   }
 
   /* OK a list, needs to be processed in order, handling each flat list-level
@@ -2513,13 +2513,13 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
                until sublist or list end is encountered */
         if (is_small(obj)) { /* Always small */
           for (;;) {
-            Uint x = unsigned_val(obj);
+            size_t x = unsigned_val(obj);
 
             switch (encoding) {
             case ERL_FILENAME_LATIN1:
               if (x > 255) {
                 DESTROY_ESTACK(stack);
-                return ((Sint) - 1);
+                return ((ssize_t) - 1);
               }
 
               need += 1;
@@ -2535,7 +2535,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
                 if (x >= 0xD800 && x <= 0xDFFF) {
                   /* Invalid unicode range */
                   DESTROY_ESTACK(stack);
-                  return ((Sint) - 1);
+                  return ((ssize_t) - 1);
                 }
 
                 need += 3;
@@ -2543,7 +2543,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
                 need += 4;
               } else {
                 DESTROY_ESTACK(stack);
-                return ((Sint) - 1);
+                return ((ssize_t) - 1);
               }
 
               break;
@@ -2556,7 +2556,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 
             default:
               DESTROY_ESTACK(stack);
-              return ((Sint) - 1);
+              return ((ssize_t) - 1);
             }
 
             /* everything else will give badarg later
@@ -2591,7 +2591,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
           goto L_Again;
         } else {
           DESTROY_ESTACK(stack);
-          return ((Sint) - 1);
+          return ((ssize_t) - 1);
         }
 
         if (is_nil(ioterm) || !is_list(ioterm)) {
@@ -2603,7 +2603,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
     if (!is_list(ioterm) && !is_nil(ioterm)) {
       /* inproper list end */
       DESTROY_ESTACK(stack);
-      return ((Sint) - 1);
+      return ((ssize_t) - 1);
     }
   } /* while  not estack empty */
 
@@ -2697,7 +2697,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
                until sublist or list end is encountered */
         if (is_small(obj)) { /* Always small */
           for (;;) {
-            Uint x = unsigned_val(obj);
+            size_t x = unsigned_val(obj);
 
             switch (encoding) {
             case ERL_FILENAME_LATIN1:
@@ -2794,29 +2794,29 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 }
 void erts_copy_utf8_to_utf16_little(uint8_t *target, uint8_t *bytes, int num_chars)
 {
-  Uint unipoint;
+  size_t unipoint;
 
   while (num_chars--) {
     if (((*bytes) & ((uint8_t) 0x80)) == 0) {
-      unipoint = (Uint) * bytes;
+      unipoint = (size_t) * bytes;
       ++bytes;
     } else if (((*bytes) & ((uint8_t) 0xE0)) == 0xC0) {
       unipoint =
-        (((Uint)((*bytes) & ((uint8_t) 0x1F))) << 6) |
-        ((Uint)(bytes[1] & ((uint8_t) 0x3F)));
+        (((size_t)((*bytes) & ((uint8_t) 0x1F))) << 6) |
+        ((size_t)(bytes[1] & ((uint8_t) 0x3F)));
       bytes += 2;
     } else if (((*bytes) & ((uint8_t) 0xF0)) == 0xE0) {
       unipoint =
-        (((Uint)((*bytes) & ((uint8_t) 0xF))) << 12) |
-        (((Uint)(bytes[1] & ((uint8_t) 0x3F))) << 6) |
-        ((Uint)(bytes[2] & ((uint8_t) 0x3F)));
+        (((size_t)((*bytes) & ((uint8_t) 0xF))) << 12) |
+        (((size_t)(bytes[1] & ((uint8_t) 0x3F))) << 6) |
+        ((size_t)(bytes[2] & ((uint8_t) 0x3F)));
       bytes += 3;
     } else if (((*bytes) & ((uint8_t) 0xF8)) == 0xF0) {
       unipoint =
-        (((Uint)((*bytes) & ((uint8_t) 0x7))) << 18) |
-        (((Uint)(bytes[1] & ((uint8_t) 0x3F))) << 12) |
-        (((Uint)(bytes[2] & ((uint8_t) 0x3F))) << 6) |
-        ((Uint)(bytes[3] & ((uint8_t) 0x3F)));
+        (((size_t)((*bytes) & ((uint8_t) 0x7))) << 18) |
+        (((size_t)(bytes[1] & ((uint8_t) 0x3F))) << 12) |
+        (((size_t)(bytes[2] & ((uint8_t) 0x3F))) << 6) |
+        ((size_t)(bytes[3] & ((uint8_t) 0x3F)));
       bytes += 4;
     } else {
       erl::exit(1, "Internal unicode error in prim_file:internal_name2native/1");
@@ -2835,7 +2835,7 @@ void erts_copy_utf8_to_utf16_little(uint8_t *target, uint8_t *bytes, int num_cha
 BIF_RETTYPE prim_file_internal_name2native_1(BIF_ALIST_1)
 {
   int encoding = erts_get_native_filename_encoding();
-  Sint need;
+  ssize_t need;
   Eterm bin_term;
   uint8_t *bin_p;
 
@@ -2851,7 +2851,7 @@ BIF_RETTYPE prim_file_internal_name2native_1(BIF_ALIST_1)
     uint8_t *temp_alloc = nullptr;
     uint8_t *bytes;
     uint8_t *err_pos;
-    Uint size, num_chars;
+    size_t size, num_chars;
     /* Uninterpreted encoding except if windows widechar, in case we convert from
        utf8 to win_wchar */
     size = binary_size(BIF_ARG_1);
@@ -2924,16 +2924,16 @@ BIF_RETTYPE prim_file_internal_name2native_1(BIF_ALIST_1)
 BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
 {
   Eterm real_bin;
-  Uint offset;
-  Uint size, num_chars;
-  Uint bitsize;
-  Uint bitoffs;
+  size_t offset;
+  size_t size, num_chars;
+  size_t bitsize;
+  size_t bitoffs;
   Eterm *hp;
   uint8_t *temp_alloc = nullptr;
   uint8_t *bytes;
   uint8_t *err_pos;
-  Uint num_built; /* characters */
-  Uint num_eaten; /* bytes */
+  size_t num_built; /* characters */
+  size_t num_eaten; /* bytes */
   Eterm ret;
   int mac = 0;
 
@@ -3004,7 +3004,7 @@ BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
     if ((size % 2) != 0) { /* Panic fixup to avoid crashing the emulator */
       size--;
       hp = HAlloc(BIF_P, size + 2);
-      ret = CONS(hp, make_small((Uint) bytes[size]), NIL);
+      ret = CONS(hp, make_small((size_t) bytes[size]), NIL);
       hp += 2;
     } else {
       hp = HAlloc(BIF_P, size);
@@ -3014,8 +3014,8 @@ BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
     bytes += size - 1;
 
     while (size > 0) {
-      Uint x = ((Uint) * bytes--) << 8;
-      x |= ((Uint) * bytes--);
+      size_t x = ((size_t) * bytes--) << 8;
+      x |= ((size_t) * bytes--);
       size -= 2;
       ret = CONS(hp, make_small(x), ret);
       hp += 2;
@@ -3034,10 +3034,10 @@ BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
 BIF_RETTYPE prim_file_internal_normalize_utf8_1(BIF_ALIST_1)
 {
   ERTS_DECLARE_DUMMY(Eterm real_bin);
-  ERTS_DECLARE_DUMMY(Uint offset);
-  Uint size, num_chars;
-  Uint bitsize;
-  ERTS_DECLARE_DUMMY(Uint bitoffs);
+  ERTS_DECLARE_DUMMY(size_t offset);
+  size_t size, num_chars;
+  size_t bitsize;
+  ERTS_DECLARE_DUMMY(size_t bitoffs);
   Eterm ret;
   uint8_t *temp_alloc = nullptr;
   uint8_t *bytes;
@@ -3073,11 +3073,11 @@ BIF_RETTYPE prim_file_internal_normalize_utf8_1(BIF_ALIST_1)
 BIF_RETTYPE prim_file_is_translatable_1(BIF_ALIST_1)
 {
   ERTS_DECLARE_DUMMY(Eterm real_bin);
-  ERTS_DECLARE_DUMMY(Uint offset);
-  Uint size;
-  Uint num_chars;
-  Uint bitsize;
-  ERTS_DECLARE_DUMMY(Uint bitoffs);
+  ERTS_DECLARE_DUMMY(size_t offset);
+  size_t size;
+  size_t num_chars;
+  size_t bitsize;
+  ERTS_DECLARE_DUMMY(size_t bitoffs);
   uint8_t *temp_alloc = nullptr;
   uint8_t *bytes;
   uint8_t *err_pos;

@@ -38,8 +38,8 @@ void erts_mtrace_install_wrapper_functions(void);
 void erts_mtrace_stop(void);
 void erts_mtrace_exit(uint32_t exit_value);
 
-void erts_mtrace_crr_alloc(void *, ErtsAlcType_t, ErtsAlcType_t, Uint);
-void erts_mtrace_crr_realloc(void *, ErtsAlcType_t, ErtsAlcType_t, void *, Uint);
+void erts_mtrace_crr_alloc(void *, ErtsAlcType_t, ErtsAlcType_t, size_t);
+void erts_mtrace_crr_realloc(void *, ErtsAlcType_t, ErtsAlcType_t, void *, size_t);
 void erts_mtrace_crr_free(ErtsAlcType_t, ErtsAlcType_t, void *);
 
 

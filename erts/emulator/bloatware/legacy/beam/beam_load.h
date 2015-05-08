@@ -58,7 +58,7 @@ extern BeamInstr *em_call_nif;
  */
 
 /* Total code size in bytes */
-extern Uint erts_total_code_size;
+extern size_t erts_total_code_size;
 /*
  * Index into start of code chunks which contains additional information
  * about the loaded module.

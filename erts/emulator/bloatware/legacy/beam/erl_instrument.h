@@ -27,7 +27,7 @@
 extern int erts_instr_memory_map;
 extern int erts_instr_stat;
 
-Uint  erts_instr_init(int stat, int map_stat);
+size_t  erts_instr_init(int stat, int map_stat);
 int   erts_instr_dump_memory_map_to_fd(int fd);
 int   erts_instr_dump_memory_map(const char *name);
 Eterm erts_instr_get_memory_map(Process *process);
@@ -35,7 +35,7 @@ int   erts_instr_dump_stat_to_fd(int fd, int begin_max_period);
 int   erts_instr_dump_stat(const char *name, int begin_max_period);
 Eterm erts_instr_get_stat(Process *proc, Eterm what, int begin_max_period);
 Eterm erts_instr_get_type_info(Process *proc);
-Uint  erts_instr_get_total(void);
-Uint  erts_instr_get_max_total(void);
+size_t  erts_instr_get_total(void);
+size_t  erts_instr_get_max_total(void);
 
 #endif

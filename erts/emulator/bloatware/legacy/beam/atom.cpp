@@ -61,8 +61,8 @@ typedef struct _atom_text {
 static AtomText *text_list; /* List of text buffers */
 static uint8_t *atom_text_pos;
 static uint8_t *atom_text_end;
-static Uint reserved_atom_space;  /* Total amount of atom text space */
-static Uint atom_space;   /* Amount of atom text space used */
+static size_t reserved_atom_space;  /* Total amount of atom text space */
+static size_t atom_space;   /* Amount of atom text space used */
 
 /*
  * Print info about atom tables
@@ -261,7 +261,7 @@ erts_atom_put(const uint8_t *name, int len, ErtsAtomEncoding enc, int trunc)
   uint8_t utf8_copy[MAX_ATOM_SZ_FROM_LATIN1];
   const uint8_t *text = name;
   int tlen = len;
-  Sint no_latin1_chars;
+  ssize_t no_latin1_chars;
   Atom a;
   int aix;
 
@@ -334,10 +334,10 @@ erts_atom_put(const uint8_t *name, int len, ErtsAtomEncoding enc, int trunc)
   if (enc == ERTS_ATOM_ENC_UTF8) {
     /* Need to verify encoding and length */
     uint8_t *err_pos;
-    Uint no_chars;
+    size_t no_chars;
 
     switch (erts_analyze_utf8_x((uint8_t *) text,
-                                (Uint) tlen,
+                                (size_t) tlen,
                                 &err_pos,
                                 &no_chars, nullptr,
                                 &no_latin1_chars,
@@ -450,7 +450,7 @@ erts_atom_get(const char *name, int len, Eterm *ap, ErtsAtomEncoding enc)
 }
 
 void
-erts_atom_get_text_space_sizes(Uint *reserved, Uint *used)
+erts_atom_get_text_space_sizes(size_t *reserved, size_t *used)
 {
 #ifdef ERTS_SMP
   int lock = !ERTS_IS_CRASH_DUMPING;

@@ -26,14 +26,14 @@
 
 typedef struct map_s {
   Eterm thing_word;
-  Uint  size;
+  size_t  size;
   Eterm keys;      /* tuple */
 } map_t;
 /* map node
  *
  * -----------
  * Eterm   THING
- * Uint    size
+ * size_t    size
  * Eterm   Keys -> {K1, K2, K3, ..., Kn} where n = size
  * ----
  * Eterm   V1

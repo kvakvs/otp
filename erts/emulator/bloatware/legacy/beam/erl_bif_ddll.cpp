@@ -28,6 +28,7 @@
  * cleenup at process exit.
  */
 
+#include "bw_misc_utils.h"
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -61,8 +62,8 @@
 typedef struct {
   Eterm pid;
   Process *proc;
-  Uint status;
-  Uint count;
+  size_t status;
+  size_t count;
 } ProcEntryInfo;
 
 /*
@@ -73,7 +74,7 @@ static erts_driver_t *lookup_driver(const char *name);
 static Eterm mkatom(const char *str);
 static void add_proc_loaded(DE_Handle *dh, Process *proc);
 static void add_proc_loaded_deref(DE_Handle *dh, Process *proc);
-static void set_driver_reloading(DE_Handle *dh, Process *proc, char *path, char *name, Uint flags);
+static void set_driver_reloading(DE_Handle *dh, Process *proc, char *path, char *name, size_t flags);
 static int load_driver_entry(DE_Handle **dhp, char *path, char *name);
 static int do_unload_driver_entry(DE_Handle *dh, Eterm *save_name);
 static int do_load_driver_entry(DE_Handle *dh, char *path, char *name);
@@ -81,24 +82,24 @@ static int do_load_driver_entry(DE_Handle *dh, char *path, char *name);
 static void unload_driver_entry(DE_Handle *dh);
 #endif
 static int reload_driver_entry(DE_Handle *dh);
-static int build_proc_info(DE_Handle *dh, ProcEntryInfo **out_pei, Uint filter);
+static int build_proc_info(DE_Handle *dh, ProcEntryInfo **out_pei, size_t filter);
 static int is_last_user(DE_Handle *dh, Process *proc);
-static DE_ProcEntry *find_proc_entry(DE_Handle *dh, Process *proc, Uint status);
+static DE_ProcEntry *find_proc_entry(DE_Handle *dh, Process *proc, size_t status);
 static void remove_proc_entry(DE_Handle *dh, DE_ProcEntry *pe);
-static int num_procs(DE_Handle *dh, Uint status);
-/*static int num_entries(DE_Handle *dh, Process *proc, Uint status);*/
+static int num_procs(DE_Handle *dh, size_t status);
+/*static int num_entries(DE_Handle *dh, Process *proc, size_t status);*/
 static void notify_proc(Process *proc, Eterm ref, Eterm driver_name,
                         Eterm type, Eterm tag, int errcode);
-static void notify_all(DE_Handle *dh, const char *name, Uint awaiting, Eterm type, Eterm tag);
+static void notify_all(DE_Handle *dh, const char *name, size_t awaiting, Eterm type, Eterm tag);
 static int load_error_need(int code);
 static Eterm build_load_error_hp(Eterm *hp, int code);
 static Eterm build_load_error(Process *p, int code);
 static int errdesc_to_code(Eterm errdesc, int *code /* out */);
-static Eterm add_monitor(Process *p, DE_Handle *dh, Uint status);
+static Eterm add_monitor(Process *p, DE_Handle *dh, size_t status);
 static Eterm notify_when_loaded(Process *p, Eterm name_term, char *name,
                                 ErtsProcLocks plocks);
 static Eterm notify_when_unloaded(Process *p, Eterm name_term, char *name,
-                                  ErtsProcLocks plocks, Uint flag);
+                                  ErtsProcLocks plocks, size_t flag);
 static void first_ddll_reference(DE_Handle *dh);
 static void dereference_all_processes(DE_Handle *dh);
 static void restore_process_references(DE_Handle *dh);
@@ -188,7 +189,7 @@ BIF_RETTYPE erl_ddll_try_load_3(BIF_ALIST_3)
   Eterm name_term = BIF_ARG_2;
   Eterm options = BIF_ARG_3;
   char *path = nullptr;
-  Sint path_len;
+  ssize_t path_len;
   char *name = nullptr;
   DE_Handle *dh;
   erts_driver_t *drv;
@@ -200,7 +201,7 @@ BIF_RETTYPE erl_ddll_try_load_3(BIF_ALIST_3)
   int monitor = 0;
   int reload = 0;
   Eterm l;
-  Uint flags = 0;
+  size_t flags = 0;
   int kill_ports = 0;
   int do_build_load_error = 0;
   int build_this_load_error = 0;
@@ -776,7 +777,7 @@ BIF_RETTYPE erl_ddll_loaded_drivers_0(BIF_ALIST_0)
 
   for (drv = driver_list; drv; drv = drv->next) {
     Eterm l;
-    l = buf_to_intlist(&hp, drv->name, sys_strlen(drv->name), NIL);
+    l = util::buf_to_intlist(&hp, drv->name, sys_strlen(drv->name), NIL);
     res = CONS(hp, l, res);
     hp += 2;
   }
@@ -806,7 +807,7 @@ BIF_RETTYPE erl_ddll_info_2(BIF_ALIST_2)
   int num_pei;
   Eterm *hp;
   int i;
-  Uint filter;
+  size_t filter;
 #if DDLL_SMP
   int have_lock = 0;
 #endif
@@ -837,7 +838,7 @@ BIF_RETTYPE erl_ddll_info_2(BIF_ALIST_2)
     if (drv->handle == nullptr) {
       res = am_linked_in_driver;
     } else {
-      Uint start_flags = drv->handle->flags & ERL_FL_CONSISTENT_MASK;
+      size_t start_flags = drv->handle->flags & ERL_FL_CONSISTENT_MASK;
 
       /* Cheating, only one flag for now... */
       if (start_flags & ERL_DE_FL_KILL_PORTS) {
@@ -1022,7 +1023,7 @@ BIF_RETTYPE erl_ddll_format_error_int_1(BIF_ALIST_1)
 
   len = sys_strlen(errstring);
   hp = HAlloc(p, 2 * len);
-  ret = buf_to_intlist(&hp, errstring, len, NIL);
+  ret = util::buf_to_intlist(&hp, errstring, len, NIL);
   BIF_RET(ret);
 error:
   BIF_ERROR(p, BADARG);
@@ -1492,7 +1493,7 @@ immediate:
 }
 
 static Eterm notify_when_unloaded(Process *p, Eterm name_term, char *name, ErtsProcLocks plocks,
-                                  Uint flag)
+                                  size_t flag)
 {
   Eterm r = NIL;
   Eterm immediate_tag = NIL;
@@ -1560,7 +1561,7 @@ static int is_last_user(DE_Handle *dh, Process *proc)
   return found;
 }
 
-static DE_ProcEntry *find_proc_entry(DE_Handle *dh, Process *proc, Uint status)
+static DE_ProcEntry *find_proc_entry(DE_Handle *dh, Process *proc, size_t status)
 {
   DE_ProcEntry *p = dh->procs;
 
@@ -1590,7 +1591,7 @@ static void remove_proc_entry(DE_Handle *dh, DE_ProcEntry *pe)
   }
 }
 
-static int num_procs(DE_Handle *dh, Uint status)
+static int num_procs(DE_Handle *dh, size_t status)
 {
   DE_ProcEntry *p = dh->procs;
   int i = 0;
@@ -1608,7 +1609,7 @@ static int num_procs(DE_Handle *dh, Uint status)
   return i;
 }
 /*
-static int num_entries(DE_Handle *dh, Process *proc, Uint status) {
+static int num_entries(DE_Handle *dh, Process *proc, size_t status) {
     DE_ProcEntry *p = dh->procs;
     int i = 0;
 
@@ -1654,7 +1655,7 @@ static Eterm copy_ref(Eterm ref, Eterm *hp)
 }
 
 static void add_proc_waiting(DE_Handle *dh, Process *proc,
-                             Uint status, Eterm ref)
+                             size_t status, Eterm ref)
 {
   DE_ProcEntry *p;
   assert_drv_list_rwlocked();
@@ -1667,7 +1668,7 @@ static void add_proc_waiting(DE_Handle *dh, Process *proc,
   dh->procs = p;
 }
 
-static Eterm add_monitor(Process *p, DE_Handle *dh, Uint status)
+static Eterm add_monitor(Process *p, DE_Handle *dh, size_t status)
 {
   Eterm r;
 
@@ -1678,7 +1679,7 @@ static Eterm add_monitor(Process *p, DE_Handle *dh, Uint status)
 }
 
 
-static void set_driver_reloading(DE_Handle *dh, Process *proc, char *path, char *name, Uint flags)
+static void set_driver_reloading(DE_Handle *dh, Process *proc, char *path, char *name, size_t flags)
 {
   DE_ProcEntry *p;
 
@@ -1855,7 +1856,7 @@ static int reload_driver_entry(DE_Handle *dh)
   char *path = dh->reload_full_path;
   char *name = dh->reload_driver_name;
   int loadres;
-  Uint flags = dh->reload_flags;
+  size_t flags = dh->reload_flags;
 
   assert_drv_list_rwlocked();
 
@@ -1928,7 +1929,7 @@ static void notify_proc(Process *proc, Eterm ref, Eterm driver_name, Eterm type,
   ERTS_SMP_CHK_NO_PROC_LOCKS;
 }
 
-static void notify_all(DE_Handle *dh, const char *name, Uint awaiting, Eterm type, Eterm tag)
+static void notify_all(DE_Handle *dh, const char *name, size_t awaiting, Eterm type, Eterm tag)
 {
   DE_ProcEntry **p;
 
@@ -2095,7 +2096,7 @@ error:
   return nullptr;
 }
 
-static int build_proc_info(DE_Handle *dh, ProcEntryInfo **out_pei, Uint filter)
+static int build_proc_info(DE_Handle *dh, ProcEntryInfo **out_pei, size_t filter)
 {
   ProcEntryInfo *pei = nullptr;
   int num_pei = 0;
@@ -2107,7 +2108,7 @@ static int build_proc_info(DE_Handle *dh, ProcEntryInfo **out_pei, Uint filter)
 
   for (pe = dh->procs; pe != nullptr; pe = pe->next) {
     Eterm id = pe->proc->common.id;
-    Uint stat = pe->awaiting_status;
+    size_t stat = pe->awaiting_status;
 
     if (stat == ERL_DE_PROC_AWAIT_UNLOAD_ONLY) {
       stat = ERL_DE_PROC_AWAIT_UNLOAD;

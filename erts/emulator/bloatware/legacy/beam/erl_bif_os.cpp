@@ -21,6 +21,8 @@
  * BIFs belonging to the 'os' module.
  */
 
+#include "bw_misc_utils.h"
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -43,7 +45,7 @@
 /* return a timestamp */
 BIF_RETTYPE os_timestamp_0(BIF_ALIST_0)
 {
-  Uint megasec, sec, microsec;
+  size_t megasec, sec, microsec;
   Eterm *hp;
 
   get_sys_now(&megasec, &sec, &microsec);
@@ -61,7 +63,7 @@ BIF_RETTYPE os_getpid_0(BIF_ALIST_0)
   sys_get_pid(pid_string, sizeof(pid_string)); /* In sys.c */
   n = sys_strlen(pid_string);
   hp = HAlloc(BIF_P, n * 2);
-  BIF_RET(buf_to_intlist(&hp, pid_string, n, NIL));
+  BIF_RET(util::buf_to_intlist(&hp, pid_string, n, NIL));
 }
 
 BIF_RETTYPE os_getenv_0(BIF_ALIST_0)
@@ -92,7 +94,7 @@ BIF_RETTYPE os_getenv_1(BIF_ALIST_1)
 {
   Process *p = BIF_P;
   Eterm str;
-  Sint len;
+  ssize_t len;
   int res;
   char *key_str, *val;
   char buf[STATIC_BUF_SIZE];

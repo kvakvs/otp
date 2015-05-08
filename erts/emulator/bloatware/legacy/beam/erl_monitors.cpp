@@ -79,7 +79,7 @@ static ERTS_INLINE int cmp_mon_ref(Eterm ref1, Eterm ref2)
 
   if (is_ref_thing_header(*b1)) {
     if (is_ref_thing_header(*b2)) {
-      return memcmp(b1 + 1, b2 + 1, ERTS_REF_WORDS * sizeof(Uint));
+      return memcmp(b1 + 1, b2 + 1, ERTS_REF_WORDS * sizeof(size_t));
     }
 
     return -1;
@@ -97,8 +97,8 @@ do {                \
     if (IS_CONST(From))           \
   (To) = (From);            \
     else {              \
-  Uint i__;           \
-  Uint len__;           \
+  size_t i__;           \
+  size_t len__;           \
   ASSERT((Hp));           \
   ASSERT(is_internal_ref((From)) || is_external((From))); \
   (To) = make_boxed((Hp));        \
@@ -112,9 +112,9 @@ do {                \
     }               \
 } while (0)
 
-static ErtsMonitor *create_monitor(Uint type, Eterm ref, Eterm pid, Eterm name)
+static ErtsMonitor *create_monitor(size_t type, Eterm ref, Eterm pid, Eterm name)
 {
-  Uint mon_size = ERTS_MONITOR_SIZE;
+  size_t mon_size = ERTS_MONITOR_SIZE;
   ErtsMonitor *n;
   Eterm *hp;
 
@@ -126,11 +126,11 @@ static ErtsMonitor *create_monitor(Uint type, Eterm ref, Eterm pid, Eterm name)
 
   if (mon_size <= ERTS_MONITOR_SH_SIZE) {
     n = (ErtsMonitor *) erts_alloc(ERTS_ALC_T_MONITOR_SH,
-                                   mon_size * sizeof(Uint));
+                                   mon_size * sizeof(size_t));
   } else {
     n = (ErtsMonitor *) erts_alloc(ERTS_ALC_T_MONITOR_LH,
-                                   mon_size * sizeof(Uint));
-    erts_smp_atomic_add_nob(&tot_link_lh_size, mon_size * sizeof(Uint));
+                                   mon_size * sizeof(size_t));
+    erts_smp_atomic_add_nob(&tot_link_lh_size, mon_size * sizeof(size_t));
   }
 
   hp = n->heap;
@@ -146,9 +146,9 @@ static ErtsMonitor *create_monitor(Uint type, Eterm ref, Eterm pid, Eterm name)
   return n;
 }
 
-static ErtsLink *create_link(Uint type, Eterm pid)
+static ErtsLink *create_link(size_t type, Eterm pid)
 {
-  Uint lnk_size = ERTS_LINK_SIZE;
+  size_t lnk_size = ERTS_LINK_SIZE;
   ErtsLink *n;
   Eterm *hp;
 
@@ -158,11 +158,11 @@ static ErtsLink *create_link(Uint type, Eterm pid)
 
   if (lnk_size <= ERTS_LINK_SH_SIZE) {
     n = (ErtsLink *) erts_alloc(ERTS_ALC_T_NLINK_SH,
-                                lnk_size * sizeof(Uint));
+                                lnk_size * sizeof(size_t));
   } else {
     n = (ErtsLink *) erts_alloc(ERTS_ALC_T_NLINK_LH,
-                                lnk_size * sizeof(Uint));
-    erts_smp_atomic_add_nob(&tot_link_lh_size, lnk_size * sizeof(Uint));
+                                lnk_size * sizeof(size_t));
+    erts_smp_atomic_add_nob(&tot_link_lh_size, lnk_size * sizeof(size_t));
   }
 
   hp = n->heap;
@@ -203,15 +203,15 @@ erts_init_monitors(void)
   erts_smp_atomic_init_nob(&tot_link_lh_size, 0);
 }
 
-Uint
+size_t
 erts_tot_link_lh_size(void)
 {
-  return (Uint) erts_smp_atomic_read_nob(&tot_link_lh_size);
+  return (size_t) erts_smp_atomic_read_nob(&tot_link_lh_size);
 }
 
 void erts_destroy_monitor(ErtsMonitor *mon)
 {
-  Uint mon_size = ERTS_MONITOR_SIZE;
+  size_t mon_size = ERTS_MONITOR_SIZE;
   ErlNode *node;
 
   ASSERT(!IS_CONST(mon->ref));
@@ -235,13 +235,13 @@ void erts_destroy_monitor(ErtsMonitor *mon)
     erts_free(ERTS_ALC_T_MONITOR_SH, (void *) mon);
   } else {
     erts_free(ERTS_ALC_T_MONITOR_LH, (void *) mon);
-    erts_smp_atomic_add_nob(&tot_link_lh_size, -1 * mon_size * sizeof(Uint));
+    erts_smp_atomic_add_nob(&tot_link_lh_size, -1 * mon_size * sizeof(size_t));
   }
 }
 
 void erts_destroy_link(ErtsLink *lnk)
 {
-  Uint lnk_size = ERTS_LINK_SIZE;
+  size_t lnk_size = ERTS_LINK_SIZE;
   ErlNode *node;
 
   ASSERT(lnk->type == LINK_NODE || ERTS_LINK_ROOT(lnk) == nullptr);
@@ -259,7 +259,7 @@ void erts_destroy_link(ErtsLink *lnk)
     erts_free(ERTS_ALC_T_NLINK_SH, (void *) lnk);
   } else {
     erts_free(ERTS_ALC_T_NLINK_LH, (void *) lnk);
-    erts_smp_atomic_add_nob(&tot_link_lh_size, -1 * lnk_size * sizeof(Uint));
+    erts_smp_atomic_add_nob(&tot_link_lh_size, -1 * lnk_size * sizeof(size_t));
   }
 }
 
@@ -353,7 +353,7 @@ static void insertion_rotation(int dstack[], int dpos,
   }
 }
 
-void erts_add_monitor(ErtsMonitor **root, Uint type, Eterm ref, Eterm pid,
+void erts_add_monitor(ErtsMonitor **root, size_t type, Eterm ref, Eterm pid,
                       Eterm name)
 {
   void *tstack[STACK_NEED];
@@ -362,7 +362,7 @@ void erts_add_monitor(ErtsMonitor **root, Uint type, Eterm ref, Eterm pid,
   int dpos = 1;
   int state = 0;
   ErtsMonitor **this_ = root;
-  Sint c;
+  ssize_t c;
 
   dstack[0] = DIR_END;
 
@@ -391,7 +391,7 @@ void erts_add_monitor(ErtsMonitor **root, Uint type, Eterm ref, Eterm pid,
 
 
 /* Returns 0 if OK, < 0 if already present */
-int erts_add_link(ErtsLink **root, Uint type, Eterm pid)
+int erts_add_link(ErtsLink **root, size_t type, Eterm pid)
 {
   void *tstack[STACK_NEED];
   int tpos = 0;
@@ -399,7 +399,7 @@ int erts_add_link(ErtsLink **root, Uint type, Eterm pid)
   int dpos = 1;
   int state = 0;
   ErtsLink **this_ = root;
-  Sint c;
+  ssize_t c;
 
   dstack[0] = DIR_END;
 
@@ -436,7 +436,7 @@ erts_add_or_lookup_suspend_monitor(ErtsSuspendMonitor **root, Eterm pid)
   int state = 0;
   ErtsSuspendMonitor **this_ = root;
   ErtsSuspendMonitor *res;
-  Sint c;
+  ssize_t c;
 
   dstack[0] = DIR_END;
 
@@ -466,7 +466,7 @@ erts_add_or_lookup_suspend_monitor(ErtsSuspendMonitor **root, Eterm pid)
 
 
 /* Returns the new_ or old link structure */
-ErtsLink *erts_add_or_lookup_link(ErtsLink **root, Uint type, Eterm pid)
+ErtsLink *erts_add_or_lookup_link(ErtsLink **root, size_t type, Eterm pid)
 {
   void *tstack[STACK_NEED];
   int tpos = 0;
@@ -474,7 +474,7 @@ ErtsLink *erts_add_or_lookup_link(ErtsLink **root, Uint type, Eterm pid)
   int dpos = 1;
   int state = 0;
   ErtsLink **this_ = root;
-  Sint c;
+  ssize_t c;
   ErtsLink *ret = nullptr;
 
   dstack[0] = DIR_END;
@@ -655,7 +655,7 @@ ErtsMonitor *erts_remove_monitor(ErtsMonitor **root, Eterm ref)
   int dpos = 1;
   int state = 0;
   ErtsMonitor **this_ = root;
-  Sint c;
+  ssize_t c;
   int dir;
   ErtsMonitor *q = nullptr;
 
@@ -712,7 +712,7 @@ ErtsLink *erts_remove_link(ErtsLink **root, Eterm pid)
   int dpos = 1;
   int state = 0;
   ErtsLink **this_ = root;
-  Sint c;
+  ssize_t c;
   int dir;
   ErtsLink *q = nullptr;
 
@@ -770,7 +770,7 @@ erts_delete_suspend_monitor(ErtsSuspendMonitor **root, Eterm pid)
   int dpos = 1;
   int state = 0;
   ErtsSuspendMonitor **this_ = root;
-  Sint c;
+  ssize_t c;
   int dir;
   ErtsSuspendMonitor *q = nullptr;
 
@@ -821,7 +821,7 @@ erts_delete_suspend_monitor(ErtsSuspendMonitor **root, Eterm pid)
 
 ErtsMonitor *erts_lookup_monitor(ErtsMonitor *root, Eterm ref)
 {
-  Sint c;
+  ssize_t c;
 
   for (;;) {
     if (root == nullptr || (c = CMP_MON_REF(ref, root->ref)) == 0) {
@@ -836,7 +836,7 @@ ErtsMonitor *erts_lookup_monitor(ErtsMonitor *root, Eterm ref)
 
 ErtsLink *erts_lookup_link(ErtsLink *root, Eterm pid)
 {
-  Sint c;
+  ssize_t c;
 
   for (;;) {
     if (root == nullptr || (c = CMP(pid, root->pid)) == 0) {
@@ -852,7 +852,7 @@ ErtsLink *erts_lookup_link(ErtsLink *root, Eterm pid)
 ErtsSuspendMonitor *
 erts_lookup_suspend_monitor(ErtsSuspendMonitor *root, Eterm pid)
 {
-  Sint c;
+  ssize_t c;
 
   for (;;) {
     if (root == nullptr || (c = CMP(pid, root->pid)) == 0) {
@@ -1110,11 +1110,11 @@ Eterm erts_debug_dump_links_1(BIF_ALIST_1)
 
 void erts_one_link_size(ErtsLink *lnk, void *vpu)
 {
-  Uint *pu = (Uint *)vpu;
-  *pu += ERTS_LINK_SIZE * sizeof(Uint);
+  size_t *pu = (size_t *)vpu;
+  *pu += ERTS_LINK_SIZE * sizeof(size_t);
 
   if (!IS_CONST(lnk->pid)) {
-    *pu += NC_HEAP_SIZE(lnk->pid) * sizeof(Uint);
+    *pu += NC_HEAP_SIZE(lnk->pid) * sizeof(size_t);
   }
 
   if (lnk->type != LINK_NODE && ERTS_LINK_ROOT(lnk) != nullptr) {
@@ -1123,14 +1123,14 @@ void erts_one_link_size(ErtsLink *lnk, void *vpu)
 }
 void erts_one_mon_size(ErtsMonitor *mon, void *vpu)
 {
-  Uint *pu = (Uint *)vpu;
-  *pu += ERTS_MONITOR_SIZE * sizeof(Uint);
+  size_t *pu = (size_t *)vpu;
+  *pu += ERTS_MONITOR_SIZE * sizeof(size_t);
 
   if (!IS_CONST(mon->pid)) {
-    *pu += NC_HEAP_SIZE(mon->pid) * sizeof(Uint);
+    *pu += NC_HEAP_SIZE(mon->pid) * sizeof(size_t);
   }
 
   if (!IS_CONST(mon->ref)) {
-    *pu += NC_HEAP_SIZE(mon->ref) * sizeof(Uint);
+    *pu += NC_HEAP_SIZE(mon->ref) * sizeof(size_t);
   }
 }

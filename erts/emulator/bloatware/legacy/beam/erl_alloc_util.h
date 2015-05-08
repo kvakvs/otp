@@ -143,30 +143,30 @@ typedef struct {
 
 #endif
 
-void   *erts_alcu_alloc(ErtsAlcType_t, void *, Uint);
-void   *erts_alcu_realloc(ErtsAlcType_t, void *, void *, Uint);
-void   *erts_alcu_realloc_mv(ErtsAlcType_t, void *, void *, Uint);
+void   *erts_alcu_alloc(ErtsAlcType_t, void *, size_t);
+void   *erts_alcu_realloc(ErtsAlcType_t, void *, void *, size_t);
+void   *erts_alcu_realloc_mv(ErtsAlcType_t, void *, void *, size_t);
 void  erts_alcu_free(ErtsAlcType_t, void *, void *);
 #ifdef USE_THREADS
-void   *erts_alcu_alloc_ts(ErtsAlcType_t, void *, Uint);
-void   *erts_alcu_realloc_ts(ErtsAlcType_t, void *, void *, Uint);
-void   *erts_alcu_realloc_mv_ts(ErtsAlcType_t, void *, void *, Uint);
+void   *erts_alcu_alloc_ts(ErtsAlcType_t, void *, size_t);
+void   *erts_alcu_realloc_ts(ErtsAlcType_t, void *, void *, size_t);
+void   *erts_alcu_realloc_mv_ts(ErtsAlcType_t, void *, void *, size_t);
 void  erts_alcu_free_ts(ErtsAlcType_t, void *, void *);
 #ifdef ERTS_SMP
-void   *erts_alcu_alloc_thr_spec(ErtsAlcType_t, void *, Uint);
-void   *erts_alcu_realloc_thr_spec(ErtsAlcType_t, void *, void *, Uint);
-void   *erts_alcu_realloc_mv_thr_spec(ErtsAlcType_t, void *, void *, Uint);
+void   *erts_alcu_alloc_thr_spec(ErtsAlcType_t, void *, size_t);
+void   *erts_alcu_realloc_thr_spec(ErtsAlcType_t, void *, void *, size_t);
+void   *erts_alcu_realloc_mv_thr_spec(ErtsAlcType_t, void *, void *, size_t);
 void  erts_alcu_free_thr_spec(ErtsAlcType_t, void *, void *);
-void   *erts_alcu_alloc_thr_pref(ErtsAlcType_t, void *, Uint);
-void   *erts_alcu_realloc_thr_pref(ErtsAlcType_t, void *, void *, Uint);
-void   *erts_alcu_realloc_mv_thr_pref(ErtsAlcType_t, void *, void *, Uint);
+void   *erts_alcu_alloc_thr_pref(ErtsAlcType_t, void *, size_t);
+void   *erts_alcu_realloc_thr_pref(ErtsAlcType_t, void *, void *, size_t);
+void   *erts_alcu_realloc_mv_thr_pref(ErtsAlcType_t, void *, void *, size_t);
 void  erts_alcu_free_thr_pref(ErtsAlcType_t, void *, void *);
 #endif
 #endif
-Eterm erts_alcu_au_info_options(int *, void *, Uint **, Uint *);
-Eterm erts_alcu_info_options(Allctr_t *, int *, void *, Uint **, Uint *);
-Eterm erts_alcu_sz_info(Allctr_t *, int, int, int *, void *, Uint **, Uint *);
-Eterm erts_alcu_info(Allctr_t *, int, int, int *, void *, Uint **, Uint *);
+Eterm erts_alcu_au_info_options(int *, void *, size_t **, size_t *);
+Eterm erts_alcu_info_options(Allctr_t *, int *, void *, size_t **, size_t *);
+Eterm erts_alcu_sz_info(Allctr_t *, int, int, int *, void *, size_t **, size_t *);
+Eterm erts_alcu_info(Allctr_t *, int, int, int *, void *, size_t **, size_t *);
 void  erts_alcu_init(AlcUInit_t *);
 void    erts_alcu_current_size(Allctr_t *, AllctrSize_t *,
                                ErtsAlcUFixInfo_t *, int);
@@ -485,25 +485,25 @@ struct Allctr_t_ {
   /* Options */
   int     t;
   int     ramv;
-  Uint    sbc_threshold;
-  Uint    sbc_move_threshold;
-  Uint    mbc_move_threshold;
-  Uint    main_carrier_size;
-  Uint    max_mseg_sbcs;
-  Uint    max_mseg_mbcs;
-  Uint    largest_mbc_size;
-  Uint    smallest_mbc_size;
-  Uint    mbc_growth_stages;
+  size_t    sbc_threshold;
+  size_t    sbc_move_threshold;
+  size_t    mbc_move_threshold;
+  size_t    main_carrier_size;
+  size_t    max_mseg_sbcs;
+  size_t    max_mseg_mbcs;
+  size_t    largest_mbc_size;
+  size_t    smallest_mbc_size;
+  size_t    mbc_growth_stages;
 
 #if HAVE_ERTS_MSEG
   ErtsMsegOpt_t mseg_opt;
 #endif
 
   /* */
-  Uint    mbc_header_size;
-  Uint    min_mbc_size;
-  Uint    min_mbc_first_free_size;
-  Uint    min_block_size;
+  size_t    mbc_header_size;
+  size_t    min_mbc_size;
+  size_t    min_mbc_first_free_size;
+  size_t    min_block_size;
 
   /* Carriers */
   CarrierList_t mbc_list;
@@ -533,14 +533,14 @@ struct Allctr_t_ {
   Carrier_t    *main_carrier;
 
   /* Callback functions (first 4 are mandatory) */
-  Block_t    *(*get_free_block)(Allctr_t *, Uint,
-                                Block_t *, Uint);
+  Block_t    *(*get_free_block)(Allctr_t *, size_t,
+                                Block_t *, size_t);
   void (*link_free_block)(Allctr_t *, Block_t *);
   void (*unlink_free_block)(Allctr_t *, Block_t *);
   Eterm(*info_options)(Allctr_t *, char *, int *,
-                       void *, Uint **, Uint *);
+                       void *, size_t **, size_t *);
 
-  Uint(*get_next_mbc_size)(Allctr_t *);
+  size_t(*get_next_mbc_size)(Allctr_t *);
   void (*creating_mbc)(Allctr_t *, Carrier_t *);
   void (*destroying_mbc)(Allctr_t *, Carrier_t *);
 

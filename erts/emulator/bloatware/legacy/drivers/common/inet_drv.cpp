@@ -14018,9 +14018,9 @@ int erts_sock_connect(erts_sock_t socket, uint8_t *ip_addr, int len, uint16_t po
   return 1;
 }
 
-Sint erts_sock_send(erts_sock_t socket, const void *buf, Sint len)
+ssize_t erts_sock_send(erts_sock_t socket, const void *buf, ssize_t len)
 {
-  Sint result = (Sint) sock_send((SOCKET) socket, buf, (size_t) len, 0);
+  ssize_t result = (ssize_t) sock_send((SOCKET) socket, buf, (size_t) len, 0);
 
   if (IS_SOCKET_ERROR(result)) {
     return SOCKET_ERROR;

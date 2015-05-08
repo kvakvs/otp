@@ -59,10 +59,10 @@ void erts_index_merge(Hash *, IndexTable *);
 
 /* Erase all entries with index 'ix' and higher
 */
-void index_erase_latest_from(IndexTable *, Uint ix);
+void index_erase_latest_from(IndexTable *, size_t ix);
 
 ERTS_GLB_INLINE int index_put(IndexTable *, void *);
-ERTS_GLB_INLINE IndexSlot *erts_index_lookup(IndexTable *, Uint);
+ERTS_GLB_INLINE IndexSlot *erts_index_lookup(IndexTable *, size_t);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
@@ -72,7 +72,7 @@ ERTS_GLB_INLINE int index_put(IndexTable *t, void *tmpl)
 }
 
 ERTS_GLB_INLINE IndexSlot *
-erts_index_lookup(IndexTable *t, Uint ix)
+erts_index_lookup(IndexTable *t, size_t ix)
 {
   return t->seg_table[ix >> INDEX_PAGE_SHIFT][ix & INDEX_PAGE_MASK];
 }

@@ -2829,7 +2829,7 @@ ERTS_POLL_EXPORT(erts_poll_info)(ErtsPollSet ps, ErtsPollInfo *pip)
 #if ERTS_POLL_USE_UPDATE_REQUESTS_QUEUE
   int pending_updates;
 #endif
-  Uint size = 0;
+  size_t size = 0;
 
   ERTS_POLLSET_LOCK(ps);
 

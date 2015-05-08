@@ -96,7 +96,7 @@ static Eterm subtract(Process *p, Eterm A, Eterm B)
 {
   Eterm  list;
   Eterm *hp;
-  Uint  need;
+  size_t  need;
   Eterm  res;
   Eterm small_vec[SMALL_VEC_SIZE];  /* Preallocated memory for small lists */
   Eterm *vec_p;
@@ -245,7 +245,7 @@ BIF_RETTYPE lists_reverse_2(BIF_ALIST_2)
   Eterm tmp_list;
   Eterm result;
   Eterm *hp;
-  Uint n;
+  size_t n;
   int max_iter;
 
   /*
@@ -359,7 +359,7 @@ static Eterm
 keyfind(int Bif, Process *p, Eterm Key, Eterm Pos, Eterm List)
 {
   int max_iter = 10 * CONTEXT_REDS;
-  Sint pos;
+  ssize_t pos;
   Eterm term;
 
   if (!is_small(Pos) || (pos = signed_val(Pos)) < 1) {

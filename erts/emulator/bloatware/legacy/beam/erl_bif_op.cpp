@@ -250,7 +250,7 @@ BIF_RETTYPE is_function_2(BIF_ALIST_2)
 
 Eterm erl_is_function(Process *p, Eterm arg1, Eterm arg2)
 {
-  Sint arity;
+  ssize_t arity;
 
   /*
    * Verify argument 2 (arity); arity must be >= 0.
@@ -273,13 +273,13 @@ error:
   if (is_fun(arg1)) {
     ErlFunThing *funp = (ErlFunThing *) fun_val(arg1);
 
-    if (funp->arity == (Uint) arity) {
+    if (funp->arity == (size_t) arity) {
       BIF_RET(am_true);
     }
   } else if (is_export(arg1)) {
     Export *exp = (Export *) EXPAND_POINTER((export_val(arg1))[1]);
 
-    if (exp->code[2] == (Uint) arity) {
+    if (exp->code[2] == (size_t) arity) {
       BIF_RET(am_true);
     }
   }

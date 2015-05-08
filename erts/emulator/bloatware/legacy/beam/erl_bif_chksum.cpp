@@ -67,9 +67,9 @@ static Eterm do_chksum(ChksumFun sumfun, Process *p, Eterm ioterm, int left,
   }
 
   if (is_binary(ioterm)) {
-    Uint bitoffs;
-    Uint bitsize;
-    Uint size;
+    size_t bitoffs;
+    size_t bitsize;
+    size_t size;
     Eterm res_term = NIL;
     uint8_t *bytes;
     uint8_t *temp_alloc = nullptr;
@@ -96,7 +96,7 @@ static Eterm do_chksum(ChksumFun sumfun, Process *p, Eterm ioterm, int left,
       Eterm *hp;
       ErlSubBin *sb;
       Eterm orig;
-      Uint offset;
+      size_t offset;
       /* Split the binary in two parts, of which we
          only process the first */
       hp = HAlloc(p, ERL_SUB_BIN_SIZE);
@@ -391,7 +391,7 @@ crc32_2(BIF_ALIST_2)
   unsigned long chksum;
   int res, err;
   Eterm rest, res_sum;
-  Uint u;
+  size_t u;
 
   if (!term_to_Uint(BIF_ARG_1, &u) || ((u >> 16) >> 16) != 0) {
     BIF_ERROR(BIF_P, BADARG);
@@ -425,7 +425,7 @@ crc32_combine_3(BIF_ALIST_3)
   z_off_t length;
   uint32_t res;
   Eterm res_sum;
-  Uint u;
+  size_t u;
 
   if (!term_to_Uint(BIF_ARG_1, &u) || ((u >> 16) >> 16) != 0) {
     BIF_ERROR(BIF_P, BADARG);
@@ -484,7 +484,7 @@ adler32_2(BIF_ALIST_2)
   unsigned long chksum;
   int res, err;
   Eterm rest, res_sum;
-  Uint u;
+  size_t u;
 
   if (!term_to_Uint(BIF_ARG_1, &u) || ((u >> 16) >> 16) != 0) {
     BIF_ERROR(BIF_P, BADARG);
@@ -518,7 +518,7 @@ adler32_combine_3(BIF_ALIST_3)
   z_off_t length;
   uint32_t res;
   Eterm res_sum;
-  Uint u;
+  size_t u;
 
   if (!term_to_Uint(BIF_ARG_1, &u) || ((u >> 16) >> 16) != 0) {
     BIF_ERROR(BIF_P, BADARG);

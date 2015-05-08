@@ -409,7 +409,7 @@ L_jump_start:
       int print_res;
       char def_buf[64];
       char *buf, *big_str;
-      Uint sz = (Uint) big_decimal_estimate(wobj);
+      size_t sz = (size_t) big_decimal_estimate(wobj);
       sz++;
 
       if (sz <= 64) {
@@ -584,7 +584,7 @@ L_jump_start:
     break;
 
     case MAP_DEF: {
-      Uint n;
+      size_t n;
       Eterm *ks, *vs;
       map_t *mp = (map_t *)map_val(wobj);
       n  = map_get_size(mp);

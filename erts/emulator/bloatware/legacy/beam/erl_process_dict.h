@@ -26,11 +26,11 @@ typedef struct proc_dict {
   unsigned int used;
   unsigned int homeSize;
   unsigned int splitPosition;
-  Uint numElements;
+  size_t numElements;
   Eterm data[1]; /* The beginning of an array of erlang terms */
 } ProcDict;
 
-Uint erts_dicts_mem_size(struct process *p);
+size_t erts_dicts_mem_size(struct process *p);
 void erts_erase_dicts(struct process *p);
 void erts_dictionary_dump(int to, void *to_arg, ProcDict *pd);
 void erts_deep_dictionary_dump(int to, void *to_arg,

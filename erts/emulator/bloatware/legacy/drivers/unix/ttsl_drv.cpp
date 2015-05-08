@@ -451,7 +451,7 @@ static void ttysl_stop(ErlDrvData ttysl_data)
 
 static int put_utf8(int ch, uint8_t *target, int sz, int *pos)
 {
-  Uint x = (Uint) ch;
+  size_t x = (size_t) ch;
 
   if (x < 0x80) {
     if (*pos >= sz) {
@@ -510,7 +510,7 @@ static int pick_utf8(uint8_t *s, int sz, int *pos)
 {
   int size = sz - (*pos);
   uint8_t *source;
-  Uint unipoint;
+  size_t unipoint;
 
   if (size > 0) {
     source = s + (*pos);
@@ -531,8 +531,8 @@ static int pick_utf8(uint8_t *s, int sz, int *pos)
 
       (*pos) += 2;
       unipoint =
-        (((Uint)((*source) & ((uint8_t) 0x1F))) << 6) |
-        ((Uint)(source[1] & ((uint8_t) 0x3F)));
+        (((size_t)((*source) & ((uint8_t) 0x1F))) << 6) |
+        ((size_t)(source[1] & ((uint8_t) 0x3F)));
       return (int) unipoint;
     } else if (((*source) & ((uint8_t) 0xF0)) == 0xE0) {
       if (size < 3) {
@@ -557,9 +557,9 @@ static int pick_utf8(uint8_t *s, int sz, int *pos)
 
       (*pos) += 3;
       unipoint =
-        (((Uint)((*source) & ((uint8_t) 0xF))) << 12) |
-        (((Uint)(source[1] & ((uint8_t) 0x3F))) << 6) |
-        ((Uint)(source[2] & ((uint8_t) 0x3F)));
+        (((size_t)((*source) & ((uint8_t) 0xF))) << 12) |
+        (((size_t)(source[1] & ((uint8_t) 0x3F))) << 6) |
+        ((size_t)(source[2] & ((uint8_t) 0x3F)));
       return (int) unipoint;
     } else if (((*source) & ((uint8_t) 0xF8)) == 0xF0) {
       if (size < 4) {
@@ -581,10 +581,10 @@ static int pick_utf8(uint8_t *s, int sz, int *pos)
 
       (*pos) += 4;
       unipoint =
-        (((Uint)((*source) & ((uint8_t) 0x7))) << 18) |
-        (((Uint)(source[1] & ((uint8_t) 0x3F))) << 12) |
-        (((Uint)(source[2] & ((uint8_t) 0x3F))) << 6) |
-        ((Uint)(source[3] & ((uint8_t) 0x3F)));
+        (((size_t)((*source) & ((uint8_t) 0x7))) << 18) |
+        (((size_t)(source[1] & ((uint8_t) 0x3F))) << 12) |
+        (((size_t)(source[2] & ((uint8_t) 0x3F))) << 6) |
+        ((size_t)(source[3] & ((uint8_t) 0x3F)));
       return (int) unipoint;
     } else {
       return -1;
@@ -594,10 +594,10 @@ static int pick_utf8(uint8_t *s, int sz, int *pos)
   }
 }
 
-static int octal_or_hex_positions(Uint c)
+static int octal_or_hex_positions(size_t c)
 {
   int x = 0;
-  Uint ch = c;
+  size_t ch = c;
 
   if (!ch) {
     return 1;
@@ -624,7 +624,7 @@ static int octal_or_hex_positions(Uint c)
   return x + 3;
 }
 
-static void octal_or_hex_format(Uint ch, uint8_t *buf, int *pos)
+static void octal_or_hex_format(size_t ch, uint8_t *buf, int *pos)
 {
   static uint8_t hex_chars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                                  'A', 'B', 'C', 'D', 'E', 'F'

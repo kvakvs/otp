@@ -21,6 +21,8 @@
 #  include "config.h"
 #endif
 
+#include "bw_misc_utils.h"
+
 #define ERTS_DO_INCL_GLB_INLINE_FUNC_DEF
 
 #include "sys.h"
@@ -67,17 +69,17 @@
 /* profile_scheduler mini message queue */
 
 typedef struct {
-  Uint scheduler_id;
-  Uint no_schedulers;
-  Uint Ms;
-  Uint s;
-  Uint us;
+  size_t scheduler_id;
+  size_t no_schedulers;
+  size_t Ms;
+  size_t s;
+  size_t us;
   Eterm state;
 } profile_sched_msg;
 
 typedef struct {
   profile_sched_msg msg[2];
-  Uint n;
+  size_t n;
 } profile_sched_msg_q;
 
 #ifdef ERTS_SMP
@@ -102,13 +104,13 @@ dispatch_profile_msg_q(profile_sched_msg_q *psmq)
 
 
 Eterm *
-erts_heap_alloc(Process *p, Uint need, Uint xtra)
+erts_heap_alloc(Process *p, size_t need, size_t xtra)
 {
   ErlHeapFragment *bp;
   Eterm *htop;
-  Uint n;
+  size_t n;
 #if defined(DEBUG) || defined(CHECK_FOR_HOLES)
-  Uint i;
+  size_t i;
 #endif
 
 #ifdef FORCE_HEAP_FRAGS
@@ -118,7 +120,7 @@ erts_heap_alloc(Process *p, Uint need, Uint xtra)
       && HEAP_TOP(p) + need <= p->space_verified_from + p->space_verified
       && HEAP_LIMIT(p) - HEAP_TOP(p) >= need) {
 
-    Uint consumed = need + (HEAP_TOP(p) - p->space_verified_from);
+    size_t consumed = need + (HEAP_TOP(p) - p->space_verified_from);
     ASSERT(consumed <= p->space_verified);
     p->space_verified -= consumed;
     p->space_verified_from += consumed;
@@ -180,7 +182,7 @@ erts_heap_alloc(Process *p, Uint need, Uint xtra)
 
 #ifdef CHECK_FOR_HOLES
 Eterm *
-erts_set_hole_marker(Eterm *ptr, Uint sz)
+erts_set_hole_marker(Eterm *ptr, size_t sz)
 {
   Eterm *p = ptr;
   int i;
@@ -199,9 +201,9 @@ erts_set_hole_marker(Eterm *ptr, Uint sz)
 void
 erl_grow_estack(ErtsEStack *s, Eterm *default_estack)
 {
-  Uint old_size = (s->end - s->start);
-  Uint new_size = old_size * 2;
-  Uint sp_offs = s->sp - s->start;
+  size_t old_size = (s->end - s->start);
+  size_t new_size = old_size * 2;
+  size_t sp_offs = s->sp - s->start;
 
   if (s->start != default_estack) {
     s->start = (Eterm *)erts_realloc(s->alloc_type, s->start,
@@ -221,9 +223,9 @@ erl_grow_estack(ErtsEStack *s, Eterm *default_estack)
 void
 erl_grow_wstack(ErtsWStack *s, UWord *default_wstack)
 {
-  Uint old_size = (s->wend - s->wstart);
-  Uint new_size = old_size * 2;
-  Uint sp_offs = s->wsp - s->wstart;
+  size_t old_size = (s->wend - s->wstart);
+  size_t new_size = old_size * 2;
+  size_t sp_offs = s->wsp - s->wstart;
 
   if (s->wstart != default_wstack) {
     s->wstart = (UWord *)erts_realloc(s->alloc_type, s->wstart,
@@ -396,7 +398,7 @@ erts_putc(int to, void *arg, char c)
 \*                                                                           */
 
 Eterm
-erts_bld_atom(Uint **hpp, Uint *szp, char *str)
+erts_bld_atom(size_t **hpp, size_t *szp, char *str)
 {
   if (hpp) {
     return erts_atom_put((uint8_t *) str, sys_strlen(str), ERTS_ATOM_ENC_LATIN1, 1);
@@ -406,7 +408,7 @@ erts_bld_atom(Uint **hpp, Uint *szp, char *str)
 }
 
 Eterm
-erts_bld_uint(Uint **hpp, Uint *szp, Uint ui)
+erts_bld_uint(size_t **hpp, size_t *szp, size_t ui)
 {
   Eterm res = THE_NON_VALUE;
 
@@ -434,13 +436,13 @@ erts_bld_uint(Uint **hpp, Uint *szp, Uint ui)
  */
 
 Eterm
-erts_bld_uword(Uint **hpp, Uint *szp, UWord uw)
+erts_bld_uword(size_t **hpp, size_t *szp, UWord uw)
 {
   Eterm res = THE_NON_VALUE;
 
   if (IS_USMALL(0, uw)) {
     if (hpp) {
-      res = make_small((Uint) uw);
+      res = make_small((size_t) uw);
     }
   } else {
     if (szp) {
@@ -458,13 +460,13 @@ erts_bld_uword(Uint **hpp, Uint *szp, UWord uw)
 
 
 Eterm
-erts_bld_uint64(Uint **hpp, Uint *szp, uint64_t ui64)
+erts_bld_uint64(size_t **hpp, size_t *szp, uint64_t ui64)
 {
   Eterm res = THE_NON_VALUE;
 
   if (IS_USMALL(0, ui64)) {
     if (hpp) {
-      res = make_small((Uint) ui64);
+      res = make_small((size_t) ui64);
     }
   } else {
     if (szp) {
@@ -480,13 +482,13 @@ erts_bld_uint64(Uint **hpp, Uint *szp, uint64_t ui64)
 }
 
 Eterm
-erts_bld_sint64(Uint **hpp, Uint *szp, int64_t si64)
+erts_bld_sint64(size_t **hpp, size_t *szp, int64_t si64)
 {
   Eterm res = THE_NON_VALUE;
 
   if (IS_SSMALL(si64)) {
     if (hpp) {
-      res = make_small((Sint) si64);
+      res = make_small((ssize_t) si64);
     }
   } else {
     if (szp) {
@@ -503,7 +505,7 @@ erts_bld_sint64(Uint **hpp, Uint *szp, int64_t si64)
 
 
 Eterm
-erts_bld_cons(Uint **hpp, Uint *szp, Eterm car, Eterm cdr)
+erts_bld_cons(size_t **hpp, size_t *szp, Eterm car, Eterm cdr)
 {
   Eterm res = THE_NON_VALUE;
 
@@ -520,11 +522,11 @@ erts_bld_cons(Uint **hpp, Uint *szp, Eterm car, Eterm cdr)
 }
 
 Eterm
-erts_bld_tuple(Uint **hpp, Uint *szp, Uint arity, ...)
+erts_bld_tuple(size_t **hpp, size_t *szp, size_t arity, ...)
 {
   Eterm res = THE_NON_VALUE;
 
-  ASSERT(arity < (((Uint)1) << (sizeof(Uint) * 8 - _HEADER_ARITY_OFFS)));
+  ASSERT(arity < (((size_t)1) << (sizeof(size_t) * 8 - _HEADER_ARITY_OFFS)));
 
   if (szp) {
     *szp += arity + 1;
@@ -535,7 +537,7 @@ erts_bld_tuple(Uint **hpp, Uint *szp, Uint arity, ...)
     *((*hpp)++) = make_arityval(arity);
 
     if (arity > 0) {
-      Uint i;
+      size_t i;
       va_list argp;
 
       va_start(argp, arity);
@@ -552,14 +554,14 @@ erts_bld_tuple(Uint **hpp, Uint *szp, Uint arity, ...)
 }
 
 
-Eterm erts_bld_tuplev(Uint **hpp, Uint *szp, Uint arity, Eterm terms[])
+Eterm erts_bld_tuplev(size_t **hpp, size_t *szp, size_t arity, Eterm terms[])
 {
   Eterm res = THE_NON_VALUE;
   /*
    * Note callers expect that 'terms' is *not* accessed if hpp == nullptr.
    */
 
-  ASSERT(arity < (((Uint)1) << (sizeof(Uint) * 8 - _HEADER_ARITY_OFFS)));
+  ASSERT(arity < (((size_t)1) << (sizeof(size_t) * 8 - _HEADER_ARITY_OFFS)));
 
   if (szp) {
     *szp += arity + 1;
@@ -571,7 +573,7 @@ Eterm erts_bld_tuplev(Uint **hpp, Uint *szp, Uint arity, Eterm terms[])
     *((*hpp)++) = make_arityval(arity);
 
     if (arity > 0) {
-      Uint i;
+      size_t i;
 
       for (i = 0; i < arity; i++) {
         *((*hpp)++) = terms[i];
@@ -583,10 +585,10 @@ Eterm erts_bld_tuplev(Uint **hpp, Uint *szp, Uint arity, Eterm terms[])
 }
 
 Eterm
-erts_bld_string_n(Uint **hpp, Uint *szp, const char *str, Sint len)
+erts_bld_string_n(size_t **hpp, size_t *szp, const char *str, ssize_t len)
 {
   Eterm res = THE_NON_VALUE;
-  Sint i = len;
+  ssize_t i = len;
 
   if (szp) {
     *szp += len * 2;
@@ -605,7 +607,7 @@ erts_bld_string_n(Uint **hpp, Uint *szp, const char *str, Sint len)
 }
 
 Eterm
-erts_bld_list(Uint **hpp, Uint *szp, Sint length, Eterm terms[])
+erts_bld_list(size_t **hpp, size_t *szp, ssize_t length, Eterm terms[])
 {
   Eterm list = THE_NON_VALUE;
 
@@ -614,7 +616,7 @@ erts_bld_list(Uint **hpp, Uint *szp, Sint length, Eterm terms[])
   }
 
   if (hpp) {
-    Sint i = length;
+    ssize_t i = length;
     list = NIL;
 
     while (--i >= 0) {
@@ -627,8 +629,8 @@ erts_bld_list(Uint **hpp, Uint *szp, Sint length, Eterm terms[])
 }
 
 Eterm
-erts_bld_2tup_list(Uint **hpp, Uint *szp,
-                   Sint length, Eterm terms1[], Uint terms2[])
+erts_bld_2tup_list(size_t **hpp, size_t *szp,
+                   ssize_t length, Eterm terms1[], size_t terms2[])
 {
   Eterm res = THE_NON_VALUE;
 
@@ -637,7 +639,7 @@ erts_bld_2tup_list(Uint **hpp, Uint *szp,
   }
 
   if (hpp) {
-    Sint i = length;
+    ssize_t i = length;
     res = NIL;
 
     while (--i >= 0) {
@@ -650,10 +652,10 @@ erts_bld_2tup_list(Uint **hpp, Uint *szp,
 }
 
 Eterm
-erts_bld_atom_uword_2tup_list(Uint **hpp, Uint *szp,
-                              Sint length, Eterm atoms[], UWord uints[])
+erts_bld_atom_uword_2tup_list(size_t **hpp, size_t *szp,
+                              ssize_t length, Eterm atoms[], UWord uints[])
 {
-  Sint i;
+  ssize_t i;
   Eterm res = THE_NON_VALUE;
 
   if (szp) {
@@ -690,10 +692,10 @@ erts_bld_atom_uword_2tup_list(Uint **hpp, Uint *szp,
 }
 
 Eterm
-erts_bld_atom_2uint_3tup_list(Uint **hpp, Uint *szp, Sint length,
-                              Eterm atoms[], Uint uints1[], Uint uints2[])
+erts_bld_atom_2uint_3tup_list(size_t **hpp, size_t *szp, ssize_t length,
+                              Eterm atoms[], size_t uints1[], size_t uints2[])
 {
-  Sint i;
+  ssize_t i;
   Eterm res = THE_NON_VALUE;
 
   if (szp) {
@@ -822,11 +824,11 @@ erts_bld_atom_2uint_3tup_list(Uint **hpp, Uint *szp, Sint length,
 #define FUNNY_NUMBER14 268440611
 
 static uint32_t
-hash_binary_bytes(Eterm bin, Uint sz, uint32_t hash)
+hash_binary_bytes(Eterm bin, size_t sz, uint32_t hash)
 {
   uint8_t *ptr;
-  Uint bitoffs;
-  Uint bitsize;
+  size_t bitoffs;
+  size_t bitsize;
 
   ERTS_GET_BINARY_BYTES(bin, ptr, bitoffs, bitsize);
 
@@ -842,10 +844,10 @@ hash_binary_bytes(Eterm bin, Uint sz, uint32_t hash)
       hash = (hash * FUNNY_NUMBER1 + b) * FUNNY_NUMBER12 + bitsize;
     }
   } else {
-    Uint previous = *ptr++;
-    Uint b;
-    Uint lshift = bitoffs;
-    Uint rshift = 8 - lshift;
+    size_t previous = *ptr++;
+    size_t b;
+    size_t lshift = bitoffs;
+    size_t rshift = 8 - lshift;
 
     while (sz--) {
       b = (previous << lshift) & 0xFF;
@@ -925,8 +927,8 @@ tail_recur:
       break;
 
     case SMALL_DEF: {
-      Sint y1 = signed_val(term);
-      Uint y2 = y1 < 0 ? -(Uint)y1 : y1;
+      ssize_t y1 = signed_val(term);
+      size_t y2 = y1 < 0 ? -(size_t)y1 : y1;
 
       UINT32_HASH_STEP(y2, FUNNY_NUMBER2);
 #if defined(ARCH_64) && !HALFWORD_HEAP
@@ -941,7 +943,7 @@ tail_recur:
     }
 
     case BINARY_DEF: {
-      Uint sz = binary_size(term);
+      size_t sz = binary_size(term);
 
       hash = hash_binary_bytes(term, sz, hash);
       hash = hash * FUNNY_NUMBER4 + sz;
@@ -961,7 +963,7 @@ tail_recur:
 
     case FUN_DEF: {
       ErlFunThing *funp = (ErlFunThing *) fun_val(term);
-      Uint num_free = funp->num_free;
+      size_t num_free = funp->num_free;
 
       hash = hash * FUNNY_NUMBER10 + num_free;
       hash = hash * FUNNY_NUMBER1 +
@@ -1047,11 +1049,11 @@ tail_recur:
       /* Note that this_ is the exact same thing as the hashing of smalls.*/
     {
       Eterm *ptr  = big_val(term);
-      Uint n = BIG_SIZE(ptr);
-      Uint k = n - 1;
+      size_t n = BIG_SIZE(ptr);
+      size_t k = n - 1;
       ErtsDigit d;
       int is_neg = BIG_SIGN(ptr);
-      Uint i;
+      size_t i;
       int j;
 
       for (i = 0; i < k; i++)  {
@@ -1104,7 +1106,7 @@ tail_recur:
 
     case TUPLE_DEF: {
       Eterm *ptr = tuple_val(term);
-      Uint arity = arityval(*ptr);
+      size_t arity = arityval(*ptr);
 
       WSTACK_PUSH3(stack, (UWord) arity, (UWord)(ptr + 1), (UWord) arity);
       op = MAKE_HASH_TUPLE_OP;
@@ -1112,7 +1114,7 @@ tail_recur:
 
     case MAKE_HASH_TUPLE_OP:
     case MAKE_HASH_TERM_ARRAY_OP: {
-      Uint i = (Uint) WSTACK_POP(stack);
+      size_t i = (size_t) WSTACK_POP(stack);
       Eterm *ptr = (Eterm *) WSTACK_POP(stack);
 
       if (i != 0) {
@@ -1279,7 +1281,7 @@ make_hash2(Eterm term)
       UINT32_HASH(y, AConst);             \
   } while(0)
 
-#define IS_SSMALL28(x) (((Uint) (((x) >> (28-1)) + 1)) < 2)
+#define IS_SSMALL28(x) (((size_t) (((x) >> (28-1)) + 1)) < 2)
 
   /* Optimization. Simple cases before declaration of estack. */
   if (primary_tag(term) == TAG_PRIMARY_IMMED1) {
@@ -1294,7 +1296,7 @@ make_hash2(Eterm term)
       break;
 
     case _TAG_IMMED1_SMALL: {
-      Sint x = signed_val(term);
+      ssize_t x = signed_val(term);
 
       if (SMALL_BITS > 28 && !IS_SSMALL28(x)) {
         term = small_to_big(x, tmp_big);
@@ -1432,7 +1434,7 @@ make_hash2(Eterm term)
 
         case FUN_SUBTAG: {
           ErlFunThing *funp = (ErlFunThing *) fun_val(term);
-          Uint num_free = funp->num_free;
+          size_t num_free = funp->num_free;
 
           UINT32_HASH_2
           (num_free,
@@ -1462,8 +1464,8 @@ make_hash2(Eterm term)
           uint8_t *bptr;
           unsigned sz = binary_size(term);
           uint32_t con = HCONST_13 + hash;
-          Uint bitoffs;
-          Uint bitsize;
+          size_t bitoffs;
+          size_t bitsize;
 
           ERTS_GET_BINARY_BYTES(term, bptr, bitoffs, bitsize);
 
@@ -1499,8 +1501,8 @@ make_hash2(Eterm term)
         case POS_BIG_SUBTAG:
         case NEG_BIG_SUBTAG: {
           Eterm *ptr = big_val(term);
-          Uint i = 0;
-          Uint n = BIG_SIZE(ptr);
+          size_t i = 0;
+          size_t n = BIG_SIZE(ptr);
           uint32_t con = BIG_SIGN(ptr) ? HCONST_10 : HCONST_11;
 #if D_EXP == 16
 
@@ -1525,7 +1527,7 @@ make_hash2(Eterm term)
 #elif D_EXP == 64
 
           do {
-            Uint t;
+            size_t t;
             uint32_t x, y;
             t = i < n ? BIG_DIGIT(ptr, i++) : 0;
             x = t & 0xffffffff;
@@ -1619,7 +1621,7 @@ make_hash2(Eterm term)
           }
 
         case _TAG_IMMED1_SMALL: {
-          Sint x = signed_val(term);
+          ssize_t x = signed_val(term);
 
           if (SMALL_BITS > 28 && !IS_SSMALL28(x)) {
             term = small_to_big(x, tmp_big);
@@ -1711,8 +1713,8 @@ tail_recur:
     case SMALL_DEF:
 #if defined(ARCH_64) && !HALFWORD_HEAP
     {
-      Sint y1 = signed_val(term);
-      Uint y2 = y1 < 0 ? -(Uint)y1 : y1;
+      ssize_t y1 = signed_val(term);
+      size_t y2 = y1 < 0 ? -(size_t)y1 : y1;
       uint32_t y3 = (uint32_t)(y2 >> 32);
       int arity = 1;
 
@@ -1730,7 +1732,7 @@ tail_recur:
 
         hash = hash * (y1 < 0 ? FUNNY_NUMBER3 : FUNNY_NUMBER2) + arity;
       } else {
-        hash = hash * FUNNY_NUMBER2 + (((Uint) y1) & 0xfffffff);
+        hash = hash * FUNNY_NUMBER2 + (((size_t) y1) & 0xfffffff);
       }
 
 #else
@@ -1746,7 +1748,7 @@ tail_recur:
 
         hash = hash * (y1 < 0 ? FUNNY_NUMBER3 : FUNNY_NUMBER2) + arity;
       } else {
-        hash = hash * FUNNY_NUMBER2 + (((Uint) y1) & 0xfffffff);
+        hash = hash * FUNNY_NUMBER2 + (((size_t) y1) & 0xfffffff);
       }
 
 #endif
@@ -1779,7 +1781,7 @@ tail_recur:
 
     case FUN_DEF: {
       ErlFunThing *funp = (ErlFunThing *) fun_val(term);
-      Uint num_free = funp->num_free;
+      size_t num_free = funp->num_free;
 
       hash = hash * FUNNY_NUMBER10 + num_free;
       hash = hash * FUNNY_NUMBER1 +
@@ -1854,8 +1856,8 @@ tail_recur:
     case BIG_DEF: {
       Eterm *ptr  = big_val(term);
       int is_neg = BIG_SIGN(ptr);
-      Uint arity = BIG_ARITY(ptr);
-      Uint i = arity;
+      size_t arity = BIG_ARITY(ptr);
+      size_t i = arity;
       ptr++;
 #if D_EXP == 16
 
@@ -1870,7 +1872,7 @@ tail_recur:
 #if defined(WORDS_BIGENDIAN)
 
       while (i--) {
-        Uint d = *ptr++;
+        size_t d = *ptr++;
         hash = hash * FUNNY_NUMBER2 + ((d << 16) | (d >> 16));
       }
 
@@ -1888,7 +1890,7 @@ tail_recur:
 #if defined(WORDS_BIGENDIAN)
 
         while (i--) {
-          Uint d = *ptr++;
+          size_t d = *ptr++;
           l = d & 0xffffffff;
           h = d >> 32;
           hash = hash * FUNNY_NUMBER2 + ((l << 16) | (l >> 16));
@@ -1901,7 +1903,7 @@ tail_recur:
 #else
 
         while (i--) {
-          Uint d = *ptr++;
+          size_t d = *ptr++;
           l = d & 0xffffffff;
           h = d >> 32;
           hash = hash * FUNNY_NUMBER2 + l;
@@ -1945,7 +1947,7 @@ tail_recur:
 
     case TUPLE_DEF: {
       Eterm *ptr = tuple_val(term);
-      Uint arity = arityval(*ptr);
+      size_t arity = arityval(*ptr);
 
       WSTACK_PUSH3(stack, (UWord) arity, (UWord)(ptr + 1), (UWord) arity);
       op = MAKE_HASH_TUPLE_OP;
@@ -1953,7 +1955,7 @@ tail_recur:
 
     case MAKE_HASH_TUPLE_OP:
     case MAKE_HASH_TERM_ARRAY_OP: {
-      Uint i = (Uint) WSTACK_POP(stack);
+      size_t i = (size_t) WSTACK_POP(stack);
       Eterm *ptr = (Eterm *) WSTACK_POP(stack);
 
       if (i != 0) {
@@ -1979,7 +1981,7 @@ tail_recur:
       break;
     }
 
-    op = (Uint) WSTACK_POP(stack);
+    op = (size_t) WSTACK_POP(stack);
   }
 
   DESTROY_WSTACK(stack);
@@ -1998,8 +2000,8 @@ static int do_send_to_logger(Eterm tag, Eterm gleader, char *buf, int len)
      {notify,{error,gleader,{emulator,"~s~n",[<message as list>]}}} |
      {notify,{warning_msg,gleader,{emulator,"~s~n",[<message as list>}]}} */
   Eterm *hp;
-  Uint sz;
-  Uint gl_sz;
+  size_t sz;
+  size_t gl_sz;
   Eterm gl;
   Eterm list, plist, format, tuple1, tuple2, tuple3;
   ErlOffHeap *ohp;
@@ -2067,10 +2069,10 @@ static int do_send_to_logger(Eterm tag, Eterm gleader, char *buf, int len)
         : (IS_CONST(gleader)
            ? gleader
            : copy_struct(gleader, gl_sz, &hp, ohp)));
-  list = buf_to_intlist(&hp, buf, len, NIL);
+  list = util::buf_to_intlist(&hp, buf, len, NIL);
   plist = CONS(hp, list, NIL);
   hp += 2;
-  format = buf_to_intlist(&hp, "~s~n", 4, NIL);
+  format = util::buf_to_intlist(&hp, "~s~n", 4, NIL);
   tuple1 = TUPLE3(hp, am_emulator, format, plist);
   hp += 4;
   tuple2 = TUPLE3(hp, tag, gl, tuple1);
@@ -2289,9 +2291,9 @@ grow_tmp_dsbuf(erts_dsprintf_buf_t *dsbufp, size_t need)
 }
 
 erts_dsprintf_buf_t *
-erts_create_tmp_dsbuf(Uint size)
+erts_create_tmp_dsbuf(size_t size)
 {
-  Uint init_size = size ? size : TMP_DSBUF_INC_SZ;
+  size_t init_size = size ? size : TMP_DSBUF_INC_SZ;
   erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_tmp_dsbuf);
   erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)erts_alloc(ERTS_ALC_T_TMP_DSBUF,
                                 sizeof(erts_dsprintf_buf_t));
@@ -2325,7 +2327,7 @@ int eq(Eterm a, Eterm b)
 #endif
 {
   DECLARE_WSTACK(stack);
-  Sint sz;
+  ssize_t sz;
   Eterm *aa;
   Eterm *bb;
 
@@ -2427,10 +2429,10 @@ tailrecur_ne:
       uint8_t *b_ptr;
       size_t a_size;
       size_t b_size;
-      Uint a_bitsize;
-      Uint b_bitsize;
-      Uint a_bitoffs;
-      Uint b_bitoffs;
+      size_t a_bitsize;
+      size_t b_bitsize;
+      size_t a_bitoffs;
+      size_t b_bitoffs;
 
       if (!is_binary_rel(b, b_base)) {
         goto not_equal;
@@ -2532,10 +2534,10 @@ tailrecur_ne:
        */
       uint32_t *anum;
       uint32_t *bnum;
-      Uint common_len;
-      Uint alen;
-      Uint blen;
-      Uint i;
+      size_t common_len;
+      size_t alen;
+      size_t blen;
+      size_t i;
       ExternalThing *athing;
       ExternalThing *bthing;
 
@@ -2671,7 +2673,7 @@ term_array: /* arrays in 'aa' and 'bb', length in 'sz' */
   {
     Eterm *ap = aa;
     Eterm *bp = bb;
-    Sint i = sz;
+    ssize_t i = sz;
 
     for (;;) {
       if (!is_same(*ap, a_base, *bp, b_base)) {
@@ -2797,7 +2799,7 @@ static int cmp_atoms(Eterm a, Eterm b)
 /* cmp(Eterm a, Eterm b)
  *  For compatibility with HiPE - arith-based compare.
  */
-Sint cmp(Eterm a, Eterm b)
+ssize_t cmp(Eterm a, Eterm b)
 {
   return erts_cmp(a, b, 0);
 }
@@ -2808,24 +2810,24 @@ Sint cmp(Eterm a, Eterm b)
  * exact = 0 -> arith-based compare
  */
 #if HALFWORD_HEAP
-Sint erts_cmp_rel_opt(Eterm a, Eterm *a_base, Eterm b, Eterm *b_base, int exact)
+ssize_t erts_cmp_rel_opt(Eterm a, Eterm *a_base, Eterm b, Eterm *b_base, int exact)
 #else
-Sint erts_cmp(Eterm a, Eterm b, int exact)
+ssize_t erts_cmp(Eterm a, Eterm b, int exact)
 #endif
 {
   DECLARE_WSTACK(stack);
   Eterm *aa;
   Eterm *bb;
   int i;
-  Sint j;
+  ssize_t j;
   int a_tag;
   int b_tag;
   ErlNode *anode;
   ErlNode *bnode;
-  Uint adata;
-  Uint bdata;
-  Uint alen;
-  Uint blen;
+  size_t adata;
+  size_t bdata;
+  size_t alen;
+  size_t blen;
   uint32_t *anum;
   uint32_t *bnum;
 
@@ -2887,7 +2889,7 @@ tailrecur_ne:
 
 port_common:
       CMP_NODES(anode, bnode);
-      ON_CMP_GOTO((Sint)(adata - bdata));
+      ON_CMP_GOTO((ssize_t)(adata - bdata));
 
     case (_TAG_IMMED1_PID >> _TAG_PRIMARY_SIZE):
       if (is_internal_pid(b)) {
@@ -3056,7 +3058,7 @@ pid_common:
           RETURN_NEQ(j);
         }
 
-        ON_CMP_GOTO((Sint) a_exp->code[2] - (Sint) b_exp->code[2]);
+        ON_CMP_GOTO((ssize_t) a_exp->code[2] - (ssize_t) b_exp->code[2]);
       }
 
       break;
@@ -3068,7 +3070,7 @@ pid_common:
       } else {
         ErlFunThing *f1 = (ErlFunThing *) fun_val_rel(a, a_base);
         ErlFunThing *f2 = (ErlFunThing *) fun_val_rel(b, b_base);
-        Sint diff;
+        ssize_t diff;
 
         diff = cmpbytes(atom_tab(atom_val(f1->fe->module))->name,
                         atom_tab(atom_val(f1->fe->module))->len,
@@ -3197,7 +3199,7 @@ ref_common:
 
       ASSERT(alen == blen);
 
-      for (i = (Sint) alen - 1; i >= 0; i--)
+      for (i = (ssize_t) alen - 1; i >= 0; i--)
         if (anum[i] != bnum[i]) {
           RETURN_NEQ((int32_t)(anum[i] - bnum[i]));
         }
@@ -3237,13 +3239,13 @@ ref_common:
         a_tag = BINARY_DEF;
         goto mixed_types;
       } else {
-        Uint a_size = binary_size_rel(a, a_base);
-        Uint b_size = binary_size_rel(b, b_base);
-        Uint a_bitsize;
-        Uint b_bitsize;
-        Uint a_bitoffs;
-        Uint b_bitoffs;
-        Uint min_size;
+        size_t a_size = binary_size_rel(a, a_base);
+        size_t b_size = binary_size_rel(b, b_base);
+        size_t a_bitsize;
+        size_t b_bitsize;
+        size_t a_bitoffs;
+        size_t b_bitoffs;
+        size_t min_size;
         int cmp;
         uint8_t *a_ptr;
         uint8_t *b_ptr;
@@ -3267,7 +3269,7 @@ ref_common:
           }
         }
 
-        ON_CMP_GOTO((Sint)(a_size - b_size));
+        ON_CMP_GOTO((ssize_t)(a_size - b_size));
       }
     }
   }
@@ -3326,8 +3328,8 @@ mixed_types:
         /* Float is a negative bignum, i.e. smaller */
         j = 1;
       } else {
-        /* Float is a Sint but less precise */
-        j = signed_val(aw) - (Sint) f2.fd;
+        /* Float is a ssize_t but less precise */
+        j = signed_val(aw) - (ssize_t) f2.fd;
       }
 
 #else
@@ -3359,7 +3361,7 @@ mixed_types:
 
       if ((f2.fd < (double)(MAX_SMALL + 1))
           && (f2.fd > (double)(MIN_SMALL - 1))) {
-        /* Float is a Sint */
+        /* Float is a ssize_t */
         j = big_sign(aw) ? -1 : 1;
       } else if (big_arity(aw) > BIG_ARITY_FLOAT_MAX
                  || pow(2.0, (big_arity(aw) - 1)*D_EXP) > fabs(f2.fd)) {
@@ -3408,8 +3410,8 @@ mixed_types:
         /* Float is a negative bignum, i.e. smaller */
         j = -1;
       } else {
-        /* Float is a Sint but less precise it */
-        j = (Sint) f1.fd - signed_val(bw);
+        /* Float is a ssize_t but less precise it */
+        j = (ssize_t) f1.fd - signed_val(bw);
       }
 
 #else
@@ -3490,12 +3492,12 @@ not_equal:
 
 
 Eterm
-store_external_or_ref_(Uint **hpp, ErlOffHeap *oh, Eterm ns)
+store_external_or_ref_(size_t **hpp, ErlOffHeap *oh, Eterm ns)
 {
-  Uint i;
-  Uint size;
-  Uint *from_hp;
-  Uint *to_hp = *hpp;
+  size_t i;
+  size_t size;
+  size_t *from_hp;
+  size_t *to_hp = *hpp;
 
   ASSERT(is_external(ns) || is_internal_ref(ns));
 
@@ -3533,8 +3535,8 @@ store_external_or_ref_(Uint **hpp, ErlOffHeap *oh, Eterm ns)
 Eterm
 store_external_or_ref_in_proc_(Process *proc, Eterm ns)
 {
-  Uint sz;
-  Uint *hp;
+  size_t sz;
+  size_t *hp;
 
   ASSERT(is_external(ns) || is_internal_ref(ns));
 
@@ -3605,7 +3607,7 @@ intlist_to_buf(Eterm list, char *buf, int len)
 ** Convert an integer to a byte list
 ** return pointer to converted stuff (need not to be at start of buf!)
 */
-char *Sint_to_buf(Sint n, struct Sint_buf *buf)
+char *Sint_to_buf(ssize_t n, struct Sint_buf *buf)
 {
   char *p = &buf->s[sizeof(buf->s) - 1];
   int sign = 0;
@@ -3637,21 +3639,21 @@ char *Sint_to_buf(Sint n, struct Sint_buf *buf)
 ** this_ pointer is updated to point after the list
 */
 
-Eterm
-buf_to_intlist(Eterm **hpp, const char *buf, size_t len, Eterm tail)
-{
-  Eterm *hp = *hpp;
-  size_t i = len;
+//Eterm
+//util::buf_to_intlist(Eterm **hpp, const char *buf, size_t len, Eterm tail)
+//{
+//  Eterm *hp = *hpp;
+//  size_t i = len;
 
-  while (i != 0) {
-    --i;
-    tail = CONS(hp, make_small((Uint)(uint8_t)buf[i]), tail);
-    hp += 2;
-  }
+//  while (i != 0) {
+//    --i;
+//    tail = CONS(hp, make_small((size_t)(uint8_t)buf[i]), tail);
+//    hp += 2;
+//  }
 
-  *hpp = hp;
-  return tail;
-}
+//  *hpp = hp;
+//  return tail;
+//}
 
 /*
 ** Write io list in to a buffer.
@@ -3708,10 +3710,10 @@ iolist_to_buf(const int yield_support,
 do {                  \
     size_t size = binary_size(obj);         \
     if (size > 0) {             \
-  Uint bitsize;             \
+  size_t bitsize;             \
   uint8_t* bptr;              \
-  Uint bitoffs;             \
-  Uint num_bits;              \
+  size_t bitoffs;             \
+  size_t num_bits;              \
   if (yield_support) {            \
       size_t max_size = ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT; \
       if (yield_count > 0)          \
@@ -3938,8 +3940,8 @@ iolist_to_buf_bcopy(ErtsIOList2BufState *state, Eterm obj, int *yield_countp)
   uint8_t *bptr;
   size_t size;
   size_t max_size;
-  Uint bitoffs;
-  Uint num_bits;
+  size_t bitoffs;
+  size_t num_bits;
   int yield_count = *yield_countp;
 
   if (state->bcopy.bptr) {
@@ -3948,7 +3950,7 @@ iolist_to_buf_bcopy(ErtsIOList2BufState *state, Eterm obj, int *yield_countp)
     bitoffs = state->bcopy.bitoffs;
     state->bcopy.bptr = nullptr;
   } else {
-    Uint bitsize;
+    size_t bitsize;
 
     ASSERT(is_binary(obj));
 
@@ -4027,7 +4029,7 @@ iolist_size(const int yield_support, ErtsIOListState *state, Eterm obj, ErlDrvSi
 {
   int res, init_yield_count, yield_count;
   Eterm *objp;
-  Uint size = (Uint) * sizep; /* Intentionally Uint due to halfword heap */
+  size_t size = (size_t) * sizep; /* Intentionally size_t due to halfword heap */
   DECLARE_ESTACK(s);
 
   if (!yield_support) {
@@ -4045,7 +4047,7 @@ iolist_size(const int yield_support, ErtsIOListState *state, Eterm obj, ErlDrvSi
     if (state->estack.start) {
       /* Restart; restore state... */
       ESTACK_RESTORE(s, &state->estack);
-      size = (Uint) state->size;
+      size = (size_t) state->size;
       obj = state->obj;
     }
   }
@@ -4054,7 +4056,7 @@ iolist_size(const int yield_support, ErtsIOListState *state, Eterm obj, ErlDrvSi
 
 #define SAFE_ADD(Var, Val)      \
     do {          \
-        Uint valvar = (Val);      \
+        size_t valvar = (Val);      \
   Var += valvar;        \
   if (Var < valvar) {     \
       goto L_overflow_error;    \
@@ -4301,7 +4303,7 @@ void
 erts_create_smp_ptimer(ErtsSmpPTimer **timer_ref,
                        Eterm id,
                        ErlTimeoutProc timeout_func,
-                       Uint timeout)
+                       size_t timeout)
 {
   ErtsSmpPTimer *res = ptimer_pre_alloc();
 
@@ -4351,7 +4353,7 @@ static int top_pad;
 static int mmap_threshold;
 static int mmap_max;
 
-Uint tot_bin_allocated;
+size_t tot_bin_allocated;
 
 void erts_init_utils(void)
 {
@@ -4469,7 +4471,7 @@ erts_free_read_env(void *value)
   }
 }
 
-
+#if 0
 typedef struct {
   size_t sz;
   char *ptr;
@@ -4548,11 +4550,11 @@ erts_get_emu_args(Process *c_p)
   Eterm *end_hp;
 #endif
   int i;
-  Uint hsz;
+  size_t hsz;
   Eterm *hp, res;
 
-  hsz = saved_emu_args.no_bytes * 2;
-  hsz += saved_emu_args.argc * 2;
+  hsz = g_saved_emu_args.no_bytes * 2;
+  hsz += g_saved_emu_args.argc * 2;
 
   hp = HAlloc(c_p, hsz);
 #ifdef DEBUG
@@ -4561,7 +4563,7 @@ erts_get_emu_args(Process *c_p)
   res = NIL;
 
   for (i = saved_emu_args.argc - 1; i >= 0; i--) {
-    Eterm arg = buf_to_intlist(&hp,
+    Eterm arg = util::buf_to_intlist(&hp,
                                saved_emu_args.arg[i].ptr,
                                saved_emu_args.arg[i].sz,
                                NIL);
@@ -4573,12 +4575,13 @@ erts_get_emu_args(Process *c_p)
 
   return res;
 }
+#endif //0
 
 
 Eterm
 erts_get_ethread_info(Process *c_p)
 {
-  Uint sz, *szp;
+  size_t sz, *szp;
   Eterm res, *hp, **hpp, *end_hp = nullptr;
 
   sz = 0;

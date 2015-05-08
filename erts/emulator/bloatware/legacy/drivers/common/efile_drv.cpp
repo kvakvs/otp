@@ -94,7 +94,7 @@
 
 
 /* Must not be possible to get from malloc()! */
-#define FILE_FD_INVALID ((Sint)(-1))
+#define FILE_FD_INVALID ((ssize_t)(-1))
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -513,7 +513,7 @@ struct t_data {
 #define EF_SAFE_REALLOC(P, S) ef_safe_realloc((P), (S))
 #define EF_FREE(P)    do { if((P)) driver_free((P)); } while(0)
 
-static void *ef_safe_alloc(Uint s)
+static void *ef_safe_alloc(size_t s)
 {
   void *p = EF_ALLOC(s);
 
@@ -526,7 +526,7 @@ static void *ef_safe_alloc(Uint s)
 
 #if 0 /* Currently not used */
 
-static void *ef_safe_realloc(void *op, Uint s)
+static void *ef_safe_realloc(void *op, size_t s)
 {
   void *p = EF_REALLOC(op, s);
 
@@ -930,7 +930,7 @@ static void reply_posix_error(file_descriptor *desc, int posix_errno)
   driver_output2(desc->port, response, t - response, nullptr, 0);
 }
 
-static void reply_Uint_posix_error(file_descriptor *desc, Uint num,
+static void reply_Uint_posix_error(file_descriptor *desc, size_t num,
                                    int posix_errno)
 {
   char response[256];   /* Response buffer. */
@@ -986,7 +986,7 @@ static int reply_error(file_descriptor *desc,
   return 0;
 }
 
-static int reply_Uint_error(file_descriptor *desc, Uint num,
+static int reply_Uint_error(file_descriptor *desc, size_t num,
                             Efile_error *errInfo) /* The error codes. */
 {
   reply_Uint_posix_error(desc, num, errInfo->posix_errno);
@@ -1013,7 +1013,7 @@ static int reply(file_descriptor *desc, int ok, Efile_error *errInfo)
   return 0;
 }
 
-static int reply_Uint(file_descriptor *desc, Uint result)
+static int reply_Uint(file_descriptor *desc, size_t result)
 {
   char tmp[1 + 4 + 4];
 
@@ -2891,7 +2891,7 @@ file_output(ErlDrvData e, char *buf, ErlDrvSizeT count)
 {
   file_descriptor *desc = (file_descriptor *)e;
   Efile_error errInfo;  /* The error codes for the last operation. */
-  Sint fd;      /* The file descriptor for this_ port, if any,
+  ssize_t fd;      /* The file descriptor for this_ port, if any,
          * -1 if none.
          */
   char *name;     /* Points to the filename in buf. */

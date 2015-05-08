@@ -57,7 +57,7 @@ IndexTable *
 erts_index_init(ErtsAlcType_t type, IndexTable *t, char *name,
                 int size, int limit, HashFunctions fun)
 {
-  Uint base_size = ((limit + INDEX_PAGE_SIZE - 1) / INDEX_PAGE_SIZE) * sizeof(IndexSlot *);
+  size_t base_size = ((limit + INDEX_PAGE_SIZE - 1) / INDEX_PAGE_SIZE) * sizeof(IndexSlot *);
   hash_init(type, &t->htable, name, 3 * size / 4, fun);
 
   t->size = 0;
@@ -81,7 +81,7 @@ index_put_entry(IndexTable *t, void *tmpl)
   ix = t->entries;
 
   if (ix >= t->size) {
-    Uint sz;
+    size_t sz;
 
     if (ix >= t->limit) {
       /* A core dump is unnecessary */
@@ -123,7 +123,7 @@ void erts_index_merge(Hash *src, IndexTable *dst)
     int ix;
 
     while (b) {
-      Uint sz;
+      size_t sz;
       ix = dst->entries++;
 
       if (ix >= dst->size) {
@@ -145,9 +145,9 @@ void erts_index_merge(Hash *src, IndexTable *dst)
   }
 }
 
-void index_erase_latest_from(IndexTable *t, Uint from_ix)
+void index_erase_latest_from(IndexTable *t, size_t from_ix)
 {
-  if (from_ix < (Uint)t->entries) {
+  if (from_ix < (size_t)t->entries) {
     int ix;
 
     for (ix = from_ix; ix < t->entries; ix++)  {

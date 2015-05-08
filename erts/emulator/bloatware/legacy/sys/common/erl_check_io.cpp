@@ -1989,10 +1989,10 @@ ERTS_CIO_EXPORT(erts_check_io_max_files)(void)
 #endif
 }
 
-Uint
+size_t
 ERTS_CIO_EXPORT(erts_check_io_size)(void)
 {
-    Uint res;
+    size_t res;
     ErtsPollInfo pi;
     ERTS_CIO_POLL_INFO(pollset.ps, &pi);
     res = pi.memory_size;
@@ -2017,8 +2017,8 @@ ERTS_CIO_EXPORT(erts_check_io_info)(void *proc)
 {
     Process *p = (Process *) proc;
     Eterm tags[16], values[16], res;
-    Uint sz, *szp, *hp, **hpp, memory_size;
-    Sint i;
+    size_t sz, *szp, *hp, **hpp, memory_size;
+    ssize_t i;
     ErtsPollInfo pi;
     erts_aint_t cio_time = erts_smp_atomic_read_acqb(&erts_check_io_time);
     int active_fds = (int) erts_smp_atomic32_read_acqb(&pollset.active_fd.no);
@@ -2076,11 +2076,11 @@ ERTS_CIO_EXPORT(erts_check_io_info)(void *proc)
     values[i++] = erts_bld_uint(hpp, szp, memory_size);
 
     tags[i] = erts_bld_atom(hpp, szp, "total_poll_set_size");
-    values[i++] = erts_bld_uint(hpp, szp, (Uint) pi.poll_set_size);
+    values[i++] = erts_bld_uint(hpp, szp, (size_t) pi.poll_set_size);
 
     if (pi.fallback) {
 	tags[i] = erts_bld_atom(hpp, szp, "fallback_poll_set_size");
-	values[i++] = erts_bld_uint(hpp, szp, (Uint) pi.fallback_poll_set_size);
+        values[i++] = erts_bld_uint(hpp, szp, (size_t) pi.fallback_poll_set_size);
     }
 
     tags[i] = erts_bld_atom(hpp, szp, "lazy_updates");
@@ -2088,7 +2088,7 @@ ERTS_CIO_EXPORT(erts_check_io_info)(void *proc)
 
     if (pi.lazy_updates) {
 	tags[i] = erts_bld_atom(hpp, szp, "pending_updates");
-	values[i++] = erts_bld_uint(hpp, szp, (Uint) pi.pending_updates);
+        values[i++] = erts_bld_uint(hpp, szp, (size_t) pi.pending_updates);
     }
 
     tags[i] = erts_bld_atom(hpp, szp, "batch_updates");
@@ -2098,10 +2098,10 @@ ERTS_CIO_EXPORT(erts_check_io_info)(void *proc)
     values[i++] = pi.concurrent_updates ? am_true : am_false;
 
     tags[i] = erts_bld_atom(hpp, szp, "max_fds");
-    values[i++] = erts_bld_uint(hpp, szp, (Uint) pi.max_fds);
+    values[i++] = erts_bld_uint(hpp, szp, (size_t) pi.max_fds);
 
     tags[i] = erts_bld_atom(hpp, szp, "active_fds");
-    values[i++] = erts_bld_uint(hpp, szp, (Uint) active_fds);
+    values[i++] = erts_bld_uint(hpp, szp, (size_t) active_fds);
 
 #ifdef ERTS_POLL_COUNT_AVOIDED_WAKEUPS
     tags[i] = erts_bld_atom(hpp, szp, "no_avoided_wakeups");

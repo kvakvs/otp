@@ -62,14 +62,14 @@
 #define MIN_MBC_SZ    (16*1024)
 #define MIN_MBC_FIRST_FREE_SZ (4*1024)
 
-#define TREE_NODE_FLG   (((Uint) 1) << 0)
-#define RED_FLG     (((Uint) 1) << 1)
+#define TREE_NODE_FLG   (((size_t) 1) << 0)
+#define RED_FLG     (((size_t) 1) << 1)
 #ifdef HARD_DEBUG
-#  define LEFT_VISITED_FLG  (((Uint) 1) << 2)
-#  define RIGHT_VISITED_FLG (((Uint) 1) << 3)
+#  define LEFT_VISITED_FLG  (((size_t) 1) << 2)
+#  define RIGHT_VISITED_FLG (((size_t) 1) << 3)
 #endif
 #ifdef DEBUG
-#  define IS_BF_FLG         (((Uint) 1) << 4)
+#  define IS_BF_FLG         (((size_t) 1) << 4)
 #endif
 
 #define IS_TREE_NODE(N)   (((AOFF_RBTree_t *) (N))->flags & TREE_NODE_FLG)
@@ -138,7 +138,7 @@ struct AOFF_Carrier_t_ {
 #  define HARD_CHECK_IS_MEMBER(ROOT,NODE) rbt_assert_is_member(ROOT,NODE)
 #  define HARD_CHECK_TREE(CRR,FLV,ROOT,SZ) check_tree(CRR, FLV, ROOT, SZ)
 static AOFF_RBTree_t *check_tree(Carrier_t *within_crr, enum AOFF_Flavor flavor,
-                                 AOFF_RBTree_t *root, Uint);
+                                 AOFF_RBTree_t *root, size_t);
 #else
 #  define HARD_CHECK_IS_MEMBER(ROOT,NODE)
 #  define HARD_CHECK_TREE(CRR,FLV,ROOT,SZ)
@@ -148,9 +148,9 @@ static AOFF_RBTree_t *check_tree(Carrier_t *within_crr, enum AOFF_Flavor flavor,
 /* Calculate 'max_sz' of tree node x by only looking at 'max_sz' of the
  * direct children of x and the size x itself.
  */
-static ERTS_INLINE Uint node_max_size(AOFF_RBTree_t *x)
+static ERTS_INLINE size_t node_max_size(AOFF_RBTree_t *x)
 {
-  Uint sz = AOFF_BLK_SZ(x);
+  size_t sz = AOFF_BLK_SZ(x);
 
   if (x->left && x->left->max_sz > sz) {
     sz = x->left->max_sz;
@@ -169,8 +169,8 @@ static ERTS_INLINE void lower_max_size(AOFF_RBTree_t *node,
                                        AOFF_RBTree_t *stop_at)
 {
   AOFF_RBTree_t *x = node;
-  Uint old_max = x->max_sz;
-  Uint new_max = node_max_size(x);
+  size_t old_max = x->max_sz;
+  size_t new_max = node_max_size(x);
 
   if (new_max < old_max) {
     x->max_sz = new_max;
@@ -220,7 +220,7 @@ static ERTS_INLINE SWord cmp_cand_blk(enum AOFF_Flavor flavor,
 
 
 /* Prototypes of callback functions */
-static Block_t *aoff_get_free_block(Allctr_t *, Uint, Block_t *, Uint);
+static Block_t *aoff_get_free_block(Allctr_t *, size_t, Block_t *, size_t);
 static void aoff_link_free_block(Allctr_t *, Block_t *);
 static void aoff_unlink_free_block(Allctr_t *allctr, Block_t *del);
 static void aoff_creating_mbc(Allctr_t *, Carrier_t *);
@@ -232,12 +232,12 @@ static UWord aoff_largest_fblk_in_mbc(Allctr_t *, Carrier_t *);
 /* Generic tree functions used by both carrier and block trees. */
 static void rbt_delete(AOFF_RBTree_t **root, AOFF_RBTree_t *del);
 static void rbt_insert(enum AOFF_Flavor flavor, AOFF_RBTree_t **root, AOFF_RBTree_t *blk);
-static AOFF_RBTree_t *rbt_search(AOFF_RBTree_t *root, Uint size);
+static AOFF_RBTree_t *rbt_search(AOFF_RBTree_t *root, size_t size);
 #ifdef HARD_DEBUG
 static int rbt_assert_is_member(AOFF_RBTree_t *root, AOFF_RBTree_t *node);
 #endif
 
-static Eterm info_options(Allctr_t *, char *, int *, void *, Uint **, Uint *);
+static Eterm info_options(Allctr_t *, char *, int *, void *, size_t **, size_t *);
 static void init_atoms(void);
 
 
@@ -560,7 +560,7 @@ aoff_unlink_free_block(Allctr_t *allctr, Block_t *blk)
 static void
 rbt_delete(AOFF_RBTree_t **root, AOFF_RBTree_t *del)
 {
-  Uint spliced_is_black;
+  size_t spliced_is_black;
   AOFF_RBTree_t *x, *y, *z = del;
   AOFF_RBTree_t null_x; /* null_x is used to get the fixup started when we
       splice out a node without children. */
@@ -745,7 +745,7 @@ aoff_link_free_block(Allctr_t *allctr, Block_t *block)
   AOFF_RBTree_t *blk = (AOFF_RBTree_t *) block;
   AOFF_RBTree_t *crr_node;
   AOFF_Carrier_t *blk_crr = (AOFF_Carrier_t *) FBLK_TO_MBC(block);
-  Uint blk_sz = AOFF_BLK_SZ(blk);
+  size_t blk_sz = AOFF_BLK_SZ(blk);
 
   ASSERT(allctr == ERTS_ALC_CARRIER_TO_ALLCTR(&blk_crr->crr));
   ASSERT(blk_crr->rbt_node.hdr.bhdr == (blk_crr->root ? blk_crr->root->max_sz : 0));
@@ -777,7 +777,7 @@ aoff_link_free_block(Allctr_t *allctr, Block_t *block)
 static void
 rbt_insert(enum AOFF_Flavor flavor, AOFF_RBTree_t **root, AOFF_RBTree_t *blk)
 {
-  Uint blk_sz = AOFF_BLK_SZ(blk);
+  size_t blk_sz = AOFF_BLK_SZ(blk);
 
 #ifdef DEBUG
   blk->flags  = (flavor == AOFF_BF) ? IS_BF_FLG : 0;
@@ -854,7 +854,7 @@ rbt_insert(enum AOFF_Flavor flavor, AOFF_RBTree_t **root, AOFF_RBTree_t *blk)
 }
 
 static AOFF_RBTree_t *
-rbt_search(AOFF_RBTree_t *root, Uint size)
+rbt_search(AOFF_RBTree_t *root, size_t size)
 {
   AOFF_RBTree_t *x = root;
 
@@ -876,8 +876,8 @@ rbt_search(AOFF_RBTree_t *root, Uint size)
 }
 
 static Block_t *
-aoff_get_free_block(Allctr_t *allctr, Uint size,
-                    Block_t *cand_blk, Uint cand_size)
+aoff_get_free_block(Allctr_t *allctr, size_t size,
+                    Block_t *cand_blk, size_t cand_size)
 {
   AOFFAllctr_t *alc = (AOFFAllctr_t *) allctr;
   AOFF_RBTree_t *crr_node = alc->mbc_root;
@@ -1057,7 +1057,7 @@ init_atoms(void)
 #define bld_tuple erts_bld_tuple
 
 static ERTS_INLINE void
-add_2tup(Uint **hpp, Uint *szp, Eterm *lp, Eterm el1, Eterm el2)
+add_2tup(size_t **hpp, size_t *szp, Eterm *lp, Eterm el1, Eterm el2)
 {
   *lp = bld_cons(hpp, szp, bld_tuple(hpp, szp, 2, el1, el2), *lp);
 }
@@ -1067,8 +1067,8 @@ info_options(Allctr_t *allctr,
              char *prefix,
              int *print_to_p,
              void *print_to_arg,
-             Uint **hpp,
-             Uint *szp)
+             size_t **hpp,
+             size_t *szp)
 {
   AOFFAllctr_t *alc = (AOFFAllctr_t *) allctr;
   Eterm res = THE_NON_VALUE;
@@ -1113,7 +1113,7 @@ erts_aoffalc_test(UWord op, UWord a1, UWord a2)
 
   case 0x501: {
     AOFF_RBTree_t *node = ((AOFFAllctr_t *) a1)->mbc_root;
-    Uint size = (Uint) a2;
+    size_t size = (size_t) a2;
     node = node ? rbt_search(node, size) : nullptr;
     return (UWord)(node ? RBT_NODE_TO_MBC(node)->root : nullptr);
   }
@@ -1209,14 +1209,14 @@ static void print_tree(AOFF_RBTree_t *);
  */
 
 static AOFF_RBTree_t *
-check_tree(Carrier_t *within_crr, enum AOFF_Flavor flavor, AOFF_RBTree_t *root, Uint size)
+check_tree(Carrier_t *within_crr, enum AOFF_Flavor flavor, AOFF_RBTree_t *root, size_t size)
 {
   AOFF_RBTree_t *res = nullptr;
-  Sint blacks;
-  Sint curr_blacks;
+  ssize_t blacks;
+  ssize_t curr_blacks;
   AOFF_RBTree_t *x;
   Carrier_t *crr;
-  Uint depth, max_depth, node_cnt;
+  size_t depth, max_depth, node_cnt;
 
 #ifdef PRINT_TREE
   print_tree(root);
@@ -1380,7 +1380,7 @@ print_tree_aux(AOFF_RBTree_t *x, int indent)
 
     fprintf(stderr, "%s: sz=%lu addr=0x%lx max_size=%u\r\n",
             IS_BLACK(x) ? "BLACK" : "RED",
-            AOFF_BLK_SZ(x), (Uint)x, (unsigned)x->max_sz);
+            AOFF_BLK_SZ(x), (size_t)x, (unsigned)x->max_sz);
     print_tree_aux(x->left,  indent + INDENT_STEP);
   }
 }

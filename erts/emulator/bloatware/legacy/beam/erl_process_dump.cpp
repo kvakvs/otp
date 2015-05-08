@@ -79,10 +79,10 @@ erts_deep_process_dump(int to, void *to_arg)
   dump_binaries(to, to_arg, all_binaries);
 }
 
-Uint erts_process_memory(Process *p)
+size_t erts_process_memory(Process *p)
 {
   ErlMessage *mp;
-  Uint size = 0;
+  size_t size = 0;
   struct saved_calls *scb;
   size += sizeof(Process);
 
@@ -369,8 +369,8 @@ heap_dump(int to, void *to_arg, Eterm x)
         erts_print(to, to_arg, PTR_FMT ":", ptr);
 
         if (is_arity_value(hdr)) {
-          Uint i;
-          Uint arity = arityval(hdr);
+          size_t i;
+          size_t arity = arityval(hdr);
 
           erts_print(to, to_arg, "t" ETERM_FMT ":", arity);
 
@@ -410,9 +410,9 @@ heap_dump(int to, void *to_arg, Eterm x)
           erts_print(to, to_arg, "B%T\n", x);
           *ptr = OUR_NIL;
         } else if (is_binary_header(hdr)) {
-          Uint tag = thing_subtag(hdr);
-          Uint size = binary_size(x);
-          Uint i;
+          size_t tag = thing_subtag(hdr);
+          size_t size = binary_size(x);
+          size_t i;
 
           if (tag == HEAP_BINARY_SUBTAG) {
             uint8_t *p;
@@ -543,8 +543,8 @@ dump_externally(int to, void *to_arg, Eterm term)
      * The crashdump_viewer does not allow inspection of them anyway.
      */
     ErlFunThing *funp = (ErlFunThing *) fun_val(term);
-    Uint num_free = funp->num_free;
-    Uint i;
+    size_t num_free = funp->num_free;
+    size_t i;
 
     for (i = 0; i < num_free; i++) {
       funp->env[i] = NIL;

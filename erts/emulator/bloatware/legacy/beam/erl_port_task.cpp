@@ -486,7 +486,7 @@ no_sig_dep_move_from_busyq(Port *pp)
 static void
 chk_task_queues(Port *pp, ErtsPortTask *execq, int processing_busy_queue)
 {
-  Sint tot_count, tot_table_count;
+  ssize_t tot_count, tot_table_count;
   int bix;
   ErtsPortTask *ptp, *last;
   ErtsPortTask *first = processing_busy_queue ? execq : pp->sched.taskq.local.busy.first;
@@ -508,7 +508,7 @@ chk_task_queues(Port *pp, ErtsPortTask *execq, int processing_busy_queue)
   ptp = first;
 
   while (ptp) {
-    Sint count = 0;
+    ssize_t count = 0;
     Eterm caller = task_caller(ptp);
     int bix = caller2bix(caller);
 
@@ -1843,7 +1843,7 @@ erts_port_task_execute(ErtsRunQueue *runq, Port **curr_port_pp)
 
   if (erts_sched_stat.enabled) {
     ErtsSchedulerData *esdp = erts_get_scheduler_data();
-    Uint old = ERTS_PORT_SCHED_ID(pp, esdp->no);
+    size_t old = ERTS_PORT_SCHED_ID(pp, esdp->no);
     int migrated = old && old != esdp->no;
 
     erts_smp_spin_lock(&erts_sched_stat.lock);
@@ -1984,8 +1984,8 @@ erts_port_task_execute(ErtsRunQueue *runq, Port **curr_port_pp)
     if (start_time != 0) {
       int64_t diff = erts_timestamp_millis() - start_time;
 
-      if (diff > 0 && (Uint) diff >  erts_system_monitor_long_schedule) {
-        monitor_long_schedule_port(pp, ptp->type, (Uint) diff);
+      if (diff > 0 && (size_t) diff >  erts_system_monitor_long_schedule) {
+        monitor_long_schedule_port(pp, ptp->type, (size_t) diff);
       }
     }
 

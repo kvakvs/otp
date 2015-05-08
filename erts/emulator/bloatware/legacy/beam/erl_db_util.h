@@ -59,7 +59,7 @@
  */
 typedef struct db_term {
   struct erl_off_heap_header *first_oh; /* Off heap data for term. */
-  Uint size;       /* Heap size of term in "words" */
+  size_t size;       /* Heap size of term in "words" */
 #ifdef DEBUG_CLONE
   Eterm *debug_clone;    /* An uncompressed copy */
 #endif
@@ -83,7 +83,7 @@ typedef struct {
   DbTable *tb;
   DbTerm *dbterm;
   void **bp;         /* {Hash|Tree}DbTerm** */
-  Uint new_size;
+  size_t new_size;
   int mustResize;
   void *lck;
 #if HALFWORD_HEAP
@@ -136,7 +136,7 @@ typedef struct db_table_method {
   int (*db_select_chunk)(Process *p,
                          DbTable *tb, /* [in out] */
                          Eterm pattern,
-                         Sint chunk_size,
+                         ssize_t chunk_size,
                          int reverse,
                          Eterm *ret);
   int (*db_select)(Process *p,
@@ -195,7 +195,7 @@ typedef struct db_table_method {
 
 typedef struct db_fixation {
   Eterm pid;
-  Uint counter;
+  size_t counter;
   struct db_fixation *next;
 } DbFixation;
 
@@ -224,7 +224,7 @@ typedef struct db_table_common {
   DbTableMethod *meth;      /* table methods */
   erts_smp_atomic_t nitems; /* Total number of items in table */
   erts_smp_atomic_t memory_size;/* Total memory size. NOTE: in bytes! */
-  Uint megasec, sec, microsec; /* Last fixation time */
+  size_t megasec, sec, microsec; /* Last fixation time */
   DbFixation *fixations;    /* List of processes who have done safe_fixtable,
                                  "local" fixations not included. */
   /* All 32-bit fields */
@@ -273,7 +273,7 @@ DbTerm *db_alloc_tmp_uncompressed(DbTableCommon *tb, DbTerm *org);
 ERTS_GLB_INLINE Eterm db_copy_object_from_ets(DbTableCommon *tb, DbTerm *bp,
     Eterm **hpp, ErlOffHeap *off_heap);
 ERTS_GLB_INLINE int db_eq(DbTableCommon *tb, Eterm a, DbTerm *b);
-Wterm db_do_read_element(DbUpdateHandle *handle, Sint position);
+Wterm db_do_read_element(DbUpdateHandle *handle, ssize_t position);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
@@ -284,7 +284,7 @@ ERTS_GLB_INLINE Eterm db_copy_key(Process *p, DbTable *tb, DbTerm *obj)
   if IS_CONST(key) {
     return key;
   } else {
-    Uint size = size_object_rel(key, obj->tpl);
+    size_t size = size_object_rel(key, obj->tpl);
     Eterm *hp = HAlloc(p, size);
     Eterm res = copy_struct_rel(key, size, &hp, &MSO(p), obj->tpl, nullptr);
     ASSERT(eq_rel(res, nullptr, key, obj->tpl));
@@ -333,21 +333,21 @@ BIF_RETTYPE db_set_trace_control_word_1(BIF_ALIST_1);
 void db_initialize_util(void);
 Eterm db_getkey(int keypos, Eterm obj);
 void db_cleanup_offheap_comp(DbTerm *p);
-void db_free_term(DbTable *tb, void *basep, Uint offset);
-void *db_store_term(DbTableCommon *tb, DbTerm *old, Uint offset, Eterm obj);
-void *db_store_term_comp(DbTableCommon *tb, DbTerm *old, Uint offset, Eterm obj);
+void db_free_term(DbTable *tb, void *basep, size_t offset);
+void *db_store_term(DbTableCommon *tb, DbTerm *old, size_t offset, Eterm obj);
+void *db_store_term_comp(DbTableCommon *tb, DbTerm *old, size_t offset, Eterm obj);
 Eterm db_copy_element_from_ets(DbTableCommon *tb, Process *p, DbTerm *obj,
-                               Uint pos, Eterm **hpp, Uint extra);
+                               size_t pos, Eterm **hpp, size_t extra);
 int db_has_variable(Eterm obj);
 int db_is_variable(Eterm obj);
 void db_do_update_element(DbUpdateHandle *handle,
-                          Sint position,
+                          ssize_t position,
                           Eterm newval);
-void db_finalize_resize(DbUpdateHandle *handle, Uint offset);
+void db_finalize_resize(DbUpdateHandle *handle, size_t offset);
 Eterm db_add_counter(Eterm **hpp, Wterm counter, Eterm incr);
-Eterm db_match_set_lint(Process *p, Eterm matchexpr, Uint flags);
+Eterm db_match_set_lint(Process *p, Eterm matchexpr, size_t flags);
 Binary *db_match_set_compile(Process *p, Eterm matchexpr,
-                             Uint flags);
+                             size_t flags);
 void erts_db_match_prog_destructor(Binary *);
 
 typedef struct match_prog {
@@ -360,8 +360,8 @@ typedef struct match_prog {
      are used for tracing */
   struct erl_heap_fragment *saved_program_buf;
   Eterm saved_program;
-  Uint heap_size;          /* size of: heap + eheap + stack */
-  Uint stack_offset;
+  size_t heap_size;          /* size of: heap + eheap + stack */
+  size_t stack_offset;
 #ifdef DMC_DEBUG
   UWord *prog_end;    /* End of program */
 #endif
@@ -405,29 +405,29 @@ typedef struct dmc_err_info {
 ** Compilation flags
 **
 ** The dialect is in the 3 least significant bits and are to be interspaced by
-** by at least 2 (decimal), thats why ((Uint) 2) isn't used. This is to be
+** by at least 2 (decimal), thats why ((size_t) 2) isn't used. This is to be
 ** able to add DBIF_GUARD or DBIF BODY to it to use in the match_spec bif
 ** table. The rest of the word is used like ordinary flags, one bit for each
 ** flag. Note that DCOMP_TABLE and DCOMP_TRACE are mutually exclusive.
 */
-#define DCOMP_TABLE ((Uint) 1) /* Ets and dets. The body returns a value, 
+#define DCOMP_TABLE ((size_t) 1) /* Ets and dets. The body returns a value, 
            * and the parameter to the execution is a tuple. */
-#define DCOMP_TRACE ((Uint) 4) /* Trace. More functions are allowed, and the 
+#define DCOMP_TRACE ((size_t) 4) /* Trace. More functions are allowed, and the 
            * parameter to the execution will be an array. */
-#define DCOMP_DIALECT_MASK ((Uint) 0x7) /* To mask out the bits marking 
+#define DCOMP_DIALECT_MASK ((size_t) 0x7) /* To mask out the bits marking 
              dialect */
-#define DCOMP_FAKE_DESTRUCTIVE ((Uint) 8) /* When this_ is active, no setting of
+#define DCOMP_FAKE_DESTRUCTIVE ((size_t) 8) /* When this_ is active, no setting of
                trace control words or seq_trace tokens will be done. */
 
 
 Binary *db_match_compile(Eterm *matchexpr, Eterm *guards,
                          Eterm *body, int num_matches,
-                         Uint flags,
+                         size_t flags,
                          DMCErrInfo *err_info);
 /* Returns newly allocated MatchProg binary with refc == 0*/
 
 Eterm db_match_dbterm(DbTableCommon *tb, Process *c_p, Binary *bprog,
-                      int all, DbTerm *obj, Eterm **hpp, Uint extra);
+                      int all, DbTerm *obj, Eterm **hpp, size_t extra);
 
 Eterm db_prog_match(Process *p, Binary *prog, Eterm term, Eterm *base,
                     Eterm *termp, int arity,

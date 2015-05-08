@@ -230,7 +230,7 @@ void *enif_priv_data(ErlNifEnv *env)
 
 void *enif_alloc(size_t size)
 {
-  return erts_alloc_fnf(ERTS_ALC_T_NIF, (Uint) size);
+  return erts_alloc_fnf(ERTS_ALC_T_NIF, (size_t) size);
 }
 
 void *enif_realloc(void *ptr, size_t size)
@@ -391,7 +391,7 @@ int enif_send(ErlNifEnv *env, const ErlNifPid *to_pid,
 
 ERL_NIF_TERM enif_make_copy(ErlNifEnv *dst_env, ERL_NIF_TERM src_term)
 {
-  Uint sz;
+  size_t sz;
   Eterm *hp;
   sz = size_object(src_term);
   hp = alloc_heap(dst_env, sz);
@@ -651,7 +651,7 @@ int enif_is_identical(Eterm lhs, Eterm rhs)
 
 int enif_compare(Eterm lhs, Eterm rhs)
 {
-  Sint result = CMP(lhs, rhs);
+  ssize_t result = CMP(lhs, rhs);
 
   if (result < 0) {
     return -1;
@@ -757,7 +757,7 @@ Eterm enif_make_sub_binary(ErlNifEnv *env, ERL_NIF_TERM bin_term,
 {
   ErlSubBin *sb;
   Eterm orig;
-  Uint offset, bit_offset, bit_size;
+  size_t offset, bit_offset, bit_size;
 #ifdef DEBUG
   unsigned src_size;
 
@@ -816,10 +816,10 @@ int enif_get_atom(ErlNifEnv *env, Eterm atom, char *buf, unsigned len,
 int enif_get_int(ErlNifEnv *env, Eterm term, int *ip)
 {
 #if SIZEOF_INT ==  ERTS_SIZEOF_ETERM
-  return term_to_Sint(term, (Sint *)ip);
+  return term_to_Sint(term, (ssize_t *)ip);
 #elif (SIZEOF_LONG ==  ERTS_SIZEOF_ETERM) || \
   (SIZEOF_LONG_LONG ==  ERTS_SIZEOF_ETERM)
-  Sint i;
+  ssize_t i;
 
   if (!term_to_Sint(term, &i) || i < INT_MIN || i > INT_MAX) {
     return 0;
@@ -835,10 +835,10 @@ int enif_get_int(ErlNifEnv *env, Eterm term, int *ip)
 int enif_get_uint(ErlNifEnv *env, Eterm term, unsigned *ip)
 {
 #if SIZEOF_INT == ERTS_SIZEOF_ETERM
-  return term_to_Uint(term, (Uint *)ip);
+  return term_to_Uint(term, (size_t *)ip);
 #elif (SIZEOF_LONG == ERTS_SIZEOF_ETERM) || \
   (SIZEOF_LONG_LONG ==  ERTS_SIZEOF_ETERM)
-  Uint i;
+  size_t i;
 
   if (!term_to_Uint(term, &i) || i > UINT_MAX) {
     return 0;
@@ -1014,8 +1014,8 @@ ERL_NIF_TERM enif_make_ulong(ErlNifEnv *env, unsigned long i)
 #if HAVE_INT64 && SIZEOF_LONG != 8
 ERL_NIF_TERM enif_make_int64(ErlNifEnv *env, ErlNifSInt64 i)
 {
-  Uint *hp;
-  Uint need = 0;
+  size_t *hp;
+  size_t need = 0;
   erts_bld_sint64(nullptr, &need, i);
   hp = alloc_heap(env, need);
   return erts_bld_sint64(&hp, nullptr, i);
@@ -1023,8 +1023,8 @@ ERL_NIF_TERM enif_make_int64(ErlNifEnv *env, ErlNifSInt64 i)
 
 ERL_NIF_TERM enif_make_uint64(ErlNifEnv *env, ErlNifUInt64 i)
 {
-  Uint *hp;
-  Uint need = 0;
+  size_t *hp;
+  size_t need = 0;
   erts_bld_uint64(nullptr, &need, i);
   hp = alloc_heap(env, need);
   return erts_bld_uint64(&hp, nullptr, i);
@@ -1692,7 +1692,7 @@ void *enif_dlsym(void *handle, const char *symbol,
 
 int enif_consume_timeslice(ErlNifEnv *env, int percent)
 {
-  Sint reds;
+  ssize_t reds;
 
   ASSERT(is_proc_bound(env) && percent >= 1 && percent <= 100);
 
@@ -2436,8 +2436,8 @@ static Eterm load_nif_error(Process *p, const char *atom, const char *format, ..
   Eterm ret;
   Eterm *hp;
   Eterm **hpp = nullptr;
-  Uint sz = 0;
-  Uint *szp = &sz;
+  size_t sz = 0;
+  size_t *szp = &sz;
   va_list arglist;
 
   va_start(arglist, format);

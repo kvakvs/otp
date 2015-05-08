@@ -88,9 +88,9 @@
 #define LINK_NODE 3  /* "Node monitor" */
 
 /* Size of a monitor without heap, in words (fixalloc) */
-#define ERTS_MONITOR_SIZE ((sizeof(ErtsMonitor) - sizeof(Uint))/sizeof(Uint))
+#define ERTS_MONITOR_SIZE ((sizeof(ErtsMonitor) - sizeof(size_t))/sizeof(size_t))
 #define ERTS_MONITOR_SH_SIZE (ERTS_MONITOR_SIZE + REF_THING_SIZE)
-#define ERTS_LINK_SIZE ((sizeof(ErtsLink) - sizeof(Uint))/sizeof(Uint))
+#define ERTS_LINK_SIZE ((sizeof(ErtsLink) - sizeof(size_t))/sizeof(size_t))
 #define ERTS_LINK_SH_SIZE ERTS_LINK_SIZE /* Size of fix-alloced links */
 
 /* ErtsMonitor and ErtsLink *need* to begin in a similar way as
@@ -109,7 +109,7 @@ typedef struct erts_monitor {
          nodename atom in MON_ORIGIN process, otherwise a pid or
          , in case of a MON_TARGET, a port */
   Eterm name;   /* When monitoring a named process: atom() else [] */
-  Uint heap[1]; /* Larger in reality */
+  size_t heap[1]; /* Larger in reality */
 } ErtsMonitor;
 
 typedef struct erts_link {
@@ -120,9 +120,9 @@ typedef struct erts_link {
         the node atom is here instead */
   union {
     struct erts_link *root;  /* Used only in dist entries */
-    Uint refc;
+    size_t refc;
   } shared;
-  Uint heap[1];            /* Larger in reality */
+  size_t heap[1];            /* Larger in reality */
 } ErtsLink;
 
 typedef struct erts_suspend_monitor {
@@ -137,12 +137,12 @@ typedef struct erts_suspend_monitor {
 #define ERTS_LINK_ROOT(Linkp) ((Linkp)->shared.root)
 #define ERTS_LINK_REFC(Linkp) ((Linkp)->shared.refc)
 
-Uint erts_tot_link_lh_size(void);
+size_t erts_tot_link_lh_size(void);
 
 
 /* Prototypes */
 void erts_destroy_monitor(ErtsMonitor *mon);
-void erts_add_monitor(ErtsMonitor **root, Uint type, Eterm ref, Eterm pid,
+void erts_add_monitor(ErtsMonitor **root, size_t type, Eterm ref, Eterm pid,
                       Eterm name);
 ErtsMonitor *erts_remove_monitor(ErtsMonitor **root, Eterm ref);
 ErtsMonitor *erts_lookup_monitor(ErtsMonitor *root, Eterm ref);
@@ -152,8 +152,8 @@ void erts_sweep_monitors(ErtsMonitor *root,
 
 void erts_destroy_link(ErtsLink *lnk);
 /* Returns 0 if OK, < 0 if already present */
-int erts_add_link(ErtsLink **root, Uint type, Eterm pid);
-ErtsLink *erts_add_or_lookup_link(ErtsLink **root, Uint type, Eterm pid);
+int erts_add_link(ErtsLink **root, size_t type, Eterm pid);
+ErtsLink *erts_add_or_lookup_link(ErtsLink **root, size_t type, Eterm pid);
 ErtsLink *erts_remove_link(ErtsLink **root, Eterm pid);
 ErtsLink *erts_lookup_link(ErtsLink *root, Eterm pid);
 void erts_sweep_links(ErtsLink *root,

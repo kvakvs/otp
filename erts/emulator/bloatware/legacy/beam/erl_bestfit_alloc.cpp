@@ -53,11 +53,11 @@
 #define MIN_MBC_SZ    (16*1024)
 #define MIN_MBC_FIRST_FREE_SZ (4*1024)
 
-#define TREE_NODE_FLG   (((Uint) 1) << 0)
-#define RED_FLG     (((Uint) 1) << 1)
+#define TREE_NODE_FLG   (((size_t) 1) << 0)
+#define RED_FLG     (((size_t) 1) << 1)
 #ifdef HARD_DEBUG
-#  define LEFT_VISITED_FLG  (((Uint) 1) << 2)
-#  define RIGHT_VISITED_FLG (((Uint) 1) << 3)
+#  define LEFT_VISITED_FLG  (((size_t) 1) << 2)
+#  define RIGHT_VISITED_FLG (((size_t) 1) << 3)
 #endif
 
 #define IS_TREE_NODE(N)   (((RBTree_t *) (N))->flags & TREE_NODE_FLG)
@@ -83,7 +83,7 @@
 
 
 #ifdef HARD_DEBUG
-static RBTree_t *check_tree(RBTree_t, int, Uint);
+static RBTree_t *check_tree(RBTree_t, int, size_t);
 #endif
 
 static void tree_delete(Allctr_t *allctr, Block_t *del);
@@ -91,26 +91,26 @@ static void tree_delete(Allctr_t *allctr, Block_t *del);
 /* Prototypes of callback functions */
 
 /* "address order best fit" specific callback functions */
-static Block_t   *aobf_get_free_block(Allctr_t *, Uint,
-                                      Block_t *, Uint);
+static Block_t   *aobf_get_free_block(Allctr_t *, size_t,
+                                      Block_t *, size_t);
 static void   aobf_link_free_block(Allctr_t *, Block_t *);
 #define     aobf_unlink_free_block  tree_delete
 
 /* "best fit" specific callback functions */
-static Block_t   *bf_get_free_block(Allctr_t *, Uint,
-                                    Block_t *, Uint);
+static Block_t   *bf_get_free_block(Allctr_t *, size_t,
+                                    Block_t *, size_t);
 static void   bf_link_free_block(Allctr_t *, Block_t *);
 static ERTS_INLINE void bf_unlink_free_block(Allctr_t *, Block_t *);
 
 
 static Eterm    info_options(Allctr_t *, char *, int *,
-                             void *, Uint **, Uint *);
+                             void *, size_t **, size_t *);
 static void   init_atoms(void);
 
 /* Types... */
 struct RBTree_t_ {
   Block_t hdr;
-  Uint flags;
+  size_t flags;
   RBTree_t *parent;
   RBTree_t *left;
   RBTree_t *right;
@@ -421,7 +421,7 @@ static void
 tree_delete(Allctr_t *allctr, Block_t *del)
 {
   BFAllctr_t *bfallctr = (BFAllctr_t *) allctr;
-  Uint spliced_is_black;
+  size_t spliced_is_black;
   RBTree_t **root = &bfallctr->mbc_root;
   RBTree_t *x, *y, *z = (RBTree_t *) del;
   RBTree_t null_x; /* null_x is used to get the fixup started when we
@@ -612,7 +612,7 @@ aobf_link_free_block(Allctr_t *allctr, Block_t *block)
   BFAllctr_t *bfallctr = (BFAllctr_t *) allctr;
   RBTree_t **root = &bfallctr->mbc_root;
   RBTree_t *blk = (RBTree_t *) block;
-  Uint blk_sz = BF_BLK_SZ(blk);
+  size_t blk_sz = BF_BLK_SZ(blk);
 
 
 
@@ -628,7 +628,7 @@ aobf_link_free_block(Allctr_t *allctr, Block_t *block)
     RBTree_t *x = *root;
 
     while (1) {
-      Uint size;
+      size_t size;
 
       size = BF_BLK_SZ(x);
 
@@ -676,14 +676,14 @@ aobf_unlink_free_block(Allctr_t *allctr, Block_t *block)
 #endif
 
 static Block_t *
-aobf_get_free_block(Allctr_t *allctr, Uint size,
-                    Block_t *cand_blk, Uint cand_size)
+aobf_get_free_block(Allctr_t *allctr, size_t size,
+                    Block_t *cand_blk, size_t cand_size)
 {
   BFAllctr_t *bfallctr = (BFAllctr_t *) allctr;
   RBTree_t **root = &bfallctr->mbc_root;
   RBTree_t *x = *root;
   RBTree_t *blk = nullptr;
-  Uint blk_sz;
+  size_t blk_sz;
 
   ASSERT(!cand_blk || cand_size >= size);
 
@@ -734,7 +734,7 @@ bf_link_free_block(Allctr_t *allctr, Block_t *block)
   BFAllctr_t *bfallctr = (BFAllctr_t *) allctr;
   RBTree_t **root = &bfallctr->mbc_root;
   RBTree_t *blk = (RBTree_t *) block;
-  Uint blk_sz = BF_BLK_SZ(blk);
+  size_t blk_sz = BF_BLK_SZ(blk);
 
   SET_TREE_NODE(blk);
 
@@ -751,7 +751,7 @@ bf_link_free_block(Allctr_t *allctr, Block_t *block)
     RBTree_t *x = *root;
 
     while (1) {
-      Uint size;
+      size_t size;
 
       size = BF_BLK_SZ(x);
 
@@ -845,14 +845,14 @@ bf_unlink_free_block(Allctr_t *allctr, Block_t *block)
 
 
 static Block_t *
-bf_get_free_block(Allctr_t *allctr, Uint size,
-                  Block_t *cand_blk, Uint cand_size)
+bf_get_free_block(Allctr_t *allctr, size_t size,
+                  Block_t *cand_blk, size_t cand_size)
 {
   BFAllctr_t *bfallctr = (BFAllctr_t *) allctr;
   RBTree_t **root = &bfallctr->mbc_root;
   RBTree_t *x = *root;
   RBTree_t *blk = nullptr;
-  Uint blk_sz;
+  size_t blk_sz;
 
   ASSERT(!cand_blk || cand_size >= size);
 
@@ -957,7 +957,7 @@ init_atoms(void)
 #define bld_tuple erts_bld_tuple
 
 static ERTS_INLINE void
-add_2tup(Uint **hpp, Uint *szp, Eterm *lp, Eterm el1, Eterm el2)
+add_2tup(size_t **hpp, size_t *szp, Eterm *lp, Eterm el1, Eterm el2)
 {
   *lp = bld_cons(hpp, szp, bld_tuple(hpp, szp, 2, el1, el2), *lp);
 }
@@ -967,8 +967,8 @@ info_options(Allctr_t *allctr,
              char *prefix,
              int *print_to_p,
              void *print_to_arg,
-             Uint **hpp,
-             Uint *szp)
+             size_t **hpp,
+             size_t *szp)
 {
   BFAllctr_t *bfallctr = (BFAllctr_t *) allctr;
   Eterm res = THE_NON_VALUE;
@@ -1090,11 +1090,11 @@ static void print_tree(RBTree_t *, int);
  */
 
 static RBTree_t *
-check_tree(RBTree_t *root, int ao, Uint size)
+check_tree(RBTree_t *root, int ao, size_t size)
 {
   RBTree_t *res = nullptr;
-  Sint blacks;
-  Sint curr_blacks;
+  ssize_t blacks;
+  ssize_t curr_blacks;
   RBTree_t *x;
 
 #ifdef PRINT_TREE
@@ -1245,7 +1245,7 @@ print_tree_aux(RBTree_t *x, int indent)
     fprintf(stderr, "%s: sz=%lu addr=0x%lx\r\n",
             IS_BLACK(x) ? "BLACK" : "RED",
             BF_BLK_SZ(x),
-            (Uint) x);
+            (size_t) x);
     print_tree_aux(x->left,  indent + INDENT_STEP);
   }
 }

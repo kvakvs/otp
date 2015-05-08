@@ -48,13 +48,13 @@ struct AFFreeBlock_t_ {
 #define MIN_MBC_FIRST_FREE_SZ (4*1024)
 
 /* Prototypes of callback functions */
-static Block_t   *get_free_block(Allctr_t *, Uint, Block_t *, Uint);
+static Block_t   *get_free_block(Allctr_t *, size_t, Block_t *, size_t);
 static void   link_free_block(Allctr_t *, Block_t *);
 static void   unlink_free_block(Allctr_t *, Block_t *);
 
 
 static Eterm    info_options(Allctr_t *, char *, int *,
-                             void *arg, Uint **, Uint *);
+                             void *arg, size_t **, size_t *);
 static void   init_atoms(void);
 
 static int atoms_initialized = 0;
@@ -118,7 +118,7 @@ erts_afalc_start(AFAllctr_t *afallctr,
 }
 
 static Block_t *
-get_free_block(Allctr_t *allctr, Uint size, Block_t *cand_blk, Uint cand_size)
+get_free_block(Allctr_t *allctr, size_t size, Block_t *cand_blk, size_t cand_size)
 {
   AFAllctr_t *afallctr = (AFAllctr_t *) allctr;
 
@@ -230,7 +230,7 @@ init_atoms(void)
 #define bld_tuple erts_bld_tuple
 
 static ERTS_INLINE void
-add_2tup(Uint **hpp, Uint *szp, Eterm *lp, Eterm el1, Eterm el2)
+add_2tup(size_t **hpp, size_t *szp, Eterm *lp, Eterm el1, Eterm el2)
 {
   *lp = bld_cons(hpp, szp, bld_tuple(hpp, szp, 2, el1, el2), *lp);
 }
@@ -240,8 +240,8 @@ info_options(Allctr_t *allctr,
              char *prefix,
              int *print_to_p,
              void *print_to_arg,
-             Uint **hpp,
-             Uint *szp)
+             size_t **hpp,
+             size_t *szp)
 {
   Eterm res = THE_NON_VALUE;
 

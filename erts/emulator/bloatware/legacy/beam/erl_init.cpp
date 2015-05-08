@@ -26,6 +26,7 @@
 #include "bw_beam_init.h"
 #include "bw_port.h"
 #include "bw_sys.h"
+#include "bw_misc_utils.h"
 
 #include "sys.h"
 #include <ctype.h>
@@ -162,7 +163,7 @@ static erts_tid_t main_thread;
  * Configurable parameters.
  */
 
-Uint display_items;       /* no of items to display in traces etc */
+size_t display_items;       /* no of items to display in traces etc */
 int H_MIN_SIZE;     /* The minimum heap grain */
 int BIN_VH_MIN_SIZE;    /* The minimum binary virtual*/
 
@@ -654,11 +655,11 @@ void erts_usage(void)
 
 static void *ethr_std_alloc(size_t size)
 {
-  return erts_alloc_fnf(ERTS_ALC_T_ETHR_STD, (Uint) size);
+  return erts_alloc_fnf(ERTS_ALC_T_ETHR_STD, (size_t) size);
 }
 static void *ethr_std_realloc(void *ptr, size_t size)
 {
-  return erts_realloc_fnf(ERTS_ALC_T_ETHR_STD, ptr, (Uint) size);
+  return erts_realloc_fnf(ERTS_ALC_T_ETHR_STD, ptr, (size_t) size);
 }
 static void ethr_std_free(void *ptr)
 {
@@ -666,11 +667,11 @@ static void ethr_std_free(void *ptr)
 }
 static void *ethr_sl_alloc(size_t size)
 {
-  return erts_alloc_fnf(ERTS_ALC_T_ETHR_SL, (Uint) size);
+  return erts_alloc_fnf(ERTS_ALC_T_ETHR_SL, (size_t) size);
 }
 static void *ethr_sl_realloc(void *ptr, size_t size)
 {
-  return erts_realloc_fnf(ERTS_ALC_T_ETHR_SL, ptr, (Uint) size);
+  return erts_realloc_fnf(ERTS_ALC_T_ETHR_SL, ptr, (size_t) size);
 }
 static void ethr_sl_free(void *ptr)
 {
@@ -678,11 +679,11 @@ static void ethr_sl_free(void *ptr)
 }
 static void *ethr_ll_alloc(size_t size)
 {
-  return erts_alloc_fnf(ERTS_ALC_T_ETHR_LL, (Uint) size);
+  return erts_alloc_fnf(ERTS_ALC_T_ETHR_LL, (size_t) size);
 }
 static void *ethr_ll_realloc(void *ptr, size_t size)
 {
-  return erts_realloc_fnf(ERTS_ALC_T_ETHR_LL, ptr, (Uint) size);
+  return erts_realloc_fnf(ERTS_ALC_T_ETHR_LL, ptr, (size_t) size);
 }
 static void ethr_ll_free(void *ptr)
 {
@@ -719,7 +720,7 @@ early_init(int *argc, char **argv) /*
   char envbuf[21]; /* enough for any 64-bit integer */
   size_t envbufsz;
 
-  erts_save_emu_args(*argc, argv);
+  erts::save_emu_args(*argc, (const char**)argv);
 
   erts_sched_compact_load = 1;
   erts_printf_eterm_func = erts_printf_term;
@@ -781,7 +782,7 @@ early_init(int *argc, char **argv) /*
    * We need to know the number of schedulers to use before we
    * can initialize the allocators.
    */
-  no_schedulers = (Uint)(ncpu > 0 ? ncpu : 1);
+  no_schedulers = (size_t)(ncpu > 0 ? ncpu : 1);
   no_schedulers_online = (ncpuavail > 0
                           ? ncpuavail
                           : (ncpuonln > 0 ? ncpuonln : no_schedulers));
@@ -1188,7 +1189,7 @@ bad_S:
   no_schedulers = schdlrs;
   no_schedulers_online = schdlrs_onln;
 
-  erts_no_schedulers = (Uint) no_schedulers;
+  erts_no_schedulers = (size_t) no_schedulers;
 #endif
 #ifdef ERTS_DIRTY_SCHEDULERS
   erts_no_dirty_cpu_schedulers = no_dirty_cpu_schedulers = dirty_cpu_scheds;
@@ -1281,7 +1282,7 @@ static void set_main_stack_size(void)
   if (erts_sched_thread_suggested_stack_size > 0) {
 # if HAVE_DECL_GETRLIMIT && HAVE_DECL_SETRLIMIT && HAVE_DECL_RLIMIT_STACK
     struct rlimit rl;
-    int bytes = erts_sched_thread_suggested_stack_size * sizeof(Uint) * 1024;
+    int bytes = erts_sched_thread_suggested_stack_size * sizeof(size_t) * 1024;
 
     if (getrlimit(RLIMIT_STACK, &rl) != 0 ||
         (rl.rlim_cur = bytes, setrlimit(RLIMIT_STACK, &rl) != 0)) {

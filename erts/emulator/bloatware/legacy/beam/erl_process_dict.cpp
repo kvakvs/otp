@@ -209,10 +209,10 @@ erts_deep_dictionary_dump(int to, void *to_arg,
   }
 }
 
-Uint
+size_t
 erts_dicts_mem_size(Process *p)
 {
-  Uint size = 0;
+  size_t size = 0;
 
   if (p->dictionary) {
     size += PD_SZ2BYTES(p->dictionary->size);
@@ -931,7 +931,7 @@ static Eterm array_put(ProcDict **ppdict, unsigned int ndx, Eterm term)
   Eterm ret;
 
   if (*ppdict == nullptr) {
-    Uint siz = next_array_size(ndx + 1);
+    size_t siz = next_array_size(ndx + 1);
     ProcDict *p;
 
     p = PD_ALLOC(PD_SZ2BYTES(siz));
@@ -944,8 +944,8 @@ static Eterm array_put(ProcDict **ppdict, unsigned int ndx, Eterm term)
     p->homeSize = p->splitPosition = p->numElements = p->used = 0;
     *ppdict = p;
   } else if (ndx >= (*ppdict)->size) {
-    Uint osize = (*ppdict)->size;
-    Uint nsize = next_array_size(ndx + 1);
+    size_t osize = (*ppdict)->size;
+    size_t nsize = next_array_size(ndx + 1);
     *ppdict = PD_REALLOC(*ppdict,
                          //PD_SZ2BYTES(osize),
                          PD_SZ2BYTES(nsize));
@@ -978,7 +978,7 @@ static Eterm array_put(ProcDict **ppdict, unsigned int ndx, Eterm term)
 
 static unsigned int pd_hash_value(ProcDict *pdict, Eterm term)
 {
-  Uint hash, high;
+  size_t hash, high;
 
   hash = MAKE_HASH(term);
   high = hash % (pdict->homeSize * 2);
@@ -1023,7 +1023,7 @@ static unsigned int next_array_size(unsigned int need)
     1342177280UL,
     2684354560UL
   };
-  int hi = sizeof(tab) / sizeof(Uint) - 1;
+  int hi = sizeof(tab) / sizeof(size_t) - 1;
   int lo = 1;
   int cur = 4;
 
@@ -1053,7 +1053,7 @@ static unsigned int next_array_size(unsigned int need)
 static void pd_check(ProcDict *pd)
 {
   unsigned int i;
-  Uint num;
+  size_t num;
 
   if (pd == nullptr) {
     return;

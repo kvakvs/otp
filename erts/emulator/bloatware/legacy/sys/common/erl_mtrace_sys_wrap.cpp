@@ -196,7 +196,7 @@ static void
 update_heap_size(char *new_end)
 {
   volatile char *new_start, *old_start, *old_end;
-  Uint size;
+  size_t size;
 
   if (new_end == ((char *) - 1)) {
     return;
@@ -210,7 +210,7 @@ update_heap_size(char *new_end)
     heap_start = (new_start = new_end);
   }
 
-  size = (Uint)(new_end - new_start);
+  size = (size_t)(new_end - new_start);
 
   if (!old_end) {
     if (size)

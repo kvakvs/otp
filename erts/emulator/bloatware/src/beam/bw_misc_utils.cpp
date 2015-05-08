@@ -1,6 +1,7 @@
 #include "bw_misc_utils.h"
 #include "bw_sys.h"
 #include "bw_beam_init.h"
+#include "bw_erl_vm.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -47,6 +48,24 @@ error: {
   }
 }
 
+// Build a list of integers in some safe memory area
+// Memory must be pre allocated prio call 2*len in size
+// hp is a pointer to the "heap" pointer on return
+// this_ pointer is updated to point after the list
+Eterm buf_to_intlist(Eterm **hpp, const char *buf, size_t len, Eterm tail)
+{
+  Eterm *hp = *hpp;
+  size_t i = len;
+
+  while (i != 0) {
+    --i;
+    tail = CONS(hp, make_small((size_t)(uint8_t)buf[i]), tail);
+    hp += 2;
+  }
+
+  *hpp = hp;
+  return tail;
+}
 } // ns util
 
 namespace erts {
@@ -109,5 +128,38 @@ void save_emu_args(int argc, const char *argv[])
 
   ASSERT(ptr == end_ptr);
 }
+
+Eterm get_emu_args(Process *c_p)
+{
+#ifdef DEBUG
+  Eterm *end_hp;
+#endif
+  int i;
+  size_t hsz;
+  Eterm *hp, res;
+
+  hsz = g_saved_emu_args.no_bytes * 2;
+  hsz += g_saved_emu_args.argc * 2;
+
+  hp = HAlloc(c_p, hsz);
+#ifdef DEBUG
+  end_hp = hp + hsz;
+#endif
+  res = NIL;
+
+  for (i = g_saved_emu_args.argc - 1; i >= 0; i--) {
+    Eterm arg = util::buf_to_intlist(&hp,
+                               g_saved_emu_args.arg[i].ptr,
+                               g_saved_emu_args.arg[i].sz,
+                               NIL);
+    res = CONS(hp, arg, res);
+    hp += 2;
+  }
+
+  ASSERT(hp == end_hp);
+
+  return res;
+}
+
 
 } // ns erts

@@ -126,7 +126,7 @@ typedef struct {
   DistEntry *dep;
   uint8_t *extp;
   uint8_t *ext_endp;
-  Sint heap_size;
+  ssize_t heap_size;
   uint32_t flags;
   ErtsAtomTranslationTable attab;
 } ErtsDistExternal;
@@ -147,7 +147,7 @@ typedef struct {
 typedef struct {
   uint8_t *extp;
   int exttmp;
-  Uint extsize;
+  size_t extsize;
 } ErtsBinary2TermState;
 
 /* -------------------------------------------------------------------------- */
@@ -157,39 +157,39 @@ void erts_reset_atom_cache_map(ErtsAtomCacheMap *);
 void erts_destroy_atom_cache_map(ErtsAtomCacheMap *);
 void erts_finalize_atom_cache_map(ErtsAtomCacheMap *, uint32_t);
 
-Uint erts_encode_ext_dist_header_size(ErtsAtomCacheMap *);
+size_t erts_encode_ext_dist_header_size(ErtsAtomCacheMap *);
 uint8_t *erts_encode_ext_dist_header_setup(uint8_t *, ErtsAtomCacheMap *);
 uint8_t *erts_encode_ext_dist_header_finalize(uint8_t *, ErtsAtomCache *, uint32_t);
-Uint erts_encode_dist_ext_size(Eterm, uint32_t, ErtsAtomCacheMap *);
+size_t erts_encode_dist_ext_size(Eterm, uint32_t, ErtsAtomCacheMap *);
 void erts_encode_dist_ext(Eterm, uint8_t **, uint32_t, ErtsAtomCacheMap *);
 
-Uint erts_encode_ext_size(Eterm);
-Uint erts_encode_ext_size_2(Eterm, unsigned);
-Uint erts_encode_ext_size_ets(Eterm);
+size_t erts_encode_ext_size(Eterm);
+size_t erts_encode_ext_size_2(Eterm, unsigned);
+size_t erts_encode_ext_size_ets(Eterm);
 void erts_encode_ext(Eterm, uint8_t **);
 uint8_t *erts_encode_ext_ets(Eterm, uint8_t *, struct erl_off_heap_header **ext_off_heap);
 
 #ifdef ERTS_WANT_EXTERNAL_TAGS
-ERTS_GLB_INLINE void erts_peek_dist_header(ErtsDistHeaderPeek *, uint8_t *, Uint);
+ERTS_GLB_INLINE void erts_peek_dist_header(ErtsDistHeaderPeek *, uint8_t *, size_t);
 #endif
 ERTS_GLB_INLINE void erts_free_dist_ext_copy(ErtsDistExternal *);
 ERTS_GLB_INLINE void *erts_dist_ext_trailer(ErtsDistExternal *);
-ErtsDistExternal *erts_make_dist_ext_copy(ErtsDistExternal *, Uint);
+ErtsDistExternal *erts_make_dist_ext_copy(ErtsDistExternal *, size_t);
 void *erts_dist_ext_trailer(ErtsDistExternal *);
 void erts_destroy_dist_ext_copy(ErtsDistExternal *);
-int erts_prepare_dist_ext(ErtsDistExternal *, uint8_t *, Uint,
+int erts_prepare_dist_ext(ErtsDistExternal *, uint8_t *, size_t,
                           DistEntry *, ErtsAtomCache *);
-Sint erts_decode_dist_ext_size(ErtsDistExternal *);
+ssize_t erts_decode_dist_ext_size(ErtsDistExternal *);
 Eterm erts_decode_dist_ext(Eterm **, ErlOffHeap *, ErtsDistExternal *);
 
-Sint erts_decode_ext_size(uint8_t *, Uint);
-Sint erts_decode_ext_size_ets(uint8_t *, Uint);
+ssize_t erts_decode_ext_size(uint8_t *, size_t);
+ssize_t erts_decode_ext_size_ets(uint8_t *, size_t);
 Eterm erts_decode_ext(Eterm **, ErlOffHeap *, uint8_t **);
 Eterm erts_decode_ext_ets(Eterm **, ErlOffHeap *, uint8_t *);
 
-Eterm erts_term_to_binary(Process *p, Eterm Term, int level, Uint flags);
+Eterm erts_term_to_binary(Process *p, Eterm Term, int level, size_t flags);
 
-Sint erts_binary2term_prepare(ErtsBinary2TermState *, uint8_t *, Sint);
+ssize_t erts_binary2term_prepare(ErtsBinary2TermState *, uint8_t *, ssize_t);
 void erts_binary2term_abort(ErtsBinary2TermState *);
 Eterm erts_binary2term_create(ErtsBinary2TermState *, Eterm **hpp, ErlOffHeap *);
 int erts_debug_max_atom_out_cache_index(void);
@@ -199,7 +199,7 @@ int erts_debug_atom_to_out_cache_index(Eterm);
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 #ifdef ERTS_WANT_EXTERNAL_TAGS
 ERTS_GLB_INLINE void
-erts_peek_dist_header(ErtsDistHeaderPeek *dhpp, uint8_t *ext, Uint sz)
+erts_peek_dist_header(ErtsDistHeaderPeek *dhpp, uint8_t *ext, size_t sz)
 {
   if (ext[0] == VERSION_MAGIC
       || ext[1] != DIST_HEADER
@@ -227,7 +227,7 @@ erts_dist_ext_trailer(ErtsDistExternal *edep)
 {
   void *res = (void *)(edep->ext_endp
                        + ERTS_EXTRA_DATA_ALIGN_SZ(edep->ext_endp));
-  ASSERT((((UWord) res) % sizeof(Uint)) == 0);
+  ASSERT((((UWord) res) % sizeof(size_t)) == 0);
   return res;
 }
 

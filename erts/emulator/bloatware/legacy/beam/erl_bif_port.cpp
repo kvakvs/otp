@@ -214,7 +214,7 @@ BIF_RETTYPE erts_internal_port_call_3(BIF_ALIST_3)
 {
   Port *prt;
   Eterm retval;
-  Uint uint_op;
+  size_t uint_op;
   unsigned int op;
   erts_aint32_t state;
 
@@ -228,7 +228,7 @@ BIF_RETTYPE erts_internal_port_call_3(BIF_ALIST_3)
     BIF_RET(am_badarg);
   }
 
-  if (uint_op > (Uint) UINT_MAX) {
+  if (uint_op > (size_t) UINT_MAX) {
     BIF_RET(am_badarg);
   }
 
@@ -275,7 +275,7 @@ BIF_RETTYPE erts_internal_port_control_3(BIF_ALIST_3)
 {
   Port *prt;
   Eterm retval;
-  Uint uint_op;
+  size_t uint_op;
   unsigned int op;
   erts_aint32_t state;
 
@@ -289,7 +289,7 @@ BIF_RETTYPE erts_internal_port_control_3(BIF_ALIST_3)
     BIF_RET(am_badarg);
   }
 
-  if (uint_op > (Uint) UINT_MAX) {
+  if (uint_op > (size_t) UINT_MAX) {
     BIF_RET(am_badarg);
   }
 
@@ -511,7 +511,7 @@ BIF_RETTYPE erts_internal_port_info_2(BIF_ALIST_2)
 
 typedef struct {
   ErtsThrPrgrLaterOp later_op;
-  Uint hsize;
+  size_t hsize;
   Eterm data;
   ErlOffHeap off_heap;
   Eterm heap[1];
@@ -559,17 +559,17 @@ erts_cleanup_port_data(Port *prt)
                         (erts_aint_t) nullptr));
 }
 
-Uint
+size_t
 erts_port_data_size(Port *prt)
 {
   erts_aint_t data = erts_smp_atomic_read_ddrb(&prt->data);
 
   if ((data & 0x3) != 0) {
     ASSERT(is_immed((Eterm)(UWord) data));
-    return (Uint) 0;
+    return (size_t) 0;
   } else {
     ErtsPortDataHeap *pdhp = (ErtsPortDataHeap *) data;
-    return (Uint) sizeof(ErtsPortDataHeap) + (pdhp->hsize - 1) * sizeof(Eterm);
+    return (size_t) sizeof(ErtsPortDataHeap) + (pdhp->hsize - 1) * sizeof(Eterm);
   }
 }
 
@@ -606,7 +606,7 @@ BIF_RETTYPE port_set_data_2(BIF_ALIST_2)
     ASSERT((data & 0x3) != 0);
   } else {
     ErtsPortDataHeap *pdhp;
-    Uint hsize;
+    size_t hsize;
     Eterm *hp;
 
     hsize = size_object(BIF_ARG_2);
@@ -683,13 +683,13 @@ open_port(Process *p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 {
   int i;
   Eterm option;
-  Uint arity;
+  size_t arity;
   Eterm *tp;
-  Uint *nargs;
+  size_t *nargs;
   erts_driver_t *driver;
   char *name_buf = nullptr;
   SysDriverOpts opts;
-  Sint linebuf;
+  ssize_t linebuf;
   Eterm edir = NIL;
   uint8_t dir[MAXPATHLEN];
   erts_aint32_t sflgs = 0;
@@ -1119,9 +1119,9 @@ static uint8_t *convert_environment(Process *p, Eterm env)
   Eterm all;
   Eterm *temp_heap;
   Eterm *hp;
-  Uint heap_size;
+  size_t heap_size;
   int n;
-  Sint size;
+  ssize_t size;
   uint8_t *bytes;
   int encoding = erts_get_native_filename_encoding();
 
@@ -1195,9 +1195,9 @@ struct packet_callback_args {
   Eterm res;   /* Out */
   int string_as_bin; /* return strings as binaries (http_bin): */
   uint8_t *aligned_ptr;
-  Uint bin_sz;
+  size_t bin_sz;
   Eterm orig;
-  Uint bin_offs;
+  size_t bin_offs;
   uint8_t bin_bitoffs;
 };
 
@@ -1205,11 +1205,11 @@ struct packet_callback_args {
     ((UWord)((char*)(ptr) - (char*)(start)) < (nbytes))
 
 static Eterm
-http_bld_string(struct packet_callback_args *pca, Uint **hpp, Uint *szp,
-                const char *str, Sint len)
+http_bld_string(struct packet_callback_args *pca, size_t **hpp, size_t *szp,
+                const char *str, ssize_t len)
 {
   Eterm res = THE_NON_VALUE;
-  Uint size;
+  size_t size;
   int make_subbin;
 
   if (pca->string_as_bin) {
@@ -1255,7 +1255,7 @@ static int http_response_erl(void *arg, int major, int minor,
   /* {http_response,{Major,Minor},Status,"Phrase"} */
   struct packet_callback_args *pca = (struct packet_callback_args *) arg;
   Eterm phrase_term, ver;
-  Uint hsize = 3 + 5;
+  size_t hsize = 3 + 5;
   Eterm *hp;
 #ifdef DEBUG
   Eterm *hend;
@@ -1275,7 +1275,7 @@ static int http_response_erl(void *arg, int major, int minor,
 }
 
 static Eterm http_bld_uri(struct packet_callback_args *pca,
-                          Eterm **hpp, Uint *szp, const PacketHttpURI *uri)
+                          Eterm **hpp, size_t *szp, const PacketHttpURI *uri)
 {
   Eterm s1, s2;
 
@@ -1317,8 +1317,8 @@ static int http_request_erl(void *arg, const http_atom_t *meth,
 {
   struct packet_callback_args *pca = (struct packet_callback_args *) arg;
   Eterm meth_term, uri_term, ver_term;
-  Uint sz = 0;
-  Uint *szp = &sz;
+  size_t sz = 0;
+  size_t *szp = &sz;
   Eterm *hp;
   Eterm **hpp = nullptr;
 
@@ -1351,7 +1351,7 @@ http_header_erl(void *arg, const http_atom_t *name, const char *name_ptr,
 {
   struct packet_callback_args *pca = (struct packet_callback_args *) arg;
   Eterm bit_term, name_term, val_term;
-  Uint sz = 6;
+  size_t sz = 6;
   Eterm *hp;
 #ifdef DEBUG
   Eterm *hend;
@@ -1396,7 +1396,7 @@ static int http_error_erl(void *arg, const char *buf, int len)
 {
   /* {http_error,Line} */
   struct packet_callback_args *pca = (struct packet_callback_args *) arg;
-  Uint sz = 3;
+  size_t sz = 3;
   Eterm *hp;
 #ifdef DEBUG
   Eterm *hend;
@@ -1553,7 +1553,7 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
 
     if (is_tuple(CAR(cons))) {
       Eterm *tpl = tuple_val(CAR(cons));
-      Uint val;
+      size_t val;
 
       if (tpl[0] == make_arityval(2) &&
           term_to_Uint(tpl[2], &val) && val <= UINT_MAX) {
@@ -1616,7 +1616,7 @@ next_option:
 
   if (code == 0) { /* no special packet parsing, make plain binary */
     ErlSubBin *body;
-    Uint hsz = 2 * ERL_SUB_BIN_SIZE + 4;
+    size_t hsz = 2 * ERL_SUB_BIN_SIZE + 4;
     hp = HAlloc(BIF_P, hsz);
     hend = hp + hsz;
 
@@ -1631,7 +1631,7 @@ next_option:
     hp += ERL_SUB_BIN_SIZE;
     pca.res = make_binary(body);
   } else if (code > 0) {
-    Uint hsz = ERL_SUB_BIN_SIZE + 4;
+    size_t hsz = ERL_SUB_BIN_SIZE + 4;
     ASSERT(pca.res != THE_NON_VALUE);
     hp = HAlloc(BIF_P, hsz);
     hend = hp + hsz;

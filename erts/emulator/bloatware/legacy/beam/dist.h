@@ -311,7 +311,7 @@ extern int erts_dist_command(Port *prt, int reds);
 extern void erts_dist_port_not_busy(Port *prt);
 extern void erts_kill_dist_connection(DistEntry *dep, uint32_t);
 
-extern Uint erts_dist_cache_size(void);
+extern size_t erts_dist_cache_size(void);
 
 
 #endif

@@ -69,7 +69,7 @@ struct ErtsBifTimer_ {
 #define BTM_PREALC_SZ   100
 #endif
 static ErtsBifTimer **bif_timer_tab;
-static Uint no_bif_timers;
+static size_t no_bif_timers;
 
 
 static erts_smp_rwmtx_t bif_timer_lock;
@@ -167,7 +167,7 @@ get_index(uint32_t *ref_numbers, uint32_t len)
 }
 
 static Eterm
-create_ref(Uint *hp, uint32_t *ref_numbers, uint32_t len)
+create_ref(size_t *hp, uint32_t *ref_numbers, uint32_t len)
 {
   uint32_t *datap;
   int i;
@@ -380,8 +380,8 @@ bif_timer_timeout(ErtsBifTimer *btm)
 #error "ERTS_REF_NUMBERS changed. Update me..."
 #endif
         Eterm ref;
-        Uint *hp;
-        Uint wrap_size = REF_THING_SIZE + 4;
+        size_t *hp;
+        size_t wrap_size = REF_THING_SIZE + 4;
         message = btm->message;
 
         if (!bp) {
@@ -431,7 +431,7 @@ setup_bif_timer(uint32_t xflags,
 {
   Process *rp;
   ErtsBifTimer *btm;
-  Uint timeout;
+  size_t timeout;
   Eterm ref;
   uint32_t *ref_numbers;
 
@@ -514,7 +514,7 @@ sl_timer_alloc:
   } else {
     ErlHeapFragment *bp;
     Eterm *hp;
-    Uint size;
+    size_t size;
 
     size = size_object(message);
     btm->bp = bp = new_message_buffer(size);
@@ -599,7 +599,7 @@ BIF_RETTYPE cancel_timer_1(BIF_ALIST_1)
     erts_smp_btm_rwunlock();
     res = am_false;
   } else {
-    Uint left = erts_time_left(&btm->tm);
+    size_t left = erts_time_left(&btm->tm);
 
     if (!(btm->flags & BTM_FLG_BYNAME)) {
       erts_smp_proc_lock(btm->receiver.proc.ess, ERTS_PROC_LOCK_MSGQ);
@@ -640,7 +640,7 @@ BIF_RETTYPE read_timer_1(BIF_ALIST_1)
   if (!btm || btm->flags & BTM_FLG_CANCELED) {
     res = am_false;
   } else {
-    Uint left = erts_time_left(&btm->tm);
+    size_t left = erts_time_left(&btm->tm);
     res = erts_make_integer(left, BIF_P);
   }
 
@@ -720,10 +720,10 @@ void erts_bif_timer_init(void)
   }
 }
 
-Uint
+size_t
 erts_bif_timer_memory_size(void)
 {
-  Uint res;
+  size_t res;
   int lock = !ERTS_IS_CRASH_DUMPING;
 
   if (lock) {

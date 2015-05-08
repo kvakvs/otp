@@ -219,7 +219,7 @@ typedef struct {
   char *primary;
   char *fallback;
   char *kernel_poll;
-  Uint memory_size;
+  size_t memory_size;
   int poll_set_size;
   int fallback_poll_set_size;
   int lazy_updates;

@@ -97,9 +97,9 @@ static erts_smp_mtx_t tiw_lock;
 #define TIW_SIZE 65536    /* timing wheel size (should be a power of 2) */
 #endif
 static ErlTimer **tiw;    /* the timing wheel, allocated in init_time() */
-static Uint tiw_pos;    /* current position in wheel */
-static Uint tiw_nto;    /* number of timeouts in wheel */
-static Uint tiw_min;
+static size_t tiw_pos;    /* current position in wheel */
+static size_t tiw_nto;    /* number of timeouts in wheel */
+static size_t tiw_min;
 static ErlTimer *tiw_min_ptr;
 
 /* END tiw_lock protected variables */
@@ -246,10 +246,10 @@ erts_short_time_t erts_next_time(void)
 static ERTS_INLINE void bump_timer_internal(erts_short_time_t
     dt) /* PRE: tiw_lock is write-locked */
 {
-  Uint keep_pos;
-  Uint count;
+  size_t keep_pos;
+  size_t count;
   ErlTimer *p, **prev, *timeout_head, **timeout_tail;
-  Uint dtime = (Uint) dt;
+  size_t dtime = (size_t) dt;
 
   /* no need to bump the position if there aren't any timeouts */
   if (tiw_nto == 0) {
@@ -258,7 +258,7 @@ static ERTS_INLINE void bump_timer_internal(erts_short_time_t
   }
 
   /* if do_time > TIW_SIZE we want to go around just once */
-  count = (Uint)(dtime / TIW_SIZE) + 1;
+  count = (size_t)(dtime / TIW_SIZE) + 1;
   keep_pos = (tiw_pos + dtime) % TIW_SIZE;
 
   if (dtime > TIW_SIZE) {
@@ -333,10 +333,10 @@ void erts_bump_timer(erts_short_time_t dt) /* dt is value from do_time */
   bump_timer_internal(dt);
 }
 
-Uint
+size_t
 erts_timer_wheel_memory_size(void)
 {
-  return (Uint) TIW_SIZE * sizeof(ErlTimer *);
+  return (size_t) TIW_SIZE * sizeof(ErlTimer *);
 }
 
 /* this_ routine links the time cells into a free list at the start
@@ -381,9 +381,9 @@ erts_init_time(void)
 ** Insert a process into the time queue, with a timeout 't'
 */
 static void
-insert_timer(ErlTimer *p, Uint t)
+insert_timer(ErlTimer *p, size_t t)
 {
-  Uint tm;
+  size_t tm;
   uint64_t ticks;
 
   /* The current slot (tiw_pos) in timing wheel is the next slot to be
@@ -401,8 +401,8 @@ insert_timer(ErlTimer *p, Uint t)
 
   /* calculate slot */
   tm = (ticks + tiw_pos) % TIW_SIZE;
-  p->slot = (Uint) tm;
-  p->count = (Uint)(ticks / TIW_SIZE);
+  p->slot = (size_t) tm;
+  p->count = (size_t)(ticks / TIW_SIZE);
 
   /* insert at head of list at slot */
   p->next = tiw[tm];
@@ -432,7 +432,7 @@ insert_timer(ErlTimer *p, Uint t)
 
 void
 erts_set_timer(ErlTimer *p, ErlTimeoutProc timeout, ErlCancelProc cancel,
-               void *arg, Uint t)
+               void *arg, size_t t)
 {
 
   erts_deliver_time();
@@ -451,7 +451,7 @@ erts_set_timer(ErlTimer *p, ErlTimeoutProc timeout, ErlCancelProc cancel,
   erts_smp_mtx_unlock(&tiw_lock);
 #if defined(ERTS_SMP)
 
-  if (t <= (Uint) ERTS_SHORT_TIME_T_MAX) {
+  if (t <= (size_t) ERTS_SHORT_TIME_T_MAX) {
     erts_sys_schedule_interrupt_timed(1, (erts_short_time_t) t);
   }
 
@@ -492,10 +492,10 @@ erts_cancel_timer(ErlTimer *p)
   0 is returned also if the timer is overdue (i.e., would have triggered
   immediately if it hadn't been cancelled).
 */
-Uint
+size_t
 erts_time_left(ErlTimer *p)
 {
-  Uint left;
+  size_t left;
   erts_short_time_t dt;
 
   erts_smp_mtx_lock(&tiw_lock);
@@ -521,7 +521,7 @@ erts_time_left(ErlTimer *p)
 
   erts_smp_mtx_unlock(&tiw_lock);
 
-  return (Uint) left * TIW_ITIME;
+  return (size_t) left * TIW_ITIME;
 }
 
 #ifdef DEBUG

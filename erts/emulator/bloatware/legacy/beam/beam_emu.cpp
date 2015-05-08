@@ -48,7 +48,7 @@
 #if defined(NO_JUMP_TABLE)
 #  define OpCase(OpCode)    case op_##OpCode
 #  define CountCase(OpCode) case op_count_##OpCode
-#  define OpCode(OpCode)    ((Uint*)op_##OpCode)
+#  define OpCode(OpCode)    ((size_t*)op_##OpCode)
 #  define Goto(Rel) {Go = (int)(UWord)(Rel); goto emulator_loop;}
 #  define LabelAddr(Addr) &&##Addr
 #else
@@ -757,18 +757,18 @@ extern int count_instructions;
 #else
 #define BsSafeMul(A, B, Fail, Target)     \
    do { uint64_t _res = (uint64_t)(A) * (uint64_t)(B);  \
-      if ((_res >> (8*sizeof(Uint))) != 0) { Fail; }  \
+      if ((_res >> (8*sizeof(size_t))) != 0) { Fail; }  \
       Target = _res;          \
    } while (0)
 #endif
 
 #define BsGetFieldSize(Bits, Unit, Fail, Target)  \
    do {             \
-      Sint _signed_size; Uint _uint_size;   \
+      ssize_t _signed_size; size_t _uint_size;   \
       if (is_small(Bits)) {       \
         _signed_size = signed_val(Bits);    \
          if (_signed_size < 0) { Fail; }    \
-         _uint_size = (Uint) _signed_size;    \
+         _uint_size = (size_t) _signed_size;    \
       } else {            \
          if (!term_to_Uint(Bits, &temp_bits)) { Fail; } \
          _uint_size = temp_bits;      \
@@ -778,14 +778,14 @@ extern int count_instructions;
 
 #define BsGetUncheckedFieldSize(Bits, Unit, Fail, Target) \
    do {               \
-      Sint _signed_size; Uint _uint_size;     \
+      ssize_t _signed_size; size_t _uint_size;     \
       if (is_small(Bits)) {         \
         _signed_size = signed_val(Bits);      \
          if (_signed_size < 0) { Fail; }      \
-         _uint_size = (Uint) _signed_size;      \
+         _uint_size = (size_t) _signed_size;      \
       } else {              \
          if (!term_to_Uint(Bits, &temp_bits)) { Fail; }   \
-         _uint_size = (Uint) temp_bits;       \
+         _uint_size = (size_t) temp_bits;       \
       }               \
       Target = _uint_size * Unit;       \
    } while (0)
@@ -793,7 +793,7 @@ extern int count_instructions;
 #define BsGetFloat2(Ms, Live, Sz, Flags, Dst, Store, Fail)    \
  do {                 \
    ErlBinMatchBuffer *_mb;            \
-   Eterm _result; Sint _size;           \
+   Eterm _result; ssize_t _size;           \
    if (!is_small(Sz) || (_size = unsigned_val(Sz)) > 64) { Fail; }  \
    _size *= ((Flags) >> 3);           \
    TestHeap(FLOAT_SIZE_OBJECT, Live);         \
@@ -823,7 +823,7 @@ extern int count_instructions;
 #define BsGetBinary_2(Ms, Live, Sz, Flags, Dst, Store, Fail)  \
   do {                \
     ErlBinMatchBuffer *_mb;         \
-    Eterm _result; Uint _size;          \
+    Eterm _result; size_t _size;          \
     BsGetFieldSize(Sz, ((Flags) >> 3), Fail, _size);    \
     TestHeap(ERL_SUB_BIN_SIZE, Live);       \
     _mb = ms_matchbuffer(Ms);         \
@@ -857,7 +857,7 @@ extern int count_instructions;
  do {               \
    ErlBinMatchBuffer *_mb;          \
    size_t new_offset;           \
-   Uint _size;              \
+   size_t _size;              \
     _mb = ms_matchbuffer(Ms);         \
    BsGetFieldSize(Bits, Unit, Fail, _size);     \
    new_offset = _mb->offset + _size;        \
@@ -890,7 +890,7 @@ extern int count_instructions;
 
 #define NewBsPutInteger(Sz, Flags, Src)           \
  do {                   \
-    Sint _size;                 \
+    ssize_t _size;                 \
     BsGetUncheckedFieldSize(Sz, ((Flags) >> 3), goto badarg, _size);    \
     if (!erts_new_bs_put_integer(ERL_BITS_ARGS_3((Src), _size, (Flags)))) \
        { goto badarg; }               \
@@ -903,14 +903,14 @@ extern int count_instructions;
 
 #define NewBsPutFloat(Sz, Flags, Src)           \
  do {                   \
-    Sint _size;                 \
+    ssize_t _size;                 \
     BsGetUncheckedFieldSize(Sz, ((Flags) >> 3), goto badarg, _size);    \
     if (!erts_new_bs_put_float(c_p, (Src), _size, (Flags))) { goto badarg; }  \
  } while (0)
 
 #define NewBsPutBinary(Sz, Flags, Src)              \
  do {                     \
-    Sint _size;                   \
+    ssize_t _size;                   \
     BsGetUncheckedFieldSize(Sz, ((Flags) >> 3), goto badarg, _size);      \
     if (!erts_new_bs_put_binary(ERL_BITS_ARGS_2((Src), _size))) { goto badarg; }  \
  } while (0)
@@ -950,7 +950,7 @@ static BeamInstr *handle_error(Process *c_p, BeamInstr *pc,
                                Eterm *reg, BifFunction bf) NOINLINE;
 static BeamInstr *call_error_handler(Process *p, BeamInstr *ip,
                                      Eterm *reg, Eterm func) NOINLINE;
-static BeamInstr *fixed_apply(Process *p, Eterm *reg, Uint arity) NOINLINE;
+static BeamInstr *fixed_apply(Process *p, Eterm *reg, size_t arity) NOINLINE;
 static BeamInstr *apply(Process *p, Eterm module, Eterm function,
                         Eterm args, Eterm *reg) NOINLINE;
 static BeamInstr *call_fun(Process *p, int arity,
@@ -1137,7 +1137,7 @@ void process_main(void)
   /* Number of reductions left.  This function
    * returns to the scheduler when FCALLS reaches zero.
    */
-  register Sint FCALLS REG_fcalls = 0;
+  register ssize_t FCALLS REG_fcalls = 0;
 
   /*
    * Temporaries used for picking up arguments for instructions.
@@ -1161,7 +1161,7 @@ void process_main(void)
    */
   int neg_o_reds = 0;
 
-  Eterm(*arith_func)(Process * p, Eterm * reg, Uint live);
+  Eterm(*arith_func)(Process * p, Eterm * reg, size_t live);
 
 #ifndef NO_JUMP_TABLE
   static void *opcodes[] = { DEFINE_OPCODES };
@@ -1172,7 +1172,7 @@ void process_main(void)
   int Go;
 #endif
 
-  Uint temp_bits; /* Temporary used by BsSkipBits2 & BsGetInteger2 */
+  size_t temp_bits; /* Temporary used by BsSkipBits2 & BsGetInteger2 */
 
   Eterm pt_arity;   /* Used by do_put_tuple */
 
@@ -1210,14 +1210,14 @@ do_schedule1:
   if (start_time != 0) {
     int64_t diff = erts_timestamp_millis() - start_time;
 
-    if (diff > 0 && (Uint) diff >  erts_system_monitor_long_schedule
+    if (diff > 0 && (size_t) diff >  erts_system_monitor_long_schedule
 #ifdef ERTS_DIRTY_SCHEDULERS
         && !ERTS_SCHEDULER_IS_DIRTY(c_p->scheduler_data)
 #endif
        ) {
       BeamInstr *inptr = find_function_from_pc(start_time_i);
       BeamInstr *outptr = find_function_from_pc(c_p->i);
-      monitor_long_schedule_proc(c_p, inptr, outptr, (Uint) diff);
+      monitor_long_schedule_proc(c_p, inptr, outptr, (size_t) diff);
     }
   }
 
@@ -1305,7 +1305,7 @@ do_schedule1:
 
         if (fptr) {
           dtrace_fun_decode(c_p, (Eterm)fptr[0],
-                            (Eterm)fptr[1], (Uint)fptr[2],
+                            (Eterm)fptr[1], (size_t)fptr[2],
                             nullptr, fun_buf);
         } else {
           erts_snprintf(fun_buf, sizeof(DTRACE_CHARBUF_NAME(fun_buf)),
@@ -1336,7 +1336,7 @@ emulator_loop:
     {
       Eterm increment_reg_val;
       Eterm increment_val;
-      Uint live;
+      size_t live;
       Eterm result;
 
       OpCase(i_increment_yIId):
@@ -1356,7 +1356,7 @@ do_increment:
 
       if (is_small(increment_reg_val))
     {
-        Sint i = signed_val(increment_reg_val) + increment_val;
+        ssize_t i = signed_val(increment_reg_val) + increment_val;
         ASSERT(MY_IS_SSMALL(i) == IS_SSMALL(i));
 
         if (MY_IS_SSMALL(i)) {
@@ -1391,7 +1391,7 @@ store_result_:
       Eterm result;
 
       if (is_both_small(tmp_arg1, tmp_arg2)) {
-        Sint i = signed_val(tmp_arg1) + signed_val(tmp_arg2);
+        ssize_t i = signed_val(tmp_arg1) + signed_val(tmp_arg2);
         ASSERT(MY_IS_SSMALL(i) == IS_SSMALL(i));
 
         if (MY_IS_SSMALL(i)) {
@@ -1409,7 +1409,7 @@ store_result_:
       Eterm result;
 
       if (is_both_small(tmp_arg1, tmp_arg2)) {
-        Sint i = signed_val(tmp_arg1) - signed_val(tmp_arg2);
+        ssize_t i = signed_val(tmp_arg1) - signed_val(tmp_arg2);
         ASSERT(MY_IS_SSMALL(i) == IS_SSMALL(i));
 
         if (MY_IS_SSMALL(i)) {
@@ -1611,8 +1611,8 @@ do_is_ne_exact_literal:
 
     OpCase(i_trim_I): {
       BeamInstr *next;
-      Uint words;
-      Uint cp;
+      size_t words;
+      size_t cp;
 
       words = Arg(0);
       cp = E[0];
@@ -1642,7 +1642,7 @@ do_is_ne_exact_literal:
 #ifdef USE_VM_CALL_PROBES
 
       if (DTRACE_ENABLED(function_return) && (fptr = find_function_from_pc(c_p->cp))) {
-        DTRACE_RETURN(c_p, (Eterm)fptr[0], (Eterm)fptr[1], (Uint)fptr[2]);
+        DTRACE_RETURN(c_p, (Eterm)fptr[0], (Eterm)fptr[1], (size_t)fptr[2]);
       }
 
 #endif
@@ -2037,9 +2037,9 @@ loop_rec__:
       if (DTRACE_ENABLED(message_receive)) {
         Eterm token2 = NIL;
         DTRACE_CHARBUF(receiver_name, DTRACE_TERM_BUF_SIZE);
-        Sint tok_label = 0;
-        Sint tok_lastcnt = 0;
-        Sint tok_serial = 0;
+        ssize_t tok_label = 0;
+        ssize_t tok_lastcnt = 0;
+        ssize_t tok_serial = 0;
 
         dtrace_proc_str(c_p, receiver_name);
         token2 = SEQ_TRACE_TOKEN(c_p);
@@ -2105,7 +2105,7 @@ loop_rec__:
 
       if (timeout_value != make_small(0)) {
 #if !defined(ARCH_64) || HALFWORD_HEAP
-        Uint time_val;
+        size_t time_val;
 #endif
 
         if (is_small(timeout_value) && signed_val(timeout_value) > 0 &&
@@ -2408,7 +2408,7 @@ do_jump_on_val_zero_index:
 do_jump_on_val_index:
 
       if (is_small(jump_on_val_index)) {
-        jump_on_val_index = (Uint)(signed_val(jump_on_val_index) - Arg(3));
+        jump_on_val_index = (size_t)(signed_val(jump_on_val_index) - Arg(3));
 
         if (jump_on_val_index < Arg(2)) {
           SET_I((BeamInstr *)(&Arg(4))[jump_on_val_index]);
@@ -2469,7 +2469,7 @@ do_put_tuple: {
       Eterm field;
       Eterm *ks;
       BeamInstr *fs;
-      Uint sz, n;
+      size_t sz, n;
 
       GetArg1(1, map);
 
@@ -2486,7 +2486,7 @@ do_put_tuple: {
       }
 
       ks = map_get_keys(mp);
-      n  = (Uint)Arg(2);
+      n  = (size_t)Arg(2);
       fs = &Arg(3); /* pattern fields */
 
       ASSERT(n > 0);
@@ -2543,7 +2543,7 @@ do {                \
       Eterm *ks;
       Eterm *vs;
       BeamInstr *fs;
-      Uint sz, n;
+      size_t sz, n;
 
       GetArg1(1, map);
 
@@ -2559,7 +2559,7 @@ do {                \
         goto get_map_elements_fail;
       }
 
-      n  = (Uint)Arg(2) / 2;
+      n  = (size_t)Arg(2) / 2;
       fs = &Arg(3); /* pattern fields and target registers */
       ks = map_get_keys(mp);
       vs = map_get_values(mp);
@@ -2708,11 +2708,11 @@ get_map_elements_fail:
     }
 
     OpCase(i_gc_bif1_jIsId): {
-      typedef Eterm(*GcBifFunction)(Process *, Eterm *, Uint);
+      typedef Eterm(*GcBifFunction)(Process *, Eterm *, size_t);
       GcBifFunction bf;
       Eterm arg;
       Eterm result;
-      Uint live = (Uint) Arg(3);
+      size_t live = (size_t) Arg(3);
 
       GetArg1(2, arg);
       reg[0] = r(0);
@@ -2748,10 +2748,10 @@ get_map_elements_fail:
     OpCase(i_gc_bif2_jIId): /* Note, one less parameter than the i_gc_bif1
           and i_gc_bif3 */
     {
-      typedef Eterm(*GcBifFunction)(Process *, Eterm *, Uint);
+      typedef Eterm(*GcBifFunction)(Process *, Eterm *, size_t);
       GcBifFunction bf;
       Eterm result;
-      Uint live = (Uint) Arg(2);
+      size_t live = (size_t) Arg(2);
 
       reg[0] = r(0);
       reg[live++] = tmp_arg1;
@@ -2786,11 +2786,11 @@ get_map_elements_fail:
     }
 
     OpCase(i_gc_bif3_jIsId): {
-      typedef Eterm(*GcBifFunction)(Process *, Eterm *, Uint);
+      typedef Eterm(*GcBifFunction)(Process *, Eterm *, size_t);
       GcBifFunction bf;
       Eterm arg;
       Eterm result;
-      Uint live = (Uint) Arg(3);
+      size_t live = (size_t) Arg(3);
 
       GetArg1(2, arg);
       reg[0] = r(0);
@@ -2913,7 +2913,7 @@ get_map_elements_fail:
       PROCESS_MAIN_CHK_LOCKS(c_p);
 
       if (c_p->mbuf || MSO(c_p).overhead >= BIN_VHEAP_SZ(c_p)) {
-        Uint arity = ((Export *)Arg(0))->code[2];
+        size_t arity = ((Export *)Arg(0))->code[2];
         result = erts_gc_after_bif_call(c_p, result, reg, arity);
         E = c_p->stop;
       }
@@ -2961,7 +2961,7 @@ get_map_elements_fail:
       if (tmp_arg2 == SMALL_ZERO) {
         goto badarith;
       } else if (is_both_small(tmp_arg1, tmp_arg2)) {
-        Sint ires = signed_val(tmp_arg1) / signed_val(tmp_arg2);
+        ssize_t ires = signed_val(tmp_arg1) / signed_val(tmp_arg2);
 
         if (MY_IS_SSMALL(ires)) {
           result = make_small(ires);
@@ -3004,7 +3004,7 @@ get_map_elements_fail:
 
 do_big_arith2: {
       Eterm result;
-      Uint live = Arg(1);
+      size_t live = Arg(1);
 
       SWAPOUT;
       reg[0] = r(0);
@@ -3073,8 +3073,8 @@ jump_f:
     }
 
     {
-      Sint i;
-      Sint ires;
+      ssize_t i;
+      ssize_t ires;
       Eterm *bigp;
 
       OpCase(i_bsr_jId):
@@ -3126,8 +3126,8 @@ small_shift:
 
             StoreBifResult(2, tmp_arg1);
           } else if (i < SMALL_BITS - 1) { /* Left shift */
-            if ((ires > 0 && ((~(Uint)0 << ((SMALL_BITS - 1) - i)) & ires) == 0) ||
-                ((~(Uint)0 << ((SMALL_BITS - 1) - i)) & ~ires) == 0) {
+            if ((ires > 0 && ((~(size_t)0 << ((SMALL_BITS - 1) - i)) & ires) == 0) ||
+                ((~(size_t)0 << ((SMALL_BITS - 1) - i)) & ~ires) == 0) {
               tmp_arg1 = make_small(ires << i);
               StoreBifResult(2, tmp_arg1);
             }
@@ -3228,7 +3228,7 @@ big_shift:
       if (is_small(bnot_val)) {
         bnot_val = make_small(~signed_val(bnot_val));
       } else {
-        Uint live = Arg(2);
+        size_t live = Arg(2);
         SWAPOUT;
         reg[0] = r(0);
         reg[live] = bnot_val;
@@ -3478,7 +3478,7 @@ context_switch2:   /* Entry for fun calls. */
          * space for most processes which never call functions with more than
          * 6 arguments.
          */
-        Uint size = c_p->arity * sizeof(c_p->arg_reg[0]);
+        size_t size = c_p->arity * sizeof(c_p->arg_reg[0]);
 
         if (c_p->arg_reg != c_p->def_arg_reg) {
           c_p->arg_reg = (Eterm *) erts_realloc(ERTS_ALC_T_ARG_REG,
@@ -3698,7 +3698,7 @@ post_error_handling:
          */
         BifFunction vbf;
 
-        DTRACE_NIF_ENTRY(c_p, (Eterm)I[-3], (Eterm)I[-2], (Uint)I[-1]);
+        DTRACE_NIF_ENTRY(c_p, (Eterm)I[-3], (Eterm)I[-2], (size_t)I[-1]);
         c_p->current = I - 3; /* current and vbf set to please handle_error */
         SWAPOUT;
         c_p->fcalls = FCALLS - 1;
@@ -3721,7 +3721,7 @@ post_error_handling:
         PROCESS_MAIN_CHK_LOCKS(c_p);
         ERTS_VERIFY_UNUSED_TEMP_ALLOC(c_p);
 
-        DTRACE_NIF_RETURN(c_p, (Eterm)I[-3], (Eterm)I[-2], (Uint)I[-1]);
+        DTRACE_NIF_RETURN(c_p, (Eterm)I[-3], (Eterm)I[-2], (size_t)I[-1]);
         goto apply_bif_or_nif_epilogue;
 
         OpCase(apply_bif):
@@ -3741,7 +3741,7 @@ post_error_handling:
         c_p->arity = 0;   /* To allow garbage collection on ourselves
            * (check_process_code/2).
            */
-        DTRACE_BIF_ENTRY(c_p, (Eterm)I[-3], (Eterm)I[-2], (Uint)I[-1]);
+        DTRACE_BIF_ENTRY(c_p, (Eterm)I[-3], (Eterm)I[-2], (size_t)I[-1]);
 
         SWAPOUT;
         c_p->fcalls = FCALLS - 1;
@@ -3762,7 +3762,7 @@ post_error_handling:
           PROCESS_MAIN_CHK_LOCKS(c_p);
         }
 
-        DTRACE_BIF_RETURN(c_p, (Eterm)I[-3], (Eterm)I[-2], (Uint)I[-1]);
+        DTRACE_BIF_RETURN(c_p, (Eterm)I[-3], (Eterm)I[-2], (size_t)I[-1]);
 
 apply_bif_or_nif_epilogue:
         ERTS_SMP_REQ_PROC_MAIN_LOCK(c_p);
@@ -3852,9 +3852,9 @@ do_case_end:
     {
       Eterm new_binary;
       Eterm num_bits_term;
-      Uint num_bits;
-      Uint alloc;
-      Uint num_bytes;
+      size_t num_bits;
+      size_t alloc;
+      size_t num_bytes;
 
       OpCase(i_bs_init_bits_heap_IIId): {
         num_bits = Arg(0);
@@ -3903,15 +3903,15 @@ do_case_end:
 do_bs_init_bits:
 
       if (is_small(num_bits_term)) {
-        Sint size = signed_val(num_bits_term);
+        ssize_t size = signed_val(num_bits_term);
 
         if (size < 0) {
           goto badarg;
         }
 
-        num_bits = (Uint) size;
+        num_bits = (size_t) size;
       } else {
-        Uint bits;
+        size_t bits;
 
         if (!term_to_Uint(num_bits_term, &bits)) {
           c_p->freason = bits;
@@ -4041,7 +4041,7 @@ do_bits_sub_bin:
 do_bs_init:
 
       if (is_small(tmp_arg1)) {
-        Sint size = signed_val(tmp_arg1);
+        ssize_t size = signed_val(tmp_arg1);
 
         if (size < 0) {
           goto badarg;
@@ -4049,14 +4049,14 @@ do_bs_init:
 
         tmp_arg1 = (Eterm) size;
       } else {
-        Uint bytes;
+        size_t bytes;
 
         if (!term_to_Uint(tmp_arg1, &bytes)) {
           c_p->freason = bytes;
           goto lb_Cl_error;
         }
 
-        if ((bytes >> (8 * sizeof(Uint) - 3)) != 0) {
+        if ((bytes >> (8 * sizeof(size_t) - 3)) != 0) {
           goto system_limit;
         }
 
@@ -4132,7 +4132,7 @@ do_proc_bin_alloc: {
       /* Fall through */
 do_heap_bin_alloc: {
         ErlHeapBin *hb;
-        Uint bin_need;
+        size_t bin_need;
 
         bin_need = heap_bin_size(tmp_arg1);
         erts_bin_offset = 0;
@@ -4149,12 +4149,12 @@ do_heap_bin_alloc: {
     }
 
     OpCase(i_bs_add_jId): {
-      Uint Unit = Arg(1);
+      size_t Unit = Arg(1);
 
       if (is_both_small(tmp_arg1, tmp_arg2)) {
-        Sint Arg1;
+        ssize_t Arg1;
         Arg1 = signed_val(tmp_arg1);
-        Sint Arg2;
+        ssize_t Arg2;
         Arg2 = signed_val(tmp_arg2);
 
         if (Arg1 >= 0 && Arg2 >= 0) {
@@ -4163,7 +4163,7 @@ do_heap_bin_alloc: {
 
 store_bs_add_result:
 
-          if (MY_IS_SSMALL((Sint) tmp_arg1)) {
+          if (MY_IS_SSMALL((ssize_t) tmp_arg1)) {
             tmp_arg1 = make_small(tmp_arg1);
           } else {
             /*
@@ -4185,9 +4185,9 @@ store_bs_add_result:
 
         goto badarg;
       } else {
-        Uint a;
-        Uint b;
-        Uint c;
+        size_t a;
+        size_t b;
+        size_t c;
 
         /*
          * Now we know that one of the arguments is
@@ -4201,7 +4201,7 @@ store_bs_add_result:
          *
          * Otherwise if both arguments are numeric,
          * but at least one argument does not fit in
-         * an Uint, the reason is SYSTEM_LIMIT.
+         * an size_t, the reason is SYSTEM_LIMIT.
          */
 
         if (!term_to_Uint(tmp_arg1, &a)) {
@@ -4256,8 +4256,8 @@ store_bs_add_result:
      */
 
     OpCase(i_bs_append_jIIId): {
-      Uint live = Arg(2);
-      Uint res;
+      size_t live = Arg(2);
+      size_t res;
 
       SWAPOUT;
       reg[0] = r(0);
@@ -4428,7 +4428,7 @@ store_bs_add_result:
     {
       Eterm header;
       BeamInstr *next;
-      Uint slots;
+      size_t slots;
       Eterm context;
 
       OpCase(i_bs_start_match2_rfIId): {
@@ -4446,13 +4446,13 @@ do_start_match:
 
         if (header_is_bin_matchstate(header)) {
           ErlBinMatchState *ms = (ErlBinMatchState *) boxed_val(context);
-          Uint actual_slots = HEADER_NUM_SLOTS(header);
+          size_t actual_slots = HEADER_NUM_SLOTS(header);
           ms->save_offset[0] = ms->mb.offset;
 
           if (actual_slots < slots) {
             ErlBinMatchState *dst;
-            Uint live = Arg(1);
-            Uint wordsneeded = ERL_BIN_MATCHSTATE_SIZE(slots);
+            size_t live = Arg(1);
+            size_t wordsneeded = ERL_BIN_MATCHSTATE_SIZE(slots);
 
             TestHeapPreserve(wordsneeded, live, context);
             ms = (ErlBinMatchState *) boxed_val(context);
@@ -4465,8 +4465,8 @@ do_start_match:
           }
         } else if (is_binary_header(header)) {
           Eterm result;
-          Uint live = Arg(1);
-          Uint wordsneeded = ERL_BIN_MATCHSTATE_SIZE(slots);
+          size_t live = Arg(1);
+          size_t wordsneeded = ERL_BIN_MATCHSTATE_SIZE(slots);
           TestHeapPreserve(wordsneeded, live, context);
           HEAP_TOP(c_p) = HTOP;
 #ifdef DEBUG
@@ -4704,7 +4704,7 @@ do_bs_get_integer_32: {
 #if !defined(ARCH_64) || HALFWORD_HEAP
         } else {
           TestHeap(BIG_UINT_HEAP_SIZE, Arg(1));
-          _result = uint_to_big((Uint) _integer, HTOP);
+          _result = uint_to_big((size_t) _integer, HTOP);
           HTOP += BIG_UINT_HEAP_SIZE;
           HEAP_SPACE_VERIFIED(0);
         }
@@ -4734,7 +4734,7 @@ do_bs_get_integer_32: {
      * Operands: Size Live Fail Flags Dst
      */
 do_bs_get_integer_imm_test_heap: {
-      Uint wordsneeded;
+      size_t wordsneeded;
       tmp_arg2 = Arg(0);
       wordsneeded = 1 + WSIZE(NBYTES(tmp_arg2));
       TestHeapPreserve(wordsneeded, Arg(1), tmp_arg1);
@@ -4789,8 +4789,8 @@ do_bs_get_integer_imm: {
      * Operands: Fail Live FlagsAndUnit Dst
      */
     OpCase(i_bs_get_integer_fIId): {
-      Uint flags;
-      Uint size;
+      size_t flags;
+      size_t size;
       ErlBinMatchBuffer *mb;
       Eterm result;
 
@@ -4798,7 +4798,7 @@ do_bs_get_integer_imm: {
       BsGetFieldSize(tmp_arg2, (flags >> 3), ClauseFail(), size);
 
       if (size >= SMALL_BITS) {
-        Uint wordsneeded;
+        size_t wordsneeded;
         /* check bits size before potential gc.
          * We do not want a gc and then realize we don't need
          * the allocated space (i.e. if the op fails)
@@ -4812,7 +4812,7 @@ do_bs_get_integer_imm: {
           ClauseFail();
         }
 
-        wordsneeded = 1 + WSIZE(NBYTES((Uint) size));
+        wordsneeded = 1 + WSIZE(NBYTES((size_t) size));
         TestHeapPreserve(wordsneeded, Arg(1), tmp_arg1);
       }
 
@@ -4893,10 +4893,10 @@ do_bs_get_utf16: {
       Eterm context_to_binary_context;
       ErlBinMatchBuffer *mb;
       ErlSubBin *sb;
-      Uint size;
-      Uint offs;
-      Uint orig;
-      Uint hole_size;
+      size_t size;
+      size_t offs;
+      size_t orig;
+      size_t hole_size;
 
       OpCase(bs_context_to_binary_r): {
         context_to_binary_context = x0;
@@ -4985,9 +4985,9 @@ do_bs_get_binary_all_reuse_common:
 do_bs_match_string: {
         BeamInstr *next;
         uint8_t *bytes;
-        Uint bits;
+        size_t bits;
         ErlBinMatchBuffer *mb;
-        Uint offs;
+        size_t offs;
 
         PreFetch(3, next);
         bits = Arg(1);
@@ -5106,7 +5106,7 @@ do_bs_match_string: {
 
     OpCase(i_return_to_trace): {
       if (IS_TRACED_FL(c_p, F_TRACE_RETURN_TO)) {
-        Uint *cpp = (Uint *) E;
+        size_t *cpp = (size_t *) E;
 
         for (;;) {
           ASSERT(is_CP(*cpp));
@@ -5288,14 +5288,14 @@ fbadarith:
          * I[ 0]: &&lb_hipe_trap_call
          * ... remainder of original BEAM code
          */
-        ASSERT(I[-5] == (Uint) OpCode(i_func_info_IaaI));
+        ASSERT(I[-5] == (size_t) OpCode(i_func_info_IaaI));
         c_p->hipe.ncallee = (void(*)(void)) I[-4];
         cmd = HIPE_MODE_SWITCH_CMD_CALL | (I[-1] << 8);
         ++hipe_trap_count;
         goto L_hipe_mode_switch;
       }
       OpCase(hipe_trap_call_closure): {
-        ASSERT(I[-5] == (Uint) OpCode(i_func_info_IaaI));
+        ASSERT(I[-5] == (size_t) OpCode(i_func_info_IaaI));
         c_p->hipe.ncallee = (void(*)(void)) I[-4];
         cmd = HIPE_MODE_SWITCH_CMD_CALL_CLOSURE | (I[-1] << 8);
         ++hipe_trap_count;
@@ -5375,7 +5375,7 @@ L_hipe_mode_switch:
        * ... remainder of original BEAM code
        */
       struct hipe_call_count *hcc = (struct hipe_call_count *)I[-4];
-      ASSERT(I[-5] == (Uint) OpCode(i_func_info_IaaI));
+      ASSERT(I[-5] == (size_t) OpCode(i_func_info_IaaI));
       ASSERT(hcc != nullptr);
       ASSERT(VALID_INSTR(hcc->opcode));
       ++(hcc->count);
@@ -5862,10 +5862,10 @@ add_stacktrace(Process *c_p, Eterm Value, Eterm exc)
  * This does not update c_p->fvalue or c_p->freason.
  */
 Eterm
-expand_error_value(Process *c_p, Uint freason, Eterm Value)
+expand_error_value(Process *c_p, size_t freason, Eterm Value)
 {
   Eterm *hp;
-  Uint r;
+  size_t r;
 
   r = GET_EXC_INDEX(freason);
   ASSERT(r < NUMBER_EXIT_CODES); /* range check */
@@ -6181,7 +6181,7 @@ build_stacktrace(Process *c_p, Eterm exc)
   FunctionInfo *stk;
   FunctionInfo *stkp;
   Eterm res = NIL;
-  Uint heap_size;
+  size_t heap_size;
   Eterm *hp;
   Eterm mfa;
   int i;
@@ -6270,7 +6270,7 @@ call_error_handler(Process *p, BeamInstr *fi, Eterm *reg, Eterm func)
   Export *ep;
   int arity;
   Eterm args;
-  Uint sz;
+  size_t sz;
   int i;
 
   /*
@@ -6315,7 +6315,7 @@ call_error_handler(Process *p, BeamInstr *fi, Eterm *reg, Eterm func)
 }
 
 static Export *
-apply_setup_error_handler(Process *p, Eterm module, Eterm function, Uint arity, Eterm *reg)
+apply_setup_error_handler(Process *p, Eterm module, Eterm function, size_t arity, Eterm *reg)
 {
   Export *ep;
 
@@ -6329,7 +6329,7 @@ apply_setup_error_handler(Process *p, Eterm module, Eterm function, Uint arity, 
     return nullptr;
   } else {
     int i;
-    Uint sz = 2 * arity;
+    size_t sz = 2 * arity;
     Eterm *hp;
     Eterm args = NIL;
 
@@ -6460,7 +6460,7 @@ error2:
 
   if (DTRACE_ENABLED(global_function_entry)) {
     BeamInstr *fptr = (BeamInstr *) ep->addressv[erts_active_code_ix()];
-    DTRACE_GLOBAL_CALL(p, (Eterm)fptr[-3], (Eterm)fptr[-2], (Uint)fptr[-1]);
+    DTRACE_GLOBAL_CALL(p, (Eterm)fptr[-3], (Eterm)fptr[-2], (size_t)fptr[-1]);
   }
 
 #endif
@@ -6468,7 +6468,7 @@ error2:
 }
 
 static BeamInstr *
-fixed_apply(Process *p, Eterm *reg, Uint arity)
+fixed_apply(Process *p, Eterm *reg, size_t arity)
 {
   Export *ep;
   Eterm module;
@@ -6530,7 +6530,7 @@ error:
 
   if (DTRACE_ENABLED(global_function_entry)) {
     BeamInstr *fptr = (BeamInstr *)  ep->addressv[erts_active_code_ix()];
-    DTRACE_GLOBAL_CALL(p, (Eterm)fptr[-3], (Eterm)fptr[-2], (Uint)fptr[-1]);
+    DTRACE_GLOBAL_CALL(p, (Eterm)fptr[-3], (Eterm)fptr[-2], (size_t)fptr[-1]);
   }
 
 #endif
@@ -6698,7 +6698,7 @@ call_fun(Process *p,    /* Current process. */
        */
 
       if (is_non_value(args)) {
-        Uint sz = 2 * arity;
+        size_t sz = 2 * arity;
         args = NIL;
 
         if (HeapWordsLeft(p) < sz) {
@@ -6776,7 +6776,7 @@ call_fun(Process *p,    /* Current process. */
     actual_arity = (int) ep->code[2];
 
     if (arity == actual_arity) {
-      DTRACE_GLOBAL_CALL(p, ep->code[0], ep->code[1], (Uint)ep->code[2]);
+      DTRACE_GLOBAL_CALL(p, ep->code[0], ep->code[1], (size_t)ep->code[2]);
       return (BeamInstr *)ep->addressv[erts_active_code_ix()];
     } else {
       /*
@@ -6884,8 +6884,8 @@ static int has_not_map_field(Eterm map, Eterm key)
 {
   map_t *mp;
   Eterm *keys;
-  Uint i;
-  Uint n;
+  size_t i;
+  size_t n;
 
   mp   = (map_t *)map_val(map);
   keys = map_get_keys(mp);
@@ -6912,8 +6912,8 @@ static Eterm get_map_element(Eterm map, Eterm key)
 {
   map_t *mp;
   Eterm *ks, *vs;
-  Uint i;
-  Uint n;
+  size_t i;
+  size_t n;
 
   mp = (map_t *)map_val(map);
   ks = map_get_keys(mp);
@@ -6960,9 +6960,9 @@ do {                \
 static Eterm
 new_map(Process *p, Eterm *reg, BeamInstr *I)
 {
-  Uint n = Arg(3);
-  Uint i;
-  Uint need = n + 1 /* hdr */ + 1 /*size*/ + 1 /* ptr */ + 1 /* arity */;
+  size_t n = Arg(3);
+  size_t i;
+  size_t need = n + 1 /* hdr */ + 1 /*size*/ + 1 /* ptr */ + 1 /* arity */;
   Eterm keys;
   Eterm *mhp, *thp;
   Eterm *E;
@@ -6998,10 +6998,10 @@ new_map(Process *p, Eterm *reg, BeamInstr *I)
 static Eterm
 update_map_assoc(Process *p, Eterm *reg, Eterm map, BeamInstr *I)
 {
-  Uint n;
-  Uint num_old;
-  Uint num_updates;
-  Uint need;
+  size_t n;
+  size_t num_old;
+  size_t num_updates;
+  size_t need;
   map_t *old_mp, *mp;
   Eterm res;
   Eterm *hp;
@@ -7036,7 +7036,7 @@ update_map_assoc(Process *p, Eterm *reg, Eterm map, BeamInstr *I)
   need = 2 * (num_old + num_updates) + 1 + MAP_HEADER_SIZE;
 
   if (HeapWordsLeft(p) < need) {
-    Uint live = Arg(3);
+    size_t live = Arg(3);
     reg[live] = map;
     erts_garbage_collect(p, need, reg, live + 1);
     map      = reg[live];
@@ -7091,7 +7091,7 @@ update_map_assoc(Process *p, Eterm *reg, Eterm map, BeamInstr *I)
 
   for (;;) {
     Eterm key;
-    Sint c;
+    ssize_t c;
 
     ASSERT(kp < (Eterm *)mp);
     key = *old_keys;
@@ -7185,10 +7185,10 @@ update_map_assoc(Process *p, Eterm *reg, Eterm map, BeamInstr *I)
 static Eterm
 update_map_exact(Process *p, Eterm *reg, Eterm map, BeamInstr *I)
 {
-  Uint n;
-  Uint i;
-  Uint num_old;
-  Uint need;
+  size_t n;
+  size_t i;
+  size_t num_old;
+  size_t need;
   map_t *old_mp, *mp;
   Eterm res;
   Eterm *hp;
@@ -7220,7 +7220,7 @@ update_map_exact(Process *p, Eterm *reg, Eterm map, BeamInstr *I)
   need = num_old + MAP_HEADER_SIZE;
 
   if (HeapWordsLeft(p) < need) {
-    Uint live = Arg(3);
+    size_t live = Arg(3);
     reg[live] = map;
     erts_garbage_collect(p, need, reg, live + 1);
     map      = reg[live];
@@ -7326,7 +7326,7 @@ erts_is_builtin(Eterm Mod, Eterm Name, int arity)
  * To get the total number of reductions, p->reds must be added.
  */
 
-Uint
+size_t
 erts_current_reductions(Process *current, Process *p)
 {
   if (current != p) {

@@ -27,27 +27,27 @@
 
 typedef struct {
   Eterm pid;
-  Sint  count;
-  Uint  s_time;
-  Uint  us_time;
+  ssize_t  count;
+  size_t  s_time;
+  size_t  us_time;
 } bp_data_time_item_t;
 
 typedef struct {
-  Uint n;
-  Uint used;
+  size_t n;
+  size_t used;
   bp_data_time_item_t *item;
 } bp_time_hash_t;
 
 typedef struct bp_data_time {     /* Call time */
-  Uint n;
+  size_t n;
   bp_time_hash_t *hash;
   erts_refc_t refc;
 } BpDataTime;
 
 typedef struct {
-  Uint ms;
-  Uint s;
-  Uint us;
+  size_t ms;
+  size_t s;
+  size_t us;
   BeamInstr *pc;
 } process_breakpoint_time_t; /* used within psd */
 
@@ -62,7 +62,7 @@ typedef struct {
 } BpMetaPid;
 
 typedef struct generic_bp_data {
-  Uint flags;
+  size_t flags;
   Binary *local_ms;   /* Match spec for local call trace */
   Binary *meta_ms;    /* Match spec for meta trace */
   BpMetaPid *meta_pid;  /* Meta trace pid */
@@ -102,7 +102,7 @@ typedef struct {
 } BpFunction;
 
 typedef struct {
-  Uint matched;   /* Number matched */
+  size_t matched;   /* Number matched */
   BpFunction *matching; /* Matching functions */
 } BpFunctions;
 
@@ -160,12 +160,12 @@ int erts_is_mtrace_break(BeamInstr *pc, Binary **match_spec_ret,
 int erts_is_mtrace_bif(BeamInstr *pc, Binary **match_spec_ret,
                        Eterm *tracer_pid_ret);
 int erts_is_native_break(BeamInstr *pc);
-int erts_is_count_break(BeamInstr *pc, Uint *count_ret);
+int erts_is_count_break(BeamInstr *pc, size_t *count_ret);
 int erts_is_time_break(Process *p, BeamInstr *pc, Eterm *call_time);
 
 void erts_trace_time_call(Process *c_p, BeamInstr *pc, BpDataTime *bdt);
 void erts_trace_time_return(Process *c_p, BeamInstr *pc);
-void erts_schedule_time_break(Process *p, Uint out);
+void erts_schedule_time_break(Process *p, size_t out);
 void erts_set_time_break(BpFunctions *f, enum erts_break_op);
 void erts_clear_time_break(BpFunctions *f);
 
@@ -175,10 +175,10 @@ void erts_clear_time_trace_bif(BeamInstr *pc);
 
 BeamInstr *erts_find_local_func(Eterm mfa[3]);
 
-ERTS_GLB_INLINE Uint erts_bp_sched2ix(void);
+ERTS_GLB_INLINE size_t erts_bp_sched2ix(void);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
-ERTS_GLB_INLINE Uint erts_bp_sched2ix(void)
+ERTS_GLB_INLINE size_t erts_bp_sched2ix(void)
 {
 #ifdef ERTS_SMP
   ErtsSchedulerData *esdp;

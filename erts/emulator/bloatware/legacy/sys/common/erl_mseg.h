@@ -57,17 +57,17 @@
 
 #define MSEG_ALIGNED_SIZE     (1 << MSEG_ALIGN_BITS)
 
-#define ERTS_MSEG_FLG_NONE    ((Uint)(0))
-#define ERTS_MSEG_FLG_2POW    ((Uint)(1 << 0))
+#define ERTS_MSEG_FLG_NONE    ((size_t)(0))
+#define ERTS_MSEG_FLG_2POW    ((size_t)(1 << 0))
 
 
 #define ERTS_MSEG_VSN_STR "0.9"
 
 typedef struct {
-  Uint amcbf;
-  Uint rmcbf;
-  Uint mcs;
-  Uint nos;
+  size_t amcbf;
+  size_t rmcbf;
+  size_t mcs;
+  size_t nos;
   ErtsMMapInit mmap;
 } ErtsMsegInit_t;
 
@@ -93,21 +93,21 @@ typedef struct {
 
 extern const ErtsMsegOpt_t erts_mseg_default_opt;
 
-void *erts_mseg_alloc(ErtsAlcType_t, UWord *, Uint);
-void *erts_mseg_alloc_opt(ErtsAlcType_t, UWord *, Uint, const ErtsMsegOpt_t *);
-void  erts_mseg_dealloc(ErtsAlcType_t, void *, UWord, Uint);
-void  erts_mseg_dealloc_opt(ErtsAlcType_t, void *, UWord, Uint, const ErtsMsegOpt_t *);
-void *erts_mseg_realloc(ErtsAlcType_t, void *, UWord, UWord *, Uint);
-void *erts_mseg_realloc_opt(ErtsAlcType_t, void *, UWord, UWord *, Uint, const ErtsMsegOpt_t *);
+void *erts_mseg_alloc(ErtsAlcType_t, UWord *, size_t);
+void *erts_mseg_alloc_opt(ErtsAlcType_t, UWord *, size_t, const ErtsMsegOpt_t *);
+void  erts_mseg_dealloc(ErtsAlcType_t, void *, UWord, size_t);
+void  erts_mseg_dealloc_opt(ErtsAlcType_t, void *, UWord, size_t, const ErtsMsegOpt_t *);
+void *erts_mseg_realloc(ErtsAlcType_t, void *, UWord, UWord *, size_t);
+void *erts_mseg_realloc_opt(ErtsAlcType_t, void *, UWord, UWord *, size_t, const ErtsMsegOpt_t *);
 void  erts_mseg_clear_cache(void);
 void  erts_mseg_cache_check(void);
-Uint  erts_mseg_no(const ErtsMsegOpt_t *);
-Uint  erts_mseg_unit_size(void);
+size_t  erts_mseg_no(const ErtsMsegOpt_t *);
+size_t  erts_mseg_unit_size(void);
 void  erts_mseg_init(ErtsMsegInit_t *init);
 void  erts_mseg_late_init(void); /* Have to be called after all allocators,
            threads and timers have been initialized. */
-Eterm erts_mseg_info_options(int, int *, void *, Uint **, Uint *);
-Eterm erts_mseg_info(int, int *, void *, int, Uint **, Uint *);
+Eterm erts_mseg_info_options(int, int *, void *, size_t **, size_t *);
+Eterm erts_mseg_info(int, int *, void *, int, size_t **, size_t *);
 
 #endif /* #if HAVE_ERTS_MSEG */
 

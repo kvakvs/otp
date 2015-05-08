@@ -248,8 +248,8 @@ struct select_context {
   int32_t max;
   int keypos;
   int all_objects;
-  Sint got;
-  Sint chunk_size;
+  ssize_t got;
+  ssize_t chunk_size;
 };
 
 /*
@@ -263,7 +263,7 @@ struct select_count_context {
   int32_t max;
   int keypos;
   int all_objects;
-  Sint got;
+  ssize_t got;
 };
 
 /*
@@ -272,7 +272,7 @@ struct select_count_context {
 struct select_delete_context {
   Process *p;
   DbTableTree *tb;
-  Uint accum;
+  size_t accum;
   Binary *mp;
   Eterm end_condition;
   int erase_lastterm;
@@ -292,7 +292,7 @@ static void free_term(DbTableTree *tb, TreeDbTerm *p);
 static int balance_left(TreeDbTerm **this_);
 static int balance_right(TreeDbTerm **this_);
 static int delsub(TreeDbTerm **this_);
-static TreeDbTerm *slot_search(Process *p, DbTableTree *tb, Sint slot);
+static TreeDbTerm *slot_search(Process *p, DbTableTree *tb, ssize_t slot);
 static TreeDbTerm *find_node(DbTableTree *tb, Eterm key);
 static TreeDbTerm **find_node2(DbTableTree *tb, Eterm key);
 static TreeDbTerm *find_next(DbTableTree *tb, DbTreeStack *, Eterm key, Eterm *kbase);
@@ -319,8 +319,8 @@ static void traverse_forward(DbTableTree *tb,
                              void *context);
 static int key_given(DbTableTree *tb, Eterm pattern, TreeDbTerm **ret,
                      Eterm *partly_bound_key);
-static Sint cmp_partly_bound(Eterm partly_bound_key, Eterm bound_key, Eterm *bk_base);
-static Sint do_cmp_partly_bound(Eterm a, Eterm b, Eterm *b_base, int *done);
+static ssize_t cmp_partly_bound(Eterm partly_bound_key, Eterm bound_key, Eterm *bk_base);
+static ssize_t do_cmp_partly_bound(Eterm a, Eterm b, Eterm *b_base, int *done);
 
 static int analyze_pattern(DbTableTree *tb, Eterm pattern,
                            struct mp_info *mpi);
@@ -378,7 +378,7 @@ static int db_select_tree(Process *p, DbTable *tbl,
 static int db_select_count_tree(Process *p, DbTable *tbl,
                                 Eterm pattern,  Eterm *ret);
 static int db_select_chunk_tree(Process *p, DbTable *tbl,
-                                Eterm pattern, Sint chunk_size,
+                                Eterm pattern, ssize_t chunk_size,
                                 int reversed, Eterm *ret);
 static int db_select_continue_tree(Process *p, DbTable *tbl,
                                    Eterm continuation, Eterm *ret);
@@ -593,7 +593,7 @@ static int db_prev_tree(Process *p, DbTable *tbl, Eterm key, Eterm *ret)
   return DB_ERROR_NONE;
 }
 
-static ERTS_INLINE Sint cmp_key(DbTableTree *tb, Eterm key, Eterm *key_base,
+static ERTS_INLINE ssize_t cmp_key(DbTableTree *tb, Eterm key, Eterm *key_base,
                                 TreeDbTerm *obj)
 {
   return cmp_rel(key, key_base,
@@ -618,7 +618,7 @@ static int db_put_tree(DbTable *tbl, Eterm obj, int key_clash_fail)
   int dpos = 0;
   int state = 0;
   TreeDbTerm **this_ = &tb->root;
-  Sint c;
+  ssize_t c;
   Eterm key;
   int dir;
   TreeDbTerm *p1, *p2, *p;
@@ -838,7 +838,7 @@ static int db_slot_tree(Process *p, DbTable *tbl,
                         Eterm slot_term, Eterm *ret)
 {
   DbTableTree *tb = &tbl->tree;
-  Sint slot;
+  ssize_t slot;
   TreeDbTerm *st;
   Eterm *hp, *hend;
   Eterm copy;
@@ -976,8 +976,8 @@ static int db_select_continue_tree(Process *p,
   Binary *mp;
   Eterm key;
   Eterm *tptr;
-  Sint chunk_size;
-  Sint reverse;
+  ssize_t chunk_size;
+  ssize_t reverse;
 
 
 #define RET_TO_BIF(Term, State) do { *ret = (Term); return State; } while(0);
@@ -1469,7 +1469,7 @@ static int db_select_count_tree(Process *p, DbTable *tbl,
 }
 
 static int db_select_chunk_tree(Process *p, DbTable *tbl,
-                                Eterm pattern, Sint chunk_size,
+                                Eterm pattern, ssize_t chunk_size,
                                 int reverse,
                                 Eterm *ret)
 {
@@ -1955,7 +1955,7 @@ static TreeDbTerm *linkout_tree(DbTableTree *tb,
   int dpos = 0;
   int state = 0;
   TreeDbTerm **this_ = &tb->root;
-  Sint c;
+  ssize_t c;
   int dir;
   TreeDbTerm *q = nullptr;
 
@@ -2021,7 +2021,7 @@ static TreeDbTerm *linkout_object_tree(DbTableTree *tb,
   int dpos = 0;
   int state = 0;
   TreeDbTerm **this_ = &tb->root;
-  Sint c;
+  ssize_t c;
   int dir;
   TreeDbTerm *q = nullptr;
   Eterm key;
@@ -2402,7 +2402,7 @@ static int delsub(TreeDbTerm **this_)
  * Helper for db_slot
  */
 
-static TreeDbTerm *slot_search(Process *p, DbTableTree *tb, Sint slot)
+static TreeDbTerm *slot_search(Process *p, DbTableTree *tb, ssize_t slot)
 {
   TreeDbTerm *this_;
   TreeDbTerm *tmp;
@@ -2501,7 +2501,7 @@ static TreeDbTerm *find_next(DbTableTree *tb, DbTreeStack *stack,
 {
   TreeDbTerm *this_;
   TreeDbTerm *tmp;
-  Sint c;
+  ssize_t c;
 
   if ((this_ = TOP_NODE(stack)) != nullptr) {
     if (!cmp_key_eq(tb, key, key_base, this_)) {
@@ -2575,7 +2575,7 @@ static TreeDbTerm *find_prev(DbTableTree *tb, DbTreeStack *stack,
 {
   TreeDbTerm *this_;
   TreeDbTerm *tmp;
-  Sint c;
+  ssize_t c;
 
   if ((this_ = TOP_NODE(stack)) != nullptr) {
     if (!cmp_key_eq(tb, key, key_base, this_)) {
@@ -2649,7 +2649,7 @@ static TreeDbTerm *find_next_from_pb_key(DbTableTree *tb, DbTreeStack *stack,
 {
   TreeDbTerm *this_;
   TreeDbTerm *tmp;
-  Sint c;
+  ssize_t c;
 
   /* spool the stack, we have to "re-search" */
   stack->pos = stack->slot = 0;
@@ -2691,7 +2691,7 @@ static TreeDbTerm *find_prev_from_pb_key(DbTableTree *tb, DbTreeStack *stack,
 {
   TreeDbTerm *this_;
   TreeDbTerm *tmp;
-  Sint c;
+  ssize_t c;
 
   /* spool the stack, we have to "re-search" */
   stack->pos = stack->slot = 0;
@@ -2735,7 +2735,7 @@ static TreeDbTerm *find_prev_from_pb_key(DbTableTree *tb, DbTreeStack *stack,
 static TreeDbTerm *find_node(DbTableTree *tb, Eterm key)
 {
   TreeDbTerm *this_;
-  Sint res;
+  ssize_t res;
   DbTreeStack *stack = get_static_stack(tb);
 
   if (!stack || EMPTY_NODE(stack)
@@ -2765,7 +2765,7 @@ static TreeDbTerm *find_node(DbTableTree *tb, Eterm key)
 static TreeDbTerm **find_node2(DbTableTree *tb, Eterm key)
 {
   TreeDbTerm **this_;
-  Sint res;
+  ssize_t res;
 
   this_ = &tb->root;
 
@@ -2951,14 +2951,14 @@ static int key_given(DbTableTree *tb, Eterm pattern, TreeDbTerm **ret,
 
 
 
-static Sint do_cmp_partly_bound(Eterm a, Eterm b, Eterm *b_base, int *done)
+static ssize_t do_cmp_partly_bound(Eterm a, Eterm b, Eterm *b_base, int *done)
 {
   Eterm *aa;
   Eterm *bb;
   Eterm a_hdr;
   Eterm b_hdr;
   int i;
-  Sint j;
+  ssize_t j;
 
   /* A variable matches anything */
   if (is_atom(a) && (a == am_Underscore || (db_is_variable(a) >= 0))) {
@@ -3038,10 +3038,10 @@ static Sint do_cmp_partly_bound(Eterm a, Eterm b, Eterm *b_base, int *done)
   }
 }
 
-static Sint cmp_partly_bound(Eterm partly_bound_key, Eterm bound_key, Eterm *bk_base)
+static ssize_t cmp_partly_bound(Eterm partly_bound_key, Eterm bound_key, Eterm *bk_base)
 {
   int done = 0;
-  Sint ret = do_cmp_partly_bound(partly_bound_key, bound_key, bk_base, &done);
+  ssize_t ret = do_cmp_partly_bound(partly_bound_key, bound_key, bk_base, &done);
 #ifdef HARDDEBUG
   erts_fprintf(stderr, "\ncmp_partly_bound: %T", partly_bound_key);
 
@@ -3123,7 +3123,7 @@ static int do_partly_bound_can_match_lesser(Eterm a, Eterm b,
 {
   Eterm *aa;
   Eterm *bb;
-  Sint i;
+  ssize_t i;
   int j;
 
   if (is_atom(a) && (a == am_Underscore ||
@@ -3215,7 +3215,7 @@ static int do_partly_bound_can_match_greater(Eterm a, Eterm b,
 {
   Eterm *aa;
   Eterm *bb;
-  Sint i;
+  ssize_t i;
   int j;
 
   if (is_atom(a) && (a == am_Underscore ||

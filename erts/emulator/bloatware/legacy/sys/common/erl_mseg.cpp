@@ -70,9 +70,9 @@
 #define MAP_IS_ALIGNED(X)   (((UWord)(X) & (MSEG_ALIGNED_SIZE - 1)) == 0)
 
 #define IS_2POW(X)          ((X) && !((X) & ((X) - 1)))
-static ERTS_INLINE Uint ceil_2pow(Uint x)
+static ERTS_INLINE size_t ceil_2pow(size_t x)
 {
-  int i = 1 << (4 + (sizeof(Uint) != 4 ? 1 : 0));
+  int i = 1 << (4 + (sizeof(size_t) != 4 ? 1 : 0));
   x--;
 
   do {
@@ -153,22 +153,22 @@ struct mem_kind_t {
   cache_t cache_powered_node[CACHE_AREAS];
   cache_t cache_free;
 
-  Sint cache_size;
-  Uint cache_hits;
+  ssize_t cache_size;
+  size_t cache_hits;
 
   struct {
     struct {
-      Uint watermark;
-      Uint no;
-      Uint sz;
+      size_t watermark;
+      size_t no;
+      size_t sz;
     } current;
     struct {
-      Uint no;
-      Uint sz;
+      size_t no;
+      size_t sz;
     } max;
     struct {
-      Uint no;
-      Uint sz;
+      size_t no;
+      size_t sz;
     } max_ever;
   } segments;
 
@@ -195,9 +195,9 @@ struct ErtsMsegAllctr_t_ {
   MemKind the_mem;
 #endif
 
-  Uint max_cache_size;
-  Uint abs_max_cache_bad_fit;
-  Uint rel_max_cache_bad_fit;
+  size_t max_cache_size;
+  size_t abs_max_cache_bad_fit;
+  size_t rel_max_cache_bad_fit;
 
   ErtsMsegCalls calls;
 };
@@ -307,7 +307,7 @@ schedule_cache_check(ErtsMsegAllctr_t *ma)
 /* #define ERTS_PRINT_ERTS_MMAP */
 
 static ERTS_INLINE void *
-mseg_create(ErtsMsegAllctr_t *ma, Uint flags, MemKind *mk, UWord *sizep)
+mseg_create(ErtsMsegAllctr_t *ma, size_t flags, MemKind *mk, UWord *sizep)
 {
 #ifdef ERTS_PRINT_ERTS_MMAP
   UWord req_size = *sizep;
@@ -338,7 +338,7 @@ mseg_create(ErtsMsegAllctr_t *ma, Uint flags, MemKind *mk, UWord *sizep)
 }
 
 static ERTS_INLINE void
-mseg_destroy(ErtsMsegAllctr_t *ma, Uint flags, MemKind *mk, void *seg_p, UWord size)
+mseg_destroy(ErtsMsegAllctr_t *ma, size_t flags, MemKind *mk, void *seg_p, UWord size)
 {
 
   uint32_t mmap_flags = 0;
@@ -363,7 +363,7 @@ mseg_destroy(ErtsMsegAllctr_t *ma, Uint flags, MemKind *mk, void *seg_p, UWord s
 }
 
 static ERTS_INLINE void *
-mseg_recreate(ErtsMsegAllctr_t *ma, Uint flags, MemKind *mk, void *old_seg, UWord old_size,
+mseg_recreate(ErtsMsegAllctr_t *ma, size_t flags, MemKind *mk, void *old_seg, UWord old_size,
               UWord *sizep)
 {
 #ifdef ERTS_PRINT_ERTS_MMAP
@@ -423,7 +423,7 @@ static ERTS_INLINE void mseg_cache_clear_node(cache_t *c)
   c->prev = c;
 }
 
-static ERTS_INLINE int cache_bless_segment(MemKind *mk, void *seg, UWord size, Uint flags)
+static ERTS_INLINE int cache_bless_segment(MemKind *mk, void *seg, UWord size, size_t flags)
 {
 
   cache_t *c;
@@ -513,7 +513,7 @@ static ERTS_INLINE int cache_bless_segment(MemKind *mk, void *seg, UWord size, U
   return 0;
 }
 
-static ERTS_INLINE void *cache_get_segment(MemKind *mk, UWord *size_p, Uint flags)
+static ERTS_INLINE void *cache_get_segment(MemKind *mk, UWord *size_p, size_t flags)
 {
 
   UWord size = *size_p;
@@ -630,7 +630,7 @@ static ERTS_INLINE void *cache_get_segment(MemKind *mk, UWord *size_p, Uint flag
  * using callbacks from aux-work in the scheduler.
  */
 
-static ERTS_INLINE Uint mseg_drop_one_memkind_cache_size(MemKind *mk, Uint flags, cache_t *head)
+static ERTS_INLINE size_t mseg_drop_one_memkind_cache_size(MemKind *mk, size_t flags, cache_t *head)
 {
   cache_t *c = nullptr;
 
@@ -653,7 +653,7 @@ static ERTS_INLINE Uint mseg_drop_one_memkind_cache_size(MemKind *mk, Uint flags
   return mk->cache_size;
 }
 
-static ERTS_INLINE Uint mseg_drop_memkind_cache_size(MemKind *mk, Uint flags, cache_t *head)
+static ERTS_INLINE size_t mseg_drop_memkind_cache_size(MemKind *mk, size_t flags, cache_t *head)
 {
   cache_t *c = nullptr;
 
@@ -687,7 +687,7 @@ static ERTS_INLINE Uint mseg_drop_memkind_cache_size(MemKind *mk, Uint flags, ca
  */
 
 
-static Uint mseg_check_memkind_cache(MemKind *mk)
+static size_t mseg_check_memkind_cache(MemKind *mk)
 {
   int i;
 
@@ -714,7 +714,7 @@ static Uint mseg_check_memkind_cache(MemKind *mk)
 static void mseg_cache_check(ErtsMsegAllctr_t *ma)
 {
   MemKind *mk;
-  Uint empty_cache = 1;
+  size_t empty_cache = 1;
 
   ERTS_MSEG_LOCK(ma);
 
@@ -815,7 +815,7 @@ static ERTS_INLINE MemKind *memkind(ErtsMsegAllctr_t *ma,
 
 static void *
 mseg_alloc(ErtsMsegAllctr_t *ma, ErtsAlcType_t atype, UWord *size_p,
-           Uint flags, const ErtsMsegOpt_t *opt)
+           size_t flags, const ErtsMsegOpt_t *opt)
 {
   UWord size;
   void *seg;
@@ -859,7 +859,7 @@ done:
 
 static void
 mseg_dealloc(ErtsMsegAllctr_t *ma, ErtsAlcType_t atype, void *seg, UWord size,
-             Uint flags, const ErtsMsegOpt_t *opt)
+             size_t flags, const ErtsMsegOpt_t *opt)
 {
   MemKind *mk = memkind(ma, opt);
 
@@ -883,7 +883,7 @@ done:
 
 static void *
 mseg_realloc(ErtsMsegAllctr_t *ma, ErtsAlcType_t atype, void *seg,
-             UWord old_size, UWord *new_size_p, Uint flags, const ErtsMsegOpt_t *opt)
+             UWord old_size, UWord *new_size_p, size_t flags, const ErtsMsegOpt_t *opt)
 {
   MemKind *mk;
   void *new_seg;
@@ -1076,7 +1076,7 @@ init_atoms(ErtsMsegAllctr_t *ma)
  * HRelease after build.
  */
 static ERTS_INLINE Eterm
-bld_unstable_uint(Uint **hpp, Uint *szp, Uint ui)
+bld_unstable_uint(size_t **hpp, size_t *szp, size_t ui)
 {
   Eterm res = THE_NON_VALUE;
 
@@ -1097,19 +1097,19 @@ bld_unstable_uint(Uint **hpp, Uint *szp, Uint ui)
 }
 
 static ERTS_INLINE void
-add_2tup(Uint **hpp, Uint *szp, Eterm *lp, Eterm el1, Eterm el2)
+add_2tup(size_t **hpp, size_t *szp, Eterm *lp, Eterm el1, Eterm el2)
 {
   *lp = bld_cons(hpp, szp, bld_tuple(hpp, szp, 2, el1, el2), *lp);
 }
 
 static ERTS_INLINE void
-add_3tup(Uint **hpp, Uint *szp, Eterm *lp, Eterm el1, Eterm el2, Eterm el3)
+add_3tup(size_t **hpp, size_t *szp, Eterm *lp, Eterm el1, Eterm el2, Eterm el3)
 {
   *lp = bld_cons(hpp, szp, bld_tuple(hpp, szp, 3, el1, el2, el3), *lp);
 }
 
 static ERTS_INLINE void
-add_4tup(Uint **hpp, Uint *szp, Eterm *lp,
+add_4tup(size_t **hpp, size_t *szp, Eterm *lp,
          Eterm el1, Eterm el2, Eterm el3, Eterm el4)
 {
   *lp = bld_cons(hpp, szp, bld_tuple(hpp, szp, 4, el1, el2, el3, el4), *lp);
@@ -1121,8 +1121,8 @@ info_options(ErtsMsegAllctr_t *ma,
              char *prefix,
              int *print_to_p,
              void *print_to_arg,
-             Uint **hpp,
-             Uint *szp)
+             size_t **hpp,
+             size_t *szp)
 {
   Eterm res;
 
@@ -1158,7 +1158,7 @@ info_options(ErtsMsegAllctr_t *ma,
 }
 
 static Eterm
-info_calls(ErtsMsegAllctr_t *ma, int *print_to_p, void *print_to_arg, Uint **hpp, Uint *szp)
+info_calls(ErtsMsegAllctr_t *ma, int *print_to_p, void *print_to_arg, size_t **hpp, size_t *szp)
 {
   Eterm res = THE_NON_VALUE;
 
@@ -1238,7 +1238,7 @@ info_calls(ErtsMsegAllctr_t *ma, int *print_to_p, void *print_to_arg, Uint **hpp
 
 static Eterm
 info_status(ErtsMsegAllctr_t *ma, MemKind *mk, int *print_to_p, void *print_to_arg,
-            int begin_new_max_period, Uint **hpp, Uint *szp)
+            int begin_new_max_period, size_t **hpp, size_t *szp)
 {
   Eterm res = THE_NON_VALUE;
 
@@ -1297,7 +1297,7 @@ info_status(ErtsMsegAllctr_t *ma, MemKind *mk, int *print_to_p, void *print_to_a
 }
 
 static Eterm info_memkind(ErtsMsegAllctr_t *ma, MemKind *mk, int *print_to_p, void *print_to_arg,
-                          int begin_max_per, Uint **hpp, Uint *szp)
+                          int begin_max_per, size_t **hpp, size_t *szp)
 {
   Eterm res = THE_NON_VALUE;
   Eterm atoms[3];
@@ -1326,7 +1326,7 @@ static Eterm info_memkind(ErtsMsegAllctr_t *ma, MemKind *mk, int *print_to_p, vo
 
 
 static Eterm
-info_version(ErtsMsegAllctr_t *ma, int *print_to_p, void *print_to_arg, Uint **hpp, Uint *szp)
+info_version(ErtsMsegAllctr_t *ma, int *print_to_p, void *print_to_arg, size_t **hpp, size_t *szp)
 {
   Eterm res = THE_NON_VALUE;
 
@@ -1349,7 +1349,7 @@ info_version(ErtsMsegAllctr_t *ma, int *print_to_p, void *print_to_arg, Uint **h
 Eterm
 erts_mseg_info_options(int ix,
                        int *print_to_p, void *print_to_arg,
-                       Uint **hpp, Uint *szp)
+                       size_t **hpp, size_t *szp)
 {
   ErtsMsegAllctr_t *ma = ERTS_MSEG_ALLCTR_IX(ix);
   Eterm res;
@@ -1364,14 +1364,14 @@ erts_mseg_info(int ix,
                int *print_to_p,
                void *print_to_arg,
                int begin_max_per,
-               Uint **hpp,
-               Uint *szp)
+               size_t **hpp,
+               size_t *szp)
 {
   ErtsMsegAllctr_t *ma = ERTS_MSEG_ALLCTR_IX(ix);
   Eterm res = THE_NON_VALUE;
   Eterm atoms[4];
   Eterm values[4];
-  Uint n = 0;
+  size_t n = 0;
 
   if (hpp || szp) {
 
@@ -1408,7 +1408,7 @@ erts_mseg_info(int ix,
 }
 
 void *
-erts_mseg_alloc_opt(ErtsAlcType_t atype, UWord *size_p, Uint flags, const ErtsMsegOpt_t *opt)
+erts_mseg_alloc_opt(ErtsAlcType_t atype, UWord *size_p, size_t flags, const ErtsMsegOpt_t *opt)
 {
   ErtsMsegAllctr_t *ma = ERTS_MSEG_ALLCTR_OPT(opt);
   void *seg;
@@ -1421,14 +1421,14 @@ erts_mseg_alloc_opt(ErtsAlcType_t atype, UWord *size_p, Uint flags, const ErtsMs
 }
 
 void *
-erts_mseg_alloc(ErtsAlcType_t atype, UWord *size_p, Uint flags)
+erts_mseg_alloc(ErtsAlcType_t atype, UWord *size_p, size_t flags)
 {
   return erts_mseg_alloc_opt(atype, size_p, flags, &erts_mseg_default_opt);
 }
 
 void
 erts_mseg_dealloc_opt(ErtsAlcType_t atype, void *seg,
-                      UWord size, Uint flags, const ErtsMsegOpt_t *opt)
+                      UWord size, size_t flags, const ErtsMsegOpt_t *opt)
 {
   ErtsMsegAllctr_t *ma = ERTS_MSEG_ALLCTR_OPT(opt);
 
@@ -1440,7 +1440,7 @@ erts_mseg_dealloc_opt(ErtsAlcType_t atype, void *seg,
 }
 
 void
-erts_mseg_dealloc(ErtsAlcType_t atype, void *seg, UWord size, Uint flags)
+erts_mseg_dealloc(ErtsAlcType_t atype, void *seg, UWord size, size_t flags)
 {
   erts_mseg_dealloc_opt(atype, seg, size, flags, &erts_mseg_default_opt);
 }
@@ -1448,7 +1448,7 @@ erts_mseg_dealloc(ErtsAlcType_t atype, void *seg, UWord size, Uint flags)
 void *
 erts_mseg_realloc_opt(ErtsAlcType_t atype, void *seg,
                       UWord old_size, UWord *new_size_p,
-                      Uint flags,
+                      size_t flags,
                       const ErtsMsegOpt_t *opt)
 {
   ErtsMsegAllctr_t *ma = ERTS_MSEG_ALLCTR_OPT(opt);
@@ -1465,18 +1465,18 @@ erts_mseg_realloc_opt(ErtsAlcType_t atype, void *seg,
 
 void *
 erts_mseg_realloc(ErtsAlcType_t atype, void *seg,
-                  UWord old_size, UWord *new_size_p, Uint flags)
+                  UWord old_size, UWord *new_size_p, size_t flags)
 {
   return erts_mseg_realloc_opt(atype, seg, old_size, new_size_p,
                                flags, &erts_mseg_default_opt);
 }
 
-Uint
+size_t
 erts_mseg_no(const ErtsMsegOpt_t *opt)
 {
   ErtsMsegAllctr_t *ma = ERTS_MSEG_ALLCTR_OPT(opt);
   MemKind *mk;
-  Uint n = 0;
+  size_t n = 0;
   ERTS_MSEG_LOCK(ma);
   ERTS_DBG_MA_CHK_THR_ACCESS(ma);
 
@@ -1488,7 +1488,7 @@ erts_mseg_no(const ErtsMsegOpt_t *opt)
   return n;
 }
 
-Uint
+size_t
 erts_mseg_unit_size(void)
 {
   return MSEG_ALIGNED_SIZE;
@@ -1619,10 +1619,10 @@ erts_mseg_init(ErtsMsegInit_t *init)
 }
 
 
-static ERTS_INLINE Uint tot_cache_size(ErtsMsegAllctr_t *ma)
+static ERTS_INLINE size_t tot_cache_size(ErtsMsegAllctr_t *ma)
 {
   MemKind *mk;
-  Uint sz = 0;
+  size_t sz = 0;
   ERTS_DBG_MA_CHK_THR_ACCESS(ma);
 
   for (mk = ma->mk_list; mk; mk = mk->next) {
@@ -1663,18 +1663,18 @@ erts_mseg_test(UWord op, UWord a1, UWord a2, UWord a3)
     return (UWord) 1;
 
   case 0x401:
-    return (UWord) erts_mseg_alloc(ERTS_ALC_A_INVALID, (UWord *) a1, (Uint) 0);
+    return (UWord) erts_mseg_alloc(ERTS_ALC_A_INVALID, (UWord *) a1, (size_t) 0);
 
   case 0x402:
-    erts_mseg_dealloc(ERTS_ALC_A_INVALID, (void *) a1, (Uint) a2, (Uint) 0);
+    erts_mseg_dealloc(ERTS_ALC_A_INVALID, (void *) a1, (size_t) a2, (size_t) 0);
     return (UWord) 0;
 
   case 0x403:
     return (UWord) erts_mseg_realloc(ERTS_ALC_A_INVALID,
                                      (void *) a1,
-                                     (Uint) a2,
+                                     (size_t) a2,
                                      (UWord *) a3,
-                                     (Uint) 0);
+                                     (size_t) 0);
 
   case 0x404:
     erts_mseg_clear_cache();

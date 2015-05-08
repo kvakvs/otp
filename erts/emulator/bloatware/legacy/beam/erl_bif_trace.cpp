@@ -470,7 +470,7 @@ int erts_is_default_trace_enabled(void)
   return erts_default_trace_pattern_is_on;
 }
 
-Uint
+size_t
 erts_trace_flag2bit(Eterm flag)
 {
   switch (flag) {
@@ -548,15 +548,15 @@ erts_trace_flag2bit(Eterm flag)
 */
 int
 erts_trace_flags(Eterm List,
-                 Uint *pMask, Eterm *pTracer, int *pCpuTimestamp)
+                 size_t *pMask, Eterm *pTracer, int *pCpuTimestamp)
 {
   Eterm list = List;
-  Uint mask = 0;
+  size_t mask = 0;
   Eterm tracer = NIL;
   int cpu_timestamp = 0;
 
   while (is_list(list)) {
-    Uint bit;
+    size_t bit;
     Eterm item = CAR(list_val(list));
 
     if (is_atom(item) && (bit = erts_trace_flag2bit(item))) {
@@ -614,7 +614,7 @@ Eterm trace_3(BIF_ALIST_3)
   int on;
   Eterm tracer = NIL;
   int matches = 0;
-  Uint mask = 0;
+  size_t mask = 0;
   int cpu_ts = 0;
 #ifdef ERTS_SMP
   int system_blocked = 0;
@@ -950,7 +950,7 @@ Eterm trace_3(BIF_ALIST_3)
     }
 
     if (pid_spec == am_all || pid_spec == am_new) {
-      Uint def_flags = mask;
+      size_t def_flags = mask;
       Eterm def_tracer = tracer;
 
       ok = 1;
@@ -1127,7 +1127,7 @@ static Eterm
 trace_info_pid(Process *p, Eterm pid_spec, Eterm key)
 {
   Eterm tracer;
-  Uint trace_flags;
+  size_t trace_flags;
   Eterm *hp;
 
   if (pid_spec == am_new) {
@@ -1173,7 +1173,7 @@ error:
 
   if (key == am_flags) {
     int num_flags = 19; /* MAXIMUM number of flags. */
-    Uint needed = 3 + 2 * num_flags;
+    size_t needed = 3 + 2 * num_flags;
     Eterm flag_list = NIL;
     Eterm *limit;
 
@@ -1247,7 +1247,7 @@ static int function_is_traced(Process *p,
                               Binary **ms,              /* out */
                               Binary **ms_meta,         /* out */
                               Eterm   *tracer_pid_meta, /* out */
-                              Uint    *count,           /* out */
+                              size_t    *count,           /* out */
                               Eterm   *call_time)       /* out */
 {
   Export e;
@@ -1315,7 +1315,7 @@ trace_info_func(Process *p, Eterm func_spec, Eterm key)
   Eterm *hp;
   DeclareTmpHeap(mfa, 3, p); /* Not really heap here, but might be when setting pattern */
   Binary *ms = nullptr, *ms_meta = nullptr;
-  Uint count = 0;
+  size_t count = 0;
   Eterm traced = am_false;
   Eterm match_spec = am_false;
   Eterm retval = am_false;
@@ -1955,9 +1955,9 @@ install_exp_breakpoints(BpFunctions *f)
 {
   const ErtsCodeIndex code_ix = erts_active_code_ix();
   BpFunction *fp = f->matching;
-  Uint ne = f->matched;
-  Uint i;
-  Uint offset = offsetof(Export, code) + 3 * sizeof(BeamInstr);
+  size_t ne = f->matched;
+  size_t i;
+  size_t offset = offsetof(Export, code) + 3 * sizeof(BeamInstr);
 
   for (i = 0; i < ne; i++) {
     BeamInstr *pc = fp[i].pc;
@@ -1972,9 +1972,9 @@ uninstall_exp_breakpoints(BpFunctions *f)
 {
   const ErtsCodeIndex code_ix = erts_active_code_ix();
   BpFunction *fp = f->matching;
-  Uint ne = f->matched;
-  Uint i;
-  Uint offset = offsetof(Export, code) + 3 * sizeof(BeamInstr);
+  size_t ne = f->matched;
+  size_t i;
+  size_t offset = offsetof(Export, code) + 3 * sizeof(BeamInstr);
 
   for (i = 0; i < ne; i++) {
     BeamInstr *pc = fp[i].pc;
@@ -1994,9 +1994,9 @@ clean_export_entries(BpFunctions *f)
 {
   const ErtsCodeIndex code_ix = erts_active_code_ix();
   BpFunction *fp = f->matching;
-  Uint ne = f->matched;
-  Uint i;
-  Uint offset = offsetof(Export, code) + 3 * sizeof(BeamInstr);
+  size_t ne = f->matched;
+  size_t i;
+  size_t offset = offsetof(Export, code) + 3 * sizeof(BeamInstr);
 
   for (i = 0; i < ne; i++) {
     BeamInstr *pc = fp[i].pc;
@@ -2210,7 +2210,7 @@ BIF_RETTYPE erl_seq_trace_info(Process *p, Eterm item)
 {
   Eterm res;
   Eterm *hp;
-  Uint current_flag;
+  size_t current_flag;
 
   if (is_not_atom(item)) {
     BIF_ERROR(p, BADARG);
@@ -2360,7 +2360,7 @@ static Eterm system_monitor_get(Process *p)
     return am_undefined;
   } else {
     Eterm res;
-    Uint hsz = 3 + (erts_system_monitor_flags.busy_dist_port ? 2 : 0) +
+    size_t hsz = 3 + (erts_system_monitor_flags.busy_dist_port ? 2 : 0) +
                (erts_system_monitor_flags.busy_port ? 2 : 0);
     Eterm long_gc = NIL;
     Eterm long_schedule = NIL;
@@ -2480,7 +2480,7 @@ system_monitor(Process *p, Eterm monitor_pid, Eterm list)
   if (is_not_list(list)) {
     goto error;
   } else {
-    Uint long_gc, long_schedule, large_heap;
+    size_t long_gc, long_schedule, large_heap;
     int busy_port, busy_dist_port;
 
     system_blocked = 1;
@@ -2605,7 +2605,7 @@ static Eterm system_profile_get(Process *p)
     return am_undefined;
   } else {
     Eterm res;
-    Uint hsz = 3
+    size_t hsz = 3
                + (erts_system_profile_flags.scheduler ? 2 : 0)
                + (erts_system_profile_flags.runnable_ports ? 2 : 0)
                + (erts_system_profile_flags.exclusive ? 2 : 0)

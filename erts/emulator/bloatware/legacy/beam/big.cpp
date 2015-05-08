@@ -269,7 +269,7 @@
   ErtsDigit _q1, _q0;           \
   ErtsDigit _un32, _un21, _un10;          \
   ErtsDigit _rh;              \
-  Sint _s;              \
+  ssize_t _s;              \
   D2PF(_b, _s);             \
   _b = _b << _s;              \
   _vn1 = _b >> H_EXP;           \
@@ -1421,7 +1421,7 @@ static dsize_t I_bnot(ErtsDigit *x, dsize_t xl, int16_t xsgn, ErtsDigit *r)
 /*
 ** Arithmetic left shift or right
 */
-static dsize_t I_lshift(ErtsDigit *x, dsize_t xl, Sint y,
+static dsize_t I_lshift(ErtsDigit *x, dsize_t xl, ssize_t y,
                         int16_t sign, ErtsDigit *r)
 {
   if (y == 0) {
@@ -1431,9 +1431,9 @@ static dsize_t I_lshift(ErtsDigit *x, dsize_t xl, Sint y,
     *r = 0;
     return 1;
   } else {
-    Uint ay = (y < 0) ? -y : y;
-    Uint bw = ay / D_EXP;
-    Uint sw = ay % D_EXP;
+    size_t ay = (y < 0) ? -y : y;
+    size_t bw = ay / D_EXP;
+    size_t sw = ay % D_EXP;
     dsize_t rl;
     ErtsDigit a1 = 0;
     ErtsDigit a0 = 0;
@@ -1479,7 +1479,7 @@ static dsize_t I_lshift(ErtsDigit *x, dsize_t xl, Sint y,
       }
 
       if (sign) {
-        Uint zl = bw;
+        size_t zl = bw;
         ErtsDigit *z = x;
 
         while (zl--) {
@@ -1561,7 +1561,7 @@ static int I_lg(ErtsDigit *x, dsize_t xl)
 **       guaranteed to be correct.
 */
 Eterm
-erts_make_integer(Uint x, Process *p)
+erts_make_integer(size_t x, Process *p)
 {
   Eterm *hp;
 
@@ -1589,10 +1589,10 @@ erts_make_integer_from_uword(UWord x, Process *p)
 }
 
 /*
-** convert Uint to bigint
+** convert size_t to bigint
 ** (must only be used if x is to big to be stored as a small)
 */
-Eterm uint_to_big(Uint x, Eterm *y)
+Eterm uint_to_big(size_t x, Eterm *y)
 {
   *y = make_pos_bignum_header(1);
   BIG_DIGIT(y, 0) = x;
@@ -1608,8 +1608,8 @@ Eterm uint_to_big(Uint x, Eterm *y)
 Eterm uword_to_big(UWord x, Eterm *y)
 {
 #if HALFWORD_HEAP
-  Uint upper = x >> 32;
-  Uint lower = x & 0xFFFFFFFFUL;
+  size_t upper = x >> 32;
+  size_t lower = x & 0xFFFFFFFFUL;
 
   if (upper == 0) {
     *y = make_pos_bignum_header(1);
@@ -1629,15 +1629,15 @@ Eterm uword_to_big(UWord x, Eterm *y)
 /*
 ** convert signed int to bigint
 */
-Eterm small_to_big(Sint x, Eterm *y)
+Eterm small_to_big(ssize_t x, Eterm *y)
 {
-  Uint xu;
+  size_t xu;
 
   if (x >= 0) {
     xu = x;
     *y = make_pos_bignum_header(1);
   } else {
-    xu = -(Uint)x;
+    xu = -(size_t)x;
     *y = make_neg_bignum_header(1);
   }
 
@@ -1653,14 +1653,14 @@ Eterm erts_uint64_to_big(uint64_t x, Eterm **hpp)
 
   if (x >= (((uint64_t) 1) << 32)) {
     *hp = make_pos_bignum_header(2);
-    BIG_DIGIT(hp, 0) = (Uint)(x & ((Uint) 0xffffffff));
-    BIG_DIGIT(hp, 1) = (Uint)((x >> 32) & ((Uint) 0xffffffff));
+    BIG_DIGIT(hp, 0) = (size_t)(x & ((size_t) 0xffffffff));
+    BIG_DIGIT(hp, 1) = (size_t)((x >> 32) & ((size_t) 0xffffffff));
     *hpp += 3;
   } else
 #endif
   {
     *hp = make_pos_bignum_header(1);
-    BIG_DIGIT(hp, 0) = (Uint) x;
+    BIG_DIGIT(hp, 0) = (size_t) x;
     *hpp += 2;
   }
 
@@ -1690,8 +1690,8 @@ Eterm erts_sint64_to_big(int64_t x, Eterm **hpp)
       *hp = make_pos_bignum_header(2);
     }
 
-    BIG_DIGIT(hp, 0) = (Uint)(ux & ((Uint) 0xffffffff));
-    BIG_DIGIT(hp, 1) = (Uint)((ux >> 32) & ((Uint) 0xffffffff));
+    BIG_DIGIT(hp, 0) = (size_t)(ux & ((size_t) 0xffffffff));
+    BIG_DIGIT(hp, 1) = (size_t)((ux >> 32) & ((size_t) 0xffffffff));
     *hpp += 3;
   } else
 #endif
@@ -1702,7 +1702,7 @@ Eterm erts_sint64_to_big(int64_t x, Eterm **hpp)
       *hp = make_pos_bignum_header(1);
     }
 
-    BIG_DIGIT(hp, 0) = (Uint) ux;
+    BIG_DIGIT(hp, 0) = (size_t) ux;
     *hpp += 2;
   }
 
@@ -1747,7 +1747,7 @@ big_to_double(Wterm x, double *resp)
  * HALFWORD: Return relative term with 'heap' as base.
  */
 Eterm
-double_to_big(double x, Eterm *heap, Uint hsz)
+double_to_big(double x, Eterm *heap, size_t hsz)
 {
   int is_negative;
   int ds;
@@ -1825,14 +1825,14 @@ int big_decimal_estimate(Wterm x)
 ** Convert a bignum into a string of decimal numbers
 */
 
-static Uint write_big(Wterm x, void (*write_func)(void *, char), void *arg)
+static size_t write_big(Wterm x, void (*write_func)(void *, char), void *arg)
 {
   Eterm *xp = big_val(x);
   ErtsDigit *dx = BIG_V(xp);
   dsize_t xl = BIG_SIZE(xp);
   int16_t sign = BIG_SIGN(xp);
   ErtsDigit rem;
-  Uint n = 0;
+  size_t n = 0;
 
   if (xl == 1 && *dx < D_DECIMAL_BASE) {
     rem = *dx;
@@ -1916,7 +1916,7 @@ write_string(void *arg, char c)
   *(--(*((char **) arg))) = c;
 }
 
-char *erts_big_to_string(Wterm x, char *buf, Uint buf_sz)
+char *erts_big_to_string(Wterm x, char *buf, size_t buf_sz)
 {
   char *big_str = buf + buf_sz - 1;
   *big_str = '\0';
@@ -1929,10 +1929,10 @@ char *erts_big_to_string(Wterm x, char *buf, Uint buf_sz)
  * e.g. 1 bsl 64 -> "18446744073709551616"
  */
 
-Uint erts_big_to_binary_bytes(Eterm x, char *buf, Uint buf_sz)
+size_t erts_big_to_binary_bytes(Eterm x, char *buf, size_t buf_sz)
 {
   char *big_str = buf + buf_sz;
-  Uint n;
+  size_t n;
   n = write_big(x, write_string, (void *) &big_str);
   ASSERT(buf <= big_str && big_str <= buf + buf_sz);
   return n;
@@ -1945,14 +1945,14 @@ Uint erts_big_to_binary_bytes(Eterm x, char *buf, Uint buf_sz)
 */
 static Eterm big_norm(Eterm *x, dsize_t xl, int16_t sign)
 {
-  Uint arity;
+  size_t arity;
 
   if (xl == 1) {
-    Uint y = BIG_DIGIT(x, 0);
+    size_t y = BIG_DIGIT(x, 0);
 
     if (D_EXP < SMALL_BITS || IS_USMALL(sign, y)) {
       if (sign) {
-        return make_small(-((Sint)y));
+        return make_small(-((ssize_t)y));
       } else {
         return make_small(y);
       }
@@ -2116,10 +2116,10 @@ uint8_t *big_to_bytes(Eterm x, uint8_t *p)
 }
 
 /*
- * Converts a positive term (small or bignum) to an Uint.
+ * Converts a positive term (small or bignum) to an size_t.
  *
  * Fails returning 0 if the term is neither a small nor a bignum,
- * if it's negative, or the big number does not fit in an Uint;
+ * if it's negative, or the big number does not fit in an size_t;
  * in addition the error reason, BADARG or SYSTEM_LIMIT, will be
  * stored in *up.
  *
@@ -2128,34 +2128,34 @@ uint8_t *big_to_bytes(Eterm x, uint8_t *p)
  */
 
 int
-term_to_Uint(Eterm term, Uint *up)
+term_to_Uint(Eterm term, size_t *up)
 {
   if (is_small(term)) {
-    Sint i = signed_val(term);
+    ssize_t i = signed_val(term);
 
     if (i < 0) {
       *up = BADARG;
       return 0;
     }
 
-    *up = (Uint) i;
+    *up = (size_t) i;
     return 1;
   } else if (is_big(term)) {
     ErtsDigit *xr = big_v(term);
     dsize_t  xl = big_size(term);
-    Uint uval = 0;
+    size_t uval = 0;
     int n = 0;
 
     if (big_sign(term)) {
       *up = BADARG;
       return 0;
-    } else if (xl * D_EXP > sizeof(Uint) * 8) {
+    } else if (xl * D_EXP > sizeof(size_t) * 8) {
       *up = SYSTEM_LIMIT;
       return 0;
     }
 
     while (xl-- > 0) {
-      uval |= ((Uint)(*xr++)) << n;
+      uval |= ((size_t)(*xr++)) << n;
       n += D_EXP;
     }
 
@@ -2175,7 +2175,7 @@ term_to_UWord(Eterm term, UWord *up)
 #else
 
   if (is_small(term)) {
-    Sint i = signed_val(term);
+    ssize_t i = signed_val(term);
 
     if (i < 0) {
       *up = BADARG;
@@ -2221,7 +2221,7 @@ term_to_Uint64(Eterm term, uint64_t *up)
 #else
 
   if (is_small(term)) {
-    Sint i = signed_val(term);
+    ssize_t i = signed_val(term);
 
     if (i < 0) {
       *up = BADARG;
@@ -2260,7 +2260,7 @@ term_to_Uint64(Eterm term, uint64_t *up)
 }
 
 
-int term_to_Sint(Eterm term, Sint *sp)
+int term_to_Sint(Eterm term, ssize_t *sp)
 {
   if (is_small(term)) {
     *sp = signed_val(term);
@@ -2269,26 +2269,26 @@ int term_to_Sint(Eterm term, Sint *sp)
     ErtsDigit *xr = big_v(term);
     dsize_t xl = big_size(term);
     int sign = big_sign(term);
-    Uint uval = 0;
+    size_t uval = 0;
     int n = 0;
 
-    if (xl * D_EXP > sizeof(Uint) * 8) {
+    if (xl * D_EXP > sizeof(size_t) * 8) {
       return 0;
     }
 
     while (xl-- > 0) {
-      uval |= ((Uint)(*xr++)) << n;
+      uval |= ((size_t)(*xr++)) << n;
       n += D_EXP;
     }
 
     if (sign) {
       uval = -uval;
 
-      if ((Sint)uval > 0) {
+      if ((ssize_t)uval > 0) {
         return 0;
       }
     } else {
-      if ((Sint)uval < 0) {
+      if ((ssize_t)uval < 0) {
         return 0;
       }
     }
@@ -2418,20 +2418,20 @@ Eterm big_minus_small(Eterm x, Eterm y, Eterm *r)
 ** Multiply smallnums
 */
 
-Eterm small_times(Sint x, Sint y, Eterm *r)
+Eterm small_times(ssize_t x, ssize_t y, Eterm *r)
 {
   int16_t sign = (x < 0) != (y < 0);
   ErtsDigit xu = (x > 0) ? x : -x;
   ErtsDigit yu = (y > 0) ? y : -y;
   ErtsDigit d1 = 0;
   ErtsDigit d0;
-  Uint arity;
+  size_t arity;
 
   DMULc(xu, yu, d1, d0);
 
   if (!d1 && ((D_EXP < SMALL_BITS) || IS_USMALL(sign, d0))) {
     if (sign) {
-      return make_small(-((Sint)d0));
+      return make_small(-((ssize_t)d0));
     } else {
       return make_small(d0);
     }
@@ -2533,7 +2533,7 @@ Eterm big_rem(Eterm x, Eterm y, Eterm *r)
 
     if (IS_USMALL(sign, rem)) {
       if (sign) {
-        return make_small(-(Sint)rem);
+        return make_small(-(ssize_t)rem);
       } else {
         return make_small(rem);
       }
@@ -2635,7 +2635,7 @@ Eterm big_bnot(Eterm x,  Eterm *r)
   return big_norm(r, I_bnot(BIG_V(xp), xsz, sign, BIG_V(r)), sign);
 }
 
-Eterm big_lshift(Eterm x, Sint y, Eterm *r)
+Eterm big_lshift(Eterm x, ssize_t y, Eterm *r)
 {
   Eterm *xp = big_val(x);
   int16_t sign = BIG_SIGN(xp);
@@ -2647,7 +2647,7 @@ Eterm big_lshift(Eterm x, Sint y, Eterm *r)
 
 /* add unsigned small int y to x */
 
-Eterm big_plus_small(Eterm x, Uint y, Eterm *r)
+Eterm big_plus_small(Eterm x, size_t y, Eterm *r)
 {
   Eterm *xp = big_val(x);
 
@@ -2659,7 +2659,7 @@ Eterm big_plus_small(Eterm x, Uint y, Eterm *r)
                              BIG_V(r)), (int16_t) BIG_SIGN(xp));
 }
 
-Eterm big_times_small(Eterm x, Uint y, Eterm *r)
+Eterm big_times_small(Eterm x, size_t y, Eterm *r)
 {
   Eterm *xp = big_val(x);
 
@@ -2672,7 +2672,7 @@ Eterm big_times_small(Eterm x, Uint y, Eterm *r)
 */
 uint32_t big_to_uint32(Eterm b)
 {
-  Uint u;
+  size_t u;
 
   if (!term_to_Uint(b, &u)) {
     ASSERT(0);
@@ -2687,8 +2687,8 @@ uint32_t big_to_uint32(Eterm b)
  */
 int term_equals_2pow32(Eterm x)
 {
-  if (sizeof(Uint) > 4) {
-    Uint u;
+  if (sizeof(size_t) > 4) {
+    size_t u;
 
     if (!term_to_Uint(x, &u)) {
       return 0;
@@ -2765,7 +2765,7 @@ const uint8_t d_base_exp_lookup[] = { 31, 19, 15, 13, 11, 11, 10, 9, 9, 8, 8, 8,
  * end
  * How much can the characters which fit in 31 bit represent
  */
-const Uint d_base_base_lookup[] = { 2147483648u, 1162261467u, 1073741824u,
+const size_t d_base_base_lookup[] = { 2147483648u, 1162261467u, 1073741824u,
                                     1220703125u, 362797056u, 1977326743u, 1073741824u, 387420489u,
                                     1000000000u, 214358881u, 429981696u, 815730721u, 1475789056u,
                                     170859375u, 268435456u, 410338673u, 612220032u, 893871739u, 1280000000u,
@@ -2780,10 +2780,10 @@ const Uint d_base_base_lookup[] = { 2147483648u, 1162261467u, 1073741824u,
                                   };
 
 Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
-                            Uint size, const int base)
+                            size_t size, const int base)
 {
   Eterm res;
-  Sint i = 0;
+  ssize_t i = 0;
   int n = 0;
   int neg = 0;
   uint8_t b;
@@ -2920,7 +2920,7 @@ Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
     if (is_small(res)) {
       res = make_small(-signed_val(res));
     } else {
-      Uint *big = big_val(res); /* point to thing */
+      size_t *big = big_val(res); /* point to thing */
       *big = bignum_header_neg(*big);
     }
   }

@@ -35,8 +35,8 @@ Eterm erts_set_system_seq_tracer(Process *c_p,
                                  ErtsProcLocks c_p_locks,
                                  Eterm new_);
 Eterm erts_get_system_seq_tracer(void);
-void erts_change_default_tracing(int setflags, Uint *flagsp, Eterm *tracerp);
-void erts_get_default_tracing(Uint *flagsp, Eterm *tracerp);
+void erts_change_default_tracing(int setflags, size_t *flagsp, Eterm *tracerp);
+void erts_get_default_tracing(size_t *flagsp, Eterm *tracerp);
 void erts_set_system_monitor(Eterm monitor);
 Eterm erts_get_system_monitor(void);
 int erts_is_tracer_proc_valid(Process *p);
@@ -77,21 +77,21 @@ void trace_port_open(Port *, Eterm calling_pid, Eterm drv_name);
 void erts_set_system_profile(Eterm profile);
 Eterm erts_get_system_profile(void);
 void profile_scheduler(Eterm scheduler_id, Eterm);
-void profile_scheduler_q(Eterm scheduler_id, Eterm state, Eterm no_schedulers, Uint Ms, Uint s,
-                         Uint us);
+void profile_scheduler_q(Eterm scheduler_id, Eterm state, Eterm no_schedulers, size_t Ms, size_t s,
+                         size_t us);
 void profile_runnable_proc(Process *p, Eterm status);
 void profile_runnable_port(Port *p, Eterm status);
 void erts_system_profile_setup_active_schedulers(void);
 
 /* system_monitor */
-void monitor_long_gc(Process *p, Uint time);
-void monitor_long_schedule_proc(Process *p, BeamInstr *in_i, BeamInstr *out_i, Uint time);
-void monitor_long_schedule_port(Port *pp, ErtsPortTaskType type, Uint time);
+void monitor_long_gc(Process *p, size_t time);
+void monitor_long_schedule_proc(Process *p, BeamInstr *in_i, BeamInstr *out_i, size_t time);
+void monitor_long_schedule_port(Port *pp, ErtsPortTaskType type, size_t time);
 void monitor_large_heap(Process *p);
 void monitor_generic(Process *p, Eterm type, Eterm spec);
-Uint erts_trace_flag2bit(Eterm flag);
+size_t erts_trace_flag2bit(Eterm flag);
 int erts_trace_flags(Eterm List,
-                     Uint *pMask, Eterm *pTracer, int *pCpuTimestamp);
+                     size_t *pMask, Eterm *pTracer, int *pCpuTimestamp);
 Eterm erts_bif_trace(int bif_index, Process *p, Eterm *args, BeamInstr *I);
 
 #ifdef ERTS_SMP
@@ -109,7 +109,7 @@ do {                  \
 seq_trace_output_generic((token), (msg), (type), (receiver), (process), NIL)
 #define seq_trace_output_exit(token, msg, type, receiver, exitfrom) \
 seq_trace_output_generic((token), (msg), (type), (receiver), nullptr, (exitfrom))
-void seq_trace_output_generic(Eterm token, Eterm msg, Uint type,
+void seq_trace_output_generic(Eterm token, Eterm msg, size_t type,
                               Eterm receiver, Process *process, Eterm exitfrom);
 
 int seq_trace_update_send(Process *process);

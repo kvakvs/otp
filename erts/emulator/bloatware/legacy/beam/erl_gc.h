@@ -47,7 +47,7 @@ do {                  \
 #define MOVE_BOXED(PTR,HDR,HTOP,ORIG)                                   \
 do {                                                                    \
     Eterm gval;                                                         \
-    Sint nelts;                                                         \
+    ssize_t nelts;                                                         \
                                                                         \
     ASSERT(is_header(HDR));                                             \
     nelts = header_arity(HDR);                                          \
@@ -67,7 +67,7 @@ do {                                                                    \
 #define in_area(ptr,start,nbytes) \
  ((UWord)((char*)(ptr) - (char*)(start)) < (nbytes))
 
-extern Uint erts_test_long_gc_sleep;
+extern size_t erts_test_long_gc_sleep;
 
 #if defined(DEBUG) || defined(ERTS_OFFHEAP_DEBUG)
 int within(Eterm *ptr, Process *p);

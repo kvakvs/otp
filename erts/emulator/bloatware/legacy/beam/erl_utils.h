@@ -120,38 +120,38 @@ uint32_t block_hash(uint8_t *, unsigned, uint32_t);
 uint32_t make_hash2(Eterm);
 uint32_t make_hash(Eterm);
 
-void erts_save_emu_args(int argc, char **argv);
-Eterm erts_get_emu_args(struct process *c_p);
+//void erts_save_emu_args(int argc, char **argv);
+//Eterm erts_get_emu_args(struct process *c_p);
 Eterm erts_get_ethread_info(struct process *c_p);
 
-Eterm erts_bld_atom(Uint **hpp, Uint *szp, char *str);
-Eterm erts_bld_uint(Uint **hpp, Uint *szp, Uint ui);
-Eterm erts_bld_uword(Uint **hpp, Uint *szp, UWord uw);
-Eterm erts_bld_uint64(Uint **hpp, Uint *szp, uint64_t ui64);
-Eterm erts_bld_sint64(Uint **hpp, Uint *szp, int64_t si64);
-Eterm erts_bld_cons(Uint **hpp, Uint *szp, Eterm car, Eterm cdr);
-Eterm erts_bld_tuple(Uint **hpp, Uint *szp, Uint arity, ...);
+Eterm erts_bld_atom(size_t **hpp, size_t *szp, char *str);
+Eterm erts_bld_uint(size_t **hpp, size_t *szp, size_t ui);
+Eterm erts_bld_uword(size_t **hpp, size_t *szp, UWord uw);
+Eterm erts_bld_uint64(size_t **hpp, size_t *szp, uint64_t ui64);
+Eterm erts_bld_sint64(size_t **hpp, size_t *szp, int64_t si64);
+Eterm erts_bld_cons(size_t **hpp, size_t *szp, Eterm car, Eterm cdr);
+Eterm erts_bld_tuple(size_t **hpp, size_t *szp, size_t arity, ...);
 #define erts_bld_tuple2(H,S,E1,E2) erts_bld_tuple(H,S,2,E1,E2)
 #define erts_bld_tuple3(H,S,E1,E2,E3) erts_bld_tuple(H,S,3,E1,E2,E3)
 #define erts_bld_tuple4(H,S,E1,E2,E3,E4) erts_bld_tuple(H,S,4,E1,E2,E3,E4)
 #define erts_bld_tuple5(H,S,E1,E2,E3,E4,E5) erts_bld_tuple(H,S,5,E1,E2,E3,E4,E5)
-Eterm erts_bld_tuplev(Uint **hpp, Uint *szp, Uint arity, Eterm terms[]);
-Eterm erts_bld_string_n(Uint **hpp, Uint *szp, const char *str, Sint len);
+Eterm erts_bld_tuplev(size_t **hpp, size_t *szp, size_t arity, Eterm terms[]);
+Eterm erts_bld_string_n(size_t **hpp, size_t *szp, const char *str, ssize_t len);
 #define erts_bld_string(hpp,szp,str) erts_bld_string_n(hpp,szp,str,strlen(str))
-Eterm erts_bld_list(Uint **hpp, Uint *szp, Sint length, Eterm terms[]);
-Eterm erts_bld_2tup_list(Uint **hpp, Uint *szp,
-                         Sint length, Eterm terms1[], Uint terms2[]);
+Eterm erts_bld_list(size_t **hpp, size_t *szp, ssize_t length, Eterm terms[]);
+Eterm erts_bld_2tup_list(size_t **hpp, size_t *szp,
+                         ssize_t length, Eterm terms1[], size_t terms2[]);
 Eterm
-erts_bld_atom_uword_2tup_list(Uint **hpp, Uint *szp,
-                              Sint length, Eterm atoms[], UWord uints[]);
+erts_bld_atom_uword_2tup_list(size_t **hpp, size_t *szp,
+                              ssize_t length, Eterm atoms[], UWord uints[]);
 Eterm
-erts_bld_atom_2uint_3tup_list(Uint **hpp, Uint *szp, Sint length,
-                              Eterm atoms[], Uint uints1[], Uint uints2[]);
+erts_bld_atom_2uint_3tup_list(size_t **hpp, size_t *szp, ssize_t length,
+                              Eterm atoms[], size_t uints1[], size_t uints2[]);
 
 void erts_init_utils(void);
 void erts_init_utils_mem(void);
 
-erts_dsprintf_buf_t *erts_create_tmp_dsbuf(Uint);
+erts_dsprintf_buf_t *erts_create_tmp_dsbuf(size_t);
 void erts_destroy_tmp_dsbuf(erts_dsprintf_buf_t *);
 
 #if HALFWORD_HEAP
@@ -165,14 +165,14 @@ int eq(Eterm, Eterm);
 #define EQ(x,y) (((x) == (y)) || (is_not_both_immed((x),(y)) && eq((x),(y))))
 
 #if HALFWORD_HEAP
-Sint erts_cmp_rel_opt(Eterm, Eterm *, Eterm, Eterm *, int);
+ssize_t erts_cmp_rel_opt(Eterm, Eterm *, Eterm, Eterm *, int);
 #define cmp_rel(A,A_BASE,B,B_BASE)       erts_cmp_rel_opt(A,A_BASE,B,B_BASE,0)
 #define cmp_rel_term(A,A_BASE,B,B_BASE)  erts_cmp_rel_opt(A,A_BASE,B,B_BASE,1)
 #define CMP(A,B)                         erts_cmp_rel_opt(A,nullptr,B,nullptr,0)
 #define CMP_TERM(A,B)                    erts_cmp_rel_opt(A,nullptr,B,nullptr,1)
 #else
-Sint cmp(Eterm, Eterm);
-Sint erts_cmp(Eterm, Eterm, int);
+ssize_t cmp(Eterm, Eterm);
+ssize_t erts_cmp(Eterm, Eterm, int);
 #define cmp_rel(A,A_BASE,B,B_BASE)       erts_cmp(A,B,0)
 #define cmp_rel_term(A,A_BASE,B,B_BASE)  erts_cmp(A,B,1)
 #define CMP(A,B)                         erts_cmp(A,B,0)

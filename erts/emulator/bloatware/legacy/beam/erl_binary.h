@@ -38,8 +38,8 @@
 
 typedef struct erl_sub_bin {
   Eterm thing_word;   /* Subtag SUB_BINARY_SUBTAG. */
-  Uint size;      /* Binary size in bytes. */
-  Uint offs;      /* Offset into original binary. */
+  size_t size;      /* Binary size in bytes. */
+  size_t offs;      /* Offset into original binary. */
   uint8_t bitsize;
   uint8_t bitoffs;
   uint8_t is_writable;    /* The underlying binary is writable */
@@ -55,7 +55,7 @@ typedef struct erl_sub_bin {
 
 typedef struct erl_heap_bin {
   Eterm thing_word;   /* Subtag HEAP_BINARY_SUBTAG. */
-  Uint size;      /* Binary size in bytes. */
+  size_t size;      /* Binary size in bytes. */
   Eterm data[1];    /* The data in the binary. */
 } ErlHeapBin;
 
@@ -90,8 +90,8 @@ typedef struct erl_heap_bin {
  *
  * Bin: input variable (Eterm)
  * Bytep: output variable (uint8_t *)
- * Bitoffs: output variable (Uint)
- * Bitsize: output variable (Uint)
+ * Bitoffs: output variable (size_t)
+ * Bitsize: output variable (size_t)
  */
 
 #define ERTS_GET_BINARY_BYTES(Bin,Bytep,Bitoffs,Bitsize) \
@@ -100,7 +100,7 @@ typedef struct erl_heap_bin {
 #define ERTS_GET_BINARY_BYTES_REL(Bin,Bytep,Bitoffs,Bitsize,BasePtr)    \
 do {                  \
     Eterm* _real_bin = binary_val_rel(Bin,BasePtr);     \
-    Uint _offs = 0;             \
+    size_t _offs = 0;             \
     Bitoffs = Bitsize = 0;            \
     if (*_real_bin == HEADER_SUB_BIN) {         \
   ErlSubBin* _sb = (ErlSubBin *) _real_bin;     \
@@ -124,9 +124,9 @@ do {                  \
  *
  * Bin: Input variable (Eterm)
  * RealBin: Output variable (Eterm)
- * ByteOffset: Output variable (Uint)
- * BitOffset: Offset in bits (Uint)
- * BitSize: Extra bit size (Uint)
+ * ByteOffset: Output variable (size_t)
+ * BitOffset: Offset in bits (size_t)
+ * BitSize: Extra bit size (size_t)
  */
 
 #define ERTS_GET_REAL_BIN(Bin, RealBin, ByteOffset, BitOffset, BitSize) \
@@ -160,7 +160,7 @@ void erts_init_binary(void);
 
 uint8_t *erts_get_aligned_binary_bytes_extra(Eterm, uint8_t **, ErtsAlcType_t, unsigned extra);
 /* Used by unicode module */
-Eterm erts_bin_bytes_to_list(Eterm previous, Eterm *hp, uint8_t *bytes, Uint size, Uint bitoffs);
+Eterm erts_bin_bytes_to_list(Eterm previous, Eterm *hp, uint8_t *bytes, size_t size, size_t bitoffs);
 
 /*
  * Common implementation for erlang:list_to_binary/1 and binary:list_to_bin/1
@@ -177,9 +177,9 @@ BIF_RETTYPE erts_binary_part(Process *p, Eterm binary, Eterm epos, Eterm elen);
  * (if not gnuc we don't know if __i386__ is defined on x86;
  *  therefore, assume intel x86...)
  */
-#  define ERTS_BIN_ALIGNMENT_MASK ((Uint) 3)
+#  define ERTS_BIN_ALIGNMENT_MASK ((size_t) 3)
 #else
-#  define ERTS_BIN_ALIGNMENT_MASK ((Uint) 7)
+#  define ERTS_BIN_ALIGNMENT_MASK ((size_t) 7)
 #endif
 
 #define ERTS_CHK_BIN_ALIGNMENT(B) \
@@ -188,13 +188,13 @@ BIF_RETTYPE erts_binary_part(Process *p, Eterm binary, Eterm epos, Eterm elen);
 ERTS_GLB_INLINE uint8_t *erts_get_aligned_binary_bytes(Eterm bin, uint8_t **base_ptr);
 ERTS_GLB_INLINE void erts_free_aligned_binary_bytes(uint8_t *buf);
 ERTS_GLB_INLINE void erts_free_aligned_binary_bytes_extra(uint8_t *buf, ErtsAlcType_t);
-ERTS_GLB_INLINE Binary *erts_bin_drv_alloc_fnf(Uint size);
-ERTS_GLB_INLINE Binary *erts_bin_drv_alloc(Uint size);
-ERTS_GLB_INLINE Binary *erts_bin_nrml_alloc(Uint size);
-ERTS_GLB_INLINE Binary *erts_bin_realloc_fnf(Binary *bp, Uint size);
-ERTS_GLB_INLINE Binary *erts_bin_realloc(Binary *bp, Uint size);
+ERTS_GLB_INLINE Binary *erts_bin_drv_alloc_fnf(size_t size);
+ERTS_GLB_INLINE Binary *erts_bin_drv_alloc(size_t size);
+ERTS_GLB_INLINE Binary *erts_bin_nrml_alloc(size_t size);
+ERTS_GLB_INLINE Binary *erts_bin_realloc_fnf(Binary *bp, size_t size);
+ERTS_GLB_INLINE Binary *erts_bin_realloc(Binary *bp, size_t size);
 ERTS_GLB_INLINE void erts_bin_free(Binary *bp);
-ERTS_GLB_INLINE Binary *erts_create_magic_binary(Uint size,
+ERTS_GLB_INLINE Binary *erts_create_magic_binary(size_t size,
     void (*destructor)(Binary *));
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
@@ -232,9 +232,9 @@ erts_free_aligned_binary_bytes(uint8_t *buf)
 #endif
 
 ERTS_GLB_INLINE Binary *
-erts_bin_drv_alloc_fnf(Uint size)
+erts_bin_drv_alloc_fnf(size_t size)
 {
-  Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
+  size_t bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
   void *res;
 
   if (bsize < size) { /* overflow */
@@ -247,9 +247,9 @@ erts_bin_drv_alloc_fnf(Uint size)
 }
 
 ERTS_GLB_INLINE Binary *
-erts_bin_drv_alloc(Uint size)
+erts_bin_drv_alloc(size_t size)
 {
-  Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
+  size_t bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
   void *res;
 
   if (bsize < size) { /* overflow */
@@ -263,9 +263,9 @@ erts_bin_drv_alloc(Uint size)
 
 
 ERTS_GLB_INLINE Binary *
-erts_bin_nrml_alloc(Uint size)
+erts_bin_nrml_alloc(size_t size)
 {
-  Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
+  size_t bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
   void *res;
 
   if (bsize < size) { /* overflow */
@@ -278,10 +278,10 @@ erts_bin_nrml_alloc(Uint size)
 }
 
 ERTS_GLB_INLINE Binary *
-erts_bin_realloc_fnf(Binary *bp, Uint size)
+erts_bin_realloc_fnf(Binary *bp, size_t size)
 {
   Binary *nbp;
-  Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
+  size_t bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
   ErtsAlcType_t type = (bp->flags & BIN_FLAG_DRV) ? ERTS_ALC_T_DRV_BINARY
                        : ERTS_ALC_T_BINARY;
   ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
@@ -296,10 +296,10 @@ erts_bin_realloc_fnf(Binary *bp, Uint size)
 }
 
 ERTS_GLB_INLINE Binary *
-erts_bin_realloc(Binary *bp, Uint size)
+erts_bin_realloc(Binary *bp, size_t size)
 {
   Binary *nbp;
-  Uint bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
+  size_t bsize = ERTS_SIZEOF_Binary(size) + CHICKEN_PAD;
   ErtsAlcType_t type = (bp->flags & BIN_FLAG_DRV) ? ERTS_ALC_T_DRV_BINARY
                        : ERTS_ALC_T_BINARY;
   ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
@@ -333,9 +333,9 @@ erts_bin_free(Binary *bp)
 }
 
 ERTS_GLB_INLINE Binary *
-erts_create_magic_binary(Uint size, void (*destructor)(Binary *))
+erts_create_magic_binary(size_t size, void (*destructor)(Binary *))
 {
-  Uint bsize = ERTS_MAGIC_BIN_SIZE(size);
+  size_t bsize = ERTS_MAGIC_BIN_SIZE(size);
   Binary *bptr = (Binary *)erts_alloc_fnf(ERTS_ALC_T_BINARY, bsize);
   ASSERT(bsize > size);
 

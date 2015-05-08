@@ -285,7 +285,7 @@ struct {
   void (*check_io_interrupt)(int);
   void (*check_io_interrupt_tmd)(int, erts_short_time_t);
   void (*check_io)(int);
-  Uint(*size)(void);
+  size_t(*size)(void);
   Eterm(*info)(void *);
   int (*check_io_debug)(ErtsCheckIoDebugInfo *);
 } io_func = {0};
@@ -394,10 +394,10 @@ erts_sys_schedule_interrupt_timed(int set, erts_short_time_t msec)
 }
 #endif
 
-Uint
+size_t
 erts_sys_misc_mem_sz(void)
 {
-  Uint res = ERTS_CHK_IO_SZ();
+  size_t res = ERTS_CHK_IO_SZ();
   res += erts_smp_atomic_read_mb(&sys_misc_mem_sz);
   return res;
 }
@@ -599,7 +599,7 @@ erl_sys_init(void)
     int res;
     char bindir[MAXPATHLEN];
     size_t bindirsz = sizeof(bindir);
-    Uint csp_path_sz;
+    size_t csp_path_sz;
 
     res = erts_sys_getenv_raw("BINDIR", bindir, &bindirsz);
 
@@ -2390,7 +2390,7 @@ static void ready_input(ErlDrvData e, ErlDrvEvent ready_fd)
   ErlDrvPort port_num;
   int packet_bytes;
   int res;
-  Uint h;
+  size_t h;
 
   port_num = driver_data[fd].port_num;
   packet_bytes = driver_data[fd].packet_bytes;
@@ -2617,7 +2617,7 @@ erts_sys_putenv(char *key, char *value)
 {
   int res;
   char *env;
-  Uint need = strlen(key) + strlen(value) + 2;
+  size_t need = strlen(key) + strlen(value) + 2;
 
 #ifdef HAVE_COPYING_PUTENV
   env = erts_alloc(ERTS_ALC_T_TMP, need);
@@ -2788,7 +2788,7 @@ void *erts_sys_aligned_realloc(UWord alignment, void *ptr, UWord size, UWord old
 
 #endif
 
-void *erts_sys_alloc(ErtsAlcType_t t, void *x, Uint sz)
+void *erts_sys_alloc(ErtsAlcType_t t, void *x, size_t sz)
 {
   void *res = malloc((size_t) sz);
 #if HAVE_ERTS_MSEG
@@ -2802,7 +2802,7 @@ void *erts_sys_alloc(ErtsAlcType_t t, void *x, Uint sz)
   return res;
 }
 
-void *erts_sys_realloc(ErtsAlcType_t t, void *x, void *p, Uint sz)
+void *erts_sys_realloc(ErtsAlcType_t t, void *x, void *p, size_t sz)
 {
   void *res = realloc(p, (size_t) sz);
 #if HAVE_ERTS_MSEG

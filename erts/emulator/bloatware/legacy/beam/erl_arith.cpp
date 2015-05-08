@@ -53,9 +53,9 @@
 
 static Eterm shift(Process *p, Eterm arg1, Eterm arg2, int right);
 
-static ERTS_INLINE void maybe_shrink(Process *p, Eterm *hp, Eterm res, Uint alloc)
+static ERTS_INLINE void maybe_shrink(Process *p, Eterm *hp, Eterm res, size_t alloc)
 {
-  Uint actual;
+  size_t actual;
 
   if (is_immed(res)) {
     if (p->heap <= hp && hp < p->htop) {
@@ -118,7 +118,7 @@ BIF_RETTYPE intdiv_2(BIF_ALIST_2)
   }
 
   if (is_both_small(BIF_ARG_1, BIF_ARG_2)) {
-    Sint ires = signed_val(BIF_ARG_1) / signed_val(BIF_ARG_2);
+    ssize_t ires = signed_val(BIF_ARG_1) / signed_val(BIF_ARG_2);
 
     if (MY_IS_SSMALL(ires)) {
       BIF_RET(make_small(ires));
@@ -184,11 +184,11 @@ BIF_RETTYPE bsr_2(BIF_ALIST_2)
 static Eterm
 shift(Process *p, Eterm arg1, Eterm arg2, int right)
 {
-  Sint i;
-  Sint ires;
+  ssize_t i;
+  ssize_t ires;
   DECLARE_TMP(tmp_big1, 0, p);
   Eterm *bigp;
-  Uint need;
+  size_t need;
 
   if (right) {
     if (is_small(arg2)) {
@@ -235,8 +235,8 @@ small_shift:
 
           BIF_RET(arg1);
         } else if (i < SMALL_BITS - 1) { /* Left shift */
-          if ((ires > 0 && ((~(Uint)0 << ((SMALL_BITS - 1) - i)) & ires) == 0) ||
-              ((~(Uint)0 << ((SMALL_BITS - 1) - i)) & ~ires) == 0) {
+          if ((ires > 0 && ((~(size_t)0 << ((SMALL_BITS - 1) - i)) & ires) == 0) ||
+              ((~(size_t)0 << ((SMALL_BITS - 1) - i)) & ~ires) == 0) {
             arg1 = make_small(ires << i);
             BIF_RET(arg1);
           }
@@ -321,7 +321,7 @@ BIF_RETTYPE bnot_1(BIF_ALIST_1)
   if (is_small(BIF_ARG_1)) {
     ret = make_small(~signed_val(BIF_ARG_1));
   } else if (is_big(BIF_ARG_1)) {
-    Uint need = BIG_NEED_SIZE(big_size(BIF_ARG_1) + 1);
+    size_t need = BIG_NEED_SIZE(big_size(BIF_ARG_1) + 1);
     Eterm *bigp = HAlloc(BIF_P, need);
 
     ret = big_bnot(BIF_ARG_1, bigp);
@@ -354,7 +354,7 @@ erts_mixed_plus(Process *p, Eterm arg1, Eterm arg2)
   dsize_t sz1, sz2, sz;
   int need_heap;
   Eterm *hp;
-  Sint ires;
+  ssize_t ires;
 
   ERTS_FP_CHECK_INIT(p);
 
@@ -530,7 +530,7 @@ erts_mixed_minus(Process *p, Eterm arg1, Eterm arg2)
   dsize_t sz1, sz2, sz;
   int need_heap;
   Eterm *hp;
-  Sint ires;
+  ssize_t ires;
 
   ERTS_FP_CHECK_INIT(p);
 
@@ -740,7 +740,7 @@ erts_mixed_times(Process *p, Eterm arg1, Eterm arg2)
                * Be careful to allocate exactly what we need
                * to not leave any holes.
                */
-              Uint arity;
+              size_t arity;
 
               ASSERT(is_big(res));
               hdr = big_res[0];
@@ -1112,7 +1112,7 @@ L_big_div:
     } else {
       Eterm *hp;
       int i = big_size(arg1);
-      Uint need;
+      size_t need;
 
       ires = big_size(arg2);
       need = BIG_NEED_SIZE(i - ires + 1) + BIG_NEED_SIZE(i);
@@ -1169,7 +1169,7 @@ L_big_rem:
     if (ires == 0) {
       arg1 = SMALL_ZERO;
     } else if (ires > 0) {
-      Uint need = BIG_NEED_SIZE(big_size(arg1));
+      size_t need = BIG_NEED_SIZE(big_size(arg1));
       Eterm *hp = HAlloc(p, need);
 
       arg1 = big_rem(arg1, arg2, hp);
@@ -1290,7 +1290,7 @@ Eterm erts_bnot(Process *p, Eterm arg)
   Eterm ret;
 
   if (is_big(arg)) {
-    Uint need = BIG_NEED_SIZE(big_size(arg) + 1);
+    size_t need = BIG_NEED_SIZE(big_size(arg) + 1);
     Eterm *bigp = HAlloc(p, need);
 
     ret = big_bnot(arg, bigp);
@@ -1337,7 +1337,7 @@ trim_heap(Process *p, Eterm *hp, Eterm res)
 #define maybe_shrink horrible error
 
 Eterm
-erts_gc_mixed_plus(Process *p, Eterm *reg, Uint live)
+erts_gc_mixed_plus(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg1;
   Eterm arg2;
@@ -1349,7 +1349,7 @@ erts_gc_mixed_plus(Process *p, Eterm *reg, Uint live)
   dsize_t sz1, sz2, sz;
   int need_heap;
   Eterm *hp;
-  Sint ires;
+  ssize_t ires;
 
   arg1 = reg[live];
   arg2 = reg[live + 1];
@@ -1542,7 +1542,7 @@ do_float:
 }
 
 Eterm
-erts_gc_mixed_minus(Process *p, Eterm *reg, Uint live)
+erts_gc_mixed_minus(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg1;
   Eterm arg2;
@@ -1554,7 +1554,7 @@ erts_gc_mixed_minus(Process *p, Eterm *reg, Uint live)
   dsize_t sz1, sz2, sz;
   int need_heap;
   Eterm *hp;
-  Sint ires;
+  ssize_t ires;
 
   arg1 = reg[live];
   arg2 = reg[live + 1];
@@ -1744,7 +1744,7 @@ do_float:
 }
 
 Eterm
-erts_gc_mixed_times(Process *p, Eterm *reg, Uint live)
+erts_gc_mixed_times(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg1;
   Eterm arg2;
@@ -1797,8 +1797,8 @@ erts_gc_mixed_times(Process *p, Eterm *reg, Uint live)
                * Be careful to allocate exactly what we need
                * to not leave any holes.
                */
-              Uint arity;
-              Uint need;
+              size_t arity;
+              size_t need;
 
               ASSERT(is_big(res));
               hdr = big_res[0];
@@ -2005,7 +2005,7 @@ do_float:
 }
 
 Eterm
-erts_gc_mixed_div(Process *p, Eterm *reg, Uint live)
+erts_gc_mixed_div(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg1;
   Eterm arg2;
@@ -2169,7 +2169,7 @@ do_float:
 }
 
 Eterm
-erts_gc_int_div(Process *p, Eterm *reg, Uint live)
+erts_gc_int_div(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg1;
   Eterm arg2;
@@ -2211,7 +2211,7 @@ L_big_div:
     } else {
       Eterm *hp;
       int i = big_size(arg1);
-      Uint need;
+      size_t need;
 
       ires = big_size(arg2);
       need = BIG_NEED_SIZE(i - ires + 1) + BIG_NEED_SIZE(i);
@@ -2248,7 +2248,7 @@ L_big_div:
 }
 
 Eterm
-erts_gc_int_rem(Process *p, Eterm *reg, Uint live)
+erts_gc_int_rem(Process *p, Eterm *reg, size_t live)
 {
   Eterm arg1;
   Eterm arg2;
@@ -2288,7 +2288,7 @@ L_big_rem:
       arg1 = SMALL_ZERO;
     } else if (ires > 0) {
       Eterm *hp;
-      Uint need = BIG_NEED_SIZE(big_size(arg1));
+      size_t need = BIG_NEED_SIZE(big_size(arg1));
 
       if (ERTS_NEED_GC(p, need)) {
         erts_garbage_collect(p, need, reg, live + 2);
@@ -2322,7 +2322,7 @@ L_big_rem:
 }
 
 #define DEFINE_GC_LOGIC_FUNC(func)            \
-Eterm erts_gc_##func(Process* p, Eterm* reg, Uint live)       \
+Eterm erts_gc_##func(Process* p, Eterm* reg, size_t live)       \
 {                   \
     Eterm arg1;                 \
     Eterm arg2;                 \
@@ -2373,11 +2373,11 @@ DEFINE_GC_LOGIC_FUNC(band)
 DEFINE_GC_LOGIC_FUNC(bor)
 DEFINE_GC_LOGIC_FUNC(bxor)
 
-Eterm erts_gc_bnot(Process *p, Eterm *reg, Uint live)
+Eterm erts_gc_bnot(Process *p, Eterm *reg, size_t live)
 {
   Eterm result;
   Eterm arg;
-  Uint need;
+  size_t need;
   Eterm *bigp;
 
   arg = reg[live];

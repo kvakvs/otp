@@ -63,7 +63,7 @@ static Export binary_bin_to_list_trap_export;
 static BIF_RETTYPE binary_bin_to_list_trap(BIF_ALIST_3);
 static Export binary_copy_trap_export;
 static BIF_RETTYPE binary_copy_trap(BIF_ALIST_2);
-static Uint max_loop_limit;
+static size_t max_loop_limit;
 
 static BIF_RETTYPE
 binary_match(Process *p, Eterm arg1, Eterm arg2, Eterm arg3);
@@ -103,23 +103,23 @@ void erts_init_bif_binary(void)
 /*
  * Setting the loop_limit for searches for debugging
  */
-Sint erts_binary_set_loop_limit(Sint limit)
+ssize_t erts_binary_set_loop_limit(ssize_t limit)
 {
-  Sint save = (Sint) max_loop_limit;
+  ssize_t save = (ssize_t) max_loop_limit;
 
   if (limit <= 0) {
     max_loop_limit = 0;
   } else {
-    max_loop_limit = (Uint) limit;
+    max_loop_limit = (size_t) limit;
   }
 
   return save;
 }
 
-static Uint get_reds(Process *p, int loop_factor)
+static size_t get_reds(Process *p, int loop_factor)
 {
-  Uint reds = ERTS_BIF_REDS_LEFT(p) * loop_factor;
-  Uint tmp = max_loop_limit;
+  size_t reds = ERTS_BIF_REDS_LEFT(p) * loop_factor;
+  size_t tmp = max_loop_limit;
 
   if (tmp != 0 && tmp < reds) {
     return tmp;
@@ -148,12 +148,12 @@ static Uint get_reds(Process *p, int loop_factor)
 #endif
 
 typedef struct _my_allocator {
-  Uint size;
+  size_t size;
   uint8_t *current;
   uint8_t *mem;
 } MyAllocator;
 
-static void init_my_allocator(MyAllocator *my, Uint siz, uint8_t *array)
+static void init_my_allocator(MyAllocator *my, size_t siz, uint8_t *array)
 {
   ASSERT((siz % SIZEOF_VOID_P) == 0);
   my->size = siz;
@@ -161,7 +161,7 @@ static void init_my_allocator(MyAllocator *my, Uint siz, uint8_t *array)
   my->current = my->mem;
 }
 
-static void *my_alloc(MyAllocator *my, Uint size)
+static void *my_alloc(MyAllocator *my, size_t size)
 {
   void *ptr = my->current;
   my->current += MYALIGN(size);
@@ -209,9 +209,9 @@ typedef struct _ac_trie {
 
 typedef struct _bm_data {
   uint8_t *x;
-  Sint len;
-  Sint *goodshift;
-  Sint badshift[ALPHABET_SIZE];
+  ssize_t len;
+  ssize_t *goodshift;
+  ssize_t badshift[ALPHABET_SIZE];
 } BMData;
 
 #ifdef HARDDEBUG
@@ -225,7 +225,7 @@ static void dump_ac_node(ACNode *node, int indent, int ch);
  * accumulated string lengths.
  */
 #define BM_SIZE(StrLen)         /* StrLen: length of searchstring */ \
-((MYALIGN(sizeof(Sint) * (StrLen))) + /* goodshift array */                \
+((MYALIGN(sizeof(ssize_t) * (StrLen))) + /* goodshift array */                \
  MYALIGN(StrLen) +                    /* searchstring saved */             \
  (MYALIGN(sizeof(BMData))))           /* Structure */
 
@@ -259,11 +259,11 @@ static void cleanup_my_data_bm(Binary *bp)
  * for an Aho-Corasick search trie, given the accumulated length of the search
  * strings.
  */
-static ACTrie *create_acdata(MyAllocator *my, Uint len,
+static ACTrie *create_acdata(MyAllocator *my, size_t len,
                              ACNode ***qbuff /* out */,
                              Binary **the_bin /* out */)
 {
-  Uint datasize = AC_SIZE(len);
+  size_t datasize = AC_SIZE(len);
   ACTrie *act;
   ACNode *acn;
   Binary *mb = erts_create_magic_binary(datasize, cleanup_my_data_ac);
@@ -290,10 +290,10 @@ static ACTrie *create_acdata(MyAllocator *my, Uint len,
 /*
  * The same initialization of allocator and basic data for Boyer-Moore.
  */
-static BMData *create_bmdata(MyAllocator *my, uint8_t *x, Uint len,
+static BMData *create_bmdata(MyAllocator *my, uint8_t *x, size_t len,
                              Binary **the_bin /* out */)
 {
-  Uint datasize = BM_SIZE(len);
+  size_t datasize = BM_SIZE(len);
   BMData *bmd;
   Binary *mb = erts_create_magic_binary(datasize, cleanup_my_data_bm);
   auto data = ERTS_MAGIC_BIN_DATA<uint8_t *>(mb);
@@ -302,7 +302,7 @@ static BMData *create_bmdata(MyAllocator *my, uint8_t *x, Uint len,
   bmd->x = (uint8_t *)my_alloc(my, len);
   memcpy(bmd->x, x, len);
   bmd->len = len;
-  bmd->goodshift = (Sint *)my_alloc(my, sizeof(Uint) * len);
+  bmd->goodshift = (ssize_t *)my_alloc(my, sizeof(size_t) * len);
   *the_bin = mb;
   return bmd;
 }
@@ -322,14 +322,14 @@ static BMData *create_bmdata(MyAllocator *my, uint8_t *x, Uint len,
 /*
  * Helper called once for each search pattern
  */
-static void ac_add_one_pattern(MyAllocator *my, ACTrie *act, uint8_t *x, Uint len)
+static void ac_add_one_pattern(MyAllocator *my, ACTrie *act, uint8_t *x, size_t len)
 {
   ACNode *acn = act->root;
   uint32_t n = ++act->counter; /* Always increase counter, even if it's a
           duplicate as this may identify the pattern
           in the final set (not in current interface
           though) */
-  Uint i = 0;
+  size_t i = 0;
 
   while (i < len) {
     if (acn->g[x[i]] != nullptr) {
@@ -435,14 +435,14 @@ static void ac_compute_failure_functions(ACTrie *act, ACNode **qbuff)
  */
 typedef struct {
   ACNode *q;
-  Uint pos;
-  Uint len;
+  size_t pos;
+  size_t len;
   ACNode *candidate;
-  Uint candidate_start;
+  size_t candidate_start;
 } ACFindFirstState;
 
 
-static void ac_init_find_first_match(ACFindFirstState *state, ACTrie *act, Sint startpos, Uint len)
+static void ac_init_find_first_match(ACFindFirstState *state, ACTrie *act, ssize_t startpos, size_t len)
 {
   state->q = act->root;
   state->pos = startpos;
@@ -457,15 +457,15 @@ static void ac_init_find_first_match(ACFindFirstState *state, ACTrie *act, Sint 
 #define AC_LOOP_FACTOR 10
 
 static int ac_find_first_match(ACFindFirstState *state, uint8_t *haystack,
-                               Uint *mpos, Uint *mlen, Uint *reductions)
+                               size_t *mpos, size_t *mlen, size_t *reductions)
 {
   ACNode *q = state->q;
-  Uint i = state->pos;
+  size_t i = state->pos;
   ACNode *candidate = state->candidate, *r;
-  Uint len = state->len;
-  Uint candidate_start = state->candidate_start;
-  Uint rstart;
-  register Uint reds = *reductions;
+  size_t len = state->len;
+  size_t candidate_start = state->candidate_start;
+  size_t rstart;
+  register size_t reds = *reductions;
 
   while (i < len) {
     if (--reds == 0) {
@@ -526,10 +526,10 @@ static int ac_find_first_match(ACFindFirstState *state, uint8_t *haystack,
 }
 
 typedef struct _findall_data {
-  Uint pos;
-  Uint len;
+  size_t pos;
+  size_t len;
 #ifdef HARDDEBUG
-  Uint id;
+  size_t id;
 #endif
   Eterm epos;
   Eterm elen;
@@ -537,14 +537,14 @@ typedef struct _findall_data {
 
 typedef struct {
   ACNode *q;
-  Uint pos;
-  Uint len;
-  Uint m;
-  Uint allocated;
+  size_t pos;
+  size_t len;
+  size_t m;
+  size_t allocated;
   FindallData *out;
 } ACFindAllState;
 
-static void ac_init_find_all(ACFindAllState *state, ACTrie *act, Sint startpos, Uint len)
+static void ac_init_find_all(ACFindAllState *state, ACTrie *act, ssize_t startpos, size_t len)
 {
   state->q = act->root;
   state->pos = startpos;
@@ -593,17 +593,17 @@ static void ac_clean_find_all(ACFindAllState *state)
  * arte returned only in the state.
  */
 static int ac_find_all_non_overlapping(ACFindAllState *state, uint8_t *haystack,
-                                       Uint *reductions)
+                                       size_t *reductions)
 {
   ACNode *q = state->q;
-  Uint i = state->pos;
-  Uint rstart;
+  size_t i = state->pos;
+  size_t rstart;
   ACNode *r;
-  Uint len = state->len;
-  Uint m = state->m, save_m;
-  Uint allocated = state->allocated;
+  size_t len = state->len;
+  size_t m = state->m, save_m;
+  size_t allocated = state->allocated;
   FindallData *out = state->out;
-  register Uint reds = *reductions;
+  register size_t reds = *reductions;
 
 
   while (i < len) {
@@ -713,8 +713,8 @@ static int ac_find_all_non_overlapping(ACFindAllState *state, uint8_t *haystack,
  */
 static void compute_badshifts(BMData *bmd)
 {
-  Sint i;
-  Sint m = bmd->len;
+  ssize_t i;
+  ssize_t m = bmd->len;
 
   for (i = 0; i < ALPHABET_SIZE; ++i) {
     bmd->badshift[i] = m;
@@ -726,7 +726,7 @@ static void compute_badshifts(BMData *bmd)
 }
 
 /* Helper for "compute_goodshifts" */
-static void compute_suffixes(uint8_t *x, Sint m, Sint *suffixes)
+static void compute_suffixes(uint8_t *x, ssize_t m, ssize_t *suffixes)
 {
   int f, g, i;
 
@@ -760,10 +760,10 @@ static void compute_suffixes(uint8_t *x, Sint m, Sint *suffixes)
  */
 static void compute_goodshifts(BMData *bmd)
 {
-  Sint m = bmd->len;
+  ssize_t m = bmd->len;
   uint8_t *x = bmd->x;
-  Sint i, j;
-  Sint *suffixes = (Sint *)erts_alloc(ERTS_ALC_T_TMP, m * sizeof(Sint));
+  ssize_t i, j;
+  ssize_t *suffixes = (ssize_t *)erts_alloc(ERTS_ALC_T_TMP, m * sizeof(ssize_t));
 
   compute_suffixes(x, m, suffixes);
 
@@ -793,8 +793,8 @@ static void compute_goodshifts(BMData *bmd)
 }
 
 typedef struct {
-  Sint pos;
-  Sint len;
+  ssize_t pos;
+  ssize_t len;
 } BMFindFirstState;
 
 #define BM_OK 0 /* used only for find_all */
@@ -802,25 +802,25 @@ typedef struct {
 #define BM_RESTART -2
 #define BM_LOOP_FACTOR 10 /* Should we have a higher value? */
 
-static void bm_init_find_first_match(BMFindFirstState *state, Sint startpos,
-                                     Uint len)
+static void bm_init_find_first_match(BMFindFirstState *state, ssize_t startpos,
+                                     size_t len)
 {
   state->pos = startpos;
-  state->len = (Sint) len;
+  state->len = (ssize_t) len;
 }
 
 
-static Sint bm_find_first_match(BMFindFirstState *state, BMData *bmd,
-                                uint8_t *haystack, Uint *reductions)
+static ssize_t bm_find_first_match(BMFindFirstState *state, BMData *bmd,
+                                uint8_t *haystack, size_t *reductions)
 {
-  Sint blen = bmd->len;
-  Sint len = state->len;
-  Sint *gs = bmd->goodshift;
-  Sint *bs = bmd->badshift;
+  ssize_t blen = bmd->len;
+  ssize_t len = state->len;
+  ssize_t *gs = bmd->goodshift;
+  ssize_t *bs = bmd->badshift;
   uint8_t *needle = bmd->x;
-  Sint i;
-  Sint j = state->pos;
-  register Uint reds = *reductions;
+  ssize_t i;
+  ssize_t j = state->pos;
+  register size_t reds = *reductions;
 
   while (j <= len - blen) {
     if (--reds == 0) {
@@ -844,17 +844,17 @@ static Sint bm_find_first_match(BMFindFirstState *state, BMData *bmd,
 }
 
 typedef struct {
-  Sint pos;
-  Sint len;
-  Uint m;
-  Uint allocated;
+  ssize_t pos;
+  ssize_t len;
+  size_t m;
+  size_t allocated;
   FindallData *out;
 } BMFindAllState;
 
-static void bm_init_find_all(BMFindAllState *state, Sint startpos, Uint len)
+static void bm_init_find_all(BMFindAllState *state, ssize_t startpos, size_t len)
 {
   state->pos = startpos;
-  state->len = (Sint) len;
+  state->len = (ssize_t) len;
   state->m = 0;
   state->allocated = 0;
   state->out = nullptr;
@@ -900,21 +900,21 @@ static void bm_clean_find_all(BMFindAllState *state)
  * Differs to the find_first function in that it stores all matches and the
  * values are returned only in the state.
  */
-static Sint bm_find_all_non_overlapping(BMFindAllState *state,
+static ssize_t bm_find_all_non_overlapping(BMFindAllState *state,
                                         BMData *bmd, uint8_t *haystack,
-                                        Uint *reductions)
+                                        size_t *reductions)
 {
-  Sint blen = bmd->len;
-  Sint len = state->len;
-  Sint *gs = bmd->goodshift;
-  Sint *bs = bmd->badshift;
+  ssize_t blen = bmd->len;
+  ssize_t len = state->len;
+  ssize_t *gs = bmd->goodshift;
+  ssize_t *bs = bmd->badshift;
   uint8_t *needle = bmd->x;
-  Sint i;
-  Sint j = state->pos;
-  Uint m = state->m;
-  Uint allocated = state->allocated;
+  ssize_t i;
+  ssize_t j = state->pos;
+  size_t m = state->m;
+  size_t allocated = state->allocated;
   FindallData *out = state->out;
-  register Uint reds = *reductions;
+  register size_t reds = *reductions;
 
   while (j <= len - blen) {
     if (--reds == 0) {
@@ -966,8 +966,8 @@ static Sint bm_find_all_non_overlapping(BMFindAllState *state,
 static int do_binary_match_compile(Eterm argument, Eterm *tag, Binary **binp)
 {
   Eterm t, b, comp_term = NIL;
-  Uint characters;
-  Uint words;
+  size_t characters;
+  size_t words;
 
   characters = 0;
   words = 0;
@@ -1022,7 +1022,7 @@ static int do_binary_match_compile(Eterm argument, Eterm *tag, Binary **binp)
 
   if (words == 1) {
     uint8_t *bytes;
-    Uint bitoffs, bitsize;
+    size_t bitoffs, bitsize;
     uint8_t *temp_alloc = nullptr;
     MyAllocator my;
     BMData *bmd;
@@ -1053,7 +1053,7 @@ static int do_binary_match_compile(Eterm argument, Eterm *tag, Binary **binp)
 
     while (is_list(t)) {
       uint8_t *bytes;
-      Uint bitoffs, bitsize;
+      size_t bitoffs, bitsize;
       uint8_t *temp_alloc = nullptr;
       b = CAR(list_val(t));
       t = CDR(list_val(t));
@@ -1099,12 +1099,12 @@ BIF_RETTYPE binary_compile_pattern_1(BIF_ALIST_1)
 #define DO_BIN_MATCH_BADARG -1
 #define DO_BIN_MATCH_RESTART -2
 
-static int do_binary_match(Process *p, Eterm subject, Uint hsstart, Uint hsend,
+static int do_binary_match(Process *p, Eterm subject, size_t hsstart, size_t hsend,
                            Eterm type, Binary *bin, Eterm state_term,
                            Eterm *res_term)
 {
   uint8_t *bytes;
-  Uint bitoffs, bitsize;
+  size_t bitoffs, bitsize;
   uint8_t *temp_alloc = nullptr;
 
   ERTS_GET_BINARY_BYTES(subject, bytes, bitoffs, bitsize);
@@ -1124,12 +1124,12 @@ static int do_binary_match(Process *p, Eterm subject, Uint hsstart, Uint hsend,
 
   if (type == am_bm) {
     BMData *bm;
-    Sint pos;
+    ssize_t pos;
     Eterm ret;
     Eterm *hp;
     BMFindFirstState state;
-    Uint reds = get_reds(p, BM_LOOP_FACTOR);
-    Uint save_reds = reds;
+    size_t reds = get_reds(p, BM_LOOP_FACTOR);
+    size_t save_reds = reds;
 
     bm = ERTS_MAGIC_BIN_DATA<BMData *>(bin);
 #ifdef HARDDEBUG
@@ -1165,7 +1165,7 @@ static int do_binary_match(Process *p, Eterm subject, Uint hsstart, Uint hsend,
       erts_free_aligned_binary_bytes(temp_alloc);
       return DO_BIN_MATCH_RESTART;
     } else {
-      Eterm erlen = erts_make_integer((Uint) bm->len, p);
+      Eterm erlen = erts_make_integer((size_t) bm->len, p);
       ret = erts_make_integer(pos, p);
       hp = HAlloc(p, 3);
       ret = TUPLE2(hp, ret, erlen);
@@ -1177,13 +1177,13 @@ static int do_binary_match(Process *p, Eterm subject, Uint hsstart, Uint hsend,
     return DO_BIN_MATCH_OK;
   } else if (type == am_ac) {
     ACTrie *act;
-    Uint pos, rlen;
+    size_t pos, rlen;
     int acr;
     ACFindFirstState state;
     Eterm ret;
     Eterm *hp;
-    Uint reds = get_reds(p, AC_LOOP_FACTOR);
-    Uint save_reds = reds;
+    size_t reds = get_reds(p, AC_LOOP_FACTOR);
+    size_t save_reds = reds;
 
     act = ERTS_MAGIC_BIN_DATA<ACTrie *>(bin);
 #ifdef HARDDEBUG
@@ -1231,12 +1231,12 @@ badarg:
   return DO_BIN_MATCH_BADARG;
 }
 
-static int do_binary_matches(Process *p, Eterm subject, Uint hsstart,
-                             Uint hsend, Eterm type, Binary *bin,
+static int do_binary_matches(Process *p, Eterm subject, size_t hsstart,
+                             size_t hsend, Eterm type, Binary *bin,
                              Eterm state_term, Eterm *res_term)
 {
   uint8_t *bytes;
-  Uint bitoffs, bitsize;
+  size_t bitoffs, bitsize;
   uint8_t *temp_alloc = nullptr;
 
   ERTS_GET_BINARY_BYTES(subject, bytes, bitoffs, bitsize);
@@ -1256,12 +1256,12 @@ static int do_binary_matches(Process *p, Eterm subject, Uint hsstart,
 
   if (type == am_bm) {
     BMData *bm;
-    Sint pos;
+    ssize_t pos;
     Eterm ret, tpl;
     Eterm *hp;
     BMFindAllState state;
-    Uint reds = get_reds(p, BM_LOOP_FACTOR);
-    Uint save_reds = reds;
+    size_t reds = get_reds(p, BM_LOOP_FACTOR);
+    size_t save_reds = reds;
 
     bm = ERTS_MAGIC_BIN_DATA<BMData *>(bin);
 #ifdef HARDDEBUG
@@ -1325,8 +1325,8 @@ static int do_binary_matches(Process *p, Eterm subject, Uint hsstart,
     ACFindAllState state;
     Eterm ret, tpl;
     Eterm *hp;
-    Uint reds = get_reds(p, AC_LOOP_FACTOR);
-    Uint save_reds = reds;
+    size_t reds = get_reds(p, AC_LOOP_FACTOR);
+    size_t save_reds = reds;
 
     act = ERTS_MAGIC_BIN_DATA<ACTrie *>(bin);
 #ifdef HARDDEBUG
@@ -1390,11 +1390,11 @@ badarg:
   return DO_BIN_MATCH_BADARG;
 }
 
-static int parse_match_opts_list(Eterm l, Eterm bin, Uint *posp, Uint *endp)
+static int parse_match_opts_list(Eterm l, Eterm bin, size_t *posp, size_t *endp)
 {
   Eterm *tp;
-  Uint pos;
-  Sint len;
+  size_t pos;
+  ssize_t len;
 
   if (l == ((Eterm) 0) || l == NIL) {
     /* Invalid term or NIL, we're called from binary_match(es)_2 or
@@ -1405,7 +1405,7 @@ static int parse_match_opts_list(Eterm l, Eterm bin, Uint *posp, Uint *endp)
   } else if (is_list(l)) {
     while (is_list(l)) {
       Eterm t = CAR(list_val(l));
-      Uint orig_size;
+      size_t orig_size;
 
       if (!is_tuple(t)) {
         goto badarg;
@@ -1436,10 +1436,10 @@ static int parse_match_opts_list(Eterm l, Eterm bin, Uint *posp, Uint *endp)
       }
 
       if (len < 0) {
-        Uint lentmp = -(Uint)len;
+        size_t lentmp = -(size_t)len;
 
         /* overflow */
-        if ((Sint)lentmp < 0) {
+        if ((ssize_t)lentmp < 0) {
           goto badarg;
         }
 
@@ -1510,8 +1510,8 @@ BIF_RETTYPE binary_match_3(BIF_ALIST_3)
 static BIF_RETTYPE
 binary_match(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
 {
-  Uint hsstart;
-  Uint hsend;
+  size_t hsstart;
+  size_t hsend;
   Eterm *tp;
   Eterm type;
   Binary *bin;
@@ -1594,7 +1594,7 @@ BIF_RETTYPE binary_matches_3(BIF_ALIST_3)
 static BIF_RETTYPE
 binary_matches(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
 {
-  Uint hsstart, hsend;
+  size_t hsstart, hsend;
   Eterm *tp;
   Eterm type;
   Binary *bin;
@@ -1686,13 +1686,13 @@ BIF_RETTYPE binary_matches_2(BIF_ALIST_2)
 
 BIF_RETTYPE erts_binary_part(Process *p, Eterm binary, Eterm epos, Eterm elen)
 {
-  Uint pos;
-  Sint len;
+  size_t pos;
+  ssize_t len;
   size_t orig_size;
   Eterm orig;
-  Uint offset;
-  Uint bit_offset;
-  Uint bit_size;
+  size_t offset;
+  size_t bit_offset;
+  size_t bit_size;
   Eterm *hp;
   ErlSubBin *sb;
 
@@ -1709,10 +1709,10 @@ BIF_RETTYPE erts_binary_part(Process *p, Eterm binary, Eterm epos, Eterm elen)
   }
 
   if (len < 0) {
-    Uint lentmp = -(Uint)len;
+    size_t lentmp = -(size_t)len;
 
     /* overflow */
-    if ((Sint)lentmp < 0) {
+    if ((ssize_t)lentmp < 0) {
       goto badarg;
     }
 
@@ -1759,13 +1759,13 @@ badarg:
 
 BIF_RETTYPE erts_gc_binary_part(Process *p, Eterm *reg, Eterm live, int range_is_tuple)
 {
-  Uint pos;
-  Sint len;
+  size_t pos;
+  ssize_t len;
   size_t orig_size;
   Eterm orig;
-  Uint offset;
-  Uint bit_offset;
-  Uint bit_size;
+  size_t offset;
+  size_t bit_offset;
+  size_t bit_size;
   Eterm *hp;
   ErlSubBin *sb;
   Eterm binary;
@@ -1811,10 +1811,10 @@ BIF_RETTYPE erts_gc_binary_part(Process *p, Eterm *reg, Eterm live, int range_is
   }
 
   if (len < 0) {
-    Uint lentmp = -(Uint)len;
+    size_t lentmp = -(size_t)len;
 
     /* overflow */
-    if ((Sint)lentmp < 0) {
+    if ((ssize_t)lentmp < 0) {
       goto badarg;
     }
 
@@ -1897,7 +1897,7 @@ typedef struct {
   int type;            /* CL_TYPE_XXX */
   uint8_t *temp_alloc;    /* Used for erts_get/free_aligned, i.e. CL_TYPE_ALIGNED */
   uint8_t *buff; /* Used for all types, malloced if CL_TYPE_HEAP */
-  Uint bufflen;        /* The length (in bytes) of buffer */
+  size_t bufflen;        /* The length (in bytes) of buffer */
 } CommonData;
 
 #define COMMON_LOOP_FACTOR 10
@@ -1916,10 +1916,10 @@ typedef struct {
 #define CL_TYPE_HEAP_NOALLOC 4 /* Will need allocating when trapping */
 
 
-static int do_search_forward(CommonData *cd, Uint *posp, Uint *redsp)
+static int do_search_forward(CommonData *cd, size_t *posp, size_t *redsp)
 {
-  Uint pos = *posp;
-  Sint reds = (Sint) * redsp;
+  size_t pos = *posp;
+  ssize_t reds = (ssize_t) * redsp;
   int i;
   uint8_t current = 0;
 
@@ -1929,7 +1929,7 @@ static int do_search_forward(CommonData *cd, Uint *posp, Uint *redsp)
         *posp = pos;
 
         if (reds > 0) {
-          *redsp = (Uint) reds;
+          *redsp = (size_t) reds;
         } else {
           *redsp = 0;
         }
@@ -1944,7 +1944,7 @@ static int do_search_forward(CommonData *cd, Uint *posp, Uint *redsp)
           *posp = pos;
 
           if (reds > 0) {
-            *redsp = (Uint) reds;
+            *redsp = (size_t) reds;
           } else {
             *redsp = 0;
           }
@@ -1965,10 +1965,10 @@ static int do_search_forward(CommonData *cd, Uint *posp, Uint *redsp)
     }
   }
 }
-static int do_search_backward(CommonData *cd, Uint *posp, Uint *redsp)
+static int do_search_backward(CommonData *cd, size_t *posp, size_t *redsp)
 {
-  Uint pos = *posp;
-  Sint reds = (Sint) * redsp;
+  size_t pos = *posp;
+  ssize_t reds = (ssize_t) * redsp;
   int i;
   uint8_t current = 0;
 
@@ -1978,7 +1978,7 @@ static int do_search_backward(CommonData *cd, Uint *posp, Uint *redsp)
         *posp = pos;
 
         if (reds > 0) {
-          *redsp = (Uint) reds;
+          *redsp = (size_t) reds;
         } else {
           *redsp = 0;
         }
@@ -1993,7 +1993,7 @@ static int do_search_backward(CommonData *cd, Uint *posp, Uint *redsp)
           *posp = pos;
 
           if (reds > 0) {
-            *redsp = (Uint) reds;
+            *redsp = (size_t) reds;
           } else {
             *redsp = 0;
           }
@@ -2045,11 +2045,11 @@ static BIF_RETTYPE do_longest_common(Process *p, Eterm list, int direction)
   Binary *mb;
   CommonData *cd;
   int i = 0;
-  Uint reds = get_reds(p, COMMON_LOOP_FACTOR);
-  Uint save_reds = reds;
+  size_t reds = get_reds(p, COMMON_LOOP_FACTOR);
+  size_t save_reds = reds;
   int res;
   Export *trapper;
-  Uint pos;
+  size_t pos;
   Eterm epos;
   Eterm *hp;
   Eterm bin_term;
@@ -2078,9 +2078,9 @@ static BIF_RETTYPE do_longest_common(Process *p, Eterm list, int direction)
   l = list;
 
   while (is_list(l)) {
-    ERTS_DECLARE_DUMMY(Uint bitoffs);
-    Uint bitsize;
-    ERTS_DECLARE_DUMMY(Uint offset);
+    ERTS_DECLARE_DUMMY(size_t bitoffs);
+    size_t bitsize;
+    ERTS_DECLARE_DUMMY(size_t offset);
     Eterm real_bin;
     ProcBin *pb;
 
@@ -2167,9 +2167,9 @@ badarg:
 static BIF_RETTYPE do_longest_common_trap(Process *p, Eterm bin_term, Eterm current_pos,
     Eterm orig_list, int direction)
 {
-  Uint reds = get_reds(p, COMMON_LOOP_FACTOR);
-  Uint save_reds = reds;
-  Uint pos;
+  size_t reds = get_reds(p, COMMON_LOOP_FACTOR);
+  size_t save_reds = reds;
+  size_t pos;
   Binary *bin;
   CommonData *cd;
   int res;
@@ -2232,10 +2232,10 @@ BIF_RETTYPE binary_longest_common_suffix_1(BIF_ALIST_1)
 BIF_RETTYPE binary_first_1(BIF_ALIST_1)
 {
   uint8_t *bytes;
-  Uint byte_size;
-  Uint bit_offs;
-  Uint bit_size;
-  Uint res;
+  size_t byte_size;
+  size_t bit_offs;
+  size_t bit_size;
+  size_t res;
 
   if (is_not_binary(BIF_ARG_1)) {
     goto badarg;
@@ -2254,7 +2254,7 @@ BIF_RETTYPE binary_first_1(BIF_ALIST_1)
   }
 
   if (bit_offs) {
-    res = ((((Uint) bytes[0]) << bit_offs) | (((Uint) bytes[1]) >> (8 - bit_offs))) & 0xFF;
+    res = ((((size_t) bytes[0]) << bit_offs) | (((size_t) bytes[1]) >> (8 - bit_offs))) & 0xFF;
   } else {
     res = bytes[0];
   }
@@ -2267,10 +2267,10 @@ badarg:
 BIF_RETTYPE binary_last_1(BIF_ALIST_1)
 {
   uint8_t *bytes;
-  Uint byte_size;
-  Uint bit_offs;
-  Uint bit_size;
-  Uint res;
+  size_t byte_size;
+  size_t bit_offs;
+  size_t bit_size;
+  size_t res;
 
   if (is_not_binary(BIF_ARG_1)) {
     goto badarg;
@@ -2289,8 +2289,8 @@ BIF_RETTYPE binary_last_1(BIF_ALIST_1)
   }
 
   if (bit_offs) {
-    res = ((((Uint) bytes[byte_size - 1]) << bit_offs) |
-           (((Uint) bytes[byte_size]) >> (8 - bit_offs))) & 0xFF;
+    res = ((((size_t) bytes[byte_size - 1]) << bit_offs) |
+           (((size_t) bytes[byte_size]) >> (8 - bit_offs))) & 0xFF;
   } else {
     res = bytes[byte_size - 1];
   }
@@ -2303,11 +2303,11 @@ badarg:
 BIF_RETTYPE binary_at_2(BIF_ALIST_2)
 {
   uint8_t *bytes;
-  Uint byte_size;
-  Uint bit_offs;
-  Uint bit_size;
-  Uint res;
-  Uint index;
+  size_t byte_size;
+  size_t bit_offs;
+  size_t bit_size;
+  size_t res;
+  size_t index;
 
   if (is_not_binary(BIF_ARG_1)) {
     goto badarg;
@@ -2334,8 +2334,8 @@ BIF_RETTYPE binary_at_2(BIF_ALIST_2)
   }
 
   if (bit_offs) {
-    res = ((((Uint) bytes[index]) << bit_offs) |
-           (((Uint) bytes[index + 1]) >> (8 - bit_offs))) & 0xFF;
+    res = ((((size_t) bytes[index]) << bit_offs) |
+           (((size_t) bytes[index + 1]) >> (8 - bit_offs))) & 0xFF;
   } else {
     res = bytes[index];
   }
@@ -2351,15 +2351,15 @@ badarg:
 
 #define BIN_TO_LIST_LOOP_FACTOR 10
 
-static int do_bin_to_list(Process *p, uint8_t *bytes, Uint bit_offs,
-                          Uint start, Sint *lenp, Eterm *termp)
+static int do_bin_to_list(Process *p, uint8_t *bytes, size_t bit_offs,
+                          size_t start, ssize_t *lenp, Eterm *termp)
 {
-  Uint reds = get_reds(p, BIN_TO_LIST_LOOP_FACTOR); /* reds can never be 0 */
-  Uint len = *lenp;
-  Uint loops;
+  size_t reds = get_reds(p, BIN_TO_LIST_LOOP_FACTOR); /* reds can never be 0 */
+  size_t len = *lenp;
+  size_t loops;
   Eterm *hp;
   Eterm term = *termp;
-  Uint n;
+  size_t n;
 
   ASSERT(reds > 0);
 
@@ -2373,8 +2373,8 @@ static int do_bin_to_list(Process *p, uint8_t *bytes, Uint bit_offs,
     --len;
 
     if (bit_offs) {
-      n = ((((Uint) bytes[start + len]) << bit_offs) |
-           (((Uint) bytes[start + len + 1]) >> (8 - bit_offs))) & 0xFF;
+      n = ((((size_t) bytes[start + len]) << bit_offs) |
+           (((size_t) bytes[start + len + 1]) >> (8 - bit_offs))) & 0xFF;
     } else {
       n = bytes[start + len];
     }
@@ -2396,7 +2396,7 @@ static int do_bin_to_list(Process *p, uint8_t *bytes, Uint bit_offs,
 
 
 static BIF_RETTYPE do_trap_bin_to_list(Process *p, Eterm binary,
-                                       Uint start, Sint len, Eterm sofar)
+                                       size_t start, ssize_t len, Eterm sofar)
 {
   Eterm *hp;
   Eterm blob;
@@ -2404,7 +2404,7 @@ static BIF_RETTYPE do_trap_bin_to_list(Process *p, Eterm binary,
   hp = HAlloc(p, 3);
   hp[0] = make_pos_bignum_header(2);
   hp[1] = start;
-  hp[2] = (Uint) len;
+  hp[2] = (size_t) len;
   blob = make_big(hp);
   BIF_TRAP3(&binary_bin_to_list_trap_export, p, binary, blob, sofar);
 }
@@ -2412,16 +2412,16 @@ static BIF_RETTYPE do_trap_bin_to_list(Process *p, Eterm binary,
 static BIF_RETTYPE binary_bin_to_list_trap(BIF_ALIST_3)
 {
   Eterm *ptr;
-  Uint start;
-  Sint len;
+  size_t start;
+  ssize_t len;
   uint8_t *bytes;
-  Uint bit_offs;
-  Uint bit_size;
+  size_t bit_offs;
+  size_t bit_size;
   Eterm res = BIF_ARG_3;
 
   ptr  = big_val(BIF_ARG_2);
   start = ptr[1];
-  len = (Sint) ptr[2];
+  len = (ssize_t) ptr[2];
 
   ERTS_GET_BINARY_BYTES(BIF_ARG_1, bytes, bit_offs, bit_size);
 
@@ -2438,12 +2438,12 @@ static BIF_RETTYPE binary_bin_to_list_common(Process *p,
     Eterm epos,
     Eterm elen)
 {
-  Uint pos;
-  Sint len;
+  size_t pos;
+  ssize_t len;
   size_t sz;
   uint8_t *bytes;
-  Uint bit_offs;
-  Uint bit_size;
+  size_t bit_offs;
+  size_t bit_size;
   Eterm res = NIL;
 
   if (is_not_binary(bin)) {
@@ -2459,10 +2459,10 @@ static BIF_RETTYPE binary_bin_to_list_common(Process *p,
   }
 
   if (len < 0) {
-    Uint lentmp = -(Uint)len;
+    size_t lentmp = -(size_t)len;
 
     /* overflow */
-    if ((Sint)lentmp < 0) {
+    if ((ssize_t)lentmp < 0) {
       goto badarg;
     }
 
@@ -2529,11 +2529,11 @@ badarg:
 
 BIF_RETTYPE binary_bin_to_list_1(BIF_ALIST_1)
 {
-  Uint pos = 0;
-  Sint len;
+  size_t pos = 0;
+  ssize_t len;
   uint8_t *bytes;
-  Uint bit_offs;
-  Uint bit_size;
+  size_t bit_offs;
+  size_t bit_size;
   Eterm res = NIL;
 
   if (is_not_binary(BIF_ARG_1)) {
@@ -2565,12 +2565,12 @@ BIF_RETTYPE binary_list_to_bin_1(BIF_ALIST_1)
 }
 
 typedef struct {
-  Uint times_left;
-  Uint source_size;
+  size_t times_left;
+  size_t source_size;
   int source_type;
   uint8_t *source;
   uint8_t *temp_alloc;
-  Uint result_pos;
+  size_t result_pos;
   Binary *result;
 } CopyBinState;
 
@@ -2610,21 +2610,21 @@ static void cleanup_copy_bin_state(Binary *bp)
 }
 
 /*
- * Binary *erts_bin_nrml_alloc(Uint size);
- * Binary *erts_bin_realloc(Binary *bp, Uint size);
+ * Binary *erts_bin_nrml_alloc(size_t size);
+ * Binary *erts_bin_realloc(Binary *bp, size_t size);
  * void erts_bin_free(Binary *bp);
  */
 static BIF_RETTYPE do_binary_copy(Process *p, Eterm bin, Eterm en)
 {
-  Uint n;
+  size_t n;
   uint8_t *bytes;
-  ERTS_DECLARE_DUMMY(Uint bit_offs);
-  Uint bit_size;
+  ERTS_DECLARE_DUMMY(size_t bit_offs);
+  size_t bit_size;
   size_t size;
-  Uint reds = get_reds(p, BINARY_COPY_LOOP_FACTOR);
-  Uint target_size;
+  size_t reds = get_reds(p, BINARY_COPY_LOOP_FACTOR);
+  size_t target_size;
   uint8_t *t;
-  Uint pos;
+  size_t pos;
 
 
   if (is_not_binary(bin)) {
@@ -2651,9 +2651,9 @@ static BIF_RETTYPE do_binary_copy(Process *p, Eterm bin, Eterm en)
 
   if ((target_size - size) >= reds) {
     Eterm orig;
-    ERTS_DECLARE_DUMMY(Uint offset);
-    ERTS_DECLARE_DUMMY(Uint bit_offset);
-    ERTS_DECLARE_DUMMY(Uint bit_size);
+    ERTS_DECLARE_DUMMY(size_t offset);
+    ERTS_DECLARE_DUMMY(size_t bit_offset);
+    ERTS_DECLARE_DUMMY(size_t bit_size);
     CopyBinState *cbs;
     Eterm *hp;
     Eterm trap_term;
@@ -2753,14 +2753,14 @@ badarg:
 
 BIF_RETTYPE binary_copy_trap(BIF_ALIST_2)
 {
-  Uint n;
+  size_t n;
   size_t size;
-  Uint reds = get_reds(BIF_P, BINARY_COPY_LOOP_FACTOR);
+  size_t reds = get_reds(BIF_P, BINARY_COPY_LOOP_FACTOR);
   uint8_t *t;
-  Uint pos;
+  size_t pos;
   Binary *mb = ((ProcBin *) binary_val(BIF_ARG_2))->val;
   auto cbs = ERTS_MAGIC_BIN_DATA<CopyBinState *>(mb);
-  Uint opos;
+  size_t opos;
 
   /* swapout... */
   n = cbs->times_left;
@@ -2769,7 +2769,7 @@ BIF_RETTYPE binary_copy_trap(BIF_ALIST_2)
   t = (uint8_t *) cbs->result->orig_bytes; /* "well behaved" binary */
 
   if ((n - 1) * size >= reds) {
-    Uint i = 0;
+    size_t i = 0;
 
     while ((pos - opos) < reds) {
       memcpy(t + pos, cbs->source, size);
@@ -2784,7 +2784,7 @@ BIF_RETTYPE binary_copy_trap(BIF_ALIST_2)
   } else {
     Binary *save;
     ProcBin *pb;
-    Uint target_size = cbs->result->orig_size;
+    size_t target_size = cbs->result->orig_size;
 
     while (pos < target_size) {
       memcpy(t + pos, cbs->source, size);
@@ -2842,9 +2842,9 @@ BIF_RETTYPE binary_referenced_byte_size_1(BIF_ALIST_1)
 
   if (pb->thing_word == HEADER_PROC_BIN) {
     /* XXX:PaN - Halfword - orig_size is a long, we should handle that */
-    res = erts_make_integer((Uint) pb->val->orig_size, BIF_P);
+    res = erts_make_integer((size_t) pb->val->orig_size, BIF_P);
   } else { /* heap binary */
-    res = erts_make_integer((Uint)((ErlHeapBin *) pb)->size, BIF_P);
+    res = erts_make_integer((size_t)((ErlHeapBin *) pb)->size, BIF_P);
   }
 
   BIF_RET(res);
@@ -2859,7 +2859,7 @@ BIF_RETTYPE binary_referenced_byte_size_1(BIF_ALIST_1)
 #define END_NATIVE END_SMALL
 #endif
 
-static int get_need(Uint u)
+static int get_need(size_t u)
 {
 #if defined(ARCH_64) && !HALFWORD_HEAP
 
@@ -2906,8 +2906,8 @@ static BIF_RETTYPE do_encode_unsigned(Process *p, Eterm uns, Eterm endianess)
   }
 
   if (is_small(uns)) {
-    Sint x = signed_val(uns);
-    Uint u;
+    ssize_t x = signed_val(uns);
+    size_t u;
     int n, i;
     uint8_t *b;
 
@@ -2915,7 +2915,7 @@ static BIF_RETTYPE do_encode_unsigned(Process *p, Eterm uns, Eterm endianess)
       goto badarg;
     }
 
-    u = (Uint) x;
+    u = (size_t) x;
     n = get_need(u);
     ASSERT(n <= ERL_ONHEAP_BIN_LIMIT);
     res = erts_new_heap_binary(p, nullptr, n, &b);
@@ -2936,7 +2936,7 @@ static BIF_RETTYPE do_encode_unsigned(Process *p, Eterm uns, Eterm endianess)
   } else {
     /* Big */
     Eterm *bigp = big_val(uns);
-    Uint n;
+    size_t n;
     dsize_t num_parts = BIG_SIZE(bigp);
     Eterm res;
     uint8_t *b;
@@ -2956,7 +2956,7 @@ static BIF_RETTYPE do_encode_unsigned(Process *p, Eterm uns, Eterm endianess)
     }
 
     if (endianess == am_big) {
-      Sint i, j;
+      ssize_t i, j;
       j = 0;
       d = BIG_DIGIT(bigp, 0);
 
@@ -2970,7 +2970,7 @@ static BIF_RETTYPE do_encode_unsigned(Process *p, Eterm uns, Eterm endianess)
         }
       }
     } else {
-      Sint i, j;
+      ssize_t i, j;
       j = 0;
       d = BIG_DIGIT(bigp, 0);
 
@@ -2996,8 +2996,8 @@ badarg:
 static BIF_RETTYPE do_decode_unsigned(Process *p, Eterm uns, Eterm endianess)
 {
   uint8_t *bytes;
-  Uint bitoffs, bitsize;
-  Uint size;
+  size_t bitoffs, bitsize;
+  size_t size;
   Eterm res;
 
   if (is_not_binary(uns) || is_not_atom(endianess) ||
@@ -3016,15 +3016,15 @@ static BIF_RETTYPE do_decode_unsigned(Process *p, Eterm uns, Eterm endianess)
 
   if (bitoffs) {
     if (endianess == am_big) {
-      while (size && (((((Uint) bytes[0]) << bitoffs) |
-                       (((Uint) bytes[1]) >> (8 - bitoffs))) & 0xFF) == 0) {
+      while (size && (((((size_t) bytes[0]) << bitoffs) |
+                       (((size_t) bytes[1]) >> (8 - bitoffs))) & 0xFF) == 0) {
         ++bytes;
         --size;
       }
     } else {
       while (size &&
-             (((((Uint) bytes[size - 1]) << bitoffs) |
-               (((Uint) bytes[size]) >> (8 - bitoffs))) & 0xFF) == 0) {
+             (((((size_t) bytes[size - 1]) << bitoffs) |
+               (((size_t) bytes[size]) >> (8 - bitoffs))) & 0xFF) == 0) {
         --size;
       }
     }
@@ -3045,16 +3045,16 @@ static BIF_RETTYPE do_decode_unsigned(Process *p, Eterm uns, Eterm endianess)
     BIF_RET(make_small(0));
   }
 
-  if (size <= sizeof(Uint)) {
-    Uint u = 0;
-    Sint i;
+  if (size <= sizeof(size_t)) {
+    size_t u = 0;
+    ssize_t i;
 
     if (endianess == am_big) {
       if (bitoffs) {
         for (i = 0; i < size; ++i) {
           u <<= 8;
-          u |= (((((Uint) bytes[i]) << bitoffs) |
-                 (((Uint) bytes[i + 1]) >> (8 - bitoffs))) & 0xFF);
+          u |= (((((size_t) bytes[i]) << bitoffs) |
+                 (((size_t) bytes[i + 1]) >> (8 - bitoffs))) & 0xFF);
         }
       } else {
         for (i = 0; i < size; ++i) {
@@ -3067,8 +3067,8 @@ static BIF_RETTYPE do_decode_unsigned(Process *p, Eterm uns, Eterm endianess)
       if (bitoffs) {
         for (i = size - 1; i >= 0; --i) {
           u <<= 8;
-          u |= (((((Uint) bytes[i]) << bitoffs) |
-                 (((Uint) bytes[i + 1]) >> (8 - bitoffs))) & 0xFF);
+          u |= (((((size_t) bytes[i]) << bitoffs) |
+                 (((size_t) bytes[i + 1]) >> (8 - bitoffs))) & 0xFF);
         }
       } else {
         for (i = size - 1; i >= 0; --i) {
@@ -3090,7 +3090,7 @@ static BIF_RETTYPE do_decode_unsigned(Process *p, Eterm uns, Eterm endianess)
     res = make_big(bigp);
 
     if (endianess == am_big) {
-      Sint i, j;
+      ssize_t i, j;
       ErtsDigit *d;
       j = size;
       d = &(BIG_DIGIT(bigp, num_parts - 1));
@@ -3100,8 +3100,8 @@ static BIF_RETTYPE do_decode_unsigned(Process *p, Eterm uns, Eterm endianess)
       if (bitoffs) {
         for (;;) {
           (*d) <<= 8;
-          (*d) |= (((((Uint) bytes[i]) << bitoffs) |
-                    (((Uint) bytes[i + 1]) >> (8 - bitoffs))) & 0xFF);
+          (*d) |= (((((size_t) bytes[i]) << bitoffs) |
+                    (((size_t) bytes[i + 1]) >> (8 - bitoffs))) & 0xFF);
 
           if (++i >= size) {
             break;
@@ -3128,7 +3128,7 @@ static BIF_RETTYPE do_decode_unsigned(Process *p, Eterm uns, Eterm endianess)
         }
       }
     } else {
-      Sint i, j;
+      ssize_t i, j;
       ErtsDigit *d;
       j = size;
       d = &(BIG_DIGIT(bigp, num_parts - 1));
@@ -3138,8 +3138,8 @@ static BIF_RETTYPE do_decode_unsigned(Process *p, Eterm uns, Eterm endianess)
       if (bitoffs) {
         for (;;) {
           (*d) <<= 8;
-          (*d) |= (((((Uint) bytes[i]) << bitoffs) |
-                    (((Uint) bytes[i + 1]) >> (8 - bitoffs))) & 0xFF);
+          (*d) |= (((((size_t) bytes[i]) << bitoffs) |
+                    (((size_t) bytes[i + 1]) >> (8 - bitoffs))) & 0xFF);
 
           if (--i < 0) {
             break;

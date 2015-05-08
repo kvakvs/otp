@@ -30,7 +30,7 @@ struct external_thing_;
 
 struct erl_off_heap_header {
   Eterm thing_word;
-  Uint size;
+  size_t size;
 #if HALFWORD_HEAP
   void *dummy_ptr_padding__;
 #endif
@@ -95,7 +95,7 @@ typedef struct {
   ErlMessage *first;
   ErlMessage **last;  /* point to the last next pointer */
   ErlMessage **save;
-  Sint len;            /* queue length */
+  ssize_t len;            /* queue length */
 
   /*
    * The following two fields are used by the recv_mark/1 and
@@ -110,7 +110,7 @@ typedef struct {
 typedef struct {
   ErlMessage *first;
   ErlMessage **last;  /* point to the last next pointer */
-  Sint len;            /* queue length */
+  ssize_t len;            /* queue length */
 } ErlMessageInQueue;
 
 #endif
@@ -196,9 +196,9 @@ do {                  \
 #define ErtsMoveMsgAttachmentIntoProc(M, P, ST, HT, FC, SWPO, SWPI) \
 do {                  \
     if ((M)->data.attached) {           \
-  Uint need__ = erts_msg_attached_data_size((M));     \
+  size_t need__ = erts_msg_attached_data_size((M));     \
   if ((ST) - (HT) >= need__) {          \
-      Uint *htop__ = (HT);          \
+      size_t *htop__ = (HT);          \
       erts_move_msg_attached_data_to_heap(&htop__, &MSO((P)), (M));\
       ASSERT(htop__ - (HT) <= need__);        \
       (HT) = htop__;            \
@@ -228,9 +228,9 @@ inline void ERTS_INIT_HEAP_FRAG(ErlHeapFragment* HEAP_FRAG_P, size_t DATA_WORDS)
 
 void init_message(void);
 void free_message(ErlMessage *);
-ErlHeapFragment *new_message_buffer(Uint);
-ErlHeapFragment *erts_resize_message_buffer(ErlHeapFragment *, Uint,
-    Eterm *, Uint);
+ErlHeapFragment *new_message_buffer(size_t);
+ErlHeapFragment *erts_resize_message_buffer(ErlHeapFragment *, size_t,
+    Eterm *, size_t);
 void free_message_buffer(ErlHeapFragment *);
 void erts_queue_dist_message(Process *, ErtsProcLocks *, ErtsDistExternal *, Eterm);
 void erts_queue_message(Process *, ErtsProcLocks *, ErlHeapFragment *, Eterm, Eterm
@@ -239,12 +239,12 @@ void erts_queue_message(Process *, ErtsProcLocks *, ErlHeapFragment *, Eterm, Et
 #endif
                        );
 void erts_deliver_exit_message(Eterm, Process *, ErtsProcLocks *, Eterm, Eterm);
-Sint erts_send_message(Process *, Process *, ErtsProcLocks *, Eterm, unsigned);
+ssize_t erts_send_message(Process *, Process *, ErtsProcLocks *, Eterm, unsigned);
 void erts_link_mbuf_to_proc(Process *proc, ErlHeapFragment *bp);
 
 void erts_move_msg_mbuf_to_heap(Eterm **, ErlOffHeap *, ErlMessage *);
 
-Uint erts_msg_attached_data_size_aux(ErlMessage *msg);
+size_t erts_msg_attached_data_size_aux(ErlMessage *msg);
 void erts_move_msg_attached_data_to_heap(Eterm **, ErlOffHeap *, ErlMessage *);
 
 Eterm erts_msg_distext2heap(Process *, ErtsProcLocks *, ErlHeapFragment **,
@@ -253,14 +253,14 @@ Eterm erts_msg_distext2heap(Process *, ErtsProcLocks *, ErlHeapFragment **,
 void erts_cleanup_offheap(ErlOffHeap *offheap);
 
 
-ERTS_GLB_INLINE Uint erts_msg_used_frag_sz(const ErlMessage *msg);
-ERTS_GLB_INLINE Uint erts_msg_attached_data_size(ErlMessage *msg);
+ERTS_GLB_INLINE size_t erts_msg_used_frag_sz(const ErlMessage *msg);
+ERTS_GLB_INLINE size_t erts_msg_attached_data_size(ErlMessage *msg);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
-ERTS_GLB_INLINE Uint erts_msg_used_frag_sz(const ErlMessage *msg)
+ERTS_GLB_INLINE size_t erts_msg_used_frag_sz(const ErlMessage *msg)
 {
   const ErlHeapFragment *bp;
-  Uint sz = 0;
+  size_t sz = 0;
 
   for (bp = msg->data.heap_frag; bp != nullptr; bp = bp->next) {
     sz += bp->used_size;
@@ -269,7 +269,7 @@ ERTS_GLB_INLINE Uint erts_msg_used_frag_sz(const ErlMessage *msg)
   return sz;
 }
 
-ERTS_GLB_INLINE Uint erts_msg_attached_data_size(ErlMessage *msg)
+ERTS_GLB_INLINE size_t erts_msg_attached_data_size(ErlMessage *msg)
 {
   ASSERT(msg->data.attached);
 
@@ -278,7 +278,7 @@ ERTS_GLB_INLINE Uint erts_msg_attached_data_size(ErlMessage *msg)
   } else if (msg->data.dist_ext->heap_size < 0) {
     return erts_msg_attached_data_size_aux(msg);
   } else {
-    Uint sz = msg->data.dist_ext->heap_size;
+    size_t sz = msg->data.dist_ext->heap_size;
 
     if (is_not_nil(ERL_MESSAGE_TOKEN(msg))) {
       auto heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(msg->data.dist_ext);

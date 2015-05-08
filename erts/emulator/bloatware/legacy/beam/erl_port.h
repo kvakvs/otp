@@ -168,8 +168,8 @@ struct _erl_drv_port {
   erts_atomic_t connected;  /* A connected process */
   Eterm caller;   /* Current caller. */
   erts_smp_atomic_t data; /* Data associated with port. */
-  Uint bytes_in;    /* Number of bytes read */
-  Uint bytes_out;   /* Number of bytes written */
+  size_t bytes_in;    /* Number of bytes read */
+  size_t bytes_out;   /* Number of bytes written */
 
   ErlIOQueue ioq;              /* driver accessible i/o queue */
   DistEntry *dist_entry;       /* Dist entry used in DISTRIBUTION */
@@ -191,7 +191,7 @@ struct _erl_drv_port {
 
 void erts_init_port_data(Port *);
 void erts_cleanup_port_data(Port *);
-Uint erts_port_data_size(Port *);
+size_t erts_port_data_size(Port *);
 ErlOffHeap *erts_port_data_offheap(Port *);
 
 #define ERTS_PORT_GET_CONNECTED(PRT) \
@@ -464,7 +464,7 @@ erts_smp_port_unlock(Port *prt)
   ERTS_INVALID_PORT_OPT((PP), (ID), ERTS_PORT_SFLGS_INVALID_TRACER_LOOKUP)
 
 #define ERTS_PORT_SCHED_ID(P, ID) \
-  ((Uint) (UWord) erts_prtsd_set((P), ERTS_PSD_SCHED_ID, (void *) (UWord) (ID)))
+  ((size_t) (UWord) erts_prtsd_set((P), ERTS_PSD_SCHED_ID, (void *) (UWord) (ID)))
 
 extern const Port erts_invalid_port;
 #define ERTS_PORT_LOCK_BUSY ((Port *) &erts_invalid_port)

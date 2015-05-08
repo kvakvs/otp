@@ -49,7 +49,7 @@ extern int erts_async_thread_suggested_stack_size;
 #if ERTS_USE_ASYNC_READY_Q
 int erts_check_async_ready(void *);
 int erts_async_ready_clean(void *, void *);
-void *erts_get_async_ready_queue(Uint sched_id);
+void *erts_get_async_ready_queue(size_t sched_id);
 #define ERTS_ASYNC_READY_CLEAN 0
 #define ERTS_ASYNC_READY_DIRTY 1
 #ifdef ERTS_SMP

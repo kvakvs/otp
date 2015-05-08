@@ -67,7 +67,7 @@ dist_msg_dbg(ErtsDistExternal *edep, char *what, uint8_t *buf, int sz)
 {
   uint8_t *extp = edep->extp;
   Eterm msg;
-  Sint size = erts_decode_dist_ext_size(edep);
+  ssize_t size = erts_decode_dist_ext_size(edep);
 
   if (size < 0) {
     erts_fprintf(stderr,
@@ -166,9 +166,9 @@ create_cache(DistEntry *dep)
   }
 }
 
-Uint erts_dist_cache_size(void)
+size_t erts_dist_cache_size(void)
 {
-  return (Uint) erts_smp_atomic_read_mb(&no_caches) * sizeof(ErtsAtomCache);
+  return (size_t) erts_smp_atomic_read_mb(&no_caches) * sizeof(ErtsAtomCache);
 }
 
 static ErtsProcList *
@@ -390,7 +390,7 @@ static void doit_node_link_net_exits(ErtsLink *lnk, void *vnecp)
   Eterm name = dep->sysname;
   Process *rp;
   ErtsLink *rlnk;
-  Uint i, n;
+  size_t i, n;
   ASSERT(lnk->type == LINK_NODE);
 
   if (is_internal_pid(lnk->pid)) {
@@ -554,7 +554,7 @@ int erts_do_net_exits(DistEntry *dep, Eterm reason)
       nodedown.reason = nd_reason;
     } else {
       Eterm *hp;
-      Uint sz = size_object(nd_reason);
+      size_t sz = size_object(nd_reason);
       nodedown.bp = new_message_buffer(sz);
       hp = nodedown.bp->mem;
       nodedown.reason = copy_struct(nd_reason,
@@ -660,10 +660,10 @@ void init_dist(void)
   ((Binary *) (((char *) (OB)) - offsetof(Binary, orig_bytes)))
 
 static ERTS_INLINE ErtsDistOutputBuf *
-alloc_dist_obuf(Uint size)
+alloc_dist_obuf(size_t size)
 {
   ErtsDistOutputBuf *obuf;
-  Uint obuf_size = sizeof(ErtsDistOutputBuf) + sizeof(uint8_t) * (size - 1);
+  size_t obuf_size = sizeof(ErtsDistOutputBuf) + sizeof(uint8_t) * (size - 1);
   Binary *bin = erts_bin_drv_alloc(obuf_size);
   bin->flags = BIN_FLAG_DRV;
   erts_refc_init(&bin->refc, 1);
@@ -687,7 +687,7 @@ free_dist_obuf(ErtsDistOutputBuf *obuf)
   }
 }
 
-static ERTS_INLINE Sint
+static ERTS_INLINE ssize_t
 size_obuf(ErtsDistOutputBuf *obuf)
 {
   Binary *bin = ErtsDistOutputBuf2Binary(obuf);
@@ -696,7 +696,7 @@ size_obuf(ErtsDistOutputBuf *obuf)
 
 static void clear_dist_entry(DistEntry *dep)
 {
-  Sint obufsize = 0;
+  ssize_t obufsize = 0;
   ErtsAtomCache *cache;
   ErtsProcList *suspendees;
   ErtsDistOutputBuf *obuf;
@@ -874,10 +874,10 @@ erts_dsig_send_msg(ErtsDSigData *dsdp, Eterm remote, Eterm message)
   Process *sender = dsdp->proc;
   int res;
 #ifdef USE_VM_PROBES
-  Sint tok_label = 0;
-  Sint tok_lastcnt = 0;
-  Sint tok_serial = 0;
-  Uint msize = 0;
+  ssize_t tok_label = 0;
+  ssize_t tok_lastcnt = 0;
+  ssize_t tok_serial = 0;
+  size_t msize = 0;
   DTRACE_CHARBUF(node_name, 64);
   DTRACE_CHARBUF(sender_name, 64);
   DTRACE_CHARBUF(receiver_name, 64);
@@ -941,9 +941,9 @@ erts_dsig_send_reg_msg(ErtsDSigData *dsdp, Eterm remote_name, Eterm message)
   Process *sender = dsdp->proc;
   int res;
 #ifdef USE_VM_PROBES
-  Sint tok_label = 0;
-  Sint tok_lastcnt = 0;
-  Sint tok_serial = 0;
+  ssize_t tok_label = 0;
+  ssize_t tok_lastcnt = 0;
+  ssize_t tok_serial = 0;
   uint32_t msize = 0;
   DTRACE_CHARBUF(node_name, 64);
   DTRACE_CHARBUF(sender_name, 64);
@@ -1009,9 +1009,9 @@ erts_dsig_send_exit_tt(ErtsDSigData *dsdp, Eterm local, Eterm remote,
   int res;
 #ifdef USE_VM_PROBES
   Process *sender = dsdp->proc;
-  Sint tok_label = 0;
-  Sint tok_lastcnt = 0;
-  Sint tok_serial = 0;
+  ssize_t tok_label = 0;
+  ssize_t tok_lastcnt = 0;
+  ssize_t tok_serial = 0;
   DTRACE_CHARBUF(node_name, 64);
   DTRACE_CHARBUF(sender_name, 64);
   DTRACE_CHARBUF(remote_name, 128);
@@ -1157,7 +1157,7 @@ int erts_net_message(Port *prt,
 #define DIST_CTL_DEFAULT_SIZE 64
   ErtsDistExternal ede;
   uint8_t *t;
-  Sint ctl_len;
+  ssize_t ctl_len;
   Eterm arg;
   Eterm from, to;
   Eterm watcher, watched;
@@ -1169,12 +1169,12 @@ int erts_net_message(Port *prt,
   Eterm *ctl = ctl_default;
   ErlOffHeap off_heap;
   Eterm *hp;
-  Sint type;
+  ssize_t type;
   Eterm token;
   Eterm token_size;
   ErtsMonitor *mon;
   ErtsLink *lnk;
-  Uint tuple_arity;
+  size_t tuple_arity;
   int res;
 #ifdef ERTS_DIST_MSG_DBG
   ErlDrvSizeT orig_len = len;
@@ -1502,7 +1502,7 @@ int erts_net_message(Port *prt,
     rp = erts_whereis_process(nullptr, 0, to, 0, 0);
 
     if (rp) {
-      Uint xsize = (type == DOP_REG_SEND
+      size_t xsize = (type == DOP_REG_SEND
                     ? 0
                     : ERTS_HEAP_FRAG_SIZE(token_size));
       ErtsProcLocks locks = 0;
@@ -1563,7 +1563,7 @@ int erts_net_message(Port *prt,
     rp = erts_proc_lookup(to);
 
     if (rp) {
-      Uint xsize = type == DOP_SEND ? 0 : ERTS_HEAP_FRAG_SIZE(token_size);
+      size_t xsize = type == DOP_SEND ? 0 : ERTS_HEAP_FRAG_SIZE(token_size);
       ErtsProcLocks locks = 0;
       ErtsDistExternal *ede_copy;
 
@@ -1842,7 +1842,7 @@ dsig_send(ErtsDSigData *dsdp, Eterm ctl, Eterm msg, int force_busy)
   int suspended = 0;
   int resume = 0;
   uint32_t pass_through_size;
-  Uint data_size, dhdr_ext_size;
+  size_t data_size, dhdr_ext_size;
   ErtsAtomCacheMap *acmp;
   ErtsDistOutputBuf *obuf;
   DistEntry *dep = dsdp->dep;
@@ -2045,16 +2045,16 @@ dsig_send(ErtsDSigData *dsdp, Eterm ctl, Eterm msg, int force_busy)
 }
 
 
-static Uint
+static size_t
 dist_port_command(Port *prt, ErtsDistOutputBuf *obuf)
 {
   int fpe_was_unmasked;
-  Uint size = obuf->ext_endp - obuf->extp;
+  size_t size = obuf->ext_endp - obuf->extp;
 
   ERTS_SMP_CHK_NO_PROC_LOCKS;
   ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
 
-  if (size > (Uint) INT_MAX)
+  if (size > (size_t) INT_MAX)
     erl::exit(erts::ABORT_EXIT,
              "Absurdly large distribution output data buffer "
              "(%beu bytes) passed.\n",
@@ -2084,11 +2084,11 @@ dist_port_command(Port *prt, ErtsDistOutputBuf *obuf)
   return size;
 }
 
-static Uint
+static size_t
 dist_port_commandv(Port *prt, ErtsDistOutputBuf *obuf)
 {
   int fpe_was_unmasked;
-  Uint size = obuf->ext_endp - obuf->extp;
+  size_t size = obuf->ext_endp - obuf->extp;
   SysIOVec iov[2];
   ErlDrvBinary *bv[2];
   ErlIOVec eiov;
@@ -2096,7 +2096,7 @@ dist_port_commandv(Port *prt, ErtsDistOutputBuf *obuf)
   ERTS_SMP_CHK_NO_PROC_LOCKS;
   ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
 
-  if (size > (Uint) INT_MAX)
+  if (size > (size_t) INT_MAX)
     erl::exit(erts::ABORT_EXIT,
              "Absurdly large distribution output data buffer "
              "(%beu bytes) passed.\n",
@@ -2155,19 +2155,19 @@ dist_port_commandv(Port *prt, ErtsDistOutputBuf *obuf)
 #define ERTS_PORT_REDS_DIST_CMD_RESUMED 5
 #define ERTS_PORT_REDS_DIST_CMD_DATA(SZ) \
   ((SZ) < (1 << 10) \
-   ? ((Sint) 1) \
-   : ((((Sint) (SZ)) >> 10) & ((Sint) ERTS_PORT_REDS_MASK__)))
+   ? ((ssize_t) 1) \
+   : ((((ssize_t) (SZ)) >> 10) & ((ssize_t) ERTS_PORT_REDS_MASK__)))
 
 int
 erts_dist_command(Port *prt, int reds_limit)
 {
-  Sint reds = ERTS_PORT_REDS_DIST_CMD_START;
+  ssize_t reds = ERTS_PORT_REDS_DIST_CMD_START;
   uint32_t status;
   uint32_t flags;
-  Sint obufsize = 0;
+  ssize_t obufsize = 0;
   ErtsDistOutputQueue oq, foq;
   DistEntry *dep = prt->dist_entry;
-  Uint(*send)(Port * prt, ErtsDistOutputBuf * obuf);
+  size_t(*send)(Port * prt, ErtsDistOutputBuf * obuf);
   erts_aint32_t sched_flags;
 
   ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
@@ -2221,7 +2221,7 @@ erts_dist_command(Port *prt, int reds_limit)
     int preempt = 0;
 
     do {
-      Uint size;
+      size_t size;
       ErtsDistOutputBuf *fob;
 
       size = (*send)(prt, foq.first);
@@ -2317,7 +2317,7 @@ finalize_only:
 
     while (oq.first && !preempt) {
       ErtsDistOutputBuf *fob;
-      Uint size;
+      size_t size;
       oq.first->extp
         = erts_encode_ext_dist_header_finalize(oq.first->extp,
             dep->cache,
@@ -2740,7 +2740,7 @@ int distribution_info(int to, void *arg)  /* Called by break handler */
 BIF_RETTYPE setnode_2(BIF_ALIST_2)
 {
   Process *net_kernel;
-  Uint creation;
+  size_t creation;
 
   /* valid creation ? */
   if (!term_to_Uint(BIF_ARG_2, &creation)) {
@@ -2836,7 +2836,7 @@ error:
 BIF_RETTYPE setnode_3(BIF_ALIST_3)
 {
   BIF_RETTYPE ret;
-  Uint flags;
+  size_t flags;
   unsigned long version;
   Eterm ic, oc;
   Eterm *tp;
@@ -3456,10 +3456,10 @@ init_nodes_monitors(void)
   nodes_monitors_end = nullptr;
 }
 
-static ERTS_INLINE Uint
+static ERTS_INLINE size_t
 nodes_mon_msg_sz(ErtsNodesMonitor *nmp, Eterm what, Eterm reason)
 {
-  Uint sz;
+  size_t sz;
 
   if (!nmp->opts) {
     sz = 3;
@@ -3493,7 +3493,7 @@ send_nodes_mon_msg(Process *rp,
                    Eterm what,
                    Eterm type,
                    Eterm reason,
-                   Uint sz)
+                   size_t sz)
 {
   Eterm msg;
   ErlHeapFragment *bp;
@@ -3588,7 +3588,7 @@ send_nodes_mon_msgs(Process *c_p, Eterm what, Eterm node, Eterm type, Eterm reas
   for (nmp = nodes_monitors; nmp; nmp = nmp->next) {
     int i;
     uint16_t no;
-    Uint sz;
+    size_t sz;
 
     ASSERT(nmp->proc != nullptr);
 
@@ -3942,8 +3942,8 @@ erts_processes_monitoring_nodes(Process *c_p)
   Eterm res;
   Eterm *hp;
   Eterm **hpp;
-  Uint sz;
-  Uint *szp;
+  size_t sz;
+  size_t *szp;
 #ifdef DEBUG
   Eterm *hend;
 #endif

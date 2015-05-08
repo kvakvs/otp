@@ -37,17 +37,17 @@ erts_smp_rwmtx_t erts_node_table_rwmtx;
 DistEntry *erts_hidden_dist_entries;
 DistEntry *erts_visible_dist_entries;
 DistEntry *erts_not_connected_dist_entries;
-Sint erts_no_of_hidden_dist_entries;
-Sint erts_no_of_visible_dist_entries;
-Sint erts_no_of_not_connected_dist_entries;
+ssize_t erts_no_of_hidden_dist_entries;
+ssize_t erts_no_of_visible_dist_entries;
+ssize_t erts_no_of_not_connected_dist_entries;
 
 DistEntry *erts_this_dist_entry;
 ErlNode *erts_this_node;
 char erts_this_node_sysname_BUFFER[256],
      *erts_this_node_sysname = "uninitialized yet";
 
-static Uint node_entries;
-static Uint dist_entries;
+static size_t node_entries;
+static size_t dist_entries;
 
 static int references_atoms_need_init = 1;
 
@@ -95,7 +95,7 @@ dist_table_alloc(void *dep_tmpl)
   }
 
   sysname = ((DistEntry *) dep_tmpl)->sysname;
-  chnl_nr = make_small((Uint) atom_val(sysname));
+  chnl_nr = make_small((size_t) atom_val(sysname));
   dep = (DistEntry *) erts_alloc(ERTS_ALC_T_DIST_ENTRY, sizeof(DistEntry));
 
   dist_entries++;
@@ -211,7 +211,7 @@ erts_dist_table_info(int to, void *to_arg)
 }
 
 DistEntry *
-erts_channel_no_to_dist_entry(Uint cno)
+erts_channel_no_to_dist_entry(size_t cno)
 {
   /*
    * For this_ node (and previous incarnations of this_ node),
@@ -342,10 +342,10 @@ void erts_delete_dist_entry(DistEntry *dep)
   }
 }
 
-Uint
+size_t
 erts_dist_table_size(void)
 {
-  Uint res;
+  size_t res;
 #ifdef DEBUG
   HashInfo hi;
   DistEntry *dep;
@@ -455,7 +455,7 @@ erts_set_dist_entry_not_connected(DistEntry *dep)
 }
 
 void
-erts_set_dist_entry_connected(DistEntry *dep, Eterm cid, Uint flags)
+erts_set_dist_entry_connected(DistEntry *dep, Eterm cid, size_t flags)
 {
   ERTS_SMP_LC_ASSERT(erts_lc_is_de_rwlocked(dep));
   erts_smp_rwmtx_rwlock(&erts_dist_table_rwmtx);
@@ -601,10 +601,10 @@ node_table_free(void *venp)
   node_entries--;
 }
 
-Uint
+size_t
 erts_node_table_size(void)
 {
-  Uint res;
+  size_t res;
 #ifdef DEBUG
   HashInfo hi;
 #endif
@@ -644,7 +644,7 @@ erts_node_table_info(int to, void *to_arg)
 }
 
 
-ErlNode *erts_find_or_insert_node(Eterm sysname, Uint creation)
+ErlNode *erts_find_or_insert_node(Eterm sysname, size_t creation)
 {
   ErlNode *res;
   ErlNode ne;
@@ -781,7 +781,7 @@ void erts_print_node_info(int to,
 /* ----------------------------------------------------------------------- */
 
 void
-erts_set_this_node(Eterm sysname, Uint creation)
+erts_set_this_node(Eterm sysname, size_t creation)
 {
   erts_smp_rwmtx_rwlock(&erts_node_table_rwmtx);
   erts_smp_rwmtx_rwlock(&erts_dist_table_rwmtx);
@@ -939,7 +939,7 @@ static Eterm AM_system;
 static Eterm AM_timer;
 
 static void setup_reference_table(void);
-static Eterm reference_table_term(Uint **hpp, Uint *szp);
+static Eterm reference_table_term(size_t **hpp, size_t *szp);
 static void delete_reference_table(void);
 
 #if BIG_UINT_HEAP_SIZE > 3 /* 2-tuple */
@@ -958,7 +958,7 @@ typedef struct node_referrer_ {
   int timer_ref;
   int system_ref;
   Eterm id;
-  Uint id_heap[ID_HEAP_SIZE];
+  size_t id_heap[ID_HEAP_SIZE];
 } NodeReferrer;
 
 typedef struct {
@@ -972,7 +972,7 @@ typedef struct dist_referrer_ {
   int node_ref;
   int ctrl_ref;
   Eterm id;
-  Uint creation;
+  size_t creation;
 } DistReferrer;
 
 typedef struct {
@@ -994,11 +994,11 @@ static InsertedBin *inserted_bins;
 Eterm
 erts_get_node_and_dist_references(struct process *proc)
 {
-  Uint *hp;
-  Uint size;
+  size_t *hp;
+  size_t size;
   Eterm res;
 #ifdef DEBUG
-  Uint *endp;
+  size_t *endp;
 #endif
 
   erts_smp_proc_unlock(proc, ERTS_PROC_LOCK_MAIN);
@@ -1064,7 +1064,7 @@ static void
 insert_dist_referrer(ReferredDist *referred_dist,
                      int type,
                      Eterm id,
-                     Uint creation)
+                     size_t creation)
 {
   DistReferrer *drp;
 
@@ -1105,7 +1105,7 @@ insert_dist_referrer(ReferredDist *referred_dist,
 }
 
 static void
-insert_dist_entry(DistEntry *dist, int type, Eterm id, Uint creation)
+insert_dist_entry(DistEntry *dist, int type, Eterm id, size_t creation)
 {
   ReferredDist *rdp = nullptr;
   int i;
@@ -1143,7 +1143,7 @@ insert_node_referrer(ReferredNode *referred_node, int type, Eterm id)
     if (IS_CONST(id)) {
       nrp->id = id;
     } else {
-      Uint *hp = &nrp->id_heap[0];
+      size_t *hp = &nrp->id_heap[0];
       ASSERT(is_big(id) || is_tuple(id));
       nrp->id = copy_struct(id, size_object(id), &hp, nullptr);
     }
@@ -1260,7 +1260,7 @@ insert_offheap(ErlOffHeap *oh, int type, Eterm id)
 #else
           DeclareTmpHeapNoproc(id_heap, BIG_UINT_HEAP_SIZE);
 #endif
-          Uint *hp = &id_heap[0];
+          size_t *hp = &id_heap[0];
           InsertedBin *nib;
 #if HALFWORD_HEAP
           int actual_need = BIG_UWORD_HEAP_SIZE(val);
@@ -1269,7 +1269,7 @@ insert_offheap(ErlOffHeap *oh, int type, Eterm id)
           a.id = erts_bld_uword(&hp, nullptr, (UWord) val);
 #else
           UseTmpHeapNoproc(BIG_UINT_HEAP_SIZE);
-          a.id = erts_bld_uint(&hp, nullptr, (Uint) u.pb->val);
+          a.id = erts_bld_uint(&hp, nullptr, (size_t) u.pb->val);
 #endif
           erts_match_prog_foreach_offheap(u.pb->val,
                                           insert_offheap2,
@@ -1684,7 +1684,7 @@ setup_reference_table(void)
  */
 
 static Eterm
-reference_table_term(Uint **hpp, Uint *szp)
+reference_table_term(size_t **hpp, size_t *szp)
 {
 #undef  MK_2TUP
 #undef  MK_3TUP
@@ -1748,7 +1748,7 @@ reference_table_term(Uint **hpp, Uint *szp)
 
       if (!IS_CONST(nrp->id)) {
 
-        Uint nrid_sz = size_object(nrp->id);
+        size_t nrid_sz = size_object(nrp->id);
 
         if (szp) {
           *szp += nrid_sz;
@@ -1870,7 +1870,7 @@ reference_table_term(Uint **hpp, Uint *szp)
 static void
 delete_reference_table(void)
 {
-  Uint i;
+  size_t i;
 
   for (i = 0; i < no_referred_nodes; i++) {
     NodeReferrer *nrp;

@@ -133,12 +133,12 @@
 /* Calculate slot index from hash value.
 ** RLOCK_HASH or WLOCK_HASH must be done before.
 */
-static ERTS_INLINE Uint hash_to_ix(DbTableHash *tb, HashValue hval)
+static ERTS_INLINE size_t hash_to_ix(DbTableHash *tb, HashValue hval)
 {
-  Uint mask = (DB_USING_FINE_LOCKING(tb)
+  size_t mask = (DB_USING_FINE_LOCKING(tb)
                ? erts_smp_atomic_read_acqb(&tb->szm)
                : erts_smp_atomic_read_nob(&tb->szm));
-  Uint ix = hval & mask;
+  size_t ix = hval & mask;
 
   if (ix >= erts_smp_atomic_read_nob(&tb->nactive)) {
     ix &= mask >> 1;
@@ -245,7 +245,7 @@ static ERTS_INLINE void WUNLOCK_HASH(erts_smp_rwmtx_t *lck)
 ** Returns "next" slot index or 0 if EOT reached.
 ** Slot READ locks updated accordingly, unlocked if EOT.
 */
-static ERTS_INLINE Sint next_slot(DbTableHash *tb, Uint ix,
+static ERTS_INLINE ssize_t next_slot(DbTableHash *tb, size_t ix,
                                   erts_smp_rwmtx_t **lck_ptr)
 {
 #ifdef ERTS_SMP
@@ -268,7 +268,7 @@ static ERTS_INLINE Sint next_slot(DbTableHash *tb, Uint ix,
 #endif
 }
 /* Same as next_slot but with WRITE locking */
-static ERTS_INLINE Sint next_slot_w(DbTableHash *tb, Uint ix,
+static ERTS_INLINE ssize_t next_slot_w(DbTableHash *tb, size_t ix,
                                     erts_smp_rwmtx_t **lck_ptr)
 {
 #ifdef ERTS_SMP
@@ -396,7 +396,7 @@ static struct ext_segment *alloc_ext_seg(DbTableHash *tb, unsigned seg_ix,
     struct segment **old_segtab);
 static int alloc_seg(DbTableHash *tb);
 static int free_seg(DbTableHash *tb, int free_records);
-static HashDbTerm *next(DbTableHash *tb, Uint *iptr, erts_smp_rwmtx_t **lck_ptr,
+static HashDbTerm *next(DbTableHash *tb, size_t *iptr, erts_smp_rwmtx_t **lck_ptr,
                         HashDbTerm *list);
 static HashDbTerm *search_list(DbTableHash *tb, Eterm key,
                                HashValue hval, HashDbTerm *list);
@@ -430,7 +430,7 @@ static int db_slot_hash(Process *p, DbTable *tbl,
                         Eterm slot_term, Eterm *ret);
 
 static int db_select_chunk_hash(Process *p, DbTable *tbl,
-                                Eterm pattern, Sint chunk_size,
+                                Eterm pattern, ssize_t chunk_size,
                                 int reverse, Eterm *ret);
 static int db_select_hash(Process *p, DbTable *tbl,
                           Eterm pattern, int reverse, Eterm *ret);
@@ -686,10 +686,10 @@ restart:
 
 /* Only used by tests
 */
-Uint db_kept_items_hash(DbTableHash *tb)
+size_t db_kept_items_hash(DbTableHash *tb)
 {
-  Uint kept_items = 0;
-  Uint ix = 0;
+  size_t kept_items = 0;
+  size_t ix = 0;
   erts_smp_rwmtx_t *lck = RLOCK_HASH(tb, ix);
   HashDbTerm *b;
 
@@ -754,7 +754,7 @@ int db_create_hash(Process *p, DbTable *tbl)
 static int db_first_hash(Process *p, DbTable *tbl, Eterm *ret)
 {
   DbTableHash *tb = &tbl->hash;
-  Uint ix = 0;
+  size_t ix = 0;
   erts_smp_rwmtx_t *lck = RLOCK_HASH(tb, ix);
   HashDbTerm *list;
 
@@ -790,7 +790,7 @@ static int db_next_hash(Process *p, DbTable *tbl, Eterm key, Eterm *ret)
 {
   DbTableHash *tb = &tbl->hash;
   HashValue hval;
-  Uint ix;
+  size_t ix;
   HashDbTerm *b;
   erts_smp_rwmtx_t *lck;
 
@@ -1333,7 +1333,7 @@ static int db_slot_hash(Process *p, DbTable *tbl, Eterm slot_term, Eterm *ret)
 {
   DbTableHash *tb = &tbl->hash;
   erts_smp_rwmtx_t *lck;
-  Sint slot;
+  ssize_t slot;
   int retval;
   int nactive;
 
@@ -1380,9 +1380,9 @@ static int db_select_continue_hash(Process *p,
                                    Eterm *ret)
 {
   DbTableHash *tb = &tbl->hash;
-  Sint slot_ix;
-  Sint save_slot_ix;
-  Sint chunk_size;
+  ssize_t slot_ix;
+  ssize_t save_slot_ix;
+  ssize_t chunk_size;
   int all_objects;
   Binary *mp;
   int num_left = 1000;
@@ -1390,7 +1390,7 @@ static int db_select_continue_hash(Process *p,
   Eterm match_list;
   Eterm *hp;
   Eterm match_res;
-  Sint got;
+  ssize_t got;
   Eterm *tptr;
   erts_smp_rwmtx_t *lck;
 
@@ -1466,7 +1466,7 @@ static int db_select_continue_hash(Process *p,
     --num_left;
     save_slot_ix = slot_ix;
 
-    if ((current = next(tb, (Uint *)&slot_ix, &lck, current)) == nullptr) {
+    if ((current = next(tb, (size_t *)&slot_ix, &lck, current)) == nullptr) {
       slot_ix = -1; /* EOT */
       break;
     }
@@ -1494,7 +1494,7 @@ done:
   if (chunk_size) {
     Eterm continuation;
     Eterm rest = NIL;
-    Sint rest_size = 0;
+    ssize_t rest_size = 0;
 
     if (got > chunk_size) {
       /* Cannot write destructively here,
@@ -1552,20 +1552,20 @@ static int db_select_hash(Process *p, DbTable *tbl,
 }
 
 static int db_select_chunk_hash(Process *p, DbTable *tbl,
-                                Eterm pattern, Sint chunk_size,
+                                Eterm pattern, ssize_t chunk_size,
                                 int reverse, /* not used */
                                 Eterm *ret)
 {
   DbTableHash *tb = &tbl->hash;
   struct mp_info mpi;
-  Sint slot_ix;
+  ssize_t slot_ix;
   HashDbTerm *current = 0;
   unsigned current_list_pos = 0;
   Eterm match_list;
   Eterm match_res;
   Eterm *hp;
   int num_left = 1000;
-  Uint got = 0;
+  size_t got = 0;
   Eterm continuation;
   int errcode;
   Eterm mpb;
@@ -1690,7 +1690,7 @@ done:
   if (chunk_size) {
     Eterm continuation;
     Eterm rest = NIL;
-    Sint rest_size = 0;
+    ssize_t rest_size = 0;
 
     if (mpi.all_objects) {
       (mpi.mp)->flags |= BIN_FLAG_ALL_OBJECTS;
@@ -1768,12 +1768,12 @@ static int db_select_count_hash(Process *p,
 {
   DbTableHash *tb = &tbl->hash;
   struct mp_info mpi;
-  Uint slot_ix = 0;
+  size_t slot_ix = 0;
   HashDbTerm *current = nullptr;
   unsigned current_list_pos = 0;
   Eterm *hp;
   int num_left = 1000;
-  Uint got = 0;
+  size_t got = 0;
   Eterm continuation;
   int errcode;
   Eterm egot;
@@ -1891,15 +1891,15 @@ static int db_select_delete_hash(Process *p,
 {
   DbTableHash *tb = &tbl->hash;
   struct mp_info mpi;
-  Uint slot_ix = 0;
+  size_t slot_ix = 0;
   HashDbTerm **current = nullptr;
   unsigned current_list_pos = 0;
   Eterm *hp;
   int num_left = 1000;
-  Uint got = 0;
+  size_t got = 0;
   Eterm continuation;
   int errcode;
-  Uint last_pseudo_delete = (Uint) - 1;
+  size_t last_pseudo_delete = (size_t) - 1;
   Eterm mpb;
   Eterm egot;
 #ifdef ERTS_SMP
@@ -2045,12 +2045,12 @@ static int db_select_delete_continue_hash(Process *p,
     Eterm *ret)
 {
   DbTableHash *tb = &tbl->hash;
-  Uint slot_ix;
-  Uint last_pseudo_delete = (Uint) - 1;
+  size_t slot_ix;
+  size_t last_pseudo_delete = (size_t) - 1;
   HashDbTerm **current = nullptr;
   Eterm *hp;
   int num_left = 1000;
-  Uint got;
+  size_t got;
   Eterm *tptr;
   Binary *mp;
   Eterm egot;
@@ -2167,11 +2167,11 @@ static int db_select_count_continue_hash(Process *p,
     Eterm *ret)
 {
   DbTableHash *tb = &tbl->hash;
-  Uint slot_ix;
+  size_t slot_ix;
   HashDbTerm *current;
   Eterm *hp;
   int num_left = 1000;
-  Uint got;
+  size_t got;
   Eterm *tptr;
   Binary *mp;
   Eterm egot;
@@ -2993,7 +2993,7 @@ static HashDbTerm *search_list(DbTableHash *tb, Eterm key,
 /* It return the next live object in a table, nullptr if no more */
 /* In-bucket: RLOCKED */
 /* Out-bucket: RLOCKED unless nullptr */
-static HashDbTerm *next(DbTableHash *tb, Uint *iptr, erts_smp_rwmtx_t **lck_ptr,
+static HashDbTerm *next(DbTableHash *tb, size_t *iptr, erts_smp_rwmtx_t **lck_ptr,
                         HashDbTerm *list)
 {
   int i;

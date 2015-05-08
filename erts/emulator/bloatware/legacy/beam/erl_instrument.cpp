@@ -32,7 +32,7 @@ typedef union {
 } Align_t;
 
 typedef struct {
-  Uint size;
+  size_t size;
 #ifdef VALGRIND
   void *valgrind_leak_suppressor;
 #endif
@@ -43,7 +43,7 @@ typedef struct {
 
 typedef struct MapStatBlock_t_ MapStatBlock_t;
 struct MapStatBlock_t_ {
-  Uint size;
+  size_t size;
   ErtsAlcType_t type_no;
   Eterm pid;
   MapStatBlock_t *prev;
@@ -54,13 +54,13 @@ struct MapStatBlock_t_ {
 #define MAP_STAT_BLOCK_HEADER_SIZE (sizeof(MapStatBlock_t) - sizeof(Align_t))
 
 typedef struct {
-  Uint size;
-  Uint max_size;
-  Uint max_size_ever;
+  size_t size;
+  size_t max_size;
+  size_t max_size_ever;
 
-  Uint blocks;
-  Uint max_blocks;
-  Uint max_blocks_ever;
+  size_t blocks;
+  size_t max_blocks;
+  size_t max_blocks_ever;
 } Stat_t;
 
 static erts_mtx_t instr_mutex;
@@ -191,7 +191,7 @@ init_am_a(void)
 }
 
 static ERTS_INLINE void
-stat_upd_alloc(ErtsAlcType_t n, Uint size)
+stat_upd_alloc(ErtsAlcType_t n, size_t size)
 {
   ErtsAlcType_t t = ERTS_ALC_N2T(n);
   ErtsAlcType_t a = ERTS_ALC_T2A(t);
@@ -249,7 +249,7 @@ stat_upd_alloc(ErtsAlcType_t n, Uint size)
 
 
 static ERTS_INLINE void
-stat_upd_free(ErtsAlcType_t n, Uint size)
+stat_upd_free(ErtsAlcType_t n, size_t size)
 {
   ErtsAlcType_t t = ERTS_ALC_N2T(n);
   ErtsAlcType_t a = ERTS_ALC_T2A(t);
@@ -283,7 +283,7 @@ stat_upd_free(ErtsAlcType_t n, Uint size)
 
 
 static ERTS_INLINE void
-stat_upd_realloc(ErtsAlcType_t n, Uint size, Uint old_size)
+stat_upd_realloc(ErtsAlcType_t n, size_t size, size_t old_size)
 {
   if (old_size) {
     stat_upd_free(n, old_size);
@@ -309,10 +309,10 @@ static void stat_pre_unlock(void)
 static ErtsAllocatorWrapper_t instr_wrapper;
 
 static void *
-stat_alloc(ErtsAlcType_t n, void *extra, Uint size)
+stat_alloc(ErtsAlcType_t n, void *extra, size_t size)
 {
   ErtsAllocatorFunctions_t *real_af = (ErtsAllocatorFunctions_t *) extra;
-  Uint ssize;
+  size_t ssize;
   void *res;
 
   if (!erts_is_allctr_wrapper_prelocked()) {
@@ -341,11 +341,11 @@ stat_alloc(ErtsAlcType_t n, void *extra, Uint size)
 }
 
 static void *
-stat_realloc(ErtsAlcType_t n, void *extra, void *ptr, Uint size)
+stat_realloc(ErtsAlcType_t n, void *extra, void *ptr, size_t size)
 {
   ErtsAllocatorFunctions_t *real_af = (ErtsAllocatorFunctions_t *) extra;
-  Uint old_size;
-  Uint ssize;
+  size_t old_size;
+  size_t ssize;
   void *sptr;
   void *res;
 
@@ -422,10 +422,10 @@ static void map_stat_pre_unlock(void)
 }
 
 static void *
-map_stat_alloc(ErtsAlcType_t n, void *extra, Uint size)
+map_stat_alloc(ErtsAlcType_t n, void *extra, size_t size)
 {
   ErtsAllocatorFunctions_t *real_af = (ErtsAllocatorFunctions_t *) extra;
-  Uint msize;
+  size_t msize;
   void *res;
 
   if (!erts_is_allctr_wrapper_prelocked()) {
@@ -463,11 +463,11 @@ map_stat_alloc(ErtsAlcType_t n, void *extra, Uint size)
 }
 
 static void *
-map_stat_realloc(ErtsAlcType_t n, void *extra, void *ptr, Uint size)
+map_stat_realloc(ErtsAlcType_t n, void *extra, void *ptr, size_t size)
 {
   ErtsAllocatorFunctions_t *real_af = (ErtsAllocatorFunctions_t *) extra;
-  Uint old_size;
-  Uint msize;
+  size_t old_size;
+  size_t msize;
   void *mptr;
   void *res;
 
@@ -694,7 +694,7 @@ Eterm erts_instr_get_memory_map(Process *proc)
   MapStatBlock_t *org_mem_anchor;
   Eterm hdr_tuple, md_list, res;
   Eterm *hp;
-  Uint hsz;
+  size_t hsz;
   MapStatBlock_t *bp;
 #ifdef DEBUG
   Eterm *end_hp;
@@ -775,9 +775,9 @@ Eterm erts_instr_get_memory_map(Process *proc)
   { /* Build header */
     ErtsAlcType_t n;
     Eterm type_map;
-    Uint *hp2 = hp;
+    size_t *hp2 = hp;
 #ifdef DEBUG
-    Uint *hp2_end;
+    size_t *hp2_end;
 #endif
 
     hp += (ERTS_ALC_N_MAX + 1 - ERTS_ALC_N_MIN) * 4;
@@ -943,7 +943,7 @@ erts_instr_get_stat(Process *proc, Eterm what, int begin_max_period)
 {
   int i, len, max, min, allctr;
   Eterm *names, *values, res;
-  Uint arr_size, stat_size, hsz, *hszp, *hp, **hpp;
+  size_t arr_size, stat_size, hsz, *hszp, *hp, **hpp;
   Stat_t *stat_src, *stat;
 
   if (!erts_instr_stat) {
@@ -1227,13 +1227,13 @@ int erts_instr_dump_stat(const char *name, int begin_max_period)
 }
 
 
-Uint
+size_t
 erts_instr_get_total(void)
 {
   return erts_instr_stat ? stats->tot.size : 0;
 }
 
-Uint
+size_t
 erts_instr_get_max_total(void)
 {
   if (erts_instr_stat) {
@@ -1248,7 +1248,7 @@ Eterm
 erts_instr_get_type_info(Process *proc)
 {
   Eterm res, *tpls;
-  Uint hsz, *hszp, *hp, **hpp;
+  size_t hsz, *hszp, *hp, **hpp;
   ErtsAlcType_t n;
 
   if (!am_n) {
@@ -1303,10 +1303,10 @@ restart_bld:
   return res;
 }
 
-Uint
+size_t
 erts_instr_init(int stat, int map_stat)
 {
-  Uint extra_sz;
+  size_t extra_sz;
   int i;
 
   am_tot = nullptr;

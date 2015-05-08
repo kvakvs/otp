@@ -45,7 +45,7 @@ typedef struct _erl_async {
   void (*async_invoke)(void *);
   void (*async_free)(void *);
 #if ERTS_USE_ASYNC_READY_Q
-  Uint               sched_id;
+  size_t               sched_id;
   union {
     ErtsThrQPrepEnQ_t *prep_enq;
     ErtsThrQFinDeQ_t   fin_deq;
@@ -159,7 +159,7 @@ async_q(int i)
 #if ERTS_USE_ASYNC_READY_Q
 
 static ERTS_INLINE ErtsAsyncReadyQ *
-async_ready_q(Uint sched_id)
+async_ready_q(size_t sched_id)
 {
   return &async->ready_queue[((int)sched_id) - 1].arq;
 }
@@ -264,7 +264,7 @@ erts_init_async(void)
 #if ERTS_USE_ASYNC_READY_Q
 
 void *
-erts_get_async_ready_queue(Uint sched_id)
+erts_get_async_ready_queue(size_t sched_id)
 {
   return (void *) async ? async_ready_q(sched_id) : nullptr;
 }
@@ -677,7 +677,7 @@ long driver_async(ErlDrvPort ix, unsigned int *key,
   long id;
   unsigned int qix;
 #if ERTS_USE_ASYNC_READY_Q
-  Uint sched_id;
+  size_t sched_id;
 
   sched_id = erts_get_scheduler_id();
 

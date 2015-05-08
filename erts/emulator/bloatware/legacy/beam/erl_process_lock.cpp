@@ -882,7 +882,7 @@ erts_pid2proc_opt(Process *c_p,
   Process *dec_refc_proc = nullptr;
   ErtsThrPrgrDelayHandle dhndl;
   ErtsProcLocks need_locks;
-  Uint pix;
+  size_t pix;
   Process *proc;
 #if ERTS_PROC_LOCK_OWN_IMPL && defined(ERTS_ENABLE_LOCK_COUNT)
   ErtsProcLocks lcnt_locks;

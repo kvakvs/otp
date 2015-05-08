@@ -29,8 +29,8 @@ typedef struct tree_db_term {
 } TreeDbTerm;
 
 typedef struct {
-  Uint pos;          /* Current position on stack */
-  Uint slot;         /* "Slot number" of top element or 0 if not set */
+  size_t pos;          /* Current position on stack */
+  size_t slot;         /* "Slot number" of top element or 0 if not set */
   TreeDbTerm **array; /* The stack */
 } DbTreeStack;
 
@@ -39,7 +39,7 @@ typedef struct db_table_tree {
 
   /* Tree-specific fields */
   TreeDbTerm *root;         /* The tree root */
-  Uint deletion;    /* Being deleted */
+  size_t deletion;    /* Being deleted */
   erts_smp_atomic_t is_stack_busy;
   DbTreeStack static_stack;
 } DbTableTree;

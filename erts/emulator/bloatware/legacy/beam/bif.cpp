@@ -22,6 +22,7 @@
 #endif
 
 #include "bw_sys.h"
+#include "bw_misc_utils.h"
 
 #include <stddef.h> /* offsetof() */
 #include "sys.h"
@@ -618,7 +619,7 @@ erts_queue_monitor_message(Process *p,
   Eterm tup;
   Eterm *hp;
   Eterm reason_copy, ref_copy, item_copy;
-  Uint reason_size, ref_size, item_size, heap_size;
+  size_t reason_size, ref_size, item_size, heap_size;
   ErlOffHeap *ohp;
   ErlHeapFragment *bp;
 
@@ -962,7 +963,7 @@ error:
           goto error;
         }
       } else if (arg == am_min_heap_size && is_small(val)) {
-        Sint min_heap_size = signed_val(val);
+        ssize_t min_heap_size = signed_val(val);
 
         if (min_heap_size < 0) {
           goto error;
@@ -972,7 +973,7 @@ error:
           so.min_heap_size = erts_next_heap_size(min_heap_size, 0);
         }
       } else if (arg == am_min_bin_vheap_size && is_small(val)) {
-        Sint min_vheap_size = signed_val(val);
+        ssize_t min_vheap_size = signed_val(val);
 
         if (min_vheap_size < 0) {
           goto error;
@@ -982,7 +983,7 @@ error:
           so.min_vheap_size = erts_next_heap_size(min_vheap_size, 0);
         }
       } else if (arg == am_fullsweep_after && is_small(val)) {
-        Sint max_gen_gcs = signed_val(val);
+        ssize_t max_gen_gcs = signed_val(val);
 
         if (max_gen_gcs < 0) {
           goto error;
@@ -990,7 +991,7 @@ error:
           so.max_gen_gcs = max_gen_gcs;
         }
       } else if (arg == am_scheduler && is_small(val)) {
-        Sint scheduler = signed_val(val);
+        ssize_t scheduler = signed_val(val);
 
         if (scheduler < 0 || erts_no_schedulers < scheduler) {
           goto error;
@@ -1643,7 +1644,7 @@ static BIF_RETTYPE process_flag_aux(Process *BIF_P,
                                     Eterm val)
 {
   Eterm old_value = NIL; /* shut up warning about use before set */
-  Sint i;
+  ssize_t i;
 
   if (flag == am_save_calls) {
     struct saved_calls *scb;
@@ -1661,7 +1662,7 @@ static BIF_RETTYPE process_flag_aux(Process *BIF_P,
     if (i == 0) {
       scb = nullptr;
     } else {
-      Uint sz = sizeof(*scb) + (i - 1) * sizeof(scb->ct[0]);
+      size_t sz = sizeof(*scb) + (i - 1) * sizeof(scb->ct[0]);
       scb = (saved_calls *)erts_alloc(ERTS_ALC_T_CALLS_BUF, sz);
       scb->len = i;
       scb->cur = 0;
@@ -1713,7 +1714,7 @@ BIF_RETTYPE process_flag_2(BIF_ALIST_2)
     BIF_RET(old_value);
   } else if (BIF_ARG_1 == am_trap_exit) {
     erts_aint32_t state;
-    Uint trap_exit;
+    size_t trap_exit;
 
     if (BIF_ARG_2 == am_true) {
       trap_exit = 1;
@@ -1749,7 +1750,7 @@ BIF_RETTYPE process_flag_2(BIF_ALIST_2)
     BIF_RET(old_value);
   } else if (BIF_ARG_1 == am_scheduler) {
     ErtsRunQueue *old, *new_, *curr;
-    Sint sched;
+    ssize_t sched;
     erts_aint32_t state;
 
     if (!is_small(BIF_ARG_2)) {
@@ -1788,7 +1789,7 @@ BIF_RETTYPE process_flag_2(BIF_ALIST_2)
       BIF_RET(old_value);
     }
   } else if (BIF_ARG_1 == am_min_heap_size) {
-    Sint i;
+    ssize_t i;
 
     if (!is_small(BIF_ARG_2)) {
       goto error;
@@ -1810,7 +1811,7 @@ BIF_RETTYPE process_flag_2(BIF_ALIST_2)
 
     BIF_RET(old_value);
   } else if (BIF_ARG_1 == am_min_bin_vheap_size) {
-    Sint i;
+    ssize_t i;
 
     if (!is_small(BIF_ARG_2)) {
       goto error;
@@ -1832,7 +1833,7 @@ BIF_RETTYPE process_flag_2(BIF_ALIST_2)
 
     BIF_RET(old_value);
   } else if (BIF_ARG_1 == am_sensitive) {
-    Uint is_sensitive;
+    size_t is_sensitive;
 
     if (BIF_ARG_2 == am_true) {
       is_sensitive = 1;
@@ -1991,12 +1992,12 @@ ebif_bang_2(BIF_ALIST_2)
 #define SEND_INTERNAL_ERROR (-6)
 #define SEND_AWAIT_RESULT (-7)
 
-Sint do_send(Process *p, Eterm to, Eterm msg, int suspend, Eterm *refp);
+ssize_t do_send(Process *p, Eterm to, Eterm msg, int suspend, Eterm *refp);
 
-static Sint remote_send(Process *p, DistEntry *dep,
+static ssize_t remote_send(Process *p, DistEntry *dep,
                         Eterm to, Eterm full_to, Eterm msg, int suspend)
 {
-  Sint res;
+  ssize_t res;
   int code;
   ErtsDSigData dsd;
 
@@ -2055,7 +2056,7 @@ static Sint remote_send(Process *p, DistEntry *dep,
   return res;
 }
 
-Sint
+ssize_t
 do_send(Process *p, Eterm to, Eterm msg, int suspend, Eterm *refp)
 {
   Eterm portid;
@@ -2305,7 +2306,7 @@ port_common:
 
 send_message: {
     ErtsProcLocks rp_locks = 0;
-    Sint res;
+    ssize_t res;
 #ifdef ERTS_SMP
 
     if (p == rp) {
@@ -2342,7 +2343,7 @@ BIF_RETTYPE send_3(BIF_ALIST_3)
   int connect = !0;
   int suspend = !0;
   Eterm l = opts;
-  Sint result;
+  ssize_t result;
 
   while (is_list(l)) {
     if (CAR(list_val(l)) == am_noconnect) {
@@ -2446,7 +2447,7 @@ BIF_RETTYPE send_2(BIF_ALIST_2)
 Eterm erl_send(Process *p, Eterm to, Eterm msg)
 {
   Eterm ref;
-  Sint result;
+  ssize_t result;
 
 #ifdef DEBUG
   ref = NIL;
@@ -2568,7 +2569,7 @@ BIF_RETTYPE tl_1(BIF_ALIST_1)
 /* return the size of an I/O list */
 
 static Eterm
-accumulate(Eterm acc, Uint size)
+accumulate(Eterm acc, size_t size)
 {
   if (is_non_value(acc)) {
     /*
@@ -2608,7 +2609,7 @@ accumulate(Eterm acc, Uint size)
 }
 
 static Eterm
-consolidate(Process *p, Eterm acc, Uint size)
+consolidate(Process *p, Eterm acc, size_t size)
 {
   Eterm *hp;
 
@@ -2616,7 +2617,7 @@ consolidate(Process *p, Eterm acc, Uint size)
     return erts_make_integer(size, p);
   } else {
     Eterm *big;
-    Uint sz;
+    size_t sz;
     Eterm res;
 
     acc = accumulate(acc, size);
@@ -2638,9 +2639,9 @@ BIF_RETTYPE iolist_size_1(BIF_ALIST_1)
 {
   Eterm obj, hd;
   Eterm *objp;
-  Uint size = 0;
-  Uint cur_size;
-  Uint new_size;
+  size_t size = 0;
+  size_t cur_size;
+  size_t new_size;
   Eterm acc = THE_NON_VALUE;
   DECLARE_ESTACK(s);
 
@@ -2662,7 +2663,7 @@ L_iter_list:
         size++;
 
         if (size == 0) {
-          acc = accumulate(acc, (Uint) - 1);
+          acc = accumulate(acc, (size_t) - 1);
           size = 1;
         }
       } else if (is_binary(hd) && binary_bitsize(hd) == 0) {
@@ -2731,7 +2732,7 @@ BIF_RETTYPE element_2(BIF_ALIST_2)
 
   if (is_tuple(BIF_ARG_2)) {
     Eterm *tuple_ptr = tuple_val(BIF_ARG_2);
-    Sint ix = signed_val(BIF_ARG_1);
+    ssize_t ix = signed_val(BIF_ARG_1);
 
     if ((ix >= 1) && (ix <= arityval(*tuple_ptr))) {
       BIF_RET(tuple_ptr[ix]);
@@ -2763,8 +2764,8 @@ BIF_RETTYPE setelement_3(BIF_ALIST_3)
   Eterm *ptr;
   Eterm *hp;
   Eterm *resp;
-  Uint ix;
-  Uint size;
+  size_t ix;
+  size_t size;
 
   if (is_not_small(BIF_ARG_1) || is_not_tuple(BIF_ARG_2)) {
 error:
@@ -2792,7 +2793,7 @@ error:
 
 BIF_RETTYPE make_tuple_2(BIF_ALIST_2)
 {
-  Sint n;
+  ssize_t n;
   Eterm *hp;
   Eterm res;
 
@@ -2813,8 +2814,8 @@ BIF_RETTYPE make_tuple_2(BIF_ALIST_2)
 
 BIF_RETTYPE make_tuple_3(BIF_ALIST_3)
 {
-  Sint n;
-  Uint limit;
+  ssize_t n;
+  size_t limit;
   Eterm *hp;
   Eterm res;
   Eterm list = BIF_ARG_3;
@@ -2825,7 +2826,7 @@ error:
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  limit = (Uint) n;
+  limit = (size_t) n;
   hp = HAlloc(BIF_P, n + 1);
   res = make_tuple(hp);
   *hp++ = make_arityval(n);
@@ -2840,7 +2841,7 @@ error:
     Eterm hd;
     Eterm *tp;
     Eterm index;
-    Uint index_val;
+    size_t index_val;
 
     cons = list_val(list);
     hd = CAR(cons);
@@ -2877,7 +2878,7 @@ BIF_RETTYPE append_element_2(BIF_ALIST_2)
 {
   Eterm *ptr;
   Eterm *hp;
-  Uint arity;
+  size_t arity;
   Eterm res;
 
   if (is_not_tuple(BIF_ARG_1)) {
@@ -2908,9 +2909,9 @@ BIF_RETTYPE insert_element_3(BIF_ALIST_3)
 {
   Eterm *ptr;
   Eterm *hp;
-  Uint arity;
+  size_t arity;
   Eterm res;
-  Sint ix, c1, c2;
+  ssize_t ix, c1, c2;
 
   if (is_not_tuple(BIF_ARG_2) || is_not_small(BIF_ARG_1)) {
     BIF_ERROR(BIF_P, BADARG);
@@ -2948,9 +2949,9 @@ BIF_RETTYPE delete_element_2(BIF_ALIST_3)
 {
   Eterm *ptr;
   Eterm *hp;
-  Uint arity;
+  size_t arity;
   Eterm res;
-  Sint ix, c1, c2;
+  ssize_t ix, c1, c2;
 
   if (is_not_tuple(BIF_ARG_2) || is_not_small(BIF_ARG_1)) {
     BIF_ERROR(BIF_P, BADARG);
@@ -2991,7 +2992,7 @@ BIF_RETTYPE delete_element_2(BIF_ALIST_3)
 BIF_RETTYPE atom_to_list_1(BIF_ALIST_1)
 {
   Atom *ap;
-  Uint num_chars, num_built, num_eaten;
+  size_t num_chars, num_built, num_eaten;
   uint8_t *err_pos;
   Eterm res;
 #ifdef DEBUG
@@ -3080,7 +3081,7 @@ error:
 BIF_RETTYPE integer_to_list_1(BIF_ALIST_1)
 {
   Eterm *hp;
-  Uint need;
+  size_t need;
 
   if (is_not_integer(BIF_ARG_1)) {
     BIF_ERROR(BIF_P, BADARG);
@@ -3095,7 +3096,7 @@ BIF_RETTYPE integer_to_list_1(BIF_ALIST_1)
     n = sys_strlen(c);
     need = 2 * n;
     hp = HAlloc(BIF_P, need);
-    BIF_RET(buf_to_intlist(&hp, c, n, NIL));
+    BIF_RET(util::buf_to_intlist(&hp, c, n, NIL));
   } else {
     int n = big_decimal_estimate(BIF_ARG_1);
     Eterm res;
@@ -3123,11 +3124,11 @@ BIF_RETTYPE integer_to_list_1(BIF_ALIST_1)
 static int do_list_to_integer(Process *p, Eterm orig_list,
                               Eterm *integer, Eterm *rest)
 {
-  Sint i = 0;
-  Uint ui = 0;
+  ssize_t i = 0;
+  size_t ui = 0;
   int skip = 0;
   int neg = 0;
-  Sint n = 0;
+  ssize_t n = 0;
   int m;
   int lg2;
   Eterm res;
@@ -3213,9 +3214,9 @@ error:
 
   if (n <= SMALL_DIGITS) {  /* It must be small */
     if (neg) {
-      i = -(Sint)ui;
+      i = -(ssize_t)ui;
     } else {
-      i = (Sint)ui;
+      i = (ssize_t)ui;
     }
 
     res = make_small(i);
@@ -3277,7 +3278,7 @@ error:
       if (is_small(res)) {
         res = make_small(-signed_val(res));
       } else {
-        Uint *big = big_val(res); /* point to thing */
+        size_t *big = big_val(res); /* point to thing */
         *big = bignum_header_neg(*big);
       }
     }
@@ -3470,8 +3471,8 @@ static BIF_RETTYPE do_float_to_list(Process *BIF_P, Eterm arg, Eterm opts)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  hp = HAlloc(BIF_P, (Uint)used * 2);
-  BIF_RET(buf_to_intlist(&hp, fbuf, (Uint)used, NIL));
+  hp = HAlloc(BIF_P, (size_t)used * 2);
+  BIF_RET(util::buf_to_intlist(&hp, fbuf, (size_t)used, NIL));
 }
 
 
@@ -3496,7 +3497,7 @@ static BIF_RETTYPE do_float_to_binary(Process *BIF_P, Eterm arg, Eterm opts)
     BIF_ERROR(BIF_P, BADARG);
   }
 
-  BIF_RET(new_binary(BIF_P, (uint8_t *)fbuf, (Uint)used));
+  BIF_RET(new_binary(BIF_P, (uint8_t *)fbuf, (size_t)used));
 }
 
 BIF_RETTYPE float_to_binary_1(BIF_ALIST_1)
@@ -3542,7 +3543,7 @@ BIF_RETTYPE string_to_float_1(BIF_ALIST_1)
   FloatDef f;
   Eterm tup;
   uint8_t *buf = nullptr;
-  Uint bufsz = STRING_TO_FLOAT_BUF_INC_SZ;
+  size_t bufsz = STRING_TO_FLOAT_BUF_INC_SZ;
 
   /* check it's a valid list to start with */
   if (is_nil(list)) {
@@ -3771,11 +3772,11 @@ BIF_RETTYPE binary_to_float_1(BIF_ALIST_1)
 {
   Eterm res;
   Eterm binary = BIF_ARG_1;
-  Sint size;
+  ssize_t size;
   uint8_t *bytes, *buf;
   Eterm *real_bin;
-  Uint offs = 0;
-  Uint bit_offs = 0;
+  size_t offs = 0;
+  size_t bit_offs = 0;
 
   if (is_not_binary(binary) || (size = binary_size(binary)) == 0) {
     BIF_ERROR(BIF_P, BADARG);
@@ -3835,7 +3836,7 @@ binary_to_float_1_error:
 
 BIF_RETTYPE tuple_to_list_1(BIF_ALIST_1)
 {
-  Uint n;
+  size_t n;
   Eterm *tupleptr;
   Eterm list = NIL;
   Eterm *hp;
@@ -4062,8 +4063,8 @@ BIF_RETTYPE localtime_0(BIF_ALIST_0)
 
 /* type check and extract components from a tuple on form: {{Y,M,D},{H,M,S}} */
 static int
-time_to_parts(Eterm date, Sint *year, Sint *month, Sint *day,
-              Sint *hour, Sint *minute, Sint *second)
+time_to_parts(Eterm date, ssize_t *year, ssize_t *month, ssize_t *day,
+              ssize_t *hour, ssize_t *minute, ssize_t *second)
 {
   Eterm *t1;
   Eterm *t2;
@@ -4111,8 +4112,8 @@ localtime_to_universaltime_2(BIF_ALIST_2)
   Process *p = BIF_P;
   Eterm localtime = BIF_ARG_1;
   Eterm dst = BIF_ARG_2;
-  Sint year, month, day;
-  Sint hour, minute, second;
+  ssize_t year, month, day;
+  ssize_t hour, minute, second;
   int isdst;
   Eterm res1, res2;
   Eterm *hp;
@@ -4156,8 +4157,8 @@ error:
 
 BIF_RETTYPE universaltime_to_localtime_1(BIF_ALIST_1)
 {
-  Sint year, month, day;
-  Sint hour, minute, second;
+  ssize_t year, month, day;
+  ssize_t hour, minute, second;
   Eterm res1, res2;
   Eterm *hp;
 
@@ -4185,12 +4186,12 @@ BIF_RETTYPE universaltime_to_localtime_1(BIF_ALIST_1)
 
 BIF_RETTYPE universaltime_to_posixtime_1(BIF_ALIST_1)
 {
-  Sint year, month, day;
-  Sint hour, minute, second;
+  ssize_t year, month, day;
+  ssize_t hour, minute, second;
 
   int64_t seconds = 0;
   Eterm *hp;
-  Uint hsz = 0;
+  size_t hsz = 0;
 
   if (!time_to_parts(BIF_ARG_1, &year, &month, &day,
                      &hour, &minute, &second)) {
@@ -4210,8 +4211,8 @@ BIF_RETTYPE universaltime_to_posixtime_1(BIF_ALIST_1)
 
 BIF_RETTYPE posixtime_to_universaltime_1(BIF_ALIST_1)
 {
-  Sint year, month, day;
-  Sint hour, minute, second;
+  ssize_t year, month, day;
+  ssize_t hour, minute, second;
   Eterm res1, res2;
   Eterm *hp;
 
@@ -4243,7 +4244,7 @@ BIF_RETTYPE posixtime_to_universaltime_1(BIF_ALIST_1)
 /* return a timestamp */
 BIF_RETTYPE now_0(BIF_ALIST_0)
 {
-  Uint megasec, sec, microsec;
+  size_t megasec, sec, microsec;
   Eterm *hp;
 
   get_now(&megasec, &sec, &microsec);
@@ -4320,7 +4321,7 @@ BIF_RETTYPE erts_debug_display_1(BIF_ALIST_1)
              -pres, erl_errno_id(-pres));
 
   hp = HAlloc(BIF_P, 2 * dsbufp->str_len); /* we need length * 2 heap words */
-  res = buf_to_intlist(&hp, dsbufp->str, dsbufp->str_len, NIL);
+  res = util::buf_to_intlist(&hp, dsbufp->str, dsbufp->str_len, NIL);
   erts_printf("%s", dsbufp->str);
   erts_destroy_tmp_dsbuf(dsbufp);
   BIF_RET(res);
@@ -4376,7 +4377,7 @@ static char halt_msg[HALT_MSG_SIZE];
 /* ARGSUSED */
 BIF_RETTYPE halt_1(BIF_ALIST_1)
 {
-  Sint code;
+  ssize_t code;
 
   if (is_small(BIF_ARG_1) && (code = signed_val(BIF_ARG_1)) >= 0) {
     VERBOSE(DEBUG_SYSTEM, ("System halted by BIF halt(%T)\n", BIF_ARG_1));
@@ -4412,7 +4413,7 @@ error:
 /* ARGSUSED */
 BIF_RETTYPE halt_2(BIF_ALIST_2)
 {
-  Sint code;
+  ssize_t code;
   Eterm optlist = BIF_ARG_2;
   int flush = 1;
 
@@ -4541,7 +4542,7 @@ term2list_dsprintf(Process *p, Eterm term)
              -pres, erl_errno_id(-pres));
 
   hp = HAlloc(p, 2 * dsbufp->str_len); /* we need length * 2 heap words */
-  res = buf_to_intlist(&hp, dsbufp->str, dsbufp->str_len, NIL);
+  res = util::buf_to_intlist(&hp, dsbufp->str, dsbufp->str_len, NIL);
   erts_destroy_tmp_dsbuf(dsbufp);
   return res;
 }
@@ -4558,7 +4559,7 @@ BIF_RETTYPE ref_to_list_1(BIF_ALIST_1)
 BIF_RETTYPE make_fun_3(BIF_ALIST_3)
 {
   Eterm *hp;
-  Sint arity;
+  ssize_t arity;
 
   if (is_not_atom(BIF_ARG_1) || is_not_atom(BIF_ARG_2) || is_not_small(BIF_ARG_3)) {
 error:
@@ -4575,11 +4576,11 @@ error:
   hp = HAlloc(BIF_P, 3);
   hp[0] = HEADER_EXPORT;
   /* Yes, May be misaligned, but X86_64 will fix it... */
-  *((Export **)(hp + 1)) = erts_export_get_or_make_stub(BIF_ARG_1, BIF_ARG_2, (Uint) arity);
+  *((Export **)(hp + 1)) = erts_export_get_or_make_stub(BIF_ARG_1, BIF_ARG_2, (size_t) arity);
 #else
   hp = HAlloc(BIF_P, 2);
   hp[0] = HEADER_EXPORT;
-  hp[1] = (Eterm) erts_export_get_or_make_stub(BIF_ARG_1, BIF_ARG_2, (Uint) arity);
+  hp[1] = (Eterm) erts_export_get_or_make_stub(BIF_ARG_1, BIF_ARG_2, (size_t) arity);
 #endif
   BIF_RET(make_export(hp));
 }
@@ -4628,7 +4629,7 @@ BIF_RETTYPE port_to_list_1(BIF_ALIST_1)
 
 BIF_RETTYPE list_to_pid_1(BIF_ALIST_1)
 {
-  Uint a = 0, b = 0, c = 0;
+  size_t a = 0, b = 0, c = 0;
   char *cp;
   int i;
   DistEntry *dep = nullptr;
@@ -4854,7 +4855,7 @@ BIF_RETTYPE group_leader_2(BIF_ALIST_2)
 
 BIF_RETTYPE system_flag_2(BIF_ALIST_2)
 {
-  Sint n;
+  ssize_t n;
 
   if (BIF_ARG_1 == am_multi_scheduling) {
     if (BIF_ARG_2 == am_block || BIF_ARG_2 == am_unblock) {
@@ -4910,7 +4911,7 @@ BIF_RETTYPE system_flag_2(BIF_ALIST_2)
     }
 
 #else
-    Sint old_no;
+    ssize_t old_no;
 
     if (!is_small(BIF_ARG_2)) {
       goto error;
@@ -4948,14 +4949,14 @@ BIF_RETTYPE system_flag_2(BIF_ALIST_2)
 #endif
   } else if (BIF_ARG_1 == am_fullsweep_after) {
     uint16_t nval;
-    Uint oval;
+    size_t oval;
 
     if (!is_small(BIF_ARG_2) || (n = signed_val(BIF_ARG_2)) < 0) {
       goto error;
     }
 
-    nval = (n > (Sint)((uint16_t) - 1)) ? ((uint16_t) - 1) : ((uint16_t) n);
-    oval = (Uint) erts_smp_atomic32_xchg_nob(&erts_max_gen_gcs,
+    nval = (n > (ssize_t)((uint16_t) - 1)) ? ((uint16_t) - 1) : ((uint16_t) n);
+    oval = (size_t) erts_smp_atomic32_xchg_nob(&erts_max_gen_gcs,
            (erts_aint32_t) nval);
     BIF_RET(make_small(oval));
   } else if (BIF_ARG_1 == am_min_heap_size) {
@@ -5076,7 +5077,7 @@ BIF_RETTYPE system_flag_2(BIF_ALIST_2)
 
 #if defined(ERTS_SMP) && defined(ERTS_DIRTY_SCHEDULERS)
   } else if (BIF_ARG_1 == am_dirty_cpu_schedulers_online) {
-    Sint old_no;
+    ssize_t old_no;
 
     if (!is_small(BIF_ARG_2)) {
       goto error;
@@ -5159,7 +5160,7 @@ error:
 BIF_RETTYPE hash_2(BIF_ALIST_2)
 {
   uint32_t hash;
-  Sint range;
+  ssize_t range;
 
   if (is_not_small(BIF_ARG_2)) {
     BIF_ERROR(BIF_P, BADARG);
@@ -5190,7 +5191,7 @@ BIF_RETTYPE phash_2(BIF_ALIST_2)
   if (term_equals_2pow32(BIF_ARG_2)) {
     range = 0;
   } else {
-    Uint u;
+    size_t u;
 
     if (!term_to_Uint(BIF_ARG_2, &u) || ((u >> 16) >> 16) != 0 || !u) {
       BIF_ERROR(BIF_P, BADARG);
@@ -5233,7 +5234,7 @@ BIF_RETTYPE phash2_2(BIF_ALIST_2)
   if (term_equals_2pow32(BIF_ARG_2)) {
     range = 0;
   } else {
-    Uint u;
+    size_t u;
 
     if (!term_to_Uint(BIF_ARG_2, &u) || ((u >> 16) >> 16) != 0 || !u) {
       BIF_ERROR(BIF_P, BADARG);
@@ -5269,7 +5270,7 @@ BIF_RETTYPE phash2_2(BIF_ALIST_2)
 
 BIF_RETTYPE bump_reductions_1(BIF_ALIST_1)
 {
-  Sint reds;
+  ssize_t reds;
 
   if (is_not_small(BIF_ARG_1) || ((reds = signed_val(BIF_ARG_1)) < 0)) {
     BIF_ERROR(BIF_P, BADARG);
@@ -5284,7 +5285,7 @@ BIF_RETTYPE bump_reductions_1(BIF_ALIST_1)
 
 BIF_RETTYPE erts_internal_cmp_term_2(BIF_ALIST_2)
 {
-  Sint res = CMP_TERM(BIF_ARG_1, BIF_ARG_2);
+  ssize_t res = CMP_TERM(BIF_ARG_1, BIF_ARG_2);
 
   /* ensure -1, 0, 1 result */
   if (res < 0) {
@@ -5412,7 +5413,7 @@ erts_bif_prep_await_proc_exit_apply_trap(Process *c_p,
 
 Export bif_return_trap_export;
 
-void erts_init_trap_export(Export *ep, Eterm m, Eterm f, Uint a,
+void erts_init_trap_export(Export *ep, Eterm m, Eterm f, size_t a,
                            Eterm(*bif)(BIF_ALIST_0))
 {
   int i;
@@ -5612,7 +5613,7 @@ BIF_RETTYPE dt_prepend_vm_tag_data_1(BIF_ALIST_1)
   Eterm *hp;
 
   if (is_binary((DT_UTAG(BIF_P)))) {
-    Uint sz = binary_size(DT_UTAG(BIF_P));
+    size_t sz = binary_size(DT_UTAG(BIF_P));
     int i;
     uint8_t *p, *q;
     uint8_t *temp_alloc = nullptr;
@@ -5643,7 +5644,7 @@ BIF_RETTYPE dt_append_vm_tag_data_1(BIF_ALIST_1)
   Eterm *hp;
 
   if (is_binary((DT_UTAG(BIF_P)))) {
-    Uint sz = binary_size(DT_UTAG(BIF_P));
+    size_t sz = binary_size(DT_UTAG(BIF_P));
     int i;
     uint8_t *p, *q;
     uint8_t *temp_alloc = nullptr;
@@ -5709,7 +5710,7 @@ BIF_RETTYPE dt_restore_tag_1(BIF_ALIST_1)
 {
 #ifdef USE_VM_PROBES
   Eterm *tpl;
-  Uint x;
+  size_t x;
 
   if (is_not_tuple(BIF_ARG_1)) {
     BIF_ERROR(BIF_P, BADARG);

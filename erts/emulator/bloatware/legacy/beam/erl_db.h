@@ -38,7 +38,7 @@
 #include "erl_db_tree.h" /* DbTableTree */
 /*TT*/
 
-Uint erts_get_ets_misc_mem_size(void);
+size_t erts_get_ets_misc_mem_size(void);
 
 typedef struct {
   DbTableCommon common;
@@ -77,9 +77,9 @@ extern Export ets_select_count_continue_exp;
 extern Export ets_select_continue_exp;
 extern erts_smp_atomic_t erts_ets_misc_mem_size;
 
-Eterm erts_ets_colliding_names(Process *, Eterm name, Uint cnt);
+Eterm erts_ets_colliding_names(Process *, Eterm name, size_t cnt);
 
-Uint erts_db_get_max_tabs(void);
+size_t erts_db_get_max_tabs(void);
 
 #endif
 
@@ -106,17 +106,17 @@ do {                  \
 
 ERTS_GLB_INLINE void *erts_db_alloc(ErtsAlcType_t type,
                                     DbTable *tab,
-                                    Uint size);
+                                    size_t size);
 ERTS_GLB_INLINE void *erts_db_alloc_fnf(ErtsAlcType_t type,
                                         DbTable *tab,
-                                        Uint size);
-ERTS_GLB_INLINE void *erts_db_alloc_nt(ErtsAlcType_t type, Uint size);
-ERTS_GLB_INLINE void *erts_db_alloc_fnf_nt(ErtsAlcType_t type, Uint size);
+                                        size_t size);
+ERTS_GLB_INLINE void *erts_db_alloc_nt(ErtsAlcType_t type, size_t size);
+ERTS_GLB_INLINE void *erts_db_alloc_fnf_nt(ErtsAlcType_t type, size_t size);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
 ERTS_GLB_INLINE void *
-erts_db_alloc(ErtsAlcType_t type, DbTable *tab, Uint size)
+erts_db_alloc(ErtsAlcType_t type, DbTable *tab, size_t size)
 {
   void *res = erts_alloc(type, size);
   ERTS_DB_ALC_MEM_UPDATE_(tab, 0, size);
@@ -124,7 +124,7 @@ erts_db_alloc(ErtsAlcType_t type, DbTable *tab, Uint size)
 }
 
 ERTS_GLB_INLINE void *
-erts_db_alloc_fnf(ErtsAlcType_t type, DbTable *tab, Uint size)
+erts_db_alloc_fnf(ErtsAlcType_t type, DbTable *tab, size_t size)
 {
   void *res = erts_alloc_fnf(type, size);
 
@@ -137,14 +137,14 @@ erts_db_alloc_fnf(ErtsAlcType_t type, DbTable *tab, Uint size)
 }
 
 ERTS_GLB_INLINE void *
-erts_db_alloc_nt(ErtsAlcType_t type, Uint size)
+erts_db_alloc_nt(ErtsAlcType_t type, size_t size)
 {
   void *res = erts_alloc(type, size);
   return res;
 }
 
 ERTS_GLB_INLINE void *
-erts_db_alloc_fnf_nt(ErtsAlcType_t type, Uint size)
+erts_db_alloc_fnf_nt(ErtsAlcType_t type, size_t size)
 {
   void *res = erts_alloc_fnf(type, size);
 
@@ -160,27 +160,27 @@ erts_db_alloc_fnf_nt(ErtsAlcType_t type, Uint size)
 ERTS_GLB_INLINE void *erts_db_realloc(ErtsAlcType_t type,
                                       DbTable *tab,
                                       void *ptr,
-                                      Uint old_size,
-                                      Uint size);
+                                      size_t old_size,
+                                      size_t size);
 ERTS_GLB_INLINE void *erts_db_realloc_fnf(ErtsAlcType_t type,
     DbTable *tab,
     void *ptr,
-    Uint old_size,
-    Uint size);
+    size_t old_size,
+    size_t size);
 ERTS_GLB_INLINE void *erts_db_realloc_nt(ErtsAlcType_t type,
     void *ptr,
-    Uint old_size,
-    Uint size);
+    size_t old_size,
+    size_t size);
 ERTS_GLB_INLINE void *erts_db_realloc_fnf_nt(ErtsAlcType_t type,
     void *ptr,
-    Uint old_size,
-    Uint size);
+    size_t old_size,
+    size_t size);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
 ERTS_GLB_INLINE void *
 erts_db_realloc(ErtsAlcType_t type, DbTable *tab, void *ptr,
-                Uint old_size, Uint size)
+                size_t old_size, size_t size)
 {
   void *res;
   ASSERT(!ptr || old_size == ERTS_ALC_DBG_BLK_SZ(ptr));
@@ -191,7 +191,7 @@ erts_db_realloc(ErtsAlcType_t type, DbTable *tab, void *ptr,
 
 ERTS_GLB_INLINE void *
 erts_db_realloc_fnf(ErtsAlcType_t type, DbTable *tab, void *ptr,
-                    Uint old_size, Uint size)
+                    size_t old_size, size_t size)
 {
   void *res;
   ASSERT(!ptr || old_size == ERTS_ALC_DBG_BLK_SZ(ptr));
@@ -207,7 +207,7 @@ erts_db_realloc_fnf(ErtsAlcType_t type, DbTable *tab, void *ptr,
 
 ERTS_GLB_INLINE void *
 erts_db_realloc_nt(ErtsAlcType_t type, void *ptr,
-                   Uint old_size, Uint size)
+                   size_t old_size, size_t size)
 {
   void *res;
   ASSERT(!ptr || old_size == ERTS_ALC_DBG_BLK_SZ(ptr));
@@ -217,7 +217,7 @@ erts_db_realloc_nt(ErtsAlcType_t type, void *ptr,
 
 ERTS_GLB_INLINE void *
 erts_db_realloc_fnf_nt(ErtsAlcType_t type, void *ptr,
-                       Uint old_size, Uint size)
+                       size_t old_size, size_t size)
 {
   void *res;
   ASSERT(!ptr || old_size == ERTS_ALC_DBG_BLK_SZ(ptr));
@@ -235,16 +235,16 @@ erts_db_realloc_fnf_nt(ErtsAlcType_t type, void *ptr,
 ERTS_GLB_INLINE void erts_db_free(ErtsAlcType_t type,
                                   DbTable *tab,
                                   void *ptr,
-                                  Uint size);
+                                  size_t size);
 
 ERTS_GLB_INLINE void erts_db_free_nt(ErtsAlcType_t type,
                                      void *ptr,
-                                     Uint size);
+                                     size_t size);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
 ERTS_GLB_INLINE void
-erts_db_free(ErtsAlcType_t type, DbTable *tab, void *ptr, Uint size)
+erts_db_free(ErtsAlcType_t type, DbTable *tab, void *ptr, size_t size)
 {
   ASSERT(ptr != 0);
   ASSERT(size == ERTS_ALC_DBG_BLK_SZ(ptr));
@@ -257,7 +257,7 @@ erts_db_free(ErtsAlcType_t type, DbTable *tab, void *ptr, Uint size)
 }
 
 ERTS_GLB_INLINE void
-erts_db_free_nt(ErtsAlcType_t type, void *ptr, Uint size)
+erts_db_free_nt(ErtsAlcType_t type, void *ptr, size_t size)
 {
   ASSERT(ptr != 0);
   ASSERT(size == ERTS_ALC_DBG_BLK_SZ(ptr));

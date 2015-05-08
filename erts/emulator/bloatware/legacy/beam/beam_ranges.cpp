@@ -46,8 +46,8 @@ static void lookup_loc(FunctionInfo *fi, BeamInstr *pc,
  */
 struct ranges {
   Range *modules;        /* Sorted lists of module addresses. */
-  Sint n;          /* Number of range entries. */
-  Sint allocated;        /* Number of allocated entries. */
+  ssize_t n;          /* Number of range entries. */
+  ssize_t allocated;        /* Number of allocated entries. */
   erts_smp_atomic_t mid;     /* Cached search start point */
 };
 static struct ranges r[ERTS_NUM_CODE_IX];
@@ -59,7 +59,7 @@ static void check_consistency(struct ranges *p)
   int i;
 
   ASSERT(p->n <= p->allocated);
-  ASSERT((Uint)(p->mid - p->modules) < p->n ||
+  ASSERT((size_t)(p->mid - p->modules) < p->n ||
          (p->mid == p->modules && p->n == 0));
 
   for (i = 0; i < p->n; i++) {
@@ -76,7 +76,7 @@ static void check_consistency(struct ranges *p)
 void
 erts_init_ranges(void)
 {
-  Sint i;
+  ssize_t i;
 
   erts_smp_atomic_init_nob(&mem_used, 0);
 
@@ -106,8 +106,8 @@ erts_end_staging_ranges(int commit)
   ErtsCodeIndex dst = erts_staging_code_ix();
 
   if (commit && r[dst].modules == nullptr) {
-    Sint i;
-    Sint n;
+    ssize_t i;
+    ssize_t n;
 
     /* No modules added, just clone src and remove purged code. */
     ErtsCodeIndex src = erts_active_code_ix();
@@ -135,13 +135,13 @@ erts_end_staging_ranges(int commit)
 }
 
 void
-erts_update_ranges(BeamInstr *code, Uint size)
+erts_update_ranges(BeamInstr *code, size_t size)
 {
   ErtsCodeIndex dst = erts_staging_code_ix();
   ErtsCodeIndex src = erts_active_code_ix();
-  Sint i;
-  Sint n;
-  Sint need;
+  ssize_t i;
+  ssize_t n;
+  ssize_t need;
 
   if (src == dst) {
     ASSERT(!erts_initialized);

@@ -64,7 +64,7 @@ erts_init_binary(void)
  */
 
 Eterm
-new_binary(Process *p, uint8_t *buf, Uint len)
+new_binary(Process *p, uint8_t *buf, size_t len)
 {
   ProcBin *pb;
   Binary *bptr;
@@ -200,9 +200,9 @@ erts_get_aligned_binary_bytes_extra(Eterm bin, uint8_t **base_ptr, ErtsAlcType_t
 {
   uint8_t *bytes;
   Eterm *real_bin;
-  Uint byte_size;
-  Uint offs = 0;
-  Uint bit_offs = 0;
+  size_t byte_size;
+  size_t offs = 0;
+  size_t bit_offs = 0;
 
   if (is_not_binary(bin)) {
     return nullptr;
@@ -241,7 +241,7 @@ erts_get_aligned_binary_bytes_extra(Eterm bin, uint8_t **base_ptr, ErtsAlcType_t
 }
 
 Eterm
-erts_bin_bytes_to_list(Eterm previous, Eterm *hp, uint8_t *bytes, Uint size, Uint bitoffs)
+erts_bin_bytes_to_list(Eterm previous, Eterm *hp, uint8_t *bytes, size_t size, size_t bitoffs)
 {
   if (bitoffs == 0) {
     while (size) {
@@ -269,7 +269,7 @@ BIF_RETTYPE binary_to_integer_1(BIF_ALIST_1)
 {
   uint8_t *temp_alloc = nullptr;
   char *bytes;
-  Uint size;
+  size_t size;
   Eterm res;
 
   if ((bytes = (char *)erts_get_aligned_binary_bytes(BIF_ARG_1, &temp_alloc))
@@ -293,7 +293,7 @@ BIF_RETTYPE binary_to_integer_2(BIF_ALIST_2)
 {
   uint8_t *temp_alloc = nullptr;
   char *bytes;
-  Uint size;
+  size_t size;
   int base;
   Eterm res;
 
@@ -328,7 +328,7 @@ binary_to_integer_2_error:
 
 BIF_RETTYPE integer_to_binary_1(BIF_ALIST_1)
 {
-  Uint size;
+  size_t size;
   Eterm res;
 
   if (is_not_integer(BIF_ARG_1)) {
@@ -348,7 +348,7 @@ BIF_RETTYPE integer_to_binary_1(BIF_ALIST_1)
     res = new_binary(BIF_P, (uint8_t *)c, size);
   } else {
     uint8_t *bytes;
-    Uint n = 0;
+    size_t n = 0;
 
     /* Here we also have multiple copies of buffers
      * due to new_binary interface
@@ -372,8 +372,8 @@ typedef struct {
   Eterm *hp_end;
 #endif
   uint8_t *bytes;
-  Uint size;
-  Uint bitoffs;
+  size_t size;
+  size_t bitoffs;
 } ErtsB2LState;
 
 static void b2l_state_destructor(Binary *mbp)
@@ -390,7 +390,7 @@ binary_to_list_chunk(Process *c_p,
 {
   BIF_RETTYPE ret;
   int bump_reds;
-  Uint size;
+  size_t size;
   uint8_t *bytes;
 
   size = (reds_left + 1) * ERTS_B2L_BYTES_PER_REDUCTION;
@@ -444,7 +444,7 @@ binary_to_list_chunk(Process *c_p,
 }
 
 static ERTS_INLINE BIF_RETTYPE
-binary_to_list(Process *c_p, Eterm *hp, Eterm tail, uint8_t *bytes, Uint size, Uint bitoffs)
+binary_to_list(Process *c_p, Eterm *hp, Eterm tail, uint8_t *bytes, size_t size, size_t bitoffs)
 {
   int reds_left = ERTS_BIF_REDS_LEFT(c_p);
 
@@ -497,10 +497,10 @@ HIPE_WRAPPER_BIF_DISABLE_GC(binary_to_list, 1)
 BIF_RETTYPE binary_to_list_1(BIF_ALIST_1)
 {
   Eterm real_bin;
-  Uint offset;
-  Uint size;
-  Uint bitsize;
-  Uint bitoffs;
+  size_t offset;
+  size_t size;
+  size_t bitsize;
+  size_t bitoffs;
 
   if (is_not_binary(BIF_ARG_1)) {
     goto error;
@@ -530,12 +530,12 @@ HIPE_WRAPPER_BIF_DISABLE_GC(binary_to_list, 3)
 BIF_RETTYPE binary_to_list_3(BIF_ALIST_3)
 {
   uint8_t *bytes;
-  Uint size;
-  Uint bitoffs;
-  Uint bitsize;
-  Uint i;
-  Uint start;
-  Uint stop;
+  size_t size;
+  size_t bitoffs;
+  size_t bitsize;
+  size_t i;
+  size_t start;
+  size_t stop;
   Eterm *hp;
 
   if (is_not_binary(BIF_ARG_1)) {
@@ -566,10 +566,10 @@ HIPE_WRAPPER_BIF_DISABLE_GC(bitstring_to_list, 1)
 BIF_RETTYPE bitstring_to_list_1(BIF_ALIST_1)
 {
   Eterm real_bin;
-  Uint offset;
-  Uint size;
-  Uint bitsize;
-  Uint bitoffs;
+  size_t offset;
+  size_t size;
+  size_t bitsize;
+  size_t bitoffs;
   uint8_t *bytes;
   Eterm previous = NIL;
   Eterm *hp;
@@ -1085,14 +1085,14 @@ type_error:
 
 BIF_RETTYPE split_binary_2(BIF_ALIST_2)
 {
-  Uint pos;
+  size_t pos;
   ErlSubBin *sb1;
   ErlSubBin *sb2;
   size_t orig_size;
   Eterm orig;
-  Uint offset;
-  Uint bit_offset;
-  Uint bit_size;
+  size_t offset;
+  size_t bit_offset;
+  size_t bit_size;
   Eterm *hp;
 
   if (is_not_binary(BIF_ARG_1)) {
@@ -1163,9 +1163,9 @@ list_to_bitstr_buf(int yield_support, ErtsIOList2BufState *state)
 #define LIST_TO_BITSTR_BUF_BCOPY(CONSP)         \
     do {                \
   uint8_t* bptr;              \
-  Uint bitsize;             \
-  Uint bitoffs;             \
-  Uint num_bits;              \
+  size_t bitsize;             \
+  size_t bitoffs;             \
+  size_t num_bits;              \
   size_t size = binary_size(obj);         \
   if (yield_support) {            \
       size_t max_size = ERTS_IOLIST_TO_BUF_BYTES_PER_YIELD_COUNT; \
@@ -1412,9 +1412,9 @@ list_to_bitstr_buf_bcopy(ErtsIOList2BufState *state, Eterm obj, int *yield_count
   uint8_t *bptr;
   size_t size;
   size_t max_size;
-  Uint bitoffs;
-  Uint num_bits;
-  Uint bitsize;
+  size_t bitoffs;
+  size_t num_bits;
+  size_t bitsize;
   int yield_count = *yield_countp;
 
   if (state->bcopy.bptr) {
@@ -1489,7 +1489,7 @@ bitstr_list_len(ErtsIOListState *state)
 {
   Eterm *objp;
   Eterm obj;
-  Uint len, offs;
+  size_t len, offs;
   int res, init_yield_count, yield_count;
   DECLARE_ESTACK(s);
 
@@ -1497,7 +1497,7 @@ bitstr_list_len(ErtsIOListState *state)
     return ERTS_IOLIST_YIELD;
   }
 
-  len = (Uint) state->size;
+  len = (size_t) state->size;
   offs = state->offs;
   obj = state->obj;
 
@@ -1515,7 +1515,7 @@ bitstr_list_len(ErtsIOListState *state)
 
 #define SAFE_ADD(Var, Val)      \
     do {          \
-        Uint valvar = (Val);      \
+        size_t valvar = (Val);      \
   Var += valvar;        \
   if (Var < valvar) {     \
       goto L_overflow_error;    \
@@ -1525,7 +1525,7 @@ bitstr_list_len(ErtsIOListState *state)
 #define SAFE_ADD_BITSIZE(Var, Bin)          \
     do {                \
   if (*binary_val(Bin) == HEADER_SUB_BIN) {     \
-            Uint valvar = ((ErlSubBin *) binary_val(Bin))->bitsize; \
+            size_t valvar = ((ErlSubBin *) binary_val(Bin))->bitsize; \
       Var += valvar;            \
       if (Var < valvar) {           \
            goto L_overflow_error;         \
@@ -1600,7 +1600,7 @@ L_again:
 
   /*
    * Make sure that the number of bits in the bitstring will fit
-   * in an Uint to ensure that the binary can be matched using
+   * in an size_t to ensure that the binary can be matched using
    * the binary syntax.
    */
   if (len << 3 < len) {
