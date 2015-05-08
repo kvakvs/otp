@@ -4832,7 +4832,7 @@ sys_realloc_success:
       size_t prefix_len = strlen(allctr->name_prefix);
 
       if (prefix_len > MAX_ATOM_CHARACTERS + sizeof(realloc) - 1) {
-        erl_exit(1, "Too long allocator name: %salloc\n", allctr->name_prefix);
+        erl::exit(1, "Too long allocator name: %salloc\n", allctr->name_prefix);
       }
 
       memcpy((void *) buf, (void *) allctr->name_prefix, prefix_len);
@@ -6154,7 +6154,7 @@ unlock_ts_return:
       /* erts_alcu_start assumes that allctr has been zeroed */
 
       if (((UWord)allctr & ERTS_CRR_ALCTR_FLG_MASK) != 0) {
-        erl_exit(ERTS_ABORT_EXIT, "%s:%d:erts_alcu_start: Alignment error\n",
+        erl::exit(erts::ABORT_EXIT, "%s:%d:erts_alcu_start: Alignment error\n",
                  __FILE__, __LINE__);
       }
 
@@ -6373,7 +6373,7 @@ unlock_ts_return:
           }
 
 #endif
-          erl_exit(ERTS_ABORT_EXIT,
+          erl::exit(erts::ABORT_EXIT,
                    "Failed to create main carrier for %salloc\n",
                    init->name_prefix);
         }
@@ -6678,7 +6678,7 @@ error:
       if (no) {
         UWord sz = allctr->sbcs.blocks.curr.size;
         sz += allctr->mbcs.blocks.curr.size;
-        erl_exit(ERTS_ABORT_EXIT,
+        erl::exit(erts::ABORT_EXIT,
                  "%salloc() used when expected to be unused!\n"
                  "Total amount of blocks allocated: %bpu\n"
                  "Total amount of bytes allocated: %bpu\n",

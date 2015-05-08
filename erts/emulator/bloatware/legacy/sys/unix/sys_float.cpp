@@ -93,7 +93,7 @@ void erts_fp_check_init_error(volatile unsigned long *fpexnp)
            __builtin_return_address(0), (void *)*fpexnp);
 
   if (write(2, buf, strlen(buf)) <= 0) {
-    erl_exit(ERTS_ABORT_EXIT, "%s", buf);
+    erl::exit(erts::ABORT_EXIT, "%s", buf);
   }
 
   *fpexnp = 0;

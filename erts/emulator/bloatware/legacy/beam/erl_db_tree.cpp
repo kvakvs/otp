@@ -1285,7 +1285,7 @@ static int db_select_count_continue_tree(Process *p,
   tptr = tuple_val(continuation);
 
   if (arityval(*tptr) != 5) {
-    erl_exit(1, "Internal error in ets:select_count/1");
+    erl::exit(1, "Internal error in ets:select_count/1");
   }
 
   lastkey = tptr[2];

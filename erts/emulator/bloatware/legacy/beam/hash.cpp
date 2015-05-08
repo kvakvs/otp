@@ -138,7 +138,7 @@ Hash *hash_init(ErtsAlcType_t type, Hash *h, char *name, int size, HashFunctions
   }
 
   if (h_size_table[ix] == -1) {
-    erl_exit(1, "panic: too large hash table size (%d)\n", size);
+    erl::exit(1, "panic: too large hash table size (%d)\n", size);
   }
 
   size = h_size_table[ix];

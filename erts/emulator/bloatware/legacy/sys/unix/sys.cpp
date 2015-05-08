@@ -606,16 +606,16 @@ erl_sys_init(void)
     if (res != 0)
     {
       if (res < 0)
-        erl_exit(-1,
+        erl::exit(-1,
         "Environment variable BINDIR is not set\n");
 
       if (res > 0)
-        erl_exit(-1,
+        erl::exit(-1,
         "Value of environment variable BINDIR is too large\n");
     }
 
     if (bindir[0] != DIR_SEPARATOR_CHAR)
-      erl_exit(-1,
+      erl::exit(-1,
       "Environment variable BINDIR does not contain an"
       " absolute path\n");
 
@@ -823,7 +823,7 @@ break_requested(void)
 #endif
 
   if (Erts::g_break_requested) {
-    erl_exit(ERTS_INTR_EXIT, "");
+    erl::exit(erts::INTR_EXIT, "");
   }
 
   //ERTS_SET_BREAK_REQUESTED;
@@ -865,7 +865,7 @@ sigusr1_exit(void)
   }
 
   prepare_crash_dump(secs);
-  erl_exit(1, "Received SIGUSR1\n");
+  erl::exit(1, "Received SIGUSR1\n");
 }
 
 #ifdef ETHR_UNUSABLE_SIGUSRX
@@ -907,7 +907,7 @@ static RETSIGTYPE user_signal2(int signum)
 static void
 quit_requested(void)
 {
-  erl_exit(ERTS_INTR_EXIT, "");
+  erl::exit(erts::INTR_EXIT, "");
 }
 
 #if (defined(SIG_SIGSET) || defined(SIG_SIGNAL))
@@ -1003,7 +1003,7 @@ SysHrTime sys_gethrtime(void)
   long long result;
 
   if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
-    erl_exit(1, "Fatal, could not get clock_monotonic value!, "
+    erl::exit(1, "Fatal, could not get clock_monotonic value!, "
              "errno = %d\n", errno);
   }
 
@@ -3152,7 +3152,7 @@ signal_dispatcher_thread_func(void *unused)
         continue;
       }
 
-      erl_exit(ERTS_ABORT_EXIT,
+      erl::exit(erts::ABORT_EXIT,
                "signal-dispatcher thread got unexpected error: %s (%d)\n",
                erl_errno_id(errno),
                errno);
@@ -3219,7 +3219,7 @@ signal_dispatcher_thread_func(void *unused)
 #endif
 
       default:
-        erl_exit(ERTS_ABORT_EXIT,
+        erl::exit(erts::ABORT_EXIT,
                  "signal-dispatcher thread received unknown "
                  "signal notification: '%c'\n",
                  buf[i]);
@@ -3239,7 +3239,7 @@ init_smp_sig_notify(void)
   thr_opts.detached = 1;
 
   if (pipe(sig_notify_fds) < 0) {
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "Failed to create signal-dispatcher pipe: %s (%d)\n",
              erl_errno_id(errno),
              errno);
@@ -3260,7 +3260,7 @@ static void initialize_darwin_main_thread_pipes(void)
 {
   if (pipe(erts_darwin_main_thread_pipe) < 0 ||
       pipe(erts_darwin_main_thread_result_pipe) < 0) {
-    erl_exit(1, "Fatal error initializing Darwin main thread stealing");
+    erl::exit(1, "Fatal error initializing Darwin main thread stealing");
   }
 }
 

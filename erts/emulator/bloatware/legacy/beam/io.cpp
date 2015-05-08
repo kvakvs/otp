@@ -5365,7 +5365,7 @@ void erts_raw_port_command(Port *p, uint8_t *buf, Uint len)
   ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(p));
 
   if (len > (Uint) INT_MAX)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "Absurdly large data buffer (%beu bytes) passed to"
              "output callback of %s driver.\n",
              len,
@@ -8114,7 +8114,7 @@ driver_system_info(ErlDrvSysInfo *sip, size_t si_size)
    * of ErlDrvSysInfo (introduced in driver version 1.0).
    */
   if (!sip || si_size < ERL_DRV_SYS_INFO_SIZE(smp_support))
-    erl_exit(1,
+    erl::exit(1,
              "driver_system_info(%p, %ld) called with invalid arguments\n",
              sip, si_size);
 

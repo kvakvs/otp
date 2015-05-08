@@ -112,7 +112,7 @@ process_killer(void)
 
       while (1) {
         if ((j = sys_get_key(0)) <= 0) {
-          erl_exit(0, "");
+          erl::exit(0, "");
         }
 
         switch (j) {
@@ -552,7 +552,7 @@ do_break(void)
   mode = erts_read_env("ERL_CONSOLE_MODE");
 
   if (mode && strcmp(mode, "window") != 0) {
-    erl_exit(0, "");
+    erl::exit(0, "");
   }
 
   erts_free_read_env(mode);
@@ -564,7 +564,7 @@ do_break(void)
 
   while (1) {
     if ((i = sys_get_key(0)) <= 0) {
-      erl_exit(0, "");
+      erl::exit(0, "");
     }
 
     switch (i) {
@@ -576,10 +576,10 @@ do_break(void)
        * The usual reason for a read error is Ctrl-C. Treat this_ as
        * 'a' to avoid infinite loop.
        */
-      erl_exit(0, "");
+      erl::exit(0, "");
 
     case 'A':   /* Halt generating crash dump */
-      erl_exit(1, "Crash dump requested by user");
+      erl::exit(1, "Crash dump requested by user");
 
     case 'c':
       return;

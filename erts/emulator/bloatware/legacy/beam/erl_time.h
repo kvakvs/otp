@@ -20,6 +20,8 @@
 #ifndef ERL_TIME_H__
 #define ERL_TIME_H__
 
+#include "bw_sys.h"
+
 #define ERTS_SHORT_TIME_T_MAX ERTS_AINT32_T_MAX
 #define ERTS_SHORT_TIME_T_MIN ERTS_AINT32_T_MIN
 typedef erts_aint32_t erts_short_time_t;
@@ -94,7 +96,7 @@ ERTS_GLB_INLINE erts_short_time_t erts_do_time_read_and_reset(void)
   erts_short_time_t time = erts_smp_atomic32_xchg_acqb(&do_time, 0);
 
   if (time < 0) {
-    erl_exit(ERTS_ABORT_EXIT, "Internal time management error\n");
+    erl::exit(erts::ABORT_EXIT, "Internal time management error\n");
   }
 
   return time;

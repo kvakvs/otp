@@ -352,7 +352,7 @@ erts_init_time(void)
 #ifdef TIW_ITIME_IS_CONSTANT
 
   if (itime != TIW_ITIME) {
-    erl_exit(ERTS_ABORT_EXIT, "timer resolution mismatch %d != %d", itime, TIW_ITIME);
+    erl::exit(erts::ABORT_EXIT, "timer resolution mismatch %d != %d", itime, TIW_ITIME);
   }
 
 #else

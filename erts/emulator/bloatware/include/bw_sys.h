@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <stdint.h>
 #include <climits>
 #include <atomic>
@@ -23,6 +24,9 @@ namespace sys {
 
   void set_blocking(int fd);
   void set_nonblocking(int fd);
+
+  inline size_t strlen(const char *s) { return std::strlen(s); }
+  inline void strcpy(char *dst, const char *src) { std::strcpy(dst, src); }
 } // ns sys
 
 namespace erts {
@@ -37,8 +41,24 @@ namespace erts {
 
   // erts::DEFAULT_NO_ASYNC_THREADS
   // erts::ASYNC_THREAD_MIN_STACK_SIZE
-
 } // ns erts
+
+namespace erl {
+  void BW_NORETURN assert_error(const char *expr, const char *func,
+                                const char *file, int line);
+} // ns erl
+
+#define ERTS_INTERNAL_ERROR(What) \
+  erl::exit(erts::ABORT_EXIT, "%s:%d:%s(): Internal error: %s\n", \
+     __FILE__, __LINE__, __func__, What);
+#define BW_ERTS_ASSERT(e) \
+    ((void) ((e) ? 1 : (erl::assert_error(#e, __func__, __FILE__, __LINE__), 0)))
+
+#ifdef DEBUG
+#  define ASSERT(e) BW_ERTS_ASSERT(e)
+#else
+#  define ASSERT(e) ((void) 1)
+#endif
 
 class Erts {
 public:

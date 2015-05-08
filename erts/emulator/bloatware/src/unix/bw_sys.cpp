@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
 
 
 std::atomic<bool> Erts::g_break_requested(false);
@@ -144,3 +145,26 @@ void set_nonblocking(int fd)
 }
 
 } // ns sys
+
+void erl::assert_error(const char *expr, const char *func, const char *file, int line)
+{
+  ::fflush(stdout);
+  ::fprintf(stderr, "%s:%d:%s() Assertion failed: %s\n",
+            file, line, func, expr);
+  ::fflush(stderr);
+#if !defined(ERTS_SMP) && 0
+
+  /* Writing a crashdump from a failed assertion when smp support
+   * is enabled almost a guaranteed deadlocking, don't even bother.
+   *
+   * It could maybe be useful (but I'm not convinced) to write the
+   * crashdump if smp support is disabled...
+   */
+  if (Erts::g_initialized) {
+    // TODO
+    // erl::crash_dump(file, line, "Assertion failed: %s\n", expr);
+  }
+
+#endif
+  ::abort();
+}

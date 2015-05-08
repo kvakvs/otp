@@ -170,7 +170,7 @@ static void get_tolerant_timeofday(SysTimeval *tv)
   diff_time = ((curr = sys_gethrtime()) + hr_correction - hr_init_time) / 1000;
 
   if (curr < hr_init_time) {
-    erl_exit(1, "Unexpected behaviour from operating system high "
+    erl::exit(1, "Unexpected behaviour from operating system high "
              "resolution timer");
   }
 

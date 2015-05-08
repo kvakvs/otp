@@ -452,7 +452,7 @@ WRITE_SYS_MSG_TO_PORT(Eterm unused_to,
   erts_encode_ext(message, &ptr);
 
   if (!(ptr <= buffer + size)) {
-    erl_exit(1, "Internal error in do_send_to_port: %d\n", ptr - buffer);
+    erl::exit(1, "Internal error in do_send_to_port: %d\n", ptr - buffer);
   }
 
 #ifndef ERTS_SMP
@@ -1175,7 +1175,7 @@ seq_trace_output_generic(Eterm token, Eterm msg, Uint type,
     break;
 
   default:
-    erl_exit(1, "invalid type in seq_trace_output_generic: %d:\n", type);
+    erl::exit(1, "invalid type in seq_trace_output_generic: %d:\n", type);
     return;     /* To avoid warning */
   }
 

@@ -1577,7 +1577,7 @@ read_literal_table(LoaderState *stp)
     stp->literals[i].heap_size = hp - stp->literals[i].heap;
 
     if (stp->literals[i].heap_size > heap_size) {
-      erl_exit(1, "overrun by %d word(s) for literal heap, term %d",
+      erl::exit(1, "overrun by %d word(s) for literal heap, term %d",
                stp->literals[i].heap_size - heap_size, i);
     }
 

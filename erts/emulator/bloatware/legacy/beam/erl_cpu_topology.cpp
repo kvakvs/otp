@@ -490,7 +490,7 @@ cpu_bind_order_sort(erts_cpu_topology_t *cpudata,
 
     default:
       cmp_func = nullptr;
-      erl_exit(ERTS_ABORT_EXIT,
+      erl::exit(erts::ABORT_EXIT,
                "Bad cpu bind type: %d\n",
                (int) cpu_bind_order);
       break;
@@ -1864,7 +1864,7 @@ defined:
     break;
 
   default:
-    erl_exit(ERTS_ABORT_EXIT, "Bad cpu topology type: %d\n", type);
+    erl::exit(erts::ABORT_EXIT, "Bad cpu topology type: %d\n", type);
     break;
   }
 
@@ -2287,7 +2287,7 @@ cpu_group_insert(erts_cpu_groups_map_t *map,
     }
   } while (ix != start);
 
-  erl_exit(ERTS_ABORT_EXIT, "Reader groups map full\n");
+  erl::exit(erts::ABORT_EXIT, "Reader groups map full\n");
 }
 
 
@@ -2640,7 +2640,7 @@ remove_cpu_groups(erts_cpu_groups_callback_t callback, void *arg)
     prev_cgm = cgm;
   }
 
-  erl_exit(ERTS_ABORT_EXIT, "Cpu groups not found\n");
+  erl::exit(erts::ABORT_EXIT, "Cpu groups not found\n");
 }
 
 static int
@@ -2674,7 +2674,7 @@ cpu_groups_lookup(erts_cpu_groups_map_t *map,
     }
   } while (ix != start);
 
-  erl_exit(ERTS_ABORT_EXIT, "Logical cpu id %d not found\n", logical);
+  erl::exit(erts::ABORT_EXIT, "Logical cpu id %d not found\n", logical);
 }
 
 static void

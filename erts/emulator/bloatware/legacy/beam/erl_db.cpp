@@ -1349,7 +1349,7 @@ BIF_RETTYPE ets_rename_2(BIF_ALIST_2)
   }
 
   if (!remove_named_tab(tb, 1)) {
-    erl_exit(1, "Could not find named tab %s", tb->common.id);
+    erl::exit(1, "Could not find named tab %s", tb->common.id);
   }
 
   tb->common.id = tb->common.the_name = BIF_ARG_2;
@@ -1661,7 +1661,7 @@ BIF_RETTYPE ets_new_2(BIF_ALIST_2)
                          BIF_P->common.id,
                          make_small(slot)),
                   0) != DB_ERROR_NONE) {
-    erl_exit(1, "Could not update ets metadata.");
+    erl::exit(1, "Could not update ets metadata.");
   }
 
   db_meta_unlock(meta_pid_to_tab, LCK_WRITE_REC);
@@ -3132,7 +3132,7 @@ void init_db(void)
   bits = erts_fit_in_bits_int32(db_max_tabs - 1);
 
   if (bits > SMALL_BITS) {
-    erl_exit(1, "Max limit for ets tabled too high %u (max %u).",
+    erl::exit(1, "Max limit for ets tabled too high %u (max %u).",
              db_max_tabs, ((Uint)1) << SMALL_BITS);
   }
 
@@ -3196,7 +3196,7 @@ void init_db(void)
   db_init_lock(meta_pid_to_tab, "meta_pid_to_tab", "meta_pid_to_tab_FIX");*/
 
   if (db_create_hash(nullptr, meta_pid_to_tab) != DB_ERROR_NONE) {
-    erl_exit(1, "Unable to create ets metadata tables.");
+    erl::exit(1, "Unable to create ets metadata tables.");
   }
 
   erts_smp_atomic_set_nob(&init_tb.common.memory_size, 0);
@@ -3227,7 +3227,7 @@ void init_db(void)
   db_init_lock(meta_pid_to_fixed_tab, "meta_pid_to_fixed_tab", "meta_pid_to_fixed_tab_FIX");*/
 
   if (db_create_hash(nullptr, meta_pid_to_fixed_tab) != DB_ERROR_NONE) {
-    erl_exit(1, "Unable to create ets metadata tables.");
+    erl::exit(1, "Unable to create ets metadata tables.");
   }
 
   /* Non visual BIF to trap to. */
@@ -3440,7 +3440,7 @@ retry:
  * yielding.
  */
 #define ERTS_DB_INTERNAL_ERROR(LSTR) \
-  erl_exit(ERTS_ABORT_EXIT, "%s:%d:erts_db_process_exiting(): " LSTR "\n", \
+  erl::exit(erts::ABORT_EXIT, "%s:%d:erts_db_process_exiting(): " LSTR "\n", \
      __FILE__, __LINE__)
 
 int
@@ -3740,7 +3740,7 @@ static void fix_table_locked(Process *p, DbTable *tb)
                          make_small(tb->common.slot)),
                   0) != DB_ERROR_NONE) {
     UnUseTmpHeap(3, p);
-    erl_exit(1, "Could not insert ets metadata in safe_fixtable.");
+    erl::exit(1, "Could not insert ets metadata in safe_fixtable.");
   }
 
   UnUseTmpHeap(3, p);

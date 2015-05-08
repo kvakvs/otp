@@ -1021,7 +1021,7 @@ BIF_RETTYPE process_info_1(BIF_ALIST_1)
       ERTS_BIF_AWAIT_X_DATA_TRAP(BIF_P, BIF_ARG_1, am_undefined);
 
     default:
-      erl_exit(ERTS_ABORT_EXIT, "%s:%d: Internal error", __FILE__, __LINE__);
+      erl::exit(erts::ABORT_EXIT, "%s:%d: Internal error", __FILE__, __LINE__);
     }
   }
 
@@ -1067,7 +1067,7 @@ BIF_RETTYPE process_info_2(BIF_ALIST_2)
         ERTS_BIF_AWAIT_X_DATA_TRAP(BIF_P, BIF_ARG_1, am_undefined);
 
       default:
-        erl_exit(ERTS_ABORT_EXIT, "%s:%d: Internal error",
+        erl::exit(erts::ABORT_EXIT, "%s:%d: Internal error",
                  __FILE__, __LINE__);
       }
     }
@@ -1933,7 +1933,7 @@ info_1_tuple(Process *BIF_P,  /* Pointer to current process. */
       buf = (char *) erts_alloc(ERTS_ALC_T_TMP, len + 1);
 
       if (intlist_to_buf(*tp, buf, len) != len) {
-        erl_exit(1, "%s:%d: Internal error\n", __FILE__, __LINE__);
+        erl::exit(1, "%s:%d: Internal error\n", __FILE__, __LINE__);
       }
 
       buf[len] = '\0';
@@ -1960,7 +1960,7 @@ info_1_tuple(Process *BIF_P,  /* Pointer to current process. */
         buf = (char *) erts_alloc(ERTS_ALC_T_TMP, len + 1);
 
         if (intlist_to_buf(tp[1], buf, len) != len) {
-          erl_exit(1, "%s:%d: Internal error\n", __FILE__, __LINE__);
+          erl::exit(1, "%s:%d: Internal error\n", __FILE__, __LINE__);
         }
 
         buf[len] = '\0';
@@ -4219,7 +4219,7 @@ BIF_RETTYPE erts_debug_set_internal_state_2(BIF_ALIST_2)
         BIF_RET(am_true);
       }
     } else if (ERTS_IS_ATOM_STR("abort", BIF_ARG_1)) {
-      erl_exit(ERTS_ABORT_EXIT, "%T\n", BIF_ARG_2);
+      erl::exit(erts::ABORT_EXIT, "%T\n", BIF_ARG_2);
     } else if (ERTS_IS_ATOM_STR("kill_dist_connection", BIF_ARG_1)) {
       DistEntry *dep = erts_sysname_to_connected_dist_entry(BIF_ARG_2);
 

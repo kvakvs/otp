@@ -330,7 +330,7 @@ int enif_send(ErlNifEnv *env, const ErlNifPid *to_pid,
 #ifdef ERTS_SMP
     c_p = nullptr;
 #else
-    erl_exit(ERTS_ABORT_EXIT, "enif_send: env==nullptr on non-SMP VM");
+    erl::exit(erts::ABORT_EXIT, "enif_send: env==nullptr on non-SMP VM");
 #endif
   }
 

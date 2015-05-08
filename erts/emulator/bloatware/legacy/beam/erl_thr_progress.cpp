@@ -520,7 +520,7 @@ erts_thr_progress_register_unmanaged_thread(ErtsThrPrgrCallbacks *callbacks)
 
   if (tpd) {
     if (!tpd->is_temporary)
-      erl_exit(ERTS_ABORT_EXIT,
+      erl::exit(erts::ABORT_EXIT,
                "%s:%d:%s(): Double register of thread\n",
                __FILE__, __LINE__, __func__);
 
@@ -544,7 +544,7 @@ erts_thr_progress_register_unmanaged_thread(ErtsThrPrgrCallbacks *callbacks)
   ASSERT(tpd->id >= 0);
 
   if (tpd->id >= intrnl->unmanaged.no)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "%s:%d:%s(): Too many unmanaged registered threads\n",
              __FILE__, __LINE__, __func__);
 
@@ -567,7 +567,7 @@ erts_thr_progress_register_managed_thread(ErtsSchedulerData *esdp,
 
   if (tpd) {
     if (!tpd->is_temporary)
-      erl_exit(ERTS_ABORT_EXIT,
+      erl::exit(erts::ABORT_EXIT,
                "%s:%d:%s(): Double register of thread\n",
                __FILE__, __LINE__, __func__);
 
@@ -593,7 +593,7 @@ erts_thr_progress_register_managed_thread(ErtsSchedulerData *esdp,
   ASSERT(tpd->id >= 0);
 
   if (tpd->id >= intrnl->managed.no)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "%s:%d:%s(): Too many managed registered threads\n",
              __FILE__, __LINE__, __func__);
 
@@ -1118,7 +1118,7 @@ has_reached_wakeup(ErtsThrPrgrVal wakeup)
     }
 
     if (!erts_thr_progress_has_passed__(limit, wakeup))
-      erl_exit(ERTS_ABORT_EXIT,
+      erl::exit(erts::ABORT_EXIT,
                "Invalid wakeup request value found:"
                " current=%b64u, wakeup=%b64u, limit=%b64u",
                current, wakeup, limit);
@@ -1196,7 +1196,7 @@ request_wakeup_managed(ErtsThrPrgrData *tpd, ErtsThrPrgrVal value)
 #if ERTS_THR_PRGR_DBG_CHK_WAKEUP_REQUEST_VALUE
 
   if (ix >= intrnl->managed.no) {
-    erl_exit(ERTS_ABORT_EXIT, "Internal error: Too many wakeup requests\n");
+    erl::exit(erts::ABORT_EXIT, "Internal error: Too many wakeup requests\n");
   }
 
 #endif

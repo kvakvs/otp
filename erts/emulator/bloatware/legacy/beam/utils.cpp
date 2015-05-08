@@ -1130,7 +1130,7 @@ tail_recur:
     }
 
     default:
-      erl_exit(1, "Invalid tag in make_hash(0x%X,0x%X)\n", term, op);
+      erl::exit(1, "Invalid tag in make_hash(0x%X,0x%X)\n", term, op);
       return 0;
     }
 
@@ -1575,7 +1575,7 @@ make_hash2(Eterm term)
         break;
 
         default:
-          erl_exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
+          erl::exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
         }
       }
       break;
@@ -1615,7 +1615,7 @@ make_hash2(Eterm term)
             goto hash2_common;
 
           default:
-            erl_exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
+            erl::exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
           }
 
         case _TAG_IMMED1_SMALL: {
@@ -1634,7 +1634,7 @@ make_hash2(Eterm term)
         break;
 
       default:
-        erl_exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
+        erl::exit(1, "Invalid tag in make_hash2(0x%X)\n", term);
 hash2_common:
 
         /* uint32_t hash always has the hash value of the previous term,
@@ -1971,7 +1971,7 @@ tail_recur:
     }
 
     default:
-      erl_exit(1, "Invalid tag in make_broken_hash\n");
+      erl::exit(1, "Invalid tag in make_broken_hash\n");
       return 0;
     }
 
@@ -4240,7 +4240,7 @@ free_ptimer(ErtsSmpPTimer *ptimer)
     break;
 
   default:
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "Internal error: Bad ptimer alloc type\n");
     break;
   }

@@ -4316,7 +4316,7 @@ BIF_RETTYPE erts_debug_display_1(BIF_ALIST_1)
   pres = erts_dsprintf(dsbufp, "%.*T\n", INT_MAX, BIF_ARG_1);
 
   if (pres < 0)
-    erl_exit(1, "Failed to convert term to string: %d (%s)\n",
+    erl::exit(1, "Failed to convert term to string: %d (%s)\n",
              -pres, erl_errno_id(-pres));
 
   hp = HAlloc(BIF_P, 2 * dsbufp->str_len); /* we need length * 2 heap words */
@@ -4341,7 +4341,7 @@ BIF_RETTYPE display_string_1(BIF_ALIST_1)
   str = (char *) erts_alloc(ERTS_ALC_T_TMP, sizeof(char) * (len + 1));
 
   if (intlist_to_buf(string, str, len) != len) {
-    erl_exit(1, "%s:%d: Internal error\n", __FILE__, __LINE__);
+    erl::exit(1, "%s:%d: Internal error\n", __FILE__, __LINE__);
   }
 
   str[len] = '\0';
@@ -4385,7 +4385,7 @@ BIF_RETTYPE halt_1(BIF_ALIST_1)
   } else if (ERTS_IS_ATOM_STR("abort", BIF_ARG_1)) {
     VERBOSE(DEBUG_SYSTEM, ("System halted by BIF halt(%T)\n", BIF_ARG_1));
     erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_MAIN);
-    erl_exit(ERTS_ABORT_EXIT, "");
+    erl::exit(erts::ABORT_EXIT, "");
   } else if (is_string(BIF_ARG_1) || BIF_ARG_1 == NIL) {
     int i;
 
@@ -4396,7 +4396,7 @@ BIF_RETTYPE halt_1(BIF_ALIST_1)
     halt_msg[i] = '\0';
     VERBOSE(DEBUG_SYSTEM, ("System halted by BIF halt(%T)\n", BIF_ARG_1));
     erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_MAIN);
-    erl_exit(ERTS_DUMP_EXIT, "%s\n", halt_msg);
+    erl::exit(erts::DUMP_EXIT, "%s\n", halt_msg);
   } else {
     goto error;
   }
@@ -4457,13 +4457,13 @@ BIF_RETTYPE halt_2(BIF_ALIST_2)
       ERTS_BIF_YIELD1(bif_export[BIF_halt_1], BIF_P, am_undefined);
     } else {
       erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_MAIN);
-      erl_exit((int)(- code), "");
+      erl::exit((int)(- code), "");
     }
   } else if (ERTS_IS_ATOM_STR("abort", BIF_ARG_1)) {
     VERBOSE(DEBUG_SYSTEM,
             ("System halted by BIF halt(%T, %T)\n", BIF_ARG_1, BIF_ARG_2));
     erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_MAIN);
-    erl_exit(ERTS_ABORT_EXIT, "");
+    erl::exit(erts::ABORT_EXIT, "");
   } else if (is_string(BIF_ARG_1) || BIF_ARG_1 == NIL) {
     int i;
 
@@ -4475,7 +4475,7 @@ BIF_RETTYPE halt_2(BIF_ALIST_2)
     VERBOSE(DEBUG_SYSTEM,
             ("System halted by BIF halt(%T, %T)\n", BIF_ARG_1, BIF_ARG_2));
     erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_MAIN);
-    erl_exit(ERTS_DUMP_EXIT, "%s\n", halt_msg);
+    erl::exit(erts::DUMP_EXIT, "%s\n", halt_msg);
   } else {
     goto error;
   }
@@ -4537,7 +4537,7 @@ term2list_dsprintf(Process *p, Eterm term)
   pres = erts_dsprintf(dsbufp, "%T", term);
 
   if (pres < 0)
-    erl_exit(1, "Failed to convert term to list: %d (%s)\n",
+    erl::exit(1, "Failed to convert term to list: %d (%s)\n",
              -pres, erl_errno_id(-pres));
 
   hp = HAlloc(p, 2 * dsbufp->str_len); /* we need length * 2 heap words */

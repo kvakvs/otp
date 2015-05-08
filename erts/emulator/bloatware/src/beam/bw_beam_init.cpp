@@ -188,7 +188,7 @@ exit_vv(int32_t n, int32_t flush_async, const char *fmt, va_list args1,
   ::exit(an);
 }
 
-/* Exit without flushing async threads */
+// Exit without flushing async threads
 void BW_NORETURN exit(int n, const char *fmt, ...)
 {
   va_list args1, args2;
@@ -199,7 +199,7 @@ void BW_NORETURN exit(int n, const char *fmt, ...)
   va_end(args1);
 }
 
-/* Exit after flushing async threads */
+// Exit after flushing async threads
 void BW_NORETURN exit_flush_async(int n, const char *fmt, ...)
 {
   va_list args1, args2;

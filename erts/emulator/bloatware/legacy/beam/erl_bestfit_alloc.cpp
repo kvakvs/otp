@@ -984,7 +984,7 @@ info_options(Allctr_t *allctr,
   if (hpp || szp) {
 
     if (!atoms_initialized)
-      erl_exit(1, "%s:%d: Internal error: Atoms not initialized",
+      erl::exit(1, "%s:%d: Internal error: Atoms not initialized",
                __FILE__, __LINE__);;
 
     res = NIL;

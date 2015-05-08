@@ -131,7 +131,7 @@ static RegProc *reg_alloc(RegProc *tmpl)
   RegProc *obj = (RegProc *) erts_alloc(ERTS_ALC_T_REG_PROC, sizeof(RegProc));
 
   if (!obj) {
-    erl_exit(1, "Can't allocate %d bytes of memory\n", sizeof(RegProc));
+    erl::exit(1, "Can't allocate %d bytes of memory\n", sizeof(RegProc));
   }
 
   obj->name = tmpl->name;

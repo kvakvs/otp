@@ -5199,7 +5199,7 @@ do_bs_match_string: {
 #ifdef NO_FPE_SIGNALS
     OpCase(fclearerror):
       OpCase(i_fcheckerror):
-      erl_exit(1, "fclearerror/i_fcheckerror without fpe signals (beam_emu)");
+      erl::exit(1, "fclearerror/i_fcheckerror without fpe signals (beam_emu)");
 #  define ERTS_NO_FPE_CHECK_INIT ERTS_FP_CHECK_INIT
 #  define ERTS_NO_FPE_ERROR ERTS_FP_ERROR
 #else
@@ -5361,7 +5361,7 @@ L_hipe_mode_switch:
         goto post_error_handling;
 
       default:
-        erl_exit(1, "hipe_mode_switch: result %u\n", c_p->def_arg_reg[3]);
+        erl::exit(1, "hipe_mode_switch: result %u\n", c_p->def_arg_reg[3]);
       }
     }
     OpCase(hipe_call_count): {
@@ -5443,7 +5443,7 @@ end_emulator_loop:
       OpCase(label_L):
       OpCase(on_load):
       OpCase(line_I):
-      erl_exit(1, "meta op\n");
+      erl::exit(1, "meta op\n");
 
     /*
      * One-time initialization of Beam emulator.
@@ -5505,7 +5505,7 @@ init_emulator: {
 #ifdef NO_JUMP_TABLE
 
   default:
-    erl_exit(1, "unexpected op code %d\n", Go);
+    erl::exit(1, "unexpected op code %d\n", Go);
   }
 
 #endif
@@ -5550,7 +5550,7 @@ translate_gc_bif(void *gcf)
   } else if (gcf == erts_gc_binary_part_3) {
     return (BifFunction)binary_part_3;
   } else {
-    erl_exit(1, "bad gc bif");
+    erl::exit(1, "bad gc bif");
   }
 }
 
@@ -5613,7 +5613,7 @@ handle_error(Process *c_p, BeamInstr *pc, Eterm *reg, BifFunction bf)
   Eterm *hp;
   Eterm Value = c_p->fvalue;
   Eterm Args = am_true;
-  c_p->i = pc;    /* In case we call erl_exit(). */
+  c_p->i = pc;    /* In case we call erl::exit(). */
 
   ASSERT(c_p->freason != TRAP); /* Should have been handled earlier. */
 
@@ -5680,7 +5680,7 @@ handle_error(Process *c_p, BeamInstr *pc, Eterm *reg, BifFunction bf)
     }
 
     if (c_p->catches > 0) {
-      erl_exit(1, "Catch not found");
+      erl::exit(1, "Catch not found");
     }
   }
 

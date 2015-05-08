@@ -506,7 +506,7 @@ dbg_chk_aux_work_val(erts_aint32_t value)
 #endif
 
   if (~valid & value)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "Invalid aux_work value found: 0x%x\n",
              ~valid & value);
 }
@@ -1225,7 +1225,7 @@ erts_sched_finish_poke(ErtsSchedulerSleepInfo *ssi, erts_aint32_t flags)
     break;
 
   default:
-    erl_exit(ERTS_ABORT_EXIT, "%s:%d: Internal error\n",
+    erl::exit(erts::ABORT_EXIT, "%s:%d: Internal error\n",
              __FILE__, __LINE__);
     break;
   }
@@ -3823,7 +3823,7 @@ immigrate(ErtsRunQueue *c_rq, ErtsMigrationPath *mp)
       break;
 
     default:
-      erl_exit(ERTS_ABORT_EXIT,
+      erl::exit(erts::ABORT_EXIT,
                "%s:%d:%s(): Invalid immigrate queue mask",
                __FILE__, __LINE__, __func__);
       prio = 0;
@@ -3854,7 +3854,7 @@ immigrate(ErtsRunQueue *c_rq, ErtsMigrationPath *mp)
 
           if (rq) {
             if (rq != c_rq)
-              erl_exit(ERTS_ABORT_EXIT,
+              erl::exit(erts::ABORT_EXIT,
                        "%s:%d:%s(): Internal error",
                        __FILE__, __LINE__, __func__);
 
@@ -4068,7 +4068,7 @@ evacuate_run_queue(ErtsRunQueue *rq,
 
       if (prt_rq) {
         if (prt_rq != to_rq)
-          erl_exit(ERTS_ABORT_EXIT,
+          erl::exit(erts::ABORT_EXIT,
                    "%s:%d:%s() internal error\n",
                    __FILE__, __LINE__, __func__);
 
@@ -4297,7 +4297,7 @@ no_procs:
       return 0;
     } else {
       if (prt_rq != rq)
-        erl_exit(ERTS_ABORT_EXIT,
+        erl::exit(erts::ABORT_EXIT,
                  "%s:%d:%s() internal error\n",
                  __FILE__, __LINE__, __func__);
 
@@ -8542,7 +8542,7 @@ sched_thread_func(void *vesdp) {
 
   process_main();
   /* No schedulers should *ever* terminate */
-  erl_exit(ERTS_ABORT_EXIT,
+  erl::exit(erts::ABORT_EXIT,
            "Scheduler thread number %beu terminated\n",
            no);
   return nullptr;
@@ -8609,7 +8609,7 @@ sched_dirty_cpu_thread_func(void *vesdp) {
 
   process_main();
   /* No schedulers should *ever* terminate */
-  erl_exit(ERTS_ABORT_EXIT,
+  erl::exit(erts::ABORT_EXIT,
            "Dirty CPU scheduler thread number %beu terminated\n",
            no);
   return nullptr;
@@ -8674,7 +8674,7 @@ sched_dirty_io_thread_func(void *vesdp) {
 
   process_main();
   /* No schedulers should *ever* terminate */
-  erl_exit(ERTS_ABORT_EXIT,
+  erl::exit(erts::ABORT_EXIT,
            "Dirty I/O scheduler thread number %beu terminated\n",
            no);
   return nullptr;
@@ -8713,14 +8713,14 @@ erts_start_schedulers(void) {
     erts_atomic_init_nob(&runq_supervisor_sleeping, 0);
 
     if (0 != ethr_event_init(&runq_supervision_event)) {
-      erl_exit(1, "Failed to create run-queue supervision event\n");
+      erl::exit(1, "Failed to create run-queue supervision event\n");
     }
 
     if (0 != ethr_thr_create(&runq_supervisor_tid,
                              runq_supervisor,
                              nullptr,
                              &opts)) {
-      erl_exit(1, "Failed to create run-queue supervision thread\n");
+      erl::exit(1, "Failed to create run-queue supervision thread\n");
     }
 
   }
@@ -8774,7 +8774,7 @@ erts_start_schedulers(void) {
       res = ethr_thr_create(&esdp->tid, sched_dirty_cpu_thread_func, (void *)esdp, &opts);
 
       if (res != 0) {
-        erl_exit(1, "Failed to create dirty cpu scheduler thread %d\n", ix);
+        erl::exit(1, "Failed to create dirty cpu scheduler thread %d\n", ix);
       }
     }
 
@@ -8786,7 +8786,7 @@ erts_start_schedulers(void) {
       res = ethr_thr_create(&esdp->tid, sched_dirty_io_thread_func, (void *)esdp, &opts);
 
       if (res != 0) {
-        erl_exit(1, "Failed to create dirty io scheduler thread %d\n", ix);
+        erl::exit(1, "Failed to create dirty io scheduler thread %d\n", ix);
       }
     }
   }
@@ -8806,11 +8806,11 @@ erts_start_schedulers(void) {
   res = ethr_thr_create(&aux_tid, aux_thread, nullptr, &opts);
 
   if (res != 0) {
-    erl_exit(1, "Failed to create aux thread\n");
+    erl::exit(1, "Failed to create aux thread\n");
   }
 
   if (actual < 1)
-    erl_exit(1,
+    erl::exit(1,
              "Failed to create any scheduler-threads: %s (%d)\n",
              erl_errno_id(res),
              res);
@@ -12960,7 +12960,7 @@ static void doit_exit_link(ErtsLink * lnk, void *vpcontext) {
     break;
 
   default:
-    erl_exit(1, "bad type in link list\n");
+    erl::exit(1, "bad type in link list\n");
     break;
   }
 
@@ -13105,7 +13105,7 @@ erts_continue_exit_process(Process * p) {
 
     case ERTS_SCHDLR_SSPND_EINVAL:
     default:
-      erl_exit(ERTS_ABORT_EXIT, "%s:%d: Internal error: %d\n",
+      erl::exit(erts::ABORT_EXIT, "%s:%d: Internal error: %d\n",
                __FILE__, __LINE__, (int) ssr);
     }
   }

@@ -580,7 +580,7 @@ void erts_encode_dist_ext(Eterm term, uint8_t **ext, uint32_t flags, ErtsAtomCac
   ep = enc_term(acmp, term, ep, flags, nullptr);
 
   if (!ep)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "%s:%d:erts_encode_dist_ext(): Internal data structure error\n",
              __FILE__, __LINE__);
 
@@ -594,7 +594,7 @@ void erts_encode_ext(Eterm term, uint8_t **ext)
   ep = enc_term(nullptr, term, ep, TERM_TO_BINARY_DFLAGS, nullptr);
 
   if (!ep)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "%s:%d:erts_encode_ext(): Internal data structure error\n",
              __FILE__, __LINE__);
 
@@ -1728,7 +1728,7 @@ static BIF_RETTYPE binary_to_term_int(Process *p, uint32_t flags, Eterm bin, Bin
       b2t_destroy_context(ctx);
 
       if (ctx->u.dc.hp > ctx->u.dc.hp_end) {
-        erl_exit(1, ":%s, line %d: heap overrun by %d words(s)\n",
+        erl::exit(1, ":%s, line %d: heap overrun by %d words(s)\n",
                  __FILE__, __LINE__, ctx->u.dc.hp - ctx->u.dc.hp_end);
       }
 
@@ -1891,14 +1891,14 @@ erts_term_to_binary_simple(Process *p, Eterm Term, Uint size, int level, Uint fl
 
     if ((endp = enc_term(nullptr, Term, bytes, flags, nullptr))
         == nullptr) {
-      erl_exit(1, "%s, line %d: bad term: %x\n",
+      erl::exit(1, "%s, line %d: bad term: %x\n",
                __FILE__, __LINE__, Term);
     }
 
     real_size = endp - bytes;
 
     if (real_size > size) {
-      erl_exit(1, "%s, line %d: buffer overflow: %d word(s)\n",
+      erl::exit(1, "%s, line %d: buffer overflow: %d word(s)\n",
                __FILE__, __LINE__, real_size - size);
     }
 
@@ -1943,14 +1943,14 @@ erts_term_to_binary_simple(Process *p, Eterm Term, Uint size, int level, Uint fl
 
     if ((endp = enc_term(nullptr, Term, bytes + 1, flags, nullptr))
         == nullptr) {
-      erl_exit(1, "%s, line %d: bad term: %x\n",
+      erl::exit(1, "%s, line %d: bad term: %x\n",
                __FILE__, __LINE__, Term);
     }
 
     real_size = endp - bytes;
 
     if (real_size > size) {
-      erl_exit(1, "%s, line %d: buffer overflow: %d word(s)\n",
+      erl::exit(1, "%s, line %d: buffer overflow: %d word(s)\n",
                __FILE__, __LINE__, endp - (bytes + size));
     }
 
@@ -4613,7 +4613,7 @@ L_jump_start:
     break;
 
     default:
-      erl_exit(1, "Internal data structure error (in encode_size_struct2)%x\n",
+      erl::exit(1, "Internal data structure error (in encode_size_struct2)%x\n",
                obj);
     }
   }

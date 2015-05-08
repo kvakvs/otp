@@ -59,7 +59,7 @@ copy_object(Eterm obj, Process *to)
 #ifdef DEBUG
 
   if (eq(obj, res) == 0) {
-    erl_exit(ERTS_ABORT_EXIT, "copy not equal to source\n");
+    erl::exit(erts::ABORT_EXIT, "copy not equal to source\n");
   }
 
 #endif
@@ -194,7 +194,7 @@ Uint size_object(Eterm obj)
       break;
 
       case BIN_MATCHSTATE_SUBTAG:
-        erl_exit(ERTS_ABORT_EXIT,
+        erl::exit(erts::ABORT_EXIT,
                  "size_object: matchstate term not allowed");
 
       default:
@@ -215,7 +215,7 @@ pop_next:
       break;
 
     default:
-      erl_exit(ERTS_ABORT_EXIT, "size_object: bad tag for %#x\n", obj);
+      erl::exit(erts::ABORT_EXIT, "size_object: bad tag for %#x\n", obj);
     }
   }
 }
@@ -273,7 +273,7 @@ Eterm copy_struct(Eterm obj, Uint sz, Eterm **hpp, ErlOffHeap *off_heap)
     goto L_copy_boxed;
 
   default:
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "%s, line %d: Internal error in copy_struct: 0x%08x\n",
              __FILE__, __LINE__, obj);
   }
@@ -347,7 +347,7 @@ L_copy_list:
         goto L_copy_boxed;
 
       default:
-        erl_exit(ERTS_ABORT_EXIT,
+        erl::exit(erts::ABORT_EXIT,
                  "%s, line %d: Internal error in copy_struct: 0x%08x\n",
                  __FILE__, __LINE__, obj);
       }
@@ -540,7 +540,7 @@ L_copy_boxed:
       break;
 
       case BIN_MATCHSTATE_SUBTAG:
-        erl_exit(ERTS_ABORT_EXIT,
+        erl::exit(erts::ABORT_EXIT,
                  "copy_struct: matchstate term not allowed");
 
       default:
@@ -570,7 +570,7 @@ L_copy_boxed:
 #ifdef DEBUG
 
   if (htop != hbot)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "Internal error in copy_struct() when copying %T:"
              " htop=%p != hbot=%p (sz=%beu)\n",
              org_obj, htop, hbot, org_sz);
@@ -578,7 +578,7 @@ L_copy_boxed:
 #else
 
   if (htop > hbot) {
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "Internal error in copy_struct(): htop, hbot overrun\n");
   }
 

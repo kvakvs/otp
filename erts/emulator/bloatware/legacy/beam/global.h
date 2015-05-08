@@ -407,7 +407,7 @@ void erl_grow_estack(ErtsEStack *, Eterm *def_stack);
 #define ESTACK_CHANGE_ALLOCATOR(s,t)          \
 do {                  \
     if (s.start != ESTK_DEF_STACK(s)) {         \
-  erl_exit(1, "Internal error - trying to change allocator "  \
+  erl::exit(1, "Internal error - trying to change allocator "  \
      "type of active estack\n");        \
     }                 \
     s.alloc_type = (t);             \
@@ -525,7 +525,7 @@ void erl_grow_wstack(ErtsWStack *, UWord *def_stack);
 #define WSTACK_CHANGE_ALLOCATOR(s,t)          \
 do {                  \
     if (s.wstart != WSTK_DEF_STACK(s)) {        \
-  erl_exit(1, "Internal error - trying to change allocator "  \
+  erl::exit(1, "Internal error - trying to change allocator "  \
      "type of active wstack\n");        \
     }                 \
     s.alloc_type = (t);             \
@@ -1182,7 +1182,7 @@ erts_alloc_message_heap_state(Uint size,
 #endif
 
   if (size > (Uint) INT_MAX) {
-    erl_exit(ERTS_ABORT_EXIT, "HUGE size (%beu)\n", size);
+    erl::exit(erts::ABORT_EXIT, "HUGE size (%beu)\n", size);
   }
 
   if (

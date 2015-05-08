@@ -55,7 +55,7 @@
         erts_fprintf(stderr, "stop=%p\n", (p)->stop); \
         erts_fprintf(stderr, "htop=%p\n", (p)->htop); \
         erts_fprintf(stderr, "heap=%p\n", (p)->heap); \
-        erl_exit(ERTS_ABORT_EXIT, "%s, line %d: %T: Overrun stack and heap\n", \
+        erl::exit(erts::ABORT_EXIT, "%s, line %d: %T: Overrun stack and heap\n", \
      __FILE__,__LINE__,(P)->common.id); \
     }
 
@@ -269,7 +269,7 @@ erts_next_heap_size(Uint size, Uint offset)
       }
     }
 
-    erl_exit(1, "no next heap size found: %beu, offset %beu\n", size, offset);
+    erl::exit(1, "no next heap size found: %beu, offset %beu\n", size, offset);
   }
 
   return 0;
@@ -2980,7 +2980,7 @@ within(Eterm *ptr, Process *p)
 #define ERTS_CHK_OFFHEAP_ASSERT(EXP)      \
 do {              \
     if (!(EXP))           \
-  erl_exit(ERTS_ABORT_EXIT,     \
+  erl::exit(erts::ABORT_EXIT,     \
      "%s:%d: Assertion failed: %s\n", \
      __FILE__, __LINE__, #EXP);   \
 } while (0)

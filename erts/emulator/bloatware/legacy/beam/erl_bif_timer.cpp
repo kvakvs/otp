@@ -175,7 +175,7 @@ create_ref(Uint *hp, uint32_t *ref_numbers, uint32_t len)
 
   if (len > ERTS_MAX_REF_NUMBERS) {
     /* Such large refs should no be able to appear in the emulator */
-    erl_exit(1, "%s:%d: Internal error\n", __FILE__, __LINE__);
+    erl::exit(1, "%s:%d: Internal error\n", __FILE__, __LINE__);
   }
 
 #if defined(ARCH_64) && !HALFWORD_HEAP

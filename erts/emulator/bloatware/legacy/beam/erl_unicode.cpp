@@ -2819,7 +2819,7 @@ void erts_copy_utf8_to_utf16_little(uint8_t *target, uint8_t *bytes, int num_cha
         ((Uint)(bytes[3] & ((uint8_t) 0x3F)));
       bytes += 4;
     } else {
-      erl_exit(1, "Internal unicode error in prim_file:internal_name2native/1");
+      erl::exit(1, "Internal unicode error in prim_file:internal_name2native/1");
     }
 
     *target++ = (uint8_t)(unipoint & 0xFF);

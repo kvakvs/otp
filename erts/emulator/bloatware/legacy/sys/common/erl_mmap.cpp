@@ -1431,7 +1431,7 @@ os_unreserve_physical(char *ptr, UWord size)
                    ERTS_MMAP_UNRESERVE_FLAGS, ERTS_MMAP_FD, 0);
 
   if (res == (void *) MAP_FAILED) {
-    erl_exit(ERTS_ABORT_EXIT, "Failed to unreserve memory");
+    erl::exit(erts::ABORT_EXIT, "Failed to unreserve memory");
   }
 }
 
@@ -2328,7 +2328,7 @@ erts_mmap_init(ErtsMMapInit *init)
   erts_page_inv_mask = pagesize - 1;
 
   if (pagesize & erts_page_inv_mask)
-    erl_exit(-1, "erts_mmap: Invalid pagesize: %bpu\n",
+    erl::exit(-1, "erts_mmap: Invalid pagesize: %bpu\n",
              pagesize);
 
   ERTS_MMAP_OP_RINGBUF_INIT();
@@ -2343,7 +2343,7 @@ erts_mmap_init(ErtsMMapInit *init)
   mmap_state.mmap_fd = open("/dev/zero", O_RDWR);
 
   if (mmap_state.mmap_fd < 0) {
-    erl_exit(-1, "erts_mmap: Failed to open /dev/zero\n");
+    erl::exit(-1, "erts_mmap: Failed to open /dev/zero\n");
   }
 
 #endif
@@ -2362,7 +2362,7 @@ erts_mmap_init(ErtsMMapInit *init)
     start = (char *)os_mmap_virtual(ptr, sz);
 
     if (!start || start > ptr || start >= end)
-      erl_exit(-1,
+      erl::exit(-1,
                "erts_mmap: Failed to create virtual range for super carrier\n");
 
     sz = start - ptr;
@@ -2407,7 +2407,7 @@ erts_mmap_init(ErtsMMapInit *init)
       }
 
       if (!start)
-        erl_exit(-1,
+        erl::exit(-1,
                  "erts_mmap: Failed to create super carrier of size %bpu MB\n",
                  init->scs / 1024 / 1024);
 
@@ -2466,7 +2466,7 @@ erts_mmap_init(ErtsMMapInit *init)
     if ((desc_size
          + ERTS_SUPERALIGNED_SIZE
          + ERTS_PAGEALIGNED_SIZE) > end - start) {
-      erl_exit(-1, "erts_mmap: No space for segments in super carrier\n");
+      erl::exit(-1, "erts_mmap: No space for segments in super carrier\n");
     }
 
     mmap_state.sa.bot = start;
@@ -2508,7 +2508,7 @@ erts_mmap_init(ErtsMMapInit *init)
 #ifdef ERTS_HAVE_OS_PHYSICAL_MEMORY_RESERVATION
 
     if (virtual_map && !os_reserve_physical(start, mmap_state.sa.bot - start)) {
-      erl_exit(-1, "erts_mmap: Failed to reserve physical memory for descriptors\n");
+      erl::exit(-1, "erts_mmap: Failed to reserve physical memory for descriptors\n");
     }
 
 #endif

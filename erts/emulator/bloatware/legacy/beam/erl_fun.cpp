@@ -206,7 +206,7 @@ erts_erase_fun_entry(ErlFunEntry *fe)
 #endif
   {
     if (fe->address != unloaded_fun)
-      erl_exit(1,
+      erl::exit(1,
                "Internal error: "
                "Invalid reference count found on #Fun<%T.%d.%d>: "
                " About to erase fun still referred by code.\n",

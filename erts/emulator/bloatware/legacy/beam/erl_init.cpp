@@ -282,7 +282,7 @@ this_rel_num(void)
     this_rel = atoi(&this_rel_str[i]);
 
     if (this_rel < 1) {
-      erl_exit(-1, "Unexpected ERLANG_OTP_RELEASE format\n");
+      erl::exit(-1, "Unexpected ERLANG_OTP_RELEASE format\n");
     }
   }
 
@@ -401,7 +401,7 @@ erl_first_process_otp(char *modname, void *code, unsigned size, int argc,
 
   if (erts_find_function(start_mod, am_start, 2,
                          erts_active_code_ix()) == nullptr) {
-    erl_exit(5, "No function %s:start/2\n", modname);
+    erl::exit(5, "No function %s:start/2\n", modname);
   }
 
   /*
@@ -508,14 +508,14 @@ load_preloaded(void)
     module_name = erts_atom_put((uint8_t *) name, sys_strlen(name), ERTS_ATOM_ENC_LATIN1, 1);
 
     if ((code = sys_preload_begin(&preload_p[i])) == 0)
-      erl_exit(1, "Failed to find preloaded code for module %s\n",
+      erl::exit(1, "Failed to find preloaded code for module %s\n",
                name);
 
     res = erts_preload_module(nullptr, 0, NIL, &module_name, code, length);
     sys_preload_end(&preload_p[i]);
 
     if (res != NIL)
-      erl_exit(1, "Failed loading preloaded module %s (%T)\n",
+      erl::exit(1, "Failed loading preloaded module %s (%T)\n",
                name, res);
 
     i++;
@@ -644,7 +644,7 @@ void erts_usage(void)
   erts_fprintf(stderr, "Note that if the emulator is started with erlexec (typically\n");
   erts_fprintf(stderr, "from the erl script), these flags should be specified with +.\n");
   erts_fprintf(stderr, "\n\n");
-  erl_exit(-1, "");
+  erl::exit(-1, "");
 }
 
 #ifdef USE_THREADS
@@ -1594,7 +1594,7 @@ erl_start(int argc, char **argv)
 
       erts_fprintf(stderr, "(" EMULATOR ") emulator version "
                    ERLANG_VERSION "\n");
-      erl_exit(0, "");
+      erl::exit(0, "");
     }
     break;
 
@@ -2385,7 +2385,7 @@ erl_exit_vv(int n, int flush_async, const char *fmt, va_list args1, va_list args
   }
 
   /* Produce an Erlang core dump if error */
-  if (((n > 0 && erts_no_crash_dump == 0) || n == ERTS_DUMP_EXIT)
+  if (((n > 0 && erts_no_crash_dump == 0) || n == erts::DUMP_EXIT)
       && Erts::g_initialized) {
     erl_crash_dump_v((char *) nullptr, 0, fmt, args1);
   }
@@ -2396,27 +2396,27 @@ erl_exit_vv(int n, int flush_async, const char *fmt, va_list args1, va_list args
 
   sys_tty_reset(n);
 
-  if (n == ERTS_INTR_EXIT) {
-    exit(0);
-  } else if (n == ERTS_DUMP_EXIT) {
+  if (n == erts::INTR_EXIT) {
+    ::exit(0);
+  } else if (n == erts::DUMP_EXIT) {
     ERTS_EXIT_AFTER_DUMP(1);
-  } else if (n > 0 || n == ERTS_ABORT_EXIT) {
-    abort();
+  } else if (n > 0 || n == erts::ABORT_EXIT) {
+    ::abort();
   }
 
-  exit(an);
+  ::exit(an);
 }
 
 /* Exit without flushing async threads */
-__decl_noreturn void __noreturn erl_exit(int n, const char *fmt, ...)
-{
-  va_list args1, args2;
-  va_start(args1, fmt);
-  va_start(args2, fmt);
-  erl_exit_vv(n, 0, fmt, args1, args2);
-  va_end(args2);
-  va_end(args1);
-}
+//__decl_noreturn void __noreturn erl_exit(int n, const char *fmt, ...)
+//{
+//  va_list args1, args2;
+//  va_start(args1, fmt);
+//  va_start(args2, fmt);
+//  erl_exit_vv(n, 0, fmt, args1, args2);
+//  va_end(args2);
+//  va_end(args1);
+//}
 
 /* Exit after flushing async threads */
 __decl_noreturn void __noreturn erl_exit_flush_async(int n, const char *fmt, ...)

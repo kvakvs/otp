@@ -45,7 +45,7 @@ fatal_error(int err, char *func)
     }
   }
 
-  erl_exit(ERTS_ABORT_EXIT, "Fatal error in %s: %s [%d]\n", func, estr, err);
+  erl::exit(erts::ABORT_EXIT, "Fatal error in %s: %s [%d]\n", func, estr, err);
 }
 
 #define ERL_DRV_TSD_KEYS_INC 10

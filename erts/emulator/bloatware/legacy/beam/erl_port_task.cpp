@@ -1973,7 +1973,7 @@ erts_port_task_execute(ErtsRunQueue *runq, Port **curr_port_pp)
       break;
 
     default:
-      erl_exit(ERTS_ABORT_EXIT,
+      erl::exit(erts::ABORT_EXIT,
                "Invalid port task type: %d\n",
                (int) ptp->type);
       break;
@@ -2273,7 +2273,7 @@ begin_port_cleanup(Port *pp, ErtsPortTask **execqp, int *processing_busy_q_p)
       }
 
       default:
-        erl_exit(ERTS_ABORT_EXIT,
+        erl::exit(erts::ABORT_EXIT,
                  "Invalid port task type: %d\n",
                  (int) ptp->type);
       }

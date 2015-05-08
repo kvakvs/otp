@@ -70,7 +70,7 @@ int sys_init_time(void)
    * the resolution is always one millisecond..
    */
   if ((erts_ticks_per_sec = TICKS_PER_SEC()) < 0) {
-    erl_exit(1, "Can't get clock ticks/sec\n");
+    erl::exit(1, "Can't get clock ticks/sec\n");
   }
 
   if (erts_ticks_per_sec >= 1000) {

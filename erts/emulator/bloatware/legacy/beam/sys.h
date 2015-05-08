@@ -21,6 +21,7 @@
 #define __SYS_H__
 
 #include "config.h"
+#include "bw_beam_init.h"
 
 #if defined(VALGRIND) && !defined(NO_FPE_SIGNALS)
 #  define NO_FPE_SIGNALS
@@ -177,17 +178,17 @@ typedef ERTS_SYS_FD_TYPE ErtsSysFdType;
 #  endif
 #endif
 
-#define ERTS_ASSERT(e) \
-    ((void) ((e) ? 1 : (erl_assert_error(#e, __func__, __FILE__, __LINE__), 0)))
+//#define ERTS_ASSERT(e) \
+//    ((void) ((e) ? 1 : (erl_assert_error(#e, __func__, __FILE__, __LINE__), 0)))
 
-__decl_noreturn void __noreturn erl_assert_error(const char *expr, const char *func,
-    const char *file, int line);
+//__decl_noreturn void __noreturn erl_assert_error(const char *expr, const char *func,
+//    const char *file, int line);
 
-#ifdef DEBUG
-#  define ASSERT(e) ERTS_ASSERT(e)
-#else
-#  define ASSERT(e) ((void) 1)
-#endif
+//#ifdef DEBUG
+//#  define ASSERT(e) ERTS_ASSERT(e)
+//#else
+//#  define ASSERT(e) ((void) 1)
+//#endif
 
 /*
  * Microsoft C/C++: We certainly want to use stdarg.h and prototypes.
@@ -559,14 +560,14 @@ static const int zero_value = 0, one_value = 1;
 
 __decl_noreturn void __noreturn erl_exit(int n, const char *, ...);
 
-/* Some special erl_exit() codes: */
-#define ERTS_INTR_EXIT  INT_MIN   /* called from signal handler */
-#define ERTS_ABORT_EXIT (INT_MIN + 1) /* no crash dump; only abort() */
-#define ERTS_DUMP_EXIT  (INT_MIN + 2) /* crash dump; then exit() */
+/* Some special erl::exit() codes: */
+//#define erts::INTR_EXIT  INT_MIN   /* called from signal handler */
+//#define erts::ABORT_EXIT (INT_MIN + 1) /* no crash dump; only abort() */
+//#define erts::DUMP_EXIT  (INT_MIN + 2) /* crash dump; then exit() */
 
-#define ERTS_INTERNAL_ERROR(What) \
-    erl_exit(ERTS_ABORT_EXIT, "%s:%d:%s(): Internal error: %s\n", \
-       __FILE__, __LINE__, __func__, What)
+//#define ERTS_INTERNAL_ERROR(What) \
+//    erl::exit(erts::ABORT_EXIT, "%s:%d:%s(): Internal error: %s\n", \
+//       __FILE__, __LINE__, __func__, What)
 
 Eterm erts_check_io_info(void *p);
 
@@ -841,7 +842,7 @@ erts_refc_inc(erts_refc_t *refcp, erts_aint_t min_val)
   erts_aint_t val = erts_smp_atomic_inc_read_nob((erts_smp_atomic_t *) refcp);
 
   if (val < min_val)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "erts_refc_inc(): Bad refc found (refc=%ld < %ld)!\n",
              val, min_val);
 
@@ -857,7 +858,7 @@ erts_refc_inctest(erts_refc_t *refcp, erts_aint_t min_val)
 #ifdef ERTS_REFC_DEBUG
 
   if (val < min_val)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "erts_refc_inctest(): Bad refc found (refc=%ld < %ld)!\n",
              val, min_val);
 
@@ -872,7 +873,7 @@ erts_refc_dec(erts_refc_t *refcp, erts_aint_t min_val)
   erts_aint_t val = erts_smp_atomic_dec_read_nob((erts_smp_atomic_t *) refcp);
 
   if (val < min_val)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "erts_refc_dec(): Bad refc found (refc=%ld < %ld)!\n",
              val, min_val);
 
@@ -888,7 +889,7 @@ erts_refc_dectest(erts_refc_t *refcp, erts_aint_t min_val)
 #ifdef ERTS_REFC_DEBUG
 
   if (val < min_val)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "erts_refc_dectest(): Bad refc found (refc=%ld < %ld)!\n",
              val, min_val);
 
@@ -903,7 +904,7 @@ erts_refc_add(erts_refc_t *refcp, erts_aint_t diff, erts_aint_t min_val)
   erts_aint_t val = erts_smp_atomic_add_read_nob((erts_smp_atomic_t *) refcp, diff);
 
   if (val < min_val)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "erts_refc_add(%ld): Bad refc found (refc=%ld < %ld)!\n",
              diff, val, min_val);
 
@@ -919,7 +920,7 @@ erts_refc_read(erts_refc_t *refcp, erts_aint_t min_val)
 #ifdef ERTS_REFC_DEBUG
 
   if (val < min_val)
-    erl_exit(ERTS_ABORT_EXIT,
+    erl::exit(erts::ABORT_EXIT,
              "erts_refc_read(): Bad refc found (refc=%ld < %ld)!\n",
              val, min_val);
 

@@ -2046,12 +2046,12 @@ restart:
 #ifdef DMC_DEBUG
 
     if (*heap_fence != FENCE_PATTERN) {
-      erl_exit(1, "Heap fence overwritten in db_prog_match after op "
+      erl::exit(1, "Heap fence overwritten in db_prog_match after op "
                "0x%08x, overwritten with 0x%08x.", save_op, *heap_fence);
     }
 
     if (*stack_fence != FENCE_PATTERN) {
-      erl_exit(1, "Stack fence overwritten in db_prog_match after op "
+      erl::exit(1, "Stack fence overwritten in db_prog_match after op "
                "0x%08x, overwritten with 0x%08x.", save_op,
                *stack_fence);
     }
@@ -2792,7 +2792,7 @@ case_matchPushV:
       goto success;
 
     default:
-      erl_exit(1, "Internal error: unexpected opcode in match program.");
+      erl::exit(1, "Internal error: unexpected opcode in match program.");
     }
   }
 
@@ -2823,12 +2823,12 @@ success:
 #ifdef DMC_DEBUG
 
   if (*heap_fence != FENCE_PATTERN) {
-    erl_exit(1, "Heap fence overwritten in db_prog_match after op "
+    erl::exit(1, "Heap fence overwritten in db_prog_match after op "
              "0x%08x, overwritten with 0x%08x.", save_op, *heap_fence);
   }
 
   if (*stack_fence != FENCE_PATTERN) {
-    erl_exit(1, "Stack fence overwritten in db_prog_match after op "
+    erl::exit(1, "Stack fence overwritten in db_prog_match after op "
              "0x%08x, overwritten with 0x%08x.", save_op,
              *stack_fence);
   }
@@ -3916,7 +3916,7 @@ static DMCRet dmc_one_term(DMCContext *context,
   }
 
   default:
-    erl_exit(1, "db_match_compile: "
+    erl::exit(1, "db_match_compile: "
              "Bad object on heap: 0x%bex\n", c);
   }
 
@@ -5241,7 +5241,7 @@ static DMCRet dmc_fun(DMCContext *context,
     break;
 
   default:
-    erl_exit(1, "ets:match() internal error, "
+    erl::exit(1, "ets:match() internal error, "
              "guard with more than 3 arguments.");
   }
 
@@ -5569,7 +5569,7 @@ static Uint my_size_object(Eterm t)
                tmp == am_const) {
       sum += size_object(tuple_val(t)[2]);
     } else {
-      erl_exit(1, "Internal error, sizing unrecognized object in "
+      erl::exit(1, "Internal error, sizing unrecognized object in "
                "(d)ets:match compilation.");
     }
 
@@ -5621,7 +5621,7 @@ static Eterm my_copy_struct(Eterm t, Eterm **hp, ErlOffHeap *off_heap)
         sz = size_object(b);
         ret = copy_struct(b, sz, hp, off_heap);
       } else {
-        erl_exit(1, "Trying to constant-copy non constant expression "
+        erl::exit(1, "Trying to constant-copy non constant expression "
                  "0x%bex in (d)ets:match compilation.", t);
       }
     } else {
