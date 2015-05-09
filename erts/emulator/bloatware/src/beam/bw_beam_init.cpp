@@ -82,6 +82,7 @@ static int early_init(int *argc, const char *argv[])
   Erts::g_compat_rel = this_rel_num();
 
   erts_sys_pre_init();
+  return 0;
 }
 
 int start(int argc, const char *argv[])
@@ -186,6 +187,7 @@ exit_vv(int32_t n, int32_t flush_async, const char *fmt, va_list args1,
   }
 
   ::exit(an);
+  ::abort();
 }
 
 // Exit without flushing async threads

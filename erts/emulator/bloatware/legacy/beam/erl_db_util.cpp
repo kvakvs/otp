@@ -1004,7 +1004,7 @@ void db_match_dis(Binary *prog);
 #define FENCE_PATTERN_SIZE 0
 #endif
 static void add_dmc_err(DMCErrInfo *err_info,
-                        char *str,
+                        const char *str,
                         int variable,
                         Eterm term,
                         DMCErrorSeverity severity);
@@ -3668,7 +3668,7 @@ int erts_db_is_compiled_ms(Eterm term)
 */
 
 static void add_dmc_err(DMCErrInfo *err_info,
-                        char *str,
+                        const char *str,
                         int variable,
                         Eterm term,
                         DMCErrorSeverity severity)

@@ -33,9 +33,9 @@
    + sizeof(((ErlDrvThreadOpts *) 0)->LAST_FIELD))
 
 static void
-fatal_error(int err, char *func)
+fatal_error(int err, const char *func)
 {
-  char *estr = strerror(err);
+  const char *estr = strerror(err);
 
   if (!estr) {
     if (err == ENOTSUP) {
@@ -91,7 +91,7 @@ static ErlDrvTSDKey max_used_tsd_key;
 static ErlDrvTSDKey used_tsd_keys_len;
 static char **used_tsd_keys;
 static erts_mtx_t tsd_mtx;
-static char *no_name;
+static const char *no_name;
 
 #ifdef USE_THREADS
 
@@ -182,7 +182,7 @@ erl_drv_mutex_create(char *name)
       erts_free(ERTS_ALC_T_DRV_MTX, (void *) dmtx);
       dmtx = nullptr;
     } else if (!name) {
-      dmtx->name = no_name;
+      dmtx->name = const_cast<char*>(no_name);
     } else {
       dmtx->name = ((char *) dmtx) + sizeof(ErlDrvMutex);
       sys_strcpy(dmtx->name, name);
@@ -277,7 +277,7 @@ erl_drv_cond_create(char *name)
       erts_free(ERTS_ALC_T_DRV_CND, (void *) dcnd);
       dcnd = nullptr;
     } else if (!name) {
-      dcnd->name = no_name;
+      dcnd->name = const_cast<char*>(no_name);
     } else {
       dcnd->name = ((char *) dcnd) + sizeof(ErlDrvCond);
       sys_strcpy(dcnd->name, name);
@@ -374,7 +374,7 @@ erl_drv_rwlock_create(char *name)
       erts_free(ERTS_ALC_T_DRV_RWLCK, (void *) drwlck);
       drwlck = nullptr;
     } else if (!name) {
-      drwlck->name = no_name;
+      drwlck->name = const_cast<char*>(no_name);
     } else {
       drwlck->name = ((char *) drwlck) + sizeof(ErlDrvRWLock);
       sys_strcpy(drwlck->name, name);
@@ -505,7 +505,7 @@ erl_drv_tsd_key_create(char *name, ErlDrvTSDKey *key)
   }
 
   if (!name) {
-    name_copy = no_name;
+    name_copy = const_cast<char*>(no_name);
   } else {
     name_copy = (char *)erts_alloc_fnf(ERTS_ALC_T_DRV_TSD,
                                        sizeof(char) * (strlen(name) + 1));
@@ -732,7 +732,7 @@ erl_drv_thread_create(char *name,
   dtid->tsd_len = 0;
 
   if (!name) {
-    dtid->name = no_name;
+    dtid->name = const_cast<char*>(no_name);
   } else {
     dtid->name = ((char *) dtid) + sizeof(struct ErlDrvTid_);
     sys_strcpy(dtid->name, name);
@@ -781,7 +781,7 @@ erl_drv_thread_self(void)
     dtid->arg = nullptr;
     dtid->tsd = nullptr;
     dtid->tsd_len = 0;
-    dtid->name = no_name;
+    dtid->name = const_cast<char*>(no_name);
     res = ethr_tsd_set(tid_key, (void *) dtid);
 
     if (res != 0) {

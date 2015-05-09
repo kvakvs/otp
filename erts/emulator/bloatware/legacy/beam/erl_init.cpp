@@ -387,7 +387,7 @@ erl_init(int ncpu,
 }
 
 static void
-erl_first_process_otp(char *modname, void *code, unsigned size, int argc,
+erl_first_process_otp(const char *modname, void *code, unsigned size, int argc,
                       char * const *argv)
 {
   int i;
@@ -1822,7 +1822,7 @@ bad_n_option:
       break;
 
     case 's' : {
-      char *estr;
+      const char *estr;
       int res;
       char *sub_param = argv[i] + 2;
 
