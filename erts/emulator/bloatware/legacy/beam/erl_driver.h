@@ -703,7 +703,7 @@ EXTERN int driver_get_now(ErlDrvNowData *now);
 EXTERN void *driver_dl_open(char *);
 EXTERN void *driver_dl_sym(void *, char *);
 EXTERN int driver_dl_close(void *);
-EXTERN char *driver_dl_error(void);
+EXTERN const char *driver_dl_error(void);
 
 /* environment */
 EXTERN int erl_drv_putenv(char *key, char *value);

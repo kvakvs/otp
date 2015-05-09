@@ -42,10 +42,11 @@
 #include "erl_bits.h"
 #include "dtrace-wrapper.h"
 
-static Port *open_port(Process *p, Eterm name, Eterm settings, int *err_typep, int *err_nump);
+static Port *open_port(Process *p, Eterm name, Eterm settings, int *err_typep,
+                       int *err_nump);
 static uint8_t *convert_environment(Process *p, Eterm env);
-static char **convert_args(Eterm);
-static void free_args(char **);
+static const char **convert_args(Eterm);
+static void free_args(const char **);
 
 const char *erts_default_arg0 = "default";
 
@@ -764,10 +765,10 @@ open_port(Process *p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 
           opts.envir = (char *) bytes;
         } else if (option == am_args) {
-          const char **av;
+          const char **av = convert_args(*tp);
           const char **oav = opts.argv;
 
-          if ((av = convert_args(*tp)) == nullptr) {
+          if (!av) {
             goto badarg;
           }
 
@@ -788,13 +789,14 @@ open_port(Process *p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
           }
 
           if (opts.argv == nullptr) {
-            opts.argv = (char **)erts_alloc(ERTS_ALC_T_TMP,
-                                            2 * sizeof(char **));
+            opts.argv = const_cast<const char **>(
+                  erts::alloc<char*>(ERTS_ALC_T_TMP, 2 * sizeof(char **))
+                  );
             opts.argv[0] = a0;
             opts.argv[1] = nullptr;
           } else {
             if (opts.argv[0] != erts_default_arg0) {
-              erts_free(ERTS_ALC_T_TMP, opts.argv[0]);
+              erts_free(ERTS_ALC_T_TMP, (void*)opts.argv[0]);
             }
 
             opts.argv[0] = a0;
@@ -1081,7 +1083,7 @@ static const char **convert_args(Eterm l)
       int j;
 
       for (j = 1; j < i; ++j) {
-        erts_free(ERTS_ALC_T_TMP, pp[j]);
+        erts_free(ERTS_ALC_T_TMP, (void*)pp[j]);
       }
 
       erts_free(ERTS_ALC_T_TMP, pp);
@@ -1106,7 +1108,7 @@ static void free_args(const char **av)
 
   for (i = 0; av[i] != nullptr; ++i) {
     if (av[i] != erts_default_arg0) {
-      erts_free(ERTS_ALC_T_TMP, av[i]);
+      erts_free(ERTS_ALC_T_TMP, (void*)av[i]);
     }
   }
 

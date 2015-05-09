@@ -8088,9 +8088,9 @@ int driver_dl_close(void *handle)
   return res;
 }
 
-char *driver_dl_error(void)
+const char *driver_dl_error(void)
 {
-  char *res;
+  const char *res;
   int *last_error_p = (int *)erts_smp_tsd_get(driver_list_lock_status_key);
   int locked = maybe_lock_driver_list();
   res = erts_ddll_error((last_error_p != nullptr) ? (*last_error_p) : ERL_DE_ERROR_UNSPECIFIED);

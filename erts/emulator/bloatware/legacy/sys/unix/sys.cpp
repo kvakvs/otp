@@ -1667,7 +1667,7 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char *name, SysDriverOpts *op
             opts->argv[0] = cmd_line;
           }
 
-          execve(cmd_line, opts->argv, new_environ);
+          execve(cmd_line, (char *const*)opts->argv, new_environ);
 
           if (opts->argv[0] == cmd_line) {
             opts->argv[0] = erts_default_arg0;
@@ -1755,7 +1755,7 @@ child_error:
           if (opts->argv[j] == erts_default_arg0) {
             cs_argv[CS_ARGV_NO_OF_ARGS + 1 + j] = cmd_line;
           } else {
-            cs_argv[CS_ARGV_NO_OF_ARGS + 1 + j] = opts->argv[j];
+            cs_argv[CS_ARGV_NO_OF_ARGS + 1 + j] = const_cast<char*>(opts->argv[j]);
           }
         }
       }
