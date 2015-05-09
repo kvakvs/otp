@@ -11,3 +11,6 @@ typedef size_t Eterm;
 #define ERTS_SWORD_MAX LONG_MAX
 #define ERTS_SIZEOF_ETERM SIZEOF_LONG
 #define ErtsStrToSint strtol
+
+// register storage class spec is deprecated in C++
+#define BW_REGISTER

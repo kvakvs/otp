@@ -839,7 +839,7 @@ else
         c = 0;
         for (i = 0; i < 4; ++i)
           {
-          register pcre_uint32 cc = *(++ptr);
+          BW_REGISTER pcre_uint32 cc = *(++ptr);
 #ifndef EBCDIC  /* ASCII/UTF-8 coding */
           if (cc >= CHAR_a) cc -= 32;               /* Convert to upper case */
           c = (c << 4) + cc - ((cc < CHAR_A)? CHAR_0 : (CHAR_A - 10));
@@ -1051,7 +1051,7 @@ else
         c = 0;
         for (i = 0; i < 2; ++i)
           {
-          register pcre_uint32 cc = *(++ptr);
+          BW_REGISTER pcre_uint32 cc = *(++ptr);
 #ifndef EBCDIC  /* ASCII/UTF-8 coding */
           if (cc >= CHAR_a) cc -= 32;               /* Convert to upper case */
           c = (c << 4) + cc - ((cc < CHAR_A)? CHAR_0 : (CHAR_A - 10));
@@ -1072,7 +1072,7 @@ else
       overflow = FALSE;
       while (MAX_255(*pt) && (digitab[*pt] & ctype_xdigit) != 0)
         {
-        register pcre_uint32 cc = *pt++;
+        BW_REGISTER pcre_uint32 cc = *pt++;
         if (c == 0 && cc == CHAR_0) continue;     /* Leading zeroes */
 
 #ifdef COMPILE_PCRE32
@@ -1747,8 +1747,8 @@ find_fixedlength(pcre_uchar *code, BOOL utf, BOOL atend, compile_data *cd)
 {
 int length = -1;
 
-register int branchlength = 0;
-register pcre_uchar *cc = code + 1 + LINK_SIZE;
+BW_REGISTER int branchlength = 0;
+BW_REGISTER pcre_uchar *cc = code + 1 + LINK_SIZE;
 
 /* Scan along the opcodes for this branch. If we get to the end of the
 branch, check the length against that of the other branches. */
@@ -1757,7 +1757,7 @@ for (;;)
   {
   int d;
   pcre_uchar *ce, *cs;
-  register pcre_uchar op = *cc;
+  BW_REGISTER pcre_uchar op = *cc;
 
   switch (op)
     {
@@ -2076,7 +2076,7 @@ PRIV(find_bracket)(const pcre_uchar *code, BOOL utf, int number)
 {
 for (;;)
   {
-  register pcre_uchar c = *code;
+  BW_REGISTER pcre_uchar c = *code;
 
   if (c == OP_END) return NULL;
 
@@ -2211,7 +2211,7 @@ find_recurse(const pcre_uchar *code, BOOL utf)
 {
 for (;;)
   {
-  register pcre_uchar c = *code;
+  BW_REGISTER pcre_uchar c = *code;
   if (c == OP_END) return NULL;
   if (c == OP_RECURSE) return code;
 
@@ -2362,7 +2362,7 @@ static BOOL
 could_be_empty_branch(const pcre_uchar *code, const pcre_uchar *endcode,
   BOOL utf, compile_data *cd)
 {
-register pcre_uchar c;
+BW_REGISTER pcre_uchar c;
 for (code = first_significant_code(code + PRIV(OP_lengths)[*code], TRUE);
      code < endcode;
      code = first_significant_code(code + PRIV(OP_lengths)[c], TRUE))
@@ -2759,7 +2759,7 @@ static int
 check_posix_name(const pcre_uchar *ptr, int len)
 {
 const char *pn = posix_names;
-register int yield = 0;
+BW_REGISTER int yield = 0;
 while (posix_name_lengths[yield] != 0)
   {
   if (len == posix_name_lengths[yield] &&
@@ -3709,9 +3709,9 @@ pcre_int32 req_caseopt, reqvary, tempreqvary;
 int options = *optionsptr;               /* May change dynamically */
 int after_manual_callout = 0;
 int length_prevgroup = 0;
-register pcre_uint32 c;
+BW_REGISTER pcre_uint32 c;
 int escape;
-register pcre_uchar *code = *codeptr;
+BW_REGISTER pcre_uchar *code = *codeptr;
 pcre_uchar *last_code = code;
 pcre_uchar *orig_code = code;
 pcre_uchar *tempcode;
@@ -4171,7 +4171,7 @@ for (;; ptr++)
         {
         BOOL local_negate = FALSE;
         int posix_class, taboffset, tabopt;
-        register const pcre_uint8 *cbits = cd->cbits;
+        BW_REGISTER const pcre_uint8 *cbits = cd->cbits;
         pcre_uint8 pbits[32];
 
         if (ptr[1] != CHAR_COLON)
@@ -4299,7 +4299,7 @@ for (;; ptr++)
 
         else
           {
-          register const pcre_uint8 *cbits = cd->cbits;
+          BW_REGISTER const pcre_uint8 *cbits = cd->cbits;
           /* Every class contains at least two < 256 characters. */
           class_has_8bitchar++;
           /* Every class contains at least two characters. */
@@ -5075,7 +5075,7 @@ for (;; ptr++)
 
     else if (*previous >= OP_ASSERT && *previous <= OP_COND)
       {
-      register int i;
+      BW_REGISTER int i;
       int len = (int)(code - previous);
       pcre_uchar *bralink = NULL;
       pcre_uchar *brazeroptr = NULL;
@@ -7422,13 +7422,13 @@ Returns:     TRUE or FALSE
 */
 
 static BOOL
-is_anchored(register const pcre_uchar *code, unsigned int bracket_map,
+is_anchored(BW_REGISTER const pcre_uchar *code, unsigned int bracket_map,
   compile_data *cd, int atomcount)
 {
 do {
    const pcre_uchar *scode = first_significant_code(
      code + PRIV(OP_lengths)[*code], FALSE);
-   register int op = *scode;
+   BW_REGISTER int op = *scode;
 
    /* Non-capturing brackets */
 
@@ -7518,7 +7518,7 @@ is_startline(const pcre_uchar *code, unsigned int bracket_map,
 do {
    const pcre_uchar *scode = first_significant_code(
      code + PRIV(OP_lengths)[*code], FALSE);
-   register int op = *scode;
+   BW_REGISTER int op = *scode;
 
    /* If we are at the start of a conditional assertion group, *both* the
    conditional assertion *and* what follows the condition must satisfy the test
@@ -7634,7 +7634,7 @@ static pcre_uint32
 find_firstassertedchar(const pcre_uchar *code, pcre_int32 *flags,
   BOOL inassert)
 {
-register pcre_uint32 c = 0;
+BW_REGISTER pcre_uint32 c = 0;
 int cflags = REQ_NONE;
 
 *flags = REQ_NONE;
@@ -7645,7 +7645,7 @@ do {
              *code == OP_CBRAPOS || *code == OP_SCBRAPOS)? IMM2_SIZE:0;
    const pcre_uchar *scode = first_significant_code(code + 1+LINK_SIZE + xl,
      TRUE);
-   register pcre_uchar op = *scode;
+   BW_REGISTER pcre_uchar op = *scode;
 
    switch(op)
      {

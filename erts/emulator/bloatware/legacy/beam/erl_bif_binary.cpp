@@ -465,7 +465,7 @@ static int ac_find_first_match(ACFindFirstState *state, uint8_t *haystack,
   size_t len = state->len;
   size_t candidate_start = state->candidate_start;
   size_t rstart;
-  register size_t reds = *reductions;
+  BW_REGISTER size_t reds = *reductions;
 
   while (i < len) {
     if (--reds == 0) {
@@ -603,7 +603,7 @@ static int ac_find_all_non_overlapping(ACFindAllState *state, uint8_t *haystack,
   size_t m = state->m, save_m;
   size_t allocated = state->allocated;
   FindallData *out = state->out;
-  register size_t reds = *reductions;
+  BW_REGISTER size_t reds = *reductions;
 
 
   while (i < len) {
@@ -820,7 +820,7 @@ static ssize_t bm_find_first_match(BMFindFirstState *state, BMData *bmd,
   uint8_t *needle = bmd->x;
   ssize_t i;
   ssize_t j = state->pos;
-  register size_t reds = *reductions;
+  BW_REGISTER size_t reds = *reductions;
 
   while (j <= len - blen) {
     if (--reds == 0) {
@@ -914,7 +914,7 @@ static ssize_t bm_find_all_non_overlapping(BMFindAllState *state,
   size_t m = state->m;
   size_t allocated = state->allocated;
   FindallData *out = state->out;
-  register size_t reds = *reductions;
+  BW_REGISTER size_t reds = *reductions;
 
   while (j <= len - blen) {
     if (--reds == 0) {

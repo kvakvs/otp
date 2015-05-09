@@ -3457,7 +3457,7 @@ for (;;)
         {
         while (current_subject < end_subject)
           {
-          register pcre_uint32 c = RAWUCHARTEST(current_subject);
+          BW_REGISTER pcre_uint32 c = RAWUCHARTEST(current_subject);
 #ifndef COMPILE_PCRE8
           if (c > 255) c = 255;
 #endif
@@ -3512,7 +3512,7 @@ for (;;)
 
       if (has_req_char && end_subject - current_subject < REQ_BYTE_MAX)
         {
-        register PCRE_PUCHAR p = current_subject + (has_first_char? 1:0);
+        BW_REGISTER PCRE_PUCHAR p = current_subject + (has_first_char? 1:0);
 
         /* We don't need to repeat the search if we haven't yet reached the
         place we found it at last time. */
@@ -3523,7 +3523,7 @@ for (;;)
             {
             while (p < end_subject)
               {
-              register pcre_uint32 pp = RAWUCHARINCTEST(p);
+              BW_REGISTER pcre_uint32 pp = RAWUCHARINCTEST(p);
               if (pp == req_char || pp == req_char2) { p--; break; }
               }
             }

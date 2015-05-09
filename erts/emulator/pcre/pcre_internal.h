@@ -48,6 +48,8 @@ depending on the PRIV macro. */
 #ifndef PCRE_INTERNAL_H
 #define PCRE_INTERNAL_H
 
+#define BW_REGISTER register
+
 #ifdef ERLANG_INTEGRATION
 #include "local_config.h"
 #endif

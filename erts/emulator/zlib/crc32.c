@@ -9,6 +9,8 @@
  * factor of two increase in speed on a Power PC G4 (PPC7455) using gcc -O3.
  */
 
+#define BW_REGISTER register
+
 /* @(#) $Id$ */
 
 /*
@@ -253,8 +255,8 @@ local unsigned long crc32_little(crc, buf, len)
     const uint8_t FAR *buf;
     unsigned len;
 {
-    register z_crc_t c;
-    register const z_crc_t FAR *buf4;
+    BW_REGISTER z_crc_t c;
+    BW_REGISTER const z_crc_t FAR *buf4;
 
     c = (z_crc_t)crc;
     c = ~c;
@@ -293,8 +295,8 @@ local unsigned long crc32_big(crc, buf, len)
     const uint8_t FAR *buf;
     unsigned len;
 {
-    register z_crc_t c;
-    register const z_crc_t FAR *buf4;
+    BW_REGISTER z_crc_t c;
+    BW_REGISTER const z_crc_t FAR *buf4;
 
     c = ZSWAP32((z_crc_t)crc);
     c = ~c;

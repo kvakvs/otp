@@ -1111,39 +1111,39 @@ void process_main(void)
   /*
    * X register zero; also called r(0)
    */
-  register Eterm x0 REG_x0 = NIL;
+  BW_REGISTER Eterm x0 REG_x0 = NIL;
 
   /* Pointer to X registers: x(1)..x(N); reg[0] is used when doing GC,
    * in all other cases x0 is used.
    */
-  register Eterm *reg REG_xregs = nullptr;
+  BW_REGISTER Eterm *reg REG_xregs = nullptr;
 
   /*
    * Top of heap (next free location); grows upwards.
    */
-  register Eterm *HTOP REG_htop = nullptr;
+  BW_REGISTER Eterm *HTOP REG_htop = nullptr;
 
   /* Stack pointer.  Grows downwards; points
    * to last item pushed (normally a saved
    * continuation pointer).
    */
-  register Eterm *E REG_stop = nullptr;
+  BW_REGISTER Eterm *E REG_stop = nullptr;
 
   /*
    * Pointer to next threaded instruction.
    */
-  register BeamInstr *I REG_I = nullptr;
+  BW_REGISTER BeamInstr *I REG_I = nullptr;
 
   /* Number of reductions left.  This function
    * returns to the scheduler when FCALLS reaches zero.
    */
-  register ssize_t FCALLS REG_fcalls = 0;
+  BW_REGISTER ssize_t FCALLS REG_fcalls = 0;
 
   /*
    * Temporaries used for picking up arguments for instructions.
    */
-  register Eterm tmp_arg1 REG_tmp_arg1 = NIL;
-  register Eterm tmp_arg2 REG_tmp_arg2 = NIL;
+  BW_REGISTER Eterm tmp_arg1 REG_tmp_arg1 = NIL;
+  BW_REGISTER Eterm tmp_arg2 REG_tmp_arg2 = NIL;
 #if HEAP_ON_C_STACK
   Eterm tmp_big[2];           /* Temporary buffer for small bignums if HEAP_ON_C_STACK. */
 #else
@@ -1154,7 +1154,7 @@ void process_main(void)
    * X registers and floating point registers are located in
    * scheduler specific data.
    */
-  register FloatDef *freg;
+  BW_REGISTER FloatDef *freg;
 
   /*
    * For keeping the negative old value of 'reds' when call saving is active.

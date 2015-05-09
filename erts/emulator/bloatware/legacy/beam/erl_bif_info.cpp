@@ -2595,8 +2595,8 @@ bld_instruction_counts:
 
 #if defined(__GNUC__) && defined(HAVE_SOLARIS_SPARC_PERFMON)
   } else if (ERTS_IS_ATOM_STR("ultrasparc_read_tick1", BIF_ARG_1)) {
-    register unsigned high asm("%l0");
-    register unsigned low asm("%l1");
+    BW_REGISTER unsigned high asm("%l0");
+    BW_REGISTER unsigned low asm("%l1");
 
     hp = vm::heap_alloc(BIF_P, 5);
     asm volatile(".word 0xa3410000;"  /* rd %tick, %l1 */
@@ -2608,8 +2608,8 @@ bld_instruction_counts:
                  make_small(low & 0xFFFF));
     BIF_RET(res);
   } else if (ERTS_IS_ATOM_STR("ultrasparc_read_tick2", BIF_ARG_1)) {
-    register unsigned high asm("%l0");
-    register unsigned low asm("%l1");
+    BW_REGISTER unsigned high asm("%l0");
+    BW_REGISTER unsigned low asm("%l1");
 
     asm volatile(".word 0xa3410000;"  /* rd %tick, %l1 */
                  ".word 0xa1347020" /* srlx  %l1, 0x20, %l0 */
@@ -2621,8 +2621,8 @@ bld_instruction_counts:
                  make_small(low & 0xFFFF));
     BIF_RET(res);
   } else if (ERTS_IS_ATOM_STR("ultrasparc_read_pic1", BIF_ARG_1)) {
-    register unsigned high asm("%l0");
-    register unsigned low asm("%l1");
+    BW_REGISTER unsigned high asm("%l0");
+    BW_REGISTER unsigned low asm("%l1");
 
     hp = vm::heap_alloc(BIF_P, 5);
     asm volatile(".word 0xa3444000;"  /* rd %asr17, %l1 */
@@ -2634,8 +2634,8 @@ bld_instruction_counts:
                  make_small(low & 0xFFFF));
     BIF_RET(res);
   } else if (ERTS_IS_ATOM_STR("ultrasparc_read_pic2", BIF_ARG_1)) {
-    register unsigned high asm("%l0");
-    register unsigned low asm("%l1");
+    BW_REGISTER unsigned high asm("%l0");
+    BW_REGISTER unsigned low asm("%l1");
 
     asm volatile(".word 0xa3444000;"  /* rd %asr17, %l1 */
                  ".word 0xa1347020" /* srlx  %l1, 0x20, %l0 */

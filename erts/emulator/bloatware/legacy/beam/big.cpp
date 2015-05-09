@@ -460,8 +460,8 @@ static int I_comp(ErtsDigit *x, dsize_t xl, ErtsDigit *y, dsize_t yl)
 static dsize_t I_add(ErtsDigit *x, dsize_t xl, ErtsDigit *y, dsize_t yl, ErtsDigit *r)
 {
   dsize_t sz = xl;
-  register ErtsDigit yr, xr;
-  register ErtsDigit c = 0;
+  BW_REGISTER ErtsDigit yr, xr;
+  BW_REGISTER ErtsDigit c = 0;
 
   ASSERT(xl >= yl);
 
@@ -495,7 +495,7 @@ static dsize_t I_add(ErtsDigit *x, dsize_t xl, ErtsDigit *y, dsize_t yl, ErtsDig
 static dsize_t D_add(ErtsDigit *x, dsize_t xl, ErtsDigit c, ErtsDigit *r)
 {
   dsize_t sz = xl;
-  register ErtsDigit xr;
+  BW_REGISTER ErtsDigit xr;
 
   while (xl--) {
     xr = *x++ + c;
@@ -519,8 +519,8 @@ static dsize_t D_add(ErtsDigit *x, dsize_t xl, ErtsDigit c, ErtsDigit *r)
 static dsize_t I_sub(ErtsDigit *x, dsize_t xl, ErtsDigit *y, dsize_t yl, ErtsDigit *r)
 {
   ErtsDigit *r0 = r;
-  register ErtsDigit yr, xr;
-  register ErtsDigit c = 0;
+  BW_REGISTER ErtsDigit yr, xr;
+  BW_REGISTER ErtsDigit c = 0;
 
   ASSERT(I_comp(x, xl, y, yl) >= 0);
 
@@ -555,7 +555,7 @@ static dsize_t I_sub(ErtsDigit *x, dsize_t xl, ErtsDigit *y, dsize_t yl, ErtsDig
 static dsize_t D_sub(ErtsDigit *x, dsize_t xl, ErtsDigit c, ErtsDigit *r)
 {
   ErtsDigit *r0 = r;
-  register ErtsDigit yr, xr;
+  BW_REGISTER ErtsDigit yr, xr;
 
   ASSERT(I_comp(x, xl, x, 1) >= 0);
 
@@ -579,8 +579,8 @@ static dsize_t D_sub(ErtsDigit *x, dsize_t xl, ErtsDigit c, ErtsDigit *r)
 static dsize_t Z_sub(ErtsDigit *y, dsize_t yl, ErtsDigit *r)
 {
   ErtsDigit *r0 = r;
-  register ErtsDigit yr;
-  register ErtsDigit c = 0;
+  BW_REGISTER ErtsDigit yr;
+  BW_REGISTER ErtsDigit c = 0;
 
   while (yl--) {
     yr = *y++ + c;

@@ -2241,7 +2241,7 @@ static int try_again(file_descriptor *desc, struct t_data *d)
 static void cq_execute(file_descriptor *desc)
 {
   struct t_data *d;
-  register void *void_ptr; /* Soft cast variable */
+  BW_REGISTER void *void_ptr; /* Soft cast variable */
 
   if (desc->timer_state == timer_again) {
     return;
@@ -4055,7 +4055,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev)
     /* Dtrace: The dtrace user tag is not last in message,
          but follows the message tag directly.
          This is handled specially in prim_file.erl */
-    register void *void_ptr;
+    BW_REGISTER void *void_ptr;
     uint32_t i, n;
     ErlIOVec *res_ev;
 #ifdef USE_VM_PROBES
@@ -4344,7 +4344,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev)
      * and the first 64 bit field does not contain the number of
      * data binaries which invoke_preadv() also ignores.
      */
-    register void *void_ptr;
+    BW_REGISTER void *void_ptr;
     char mode;
     int64_t hdr_offset;
     uint32_t max_size;

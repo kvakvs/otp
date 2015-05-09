@@ -4932,7 +4932,7 @@ struct addr_if {
 #ifndef SIOCGIFNETMASK
 static struct in_addr net_mask(struct in_addr in)
 {
-  register u_long i = sock_ntohl(in.s_addr);
+  BW_REGISTER u_long i = sock_ntohl(in.s_addr);
 
   if (IN_CLASSA(i)) {
     in.s_addr = sock_htonl(IN_CLASSA_NET);

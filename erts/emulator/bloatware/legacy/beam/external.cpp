@@ -383,7 +383,7 @@ uint8_t *erts_encode_ext_dist_header_finalize(uint8_t *ext, ErtsAtomCache *cache
   uint8_t dist_hdr_flags;
   int long_atoms;
   int utf8_atoms = (int)(dflags & DFLAG_UTF8_ATOMS);
-  register uint8_t *ep = ext;
+  BW_REGISTER uint8_t *ep = ext;
   ASSERT(ep[0] == VERSION_MAGIC);
 
   if (ep[1] != DIST_HEADER) {
@@ -415,7 +415,7 @@ uint8_t *erts_encode_ext_dist_header_finalize(uint8_t *ext, ErtsAtomCache *cache
     uint32_t flgs_buf[((ERTS_DIST_HDR_ATOM_CACHE_FLAG_BYTES(
                           ERTS_MAX_INTERNAL_ATOM_CACHE_ENTRIES) - 1)
                        / sizeof(uint32_t)) + 1];
-    register uint32_t flgs;
+    BW_REGISTER uint32_t flgs;
     int iix, flgs_bytes, flgs_buf_ix, used_half_bytes;
 #ifdef DEBUG
     int tot_used_half_bytes;
@@ -658,7 +658,7 @@ erts_prepare_dist_ext(ErtsDistExternal *edep,
 #define ERTS_EXT_HDR_FAIL abort()
 #endif
 
-  register uint8_t *ep = ext;
+  BW_REGISTER uint8_t *ep = ext;
   int utf8_atoms = (int)(dep->flags & DFLAG_UTF8_ATOMS);
 
   edep->heap_size = -1;
@@ -739,7 +739,7 @@ erts_prepare_dist_ext(ErtsDistExternal *edep,
       int byte_ix;
       int bit_ix;
       int got_flgs;
-      register uint32_t flgs = 0;
+      BW_REGISTER uint32_t flgs = 0;
 
       CHKSIZE(flgs_size);
       ep += flgs_size;
@@ -3222,7 +3222,7 @@ dec_term(ErtsDistExternal *edep, Eterm **hpp, uint8_t *ep, ErlOffHeap *off_heap,
   Eterm *hp_saved;
   int n;
   ErtsAtomEncoding char_enc;
-  register Eterm *hp;        /* Please don't take the address of hp */
+  BW_REGISTER Eterm *hp;        /* Please don't take the address of hp */
   Eterm *maps_head;   /* for validation of maps */
   Eterm *next;
   SWord reds;

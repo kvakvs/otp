@@ -182,11 +182,11 @@ Returns:      >= 0 the number of subject bytes matched
 */
 
 static int
-match_ref(int offset, register PCRE_PUCHAR eptr, int length, match_data *md,
+match_ref(int offset, BW_REGISTER PCRE_PUCHAR eptr, int length, match_data *md,
   BOOL caseless)
 {
 PCRE_PUCHAR eptr_start = eptr;
-register PCRE_PUCHAR p = md->start_subject + md->offset_vector[offset];
+BW_REGISTER PCRE_PUCHAR p = md->start_subject + md->offset_vector[offset];
 #ifdef SUPPORT_UTF
 BOOL utf = md->utf;
 #endif
@@ -564,10 +564,10 @@ match(REGISTER PCRE_PUCHAR eptr, REGISTER const pcre_uchar *ecode,
 so they can be ordinary variables in all cases. Mark some of them with
 "register" because they are used a lot in loops. */
 
-register int  rrc;         /* Returns from recursive calls */
-register int  i;           /* Used for loops not involving calls to RMATCH() */
-register pcre_uint32 c;    /* Character values not kept over RMATCH() calls */
-register BOOL utf;         /* Local copy of UTF flag for speed */
+BW_REGISTER int  rrc;         /* Returns from recursive calls */
+BW_REGISTER int  i;           /* Used for loops not involving calls to RMATCH() */
+BW_REGISTER pcre_uint32 c;    /* Character values not kept over RMATCH() calls */
+BW_REGISTER BOOL utf;         /* Local copy of UTF flag for speed */
 
 BOOL minimize, possessive; /* Quantifier options */
 BOOL caseless;
@@ -607,8 +607,8 @@ do {						\
   }						\
 } while (0)
 
-register int loop_count = 0;
-register int loop_limit = md->loop_limit;
+BW_REGISTER int loop_count = 0;
+BW_REGISTER int loop_limit = md->loop_limit;
 heapframe *frame; 
 if (md->state_save) {
   frame = md->state_save;
@@ -2149,8 +2149,8 @@ for (;;)
 
         if (offset > offset_top)
           {
-          register int *iptr = md->offset_vector + offset_top;
-          register int *iend = md->offset_vector + offset;
+          BW_REGISTER int *iptr = md->offset_vector + offset_top;
+          BW_REGISTER int *iend = md->offset_vector + offset;
           while (iptr < iend) *iptr++ = -1; /* LOOP_COUNT: CHK */
           }
 
@@ -3796,7 +3796,7 @@ for (;;)
 #ifdef SUPPORT_UTF
     if (utf)
       {
-      register pcre_uint32 ch, och;
+      BW_REGISTER pcre_uint32 ch, och;
 
       ecode++;
       GETCHARINC(ch, ecode);
@@ -3823,7 +3823,7 @@ for (;;)
     else
 #endif
       {
-      register pcre_uint32 ch = ecode[1];
+      BW_REGISTER pcre_uint32 ch = ecode[1];
       c = *eptr++;
       if (ch == c || (op == OP_NOTI && TABLE_GET(ch, md->fcc, ch) == c))
         RRETURN(MATCH_NOMATCH);
@@ -3937,7 +3937,7 @@ for (;;)
 #ifdef SUPPORT_UTF
       if (utf)
         {
-        register pcre_uint32 d;
+        BW_REGISTER pcre_uint32 d;
 	COST(min);
         for (i = 1; i <= min; i++)  /* LOOP_COUNT: COST */
           {
@@ -3974,7 +3974,7 @@ for (;;)
 #ifdef SUPPORT_UTF
         if (utf)
           {
-          register pcre_uint32 d;
+          BW_REGISTER pcre_uint32 d;
           for (fi = min;; fi++) /* LOOP_COUNT: Ok */
             {
             RMATCH(eptr, ecode, offset_top, md, eptrb, RM28);
@@ -4019,7 +4019,7 @@ for (;;)
 #ifdef SUPPORT_UTF
         if (utf)
           {
-	  register pcre_uint32 d;
+	  BW_REGISTER pcre_uint32 d;
           for (i = min; i < max; i++) /* LOOP_COUNT: CHK */
             {
             int len = 1;
@@ -4080,7 +4080,7 @@ for (;;)
 #ifdef SUPPORT_UTF
       if (utf)
         {
-        register pcre_uint32 d;
+        BW_REGISTER pcre_uint32 d;
         for (i = 1; i <= min; i++)  /* LOOP_COUNT: CHK */
           {
           if (eptr >= md->end_subject)
@@ -4116,7 +4116,7 @@ for (;;)
 #ifdef SUPPORT_UTF
         if (utf)
           {
-          register pcre_uint32 d;
+          BW_REGISTER pcre_uint32 d;
           for (fi = min;; fi++)  /* LOOP_COUNT: Ok */
             {
             RMATCH(eptr, ecode, offset_top, md, eptrb, RM32);
@@ -4160,7 +4160,7 @@ for (;;)
 #ifdef SUPPORT_UTF
         if (utf)
           {
-          register pcre_uint32 d;
+          BW_REGISTER pcre_uint32 d;
           for (i = min; i < max; i++) /* LOOP_COUNT: CHK */
             {
             int len = 1;
@@ -6988,7 +6988,7 @@ tables = re->tables;
 
 if (extra_data != NULL)
   {
-  register unsigned int flags = extra_data->flags;
+  BW_REGISTER unsigned int flags = extra_data->flags;
   if ((flags & PCRE_EXTRA_STUDY_DATA) != 0)
     study = (const pcre_study_data *)extra_data->study_data;
   if ((flags & PCRE_EXTRA_MATCH_LIMIT) != 0)
@@ -7162,8 +7162,8 @@ in case they inspect these fields. */
 
 if (md->offset_vector != NULL)
   {
-  register int *iptr = md->offset_vector + ocount;
-  register int *iend = iptr - re->top_bracket;
+  BW_REGISTER int *iptr = md->offset_vector + ocount;
+  BW_REGISTER int *iend = iptr - re->top_bracket;
   if (iend < md->offset_vector + 2) iend = md->offset_vector + 2;
   while (--iptr >= iend) *iptr = -1;
   md->offset_vector[0] = md->offset_vector[1] = -1;
@@ -7310,7 +7310,7 @@ for(;;)
       {
       while (start_match < end_subject)
         {
-        register pcre_uint32 c = RAWUCHARTEST(start_match);
+        BW_REGISTER pcre_uint32 c = RAWUCHARTEST(start_match);
 #ifndef COMPILE_PCRE8
         if (c > 255) c = 255;
 #endif
@@ -7385,7 +7385,7 @@ for(;;)
 
     if (has_req_char && end_subject - start_match < REQ_BYTE_MAX)
       {
-      register PCRE_PUCHAR p = start_match + (has_first_char? 1:0);
+      BW_REGISTER PCRE_PUCHAR p = start_match + (has_first_char? 1:0);
 
       /* We don't need to repeat the search if we haven't yet reached the
       place we found it at last time. */
@@ -7396,7 +7396,7 @@ for(;;)
           {
           while (p < end_subject)
             {
-            register pcre_uint32 pp = RAWUCHARINCTEST(p);
+            BW_REGISTER pcre_uint32 pp = RAWUCHARINCTEST(p);
             if (pp == req_char || pp == req_char2) { p--; break; }
             }
           }
@@ -7624,7 +7624,7 @@ if (rc == MATCH_MATCH || rc == MATCH_ACCEPT)
 
   if (md->end_offset_top/2 <= re->top_bracket && offsets != NULL)
     {
-    register int *iptr, *iend;
+    BW_REGISTER int *iptr, *iend;
     int resetcount = 2 + re->top_bracket * 2;
     if (resetcount > offsetcount) resetcount = offsetcount;
     iptr = offsets + md->end_offset_top;
