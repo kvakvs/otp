@@ -1,12 +1,13 @@
 #pragma once
 
 #include <stdarg.h>
+#include "bw_sys.h"
 
 namespace erl {
 
 int start(int argc, const char *argv[]);
-void exit(int n, const char *fmt, ...);
-void exit_flush_async(int n, const char *fmt, ...);
+void BW_NORETURN exit(int n, const char *fmt, ...);
+void BW_NORETURN exit_flush_async(int n, const char *fmt, ...);
 void error(const char *fmt, va_list args);
 
 } // ns erl

@@ -514,10 +514,10 @@ void ethr_compiler_barrier_fallback(void);
 int ethr_init_atomics(void);
 
 /* info */
-char **ethr_native_atomic32_ops(void);
-char **ethr_native_atomic64_ops(void);
-char **ethr_native_dw_atomic_ops(void);
-char **ethr_native_su_dw_atomic_ops(void);
+const char **ethr_native_atomic32_ops(void);
+const char **ethr_native_atomic64_ops(void);
+const char **ethr_native_dw_atomic_ops(void);
+const char **ethr_native_su_dw_atomic_ops(void);
 
 #if !defined(ETHR_DW_NATMC_BITS__) && !defined(ETHR_NATMC_BITS__) && !defined(ETHR_NATMC32_BITS__)
 /*

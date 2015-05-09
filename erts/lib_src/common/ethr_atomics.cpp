@@ -4036,7 +4036,7 @@ char *zero_ops[] = {nullptr};
 #endif
 
 
-static char *native_su_dw_atomic_ops[] = {
+static const char *native_su_dw_atomic_ops[] = {
 #ifdef ETHR_HAVE_ETHR_NATIVE_SU_DW_ATOMIC_CMPXCHG
     "cmpxchg",
 #endif
@@ -4112,7 +4112,7 @@ static char *native_su_dw_atomic_ops[] = {
     nullptr
 };
 
-char **
+const char **
 ethr_native_su_dw_atomic_ops(void)
 {
 
@@ -4124,7 +4124,7 @@ ethr_native_su_dw_atomic_ops(void)
 }
 
 
-static char *native_dw_atomic_ops[] = {
+static const char *native_dw_atomic_ops[] = {
 #ifdef ETHR_HAVE_ETHR_NATIVE_DW_ATOMIC_CMPXCHG
     "cmpxchg",
 #endif
@@ -4200,7 +4200,7 @@ static char *native_dw_atomic_ops[] = {
     nullptr
 };
 
-char **
+const char **
 ethr_native_dw_atomic_ops(void)
 {
 
@@ -4212,7 +4212,7 @@ ethr_native_dw_atomic_ops(void)
 }
 
 
-static char *native_atomic64_ops[] = {
+static const char *native_atomic64_ops[] = {
 #ifdef ETHR_HAVE_ETHR_NATIVE_ATOMIC64_CMPXCHG
     "cmpxchg",
 #endif
@@ -4450,7 +4450,7 @@ static char *native_atomic64_ops[] = {
     nullptr
 };
 
-char **
+const char **
 ethr_native_atomic64_ops(void)
 {
 
@@ -4458,7 +4458,7 @@ ethr_native_atomic64_ops(void)
 }
 
 
-static char *native_atomic32_ops[] = {
+static const char *native_atomic32_ops[] = {
 #ifdef ETHR_HAVE_ETHR_NATIVE_ATOMIC32_CMPXCHG
     "cmpxchg",
 #endif
@@ -4696,7 +4696,7 @@ static char *native_atomic32_ops[] = {
     nullptr
 };
 
-char **
+const char **
 ethr_native_atomic32_ops(void)
 {
 

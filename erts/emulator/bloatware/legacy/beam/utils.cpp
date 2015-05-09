@@ -4595,7 +4595,7 @@ erts_get_ethread_info(Process *c_p)
     || defined(ETHR_NATIVE_DW_ATOMIC_IMPL)
     char buf[1024];
     int i;
-    char **str;
+    const char **str;
 #endif
 
     res = NIL;
