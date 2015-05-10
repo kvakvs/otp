@@ -183,13 +183,13 @@ Eterm erts_error_logger_warnings; /* What to map warning logs to, am_error,
 
 int erts_compat_rel;
 
-static int no_schedulers;
-static int no_schedulers_online;
-#ifdef ERTS_DIRTY_SCHEDULERS
-static int no_dirty_cpu_schedulers;
-static int no_dirty_cpu_schedulers_online;
-static int no_dirty_io_schedulers;
-#endif
+//static int no_schedulers;
+//static int no_schedulers_online;
+//#ifdef ERTS_DIRTY_SCHEDULERS
+//static int no_dirty_cpu_schedulers;
+//static int no_dirty_cpu_schedulers_online;
+//static int no_dirty_io_schedulers;
+//#endif
 
 #ifdef DEBUG
 uint32_t verbose;             /* See erl_debug.h for information about verbose */
@@ -329,12 +329,12 @@ erl_init(int ncpu,
   erts_init_time();
   erts_init_sys_common_misc();
   erts_init_process(ncpu, proc_tab_sz, legacy_proc_tab);
-  erts_init_scheduling(no_schedulers,
-                       no_schedulers_online
+  erts_init_scheduling(Init::g_no_schedulers,
+                       Init::g_no_schedulers_online
 #ifdef ERTS_DIRTY_SCHEDULERS
-                       , no_dirty_cpu_schedulers,
-                       no_dirty_cpu_schedulers_online,
-                       no_dirty_io_schedulers
+                       , Init::g_no_dirty_cpu_schedulers,
+                       Init::g_no_dirty_cpu_schedulers_online,
+                       Init::g_no_dirty_io_schedulers
 #endif
                       );
   erts_init_cpu_topology(); /* Must be after init_scheduling */
@@ -699,7 +699,7 @@ early_init(int *argc, char **argv) /*
            * early!
            */
 {
-  ErtsAllocInitOpts alloc_opts = ERTS_ALLOC_INIT_DEF_OPTS_INITER;
+  alloc::InitOpts alloc_opts; // = ERTS_ALLOC_INIT_DEF_OPTS_INITER;
   int ncpu;
   int ncpuonln;
   int ncpuavail;
@@ -782,13 +782,13 @@ early_init(int *argc, char **argv) /*
    * We need to know the number of schedulers to use before we
    * can initialize the allocators.
    */
-  no_schedulers = (size_t)(ncpu > 0 ? ncpu : 1);
-  no_schedulers_online = (ncpuavail > 0
+  Init::g_no_schedulers = (size_t)(ncpu > 0 ? ncpu : 1);
+  Init::g_no_schedulers_online = (ncpuavail > 0
                           ? ncpuavail
-                          : (ncpuonln > 0 ? ncpuonln : no_schedulers));
+                          : (ncpuonln > 0 ? ncpuonln : Init::g_no_schedulers));
 
-  schdlrs = no_schedulers;
-  schdlrs_onln = no_schedulers_online;
+  schdlrs = Init::g_no_schedulers;
+  schdlrs_onln = Init::g_no_schedulers_online;
 
 #ifdef ERTS_DIRTY_SCHEDULERS
   dirty_cpu_scheds = no_schedulers;
@@ -1061,7 +1061,7 @@ bad_SDcpu:
             case 0:
               switch (sscanf(arg, ":%d", &onln)) {
               case 1:
-                tot = no_schedulers;
+                tot = Init::g_no_schedulers;
                 goto chk_S;
 
               default:
@@ -1076,13 +1076,13 @@ chk_S:
               if (tot > 0) {
                 schdlrs = tot;
               } else {
-                schdlrs = no_schedulers + tot;
+                schdlrs = Init::g_no_schedulers + tot;
               }
 
               if (onln > 0) {
                 schdlrs_onln = onln;
               } else {
-                schdlrs_onln = no_schedulers_online + onln;
+                schdlrs_onln = Init::g_no_schedulers_online + onln;
               }
 
               if (schdlrs < 1 || ERTS_MAX_NO_OF_SCHEDULERS < schdlrs) {
@@ -1186,17 +1186,17 @@ bad_S:
 #endif
 
 #ifdef ERTS_SMP
-  no_schedulers = schdlrs;
-  no_schedulers_online = schdlrs_onln;
+  Init::g_no_schedulers = schdlrs;
+  Init::g_no_schedulers_online = schdlrs_onln;
 
-  erts_no_schedulers = (size_t) no_schedulers;
+  Erts::g_no_schedulers = (size_t) Init::g_no_schedulers;
 #endif
 #ifdef ERTS_DIRTY_SCHEDULERS
   erts_no_dirty_cpu_schedulers = no_dirty_cpu_schedulers = dirty_cpu_scheds;
   no_dirty_cpu_schedulers_online = dirty_cpu_scheds_online;
   erts_no_dirty_io_schedulers = no_dirty_io_schedulers = dirty_io_scheds;
 #endif
-  erts_early_init_scheduling(no_schedulers);
+  erts_early_init_scheduling(Init::g_no_schedulers);
 
   alloc_opts.ncpu = ncpu;
   erts_alloc_init(argc, argv, &alloc_opts); /* Handles (and removes)
@@ -1215,8 +1215,8 @@ bad_S:
    * ** Async threads (see erl_async.c)
    * ** Dirty scheduler threads
    */
-  erts_thr_progress_init(no_schedulers,
-                         no_schedulers + 2,
+  erts_thr_progress_init(Init::g_no_schedulers,
+                         Init::g_no_schedulers + 2,
 #ifndef ERTS_DIRTY_SCHEDULERS
                          erts_async_max_threads
 #else
@@ -1228,7 +1228,7 @@ bad_S:
 #endif
   erts_thr_q_init();
   erts_init_utils();
-  erts_early_init_cpu_topology(no_schedulers,
+  erts_early_init_cpu_topology(Init::g_no_schedulers,
                                &max_main_threads,
                                max_reader_groups,
                                &reader_groups);

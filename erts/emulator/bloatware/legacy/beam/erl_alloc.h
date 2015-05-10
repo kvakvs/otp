@@ -77,10 +77,11 @@ struct process;
 int erts_request_alloc_info(struct process *c_p, Eterm ref, Eterm allocs,
                             int only_sz, int internal);
 
-#define ERTS_ALLOC_INIT_DEF_OPTS_INITER {0}
-typedef struct {
-  int ncpu;
-} ErtsAllocInitOpts;
+//#define ERTS_ALLOC_INIT_DEF_OPTS_INITER {0}
+//typedef struct {
+//  int ncpu;
+//} ErtsAllocInitOpts;
+#include "bw_alloc.h"
 
 typedef struct {
   Allctr_t *deallctr[ERTS_ALC_A_MAX + 1];
@@ -89,7 +90,7 @@ typedef struct {
   int pre_alc_ix;
 } ErtsSchedAllocData;
 
-void erts_alloc_init(int *argc, char **argv, ErtsAllocInitOpts *eaiop);
+void erts_alloc_init(int *argc, char **argv, alloc::InitOpts *eaiop);
 void erts_alloc_late_init(void);
 
 #if defined(GET_ERTS_ALC_TEST) || defined(ERTS_ALC_INTERNAL__)

@@ -466,12 +466,12 @@ extern volatile int erts_got_sigusr1;
 #endif
 
 #ifdef ERTS_SMP
-extern erts_smp_atomic32_t erts_writing_erl_crash_dump;
-extern erts_tsd_key_t erts_is_crash_dumping_key;
-#define ERTS_SOMEONE_IS_CRASH_DUMPING \
-  ((int) erts_smp_atomic32_read_mb(&erts_writing_erl_crash_dump))
+//extern erts_smp_atomic32_t erts_writing_erl_crash_dump;
+//extern erts_tsd_key_t erts_is_crash_dumping_key;
+//#define ERTS_SOMEONE_IS_CRASH_DUMPING \
+//  ((int) erts_smp_atomic32_read_mb(&erts_writing_erl_crash_dump))
 #define ERTS_IS_CRASH_DUMPING \
-  ((int) (SWord) erts_tsd_get(erts_is_crash_dumping_key))
+  ((int) (SWord) erts_tsd_get(Erts::g_is_crash_dumping_key))
 #else
 extern volatile int erts_writing_erl_crash_dump;
 #define ERTS_SOMEONE_IS_CRASH_DUMPING erts_writing_erl_crash_dump

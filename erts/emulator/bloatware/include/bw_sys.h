@@ -5,6 +5,7 @@
 #include <climits>
 #include <atomic>
 #include <termios.h>
+#include <pthread.h>
 
 #define BW_NORETURN __attribute__((noreturn))
 
@@ -67,12 +68,23 @@ public:
   //
   static std::atomic<bool> g_break_requested;
   static std::atomic<bool> g_no_crash_dump;
+  static std::atomic<bool> g_writing_erl_crash_dump;
+  static std::atomic<bool> g_exiting;
+  static std::atomic<int32_t> g_max_gen_gcs;
+
+  typedef pthread_key_t tsd_key_t;
+  static tsd_key_t g_is_crash_dumping_key;
+  static tsd_key_t g_sched_data_key;
+
   static bool g_initialized;
   static bool g_ignore_break;
   static bool g_replace_intr;
   static uint32_t g_backtrace_depth;
   static bool g_use_sender_punish;
   static int32_t g_compat_rel;
+
+  // Schedulers
+  static size_t g_no_schedulers;
 
   //static uint32_t g_async_max_threads;
   //static uint32_t g_async_thread_suggested_stack_size;

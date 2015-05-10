@@ -79,7 +79,10 @@ set(SRC_LIST
     bloatware/legacy/beam/copy.cpp
     bloatware/legacy/beam/dist.cpp               bloatware/legacy/beam/dist.h
     bloatware/legacy/beam/erl_afit_alloc.cpp     bloatware/legacy/beam/erl_afit_alloc.h
+
     bloatware/legacy/beam/erl_alloc.cpp          bloatware/legacy/beam/erl_alloc.h
+    bloatware/src/beam/bw_alloc.cpp bloatware/src/beam/bw_alloc.h
+
     bloatware/legacy/beam/erl_alloc_util.cpp     bloatware/legacy/beam/erl_alloc_util.h
     bloatware/legacy/beam/erl_ao_firstfit_alloc.cpp   bloatware/legacy/beam/erl_ao_firstfit_alloc.h
     bloatware/legacy/beam/erl_arith.cpp

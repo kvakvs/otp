@@ -296,7 +296,7 @@ do {              \
 erts_sched_stat_t erts_sched_stat;
 
 #ifdef USE_THREADS
-static erts_tsd_key_t sched_data_key;
+//static erts_tsd_key_t sched_data_key;
 #endif
 
 static erts_smp_atomic32_t function_calls;
@@ -559,7 +559,7 @@ void
 erts_pre_init_process(void)
 {
 #ifdef USE_THREADS
-  erts_tsd_key_create(&sched_data_key, "erts_sched_data_key");
+  erts_tsd_key_create(&Erts::g_sched_data_key, "erts_sched_data_key");
 #endif
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
@@ -6253,7 +6253,7 @@ erts_schedid2runq(size_t id) {
 
 ErtsSchedulerData *
 erts_get_scheduler_data(void) {
-  return (ErtsSchedulerData *) erts_tsd_get(sched_data_key);
+  return (ErtsSchedulerData *) erts_tsd_get(Erts::g_sched_data_key);
 }
 
 #endif
@@ -8476,7 +8476,7 @@ sched_thread_func(void *vesdp) {
     erts_lc_set_thread_name(&buf[0]);
   }
 #endif
-  erts_tsd_set(sched_data_key, vesdp);
+  erts_tsd_set(Erts::g_sched_data_key, vesdp);
 #ifdef ERTS_SMP
 #if HAVE_ERTS_MSEG
   erts_mseg_late_init();

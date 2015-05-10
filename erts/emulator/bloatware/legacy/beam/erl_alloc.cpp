@@ -556,7 +556,7 @@ adjust_carrier_migration_support(struct au_init *auip)
 }
 
 void
-erts_alloc_init(int *argc, char **argv, ErtsAllocInitOpts *eaiop)
+erts_alloc_init(int *argc, char **argv, alloc::InitOpts *eaiop)
 {
   UWord extra_block_size = 0;
   int i, ncpu;

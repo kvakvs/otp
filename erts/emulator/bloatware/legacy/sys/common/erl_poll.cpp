@@ -2987,7 +2987,7 @@ fatal_error(const char *format, ...)
 {
   va_list ap;
 
-  if (ERTS_SOMEONE_IS_CRASH_DUMPING || ERTS_GOT_SIGUSR1) {
+  if (Erts::g_writing_erl_crash_dump || ERTS_GOT_SIGUSR1) {
     /*
      * Crash dump writing and reception of sigusr1 (which will
      * result in a crash dump) closes all file descriptors. This
@@ -3008,7 +3008,7 @@ fatal_error(const char *format, ...)
 static void
 fatal_error_async_signal_safe(const char *error_str)
 {
-  if (ERTS_SOMEONE_IS_CRASH_DUMPING || ERTS_GOT_SIGUSR1) {
+  if (Erts::g_writing_erl_crash_dump || ERTS_GOT_SIGUSR1) {
     /* See comment above in fatal_error() */
     return;
   }

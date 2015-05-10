@@ -1,6 +1,7 @@
 #include "bw_cpu_topology.h"
 #include "bw_beam_init.h"
 #include "bw_erl_vm.h"
+#include "bw_misc_utils.h"
 #include "bw_port.h"
 #include "bw_process.h"
 #include "bw_sys.h"
@@ -17,8 +18,16 @@
 const char *Init::g_program;
 const char *Init::g_init = "init";
 const char *Init::g_boot = "boot";
-int        Init::g_boot_argc;
-char * const *Init::g_boot_argv;
+int32_t     Init::g_boot_argc = 0;
+char *const *Init::g_boot_argv = nullptr;
+
+int32_t Init::g_no_schedulers = 0;
+int32_t Init::g_no_schedulers_online = 0;
+#ifdef ERTS_DIRTY_SCHEDULERS
+int32_t Init::g_no_dirty_cpu_schedulers = 0;
+int32_t Init::g_no_dirty_cpu_schedulers_online = 0;
+int32_t Init::g_no_dirty_io_schedulers = 0;
+#endif
 
 namespace erl {
 
@@ -58,7 +67,7 @@ static int32_t this_rel_num()
 
 static int early_init(int *argc, const char *argv[])
 {
-  //erts::save_emu_args(*argc, argv);
+  erts::save_emu_args(*argc, argv);
 
 //  erts_sched_compact_load = 1;
 //  erts_printf_eterm_func = erts_printf_term;
@@ -82,6 +91,60 @@ static int early_init(int *argc, const char *argv[])
   Erts::g_compat_rel = this_rel_num();
 
   erts_sys_pre_init();
+
+  Erts::g_exiting = false; // default in bw_sys too!
+  //erts_thr_progress_pre_init();
+
+  //#ifdef ERTS_ENABLE_LOCK_CHECK
+  //  erts_lc_init();
+  //#endif
+
+  Erts::g_writing_erl_crash_dump = false; // default in bw_sys too!
+  // TODO: ethread/pthread to c++11
+  erts_tsd_key_create(&Erts::g_is_crash_dumping_key, "erts_is_crash_dumping_key");
+
+  //Erts::g_max_gen_gcs = (int32_t)((uint16_t)-1); // default in bw_sys too!
+
+  //erts_pre_init_process (without lock checks)
+  erts_tsd_key_create(&Erts::g_sched_data_key, "erts_sched_data_key");
+
+  // We need to know the number of schedulers to use before we
+  // can initialize the allocators
+  Init::g_no_schedulers = (size_t)(ncpu > 0 ? ncpu : 1);
+  Init::g_no_schedulers_online = (ncpuavail > 0
+                                  ? ncpuavail
+                                  : (ncpuonln > 0
+                                     ? ncpuonln
+                                     : Init::g_no_schedulers));
+
+  int32_t schdlrs = Init::g_no_schedulers;
+  int32_t schdlrs_onln = Init::g_no_schedulers_online;
+
+#ifdef BW_ERTS_DIRTY_SCHEDULERS
+  int32_t dirty_cpu_scheds = Init::g_no_schedulers;
+  int32_t dirty_cpu_scheds_online = Init::g_no_schedulers_online;
+  int32_t dirty_io_scheds = 10;
+#endif
+
+  // TODO: args after emulator options
+
+  Init::g_no_schedulers = schdlrs;
+  Init::g_no_schedulers_online = schdlrs_onln;
+
+  Erts::g_no_schedulers = (size_t) Init::g_no_schedulers;
+
+#ifdef BW_ERTS_DIRTY_SCHEDULERS
+  Erts::g_no_dirty_cpu_schedulers = Init::g_no_dirty_cpu_schedulers = dirty_cpu_scheds;
+  Init::g_no_dirty_cpu_schedulers_online = dirty_cpu_scheds_online;
+  Erts::g_no_dirty_io_schedulers = Init::g_no_dirty_io_schedulers = dirty_io_scheds;
+#endif
+
+  //erts_early_init_scheduling(no_schedulers);
+
+  alloc::InitOpts alloc_opts;
+  alloc_opts.ncpu = ncpu;
+  //erts_alloc_init(argc, argv, &alloc_opts); // Handles (and removes) -M flags.
+
   return 0;
 }
 

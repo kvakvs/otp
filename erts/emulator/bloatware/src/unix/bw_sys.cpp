@@ -11,6 +11,13 @@
 
 std::atomic<bool> Erts::g_break_requested(false);
 std::atomic<bool> Erts::g_no_crash_dump(false);
+std::atomic<bool> Erts::g_writing_erl_crash_dump(false);
+std::atomic<bool> Erts::g_exiting(false);
+std::atomic<int32_t> Erts::g_max_gen_gcs(0xffff);
+
+Erts::tsd_key_t Erts::g_is_crash_dumping_key(0);
+Erts::tsd_key_t Erts::g_sched_data_key(0);
+
 bool Erts::g_initialized         = false;
 bool Erts::g_tty_using_oldshell  = true;
 bool Erts::g_ignore_break        = false;
@@ -18,6 +25,9 @@ bool Erts::g_replace_intr        = false; // erl::start command line parse
 uint32_t Erts::g_backtrace_depth = erts::DEFAULT_BACKTRACE_SIZE;
 bool Erts::g_use_sender_punish   = true;
 int32_t Erts::g_compat_rel;
+
+// Schedulers
+size_t Erts::g_no_schedulers = 1;
 
 // set early so the break handler has access to initial mode
 struct termios Erts::g_tty_initial_mode;

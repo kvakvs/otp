@@ -766,7 +766,8 @@ erl_crash_dump_v(const char *file, int line, const char *fmt, va_list args)
   int secs;
   int env_erl_crash_dump_seconds_set = 1;
 
-  if (ERTS_SOMEONE_IS_CRASH_DUMPING) {
+  //if (ERTS_SOMEONE_IS_CRASH_DUMPING) {
+  if (Erts::g_writing_erl_crash_dump) {
     return;
   }
 
@@ -782,8 +783,9 @@ erl_crash_dump_v(const char *file, int line, const char *fmt, va_list args)
   /* Either worked or not... */
 
   /* Allow us to pass certain places without locking... */
-  erts_smp_atomic32_set_mb(&erts_writing_erl_crash_dump, 1);
-  erts_smp_tsd_set(erts_is_crash_dumping_key, (void *) 1);
+  //erts_smp_atomic32_set_mb(&erts_writing_erl_crash_dump, 1);
+  Erts::g_writing_erl_crash_dump = true;
+  erts_smp_tsd_set(Erts::g_is_crash_dumping_key, (void *) 1);
 #else
   erts_writing_erl_crash_dump = 1;
 #endif
