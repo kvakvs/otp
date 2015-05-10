@@ -1795,7 +1795,7 @@ bad_fd_in_pollset(ErtsDrvEventState *state, Eterm inport,
     erts_dsprintf_buf_t *dsbufp = erts_create_logger_dsbuf();
 
     if (events & (ERTS_POLL_EV_IN|ERTS_POLL_EV_OUT)) {
-	char *io_str;
+        const char *io_str;
 	Eterm port = NIL;
 	if ((events & ERTS_POLL_EV_IN) && (events & ERTS_POLL_EV_OUT)) {
 	    io_str = "input/output";

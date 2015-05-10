@@ -167,7 +167,7 @@ void erl_drv_thr_init(void)
  */
 
 ErlDrvMutex *
-erl_drv_mutex_create(char *name)
+erl_drv_mutex_create(const char *name)
 {
 #ifdef USE_THREADS
   ErlDrvMutex *dmtx = (ErlDrvMutex *)erts_alloc_fnf(ERTS_ALC_T_DRV_MTX,
@@ -262,7 +262,7 @@ erl_drv_mutex_unlock(ErlDrvMutex *dmtx)
 }
 
 ErlDrvCond *
-erl_drv_cond_create(char *name)
+erl_drv_cond_create(const char *name)
 {
 #ifdef USE_THREADS
   ErlDrvCond *dcnd = (ErlDrvCond *)erts_alloc_fnf(ERTS_ALC_T_DRV_CND,
@@ -362,7 +362,7 @@ erl_drv_cond_wait(ErlDrvCond *dcnd, ErlDrvMutex *dmtx)
 }
 
 ErlDrvRWLock *
-erl_drv_rwlock_create(char *name)
+erl_drv_rwlock_create(const char *name)
 {
 #ifdef USE_THREADS
   ErlDrvRWLock *drwlck = (ErlDrvRWLock *)erts_alloc_fnf(ERTS_ALC_T_DRV_RWLCK,
@@ -494,7 +494,7 @@ erl_drv_rwlock_rwunlock(ErlDrvRWLock *drwlck)
 }
 
 int
-erl_drv_tsd_key_create(char *name, ErlDrvTSDKey *key)
+erl_drv_tsd_key_create(const char *name, ErlDrvTSDKey *key)
 {
   char *name_copy;
   size_t old_used_tsd_keys_len;

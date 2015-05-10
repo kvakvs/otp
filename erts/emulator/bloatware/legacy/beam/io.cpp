@@ -5419,13 +5419,13 @@ int async_ready(Port *p, void *data)
 }
 
 static void
-report_missing_drv_callback(Port *p, char *drv_type, char *callback)
+report_missing_drv_callback(Port *p, const char *drv_type, const char *callback)
 {
   ErtsPortNames *pnp = erts_get_port_names(p->common.id,
                        ERTS_Port2ErlDrvPort(p));
-  char *unknown = "<unknown>";
-  char *drv_name = pnp->driver_name ? pnp->driver_name : unknown;
-  char *prt_name = pnp->name ? pnp->name : unknown;
+  const char *unknown = "<unknown>";
+  const char *drv_name = pnp->driver_name ? pnp->driver_name : unknown;
+  const char *prt_name = pnp->name ? pnp->name : unknown;
   erts_dsprintf_buf_t *dsbufp = erts_create_logger_dsbuf();
   erts_dsprintf(dsbufp, "%T: %s driver '%s' ", p->common.id, drv_type, drv_name);
 
@@ -5445,7 +5445,7 @@ erts_stale_drv_select(Eterm port,
                       int mode,
                       int deselect)
 {
-  char *type;
+  const char *type;
   ErtsPortNames *pnp;
   erts_dsprintf_buf_t *dsbufp;
 

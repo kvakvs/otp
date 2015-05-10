@@ -2265,7 +2265,7 @@ static struct {
   erts_mtx_t init_mutex;
 } am;
 
-static void ERTS_INLINE atom_init(Eterm *atom, char *name)
+static void ERTS_INLINE atom_init(Eterm *atom, const char *name)
 {
   *atom = am_atom_put(name, strlen(name));
 }
@@ -2637,7 +2637,7 @@ Eterm erts_mmap_info(int *print_to_p,
   return res;
 }
 
-Eterm erts_mmap_info_options(char *prefix,
+Eterm erts_mmap_info_options(const char *prefix,
                              int *print_to_p,
                              void *print_to_arg,
                              size_t **hpp,

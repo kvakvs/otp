@@ -64,7 +64,7 @@ struct erts_mmap_info_struct {
 };
 Eterm erts_mmap_info(int *print_to_p, void *print_to_arg,
                      Eterm **hpp, size_t *szp, struct erts_mmap_info_struct *);
-Eterm erts_mmap_info_options(char *prefix, int *print_to_p, void *print_to_arg,
+Eterm erts_mmap_info_options(const char *prefix, int *print_to_p, void *print_to_arg,
                              size_t **hpp, size_t *szp);
 struct process;
 Eterm erts_mmap_debug_info(struct process *);

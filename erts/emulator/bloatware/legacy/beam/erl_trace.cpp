@@ -980,7 +980,7 @@ trace_send(Process *p, Eterm to, Eterm msg)
     }
   } else if (is_external_pid(to)
              && external_pid_dist_entry(to) == erts_this_dist_entry) {
-    char *s;
+    const char *s;
 send_to_non_existing_process:
     s = "send_to_non_existing_process";
     operation = am_atom_put(s, sys_strlen(s));
@@ -3444,7 +3444,7 @@ sys_msg_disp_failure(ErtsSysMsgQ *smqp, Eterm receiver)
     break;
 
   case SYS_MSG_TYPE_ERRLGR: {
-    char *no_elgger = "(no error logger present)";
+    const char *no_elgger = "(no error logger present)";
     Eterm *tp;
     Eterm tag;
 

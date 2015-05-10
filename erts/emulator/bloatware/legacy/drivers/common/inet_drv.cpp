@@ -2083,7 +2083,7 @@ static ErlDrvSSizeT ctl_error(int err, char **rbuf, ErlDrvSizeT rsize)
   return ctl_reply(INET_REP_ERROR, s, strlen(s), rbuf, rsize);
 }
 
-static ErlDrvSSizeT ctl_xerror(char *xerr, char **rbuf, ErlDrvSizeT rsize)
+static ErlDrvSSizeT ctl_xerror(const char *xerr, char **rbuf, ErlDrvSizeT rsize)
 {
   int n = strlen(xerr);
   return ctl_reply(INET_REP_ERROR, xerr, n, rbuf, rsize);

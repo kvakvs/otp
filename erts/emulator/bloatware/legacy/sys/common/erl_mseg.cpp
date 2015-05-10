@@ -999,7 +999,7 @@ static struct {
 #endif
 } am;
 
-static void ERTS_INLINE atom_init(Eterm *atom, char *name)
+static void ERTS_INLINE atom_init(Eterm *atom, const char *name)
 {
   *atom = am_atom_put(name, strlen(name));
 }
@@ -1118,7 +1118,7 @@ add_4tup(size_t **hpp, size_t *szp, Eterm *lp,
 
 static Eterm
 info_options(ErtsMsegAllctr_t *ma,
-             char *prefix,
+             const char *prefix,
              int *print_to_p,
              void *print_to_arg,
              size_t **hpp,

@@ -330,8 +330,8 @@ struct ErtsPollSet_ {
 };
 
 void erts_silence_warn_unused_result(long unused);
-static void fatal_error(char *format, ...);
-static void fatal_error_async_signal_safe(char *error_str);
+static void fatal_error(const char *format, ...);
+static void fatal_error_async_signal_safe(const char *error_str);
 
 static int max_fds = -1;
 static ErtsPollSet pollsets;
@@ -2983,7 +2983,7 @@ ERTS_POLL_EXPORT(erts_poll_info)(ErtsPollSet ps, ErtsPollInfo *pip)
 #endif
 
 static void
-fatal_error(char *format, ...)
+fatal_error(const char *format, ...)
 {
   va_list ap;
 
@@ -3006,7 +3006,7 @@ fatal_error(char *format, ...)
 }
 
 static void
-fatal_error_async_signal_safe(char *error_str)
+fatal_error_async_signal_safe(const char *error_str)
 {
   if (ERTS_SOMEONE_IS_CRASH_DUMPING || ERTS_GOT_SIGUSR1) {
     /* See comment above in fatal_error() */

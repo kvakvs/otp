@@ -90,7 +90,7 @@ __attribute__ ((aligned (ETHR_CACHE_LINE_SIZE)))
    (sizeof(V) == 13 && is_x86_vendor((V), (B), (C), (D)))
 
 static ETHR_INLINE int
-is_x86_vendor(char *str, int ebx, int ecx, int edx)
+is_x86_vendor(const char *str, int ebx, int ecx, int edx)
 {
     return (*((int *) &str[0]) == ebx
 	    && *((int *) &str[sizeof(int)]) == edx
@@ -647,7 +647,7 @@ ETHR_IMPL_NORETURN__ ethr_fatal_error__(const char *file,
 					const char *func,
 					int err)
 {
-    char *errstr;
+    const char *errstr;
     if (err == ENOTSUP)
 	errstr = "Operation not supported";
     else {

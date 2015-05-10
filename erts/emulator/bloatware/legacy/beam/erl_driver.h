@@ -547,17 +547,17 @@ EXTERN void driver_system_info(ErlDrvSysInfo *sip, size_t si_size);
  * erl driver thread functions.
  */
 
-EXTERN ErlDrvMutex *erl_drv_mutex_create(char *name);
+EXTERN ErlDrvMutex *erl_drv_mutex_create(const char *name);
 EXTERN void erl_drv_mutex_destroy(ErlDrvMutex *mtx);
 EXTERN int erl_drv_mutex_trylock(ErlDrvMutex *mtx);
 EXTERN void erl_drv_mutex_lock(ErlDrvMutex *mtx);
 EXTERN void erl_drv_mutex_unlock(ErlDrvMutex *mtx);
-EXTERN ErlDrvCond *erl_drv_cond_create(char *name);
+EXTERN ErlDrvCond *erl_drv_cond_create(const char *name);
 EXTERN void erl_drv_cond_destroy(ErlDrvCond *cnd);
 EXTERN void erl_drv_cond_signal(ErlDrvCond *cnd);
 EXTERN void erl_drv_cond_broadcast(ErlDrvCond *cnd);
 EXTERN void erl_drv_cond_wait(ErlDrvCond *cnd, ErlDrvMutex *mtx);
-EXTERN ErlDrvRWLock *erl_drv_rwlock_create(char *name);
+EXTERN ErlDrvRWLock *erl_drv_rwlock_create(const char *name);
 EXTERN void erl_drv_rwlock_destroy(ErlDrvRWLock *rwlck);
 EXTERN int erl_drv_rwlock_tryrlock(ErlDrvRWLock *rwlck);
 EXTERN void erl_drv_rwlock_rlock(ErlDrvRWLock *rwlck);
@@ -565,7 +565,7 @@ EXTERN void erl_drv_rwlock_runlock(ErlDrvRWLock *rwlck);
 EXTERN int erl_drv_rwlock_tryrwlock(ErlDrvRWLock *rwlck);
 EXTERN void erl_drv_rwlock_rwlock(ErlDrvRWLock *rwlck);
 EXTERN void erl_drv_rwlock_rwunlock(ErlDrvRWLock *rwlck);
-EXTERN int erl_drv_tsd_key_create(char *name, ErlDrvTSDKey *key);
+EXTERN int erl_drv_tsd_key_create(const char *name, ErlDrvTSDKey *key);
 EXTERN void erl_drv_tsd_key_destroy(ErlDrvTSDKey key);
 EXTERN void erl_drv_tsd_set(ErlDrvTSDKey key, void *data);
 EXTERN void *erl_drv_tsd_get(ErlDrvTSDKey key);

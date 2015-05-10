@@ -63,7 +63,10 @@ static ErlDrvData ttysl_start(ErlDrvPort, char *);
 
 /* Terminal capabilites in which we are interested. */
 static char *capbuf;
-static char *up, *down, *left, *right;
+static const char *up;
+static const char *down;
+static const char *left;
+static const char *right;
 static int cols, xn;
 static volatile int cols_needs_update = FALSE;
 

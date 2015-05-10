@@ -963,10 +963,10 @@ static void reply_Uint_posix_error(file_descriptor *desc, size_t num,
 }
 
 #ifdef HAVE_SENDFILE
-static void reply_string_error(file_descriptor *desc, char *str)
+static void reply_string_error(file_descriptor *desc, const char *str)
 {
   char response[256];   /* Response buffer. */
-  char *s;
+  const char *s;
   char *t;
 
   response[0] = FILE_RESP_ERROR;
@@ -1674,10 +1674,11 @@ static void invoke_writev(void *data)
            */
           errno = EINVAL;
 
-          if (!(status =
-                  erts_gzwrite((ErtsGzFile)d->fd,
-                               iov[i].iov_base,
-                               iov[i].iov_len)) == iov[i].iov_len) {
+          if (!(
+                (status = erts_gzwrite((ErtsGzFile)d->fd,
+                                       iov[i].iov_base,
+                                       iov[i].iov_len)) == iov[i].iov_len
+                )) {
             d->errInfo.posix_errno =
               d->errInfo.os_errno = errno; /* XXX Correct? */
             break;

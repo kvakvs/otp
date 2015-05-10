@@ -51,7 +51,7 @@ static int num_errcodes_allocated = 0;
 
 #define my_strdup(WHAT) my_strdup_in(ERTS_ALC_T_DDLL_ERRCODES, WHAT);
 
-static char *my_strdup_in(ErtsAlcType_t type, char *what)
+static char *my_strdup_in(ErtsAlcType_t type, const char *what)
 {
   char *res = erts::alloc<char>(type, strlen(what) + 1);
   strcpy(res, what);
@@ -59,7 +59,7 @@ static char *my_strdup_in(ErtsAlcType_t type, char *what)
 }
 
 
-static int find_errcode(char *string, ErtsSysDdllError *err)
+static int find_errcode(const char *string, ErtsSysDdllError *err)
 {
   int i;
 
@@ -277,7 +277,7 @@ int erts_sys_ddll_close2(void *handle, ErtsSysDdllError *err)
 /*
  * Return string that describes the (current) error
  */
-char *erts_sys_ddll_error(int code)
+const char *erts_sys_ddll_error(int code)
 {
   int actual_code;
 
@@ -288,7 +288,7 @@ char *erts_sys_ddll_error(int code)
   actual_code = -1 * (code - ERL_DE_DYNAMIC_ERROR_OFFSET);
 #if defined(HAVE_DLOPEN)
   {
-    char *msg;
+    const char *msg;
 
     if (actual_code >= num_errcodes) {
       msg = "Unknown dlload error";
