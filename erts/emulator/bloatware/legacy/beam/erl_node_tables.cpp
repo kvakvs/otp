@@ -43,8 +43,8 @@ ssize_t erts_no_of_not_connected_dist_entries;
 
 DistEntry *erts_this_dist_entry;
 ErlNode *erts_this_node;
-char erts_this_node_sysname_BUFFER[256],
-     *erts_this_node_sysname = "uninitialized yet";
+char erts_this_node_sysname_BUFFER[256];
+const char *erts_this_node_sysname = "uninitialized yet";
 
 static size_t node_entries;
 static size_t dist_entries;
@@ -795,7 +795,8 @@ erts_set_this_node(Eterm sysname, size_t creation)
   erts_this_node->sysname = sysname;
   erts_this_node->creation = creation;
   erts_this_node_sysname = erts_this_node_sysname_BUFFER;
-  erts_snprintf(erts_this_node_sysname, sizeof(erts_this_node_sysname),
+  erts_snprintf(erts_this_node_sysname_BUFFER,
+                sizeof(erts_this_node_sysname_BUFFER),
                 "%T", sysname);
   (void) hash_put(&erts_node_table, (void *) erts_this_node);
 
@@ -884,7 +885,8 @@ void erts_init_node_tables(void)
   erts_this_node->creation      = 0;
   erts_this_node->dist_entry      = erts_this_dist_entry;
   erts_this_node_sysname = erts_this_node_sysname_BUFFER;
-  erts_snprintf(erts_this_node_sysname, sizeof(erts_this_node_sysname),
+  erts_snprintf(erts_this_node_sysname_BUFFER,
+                sizeof(erts_this_node_sysname_BUFFER),
                 "%T", erts_this_node->sysname);
 
   (void) hash_put(&erts_node_table, (void *) erts_this_node);

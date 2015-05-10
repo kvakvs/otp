@@ -99,3 +99,14 @@ public:
   //static Eterm(*info)(void *);
   //int (*check_io_debug)(ErtsCheckIoDebugInfo *);
 };
+
+class Termcap {
+public:
+  // Termcap functions.
+  static int tgetent(const char *bp, const char *name);
+  static int tgetnum(const char *cap);
+  static int tgetflag(const char *cap);
+  static char *tgetstr(const char *cap, char **buf);
+  static char *tgoto(const char *cm, int col, int line);
+  static int tputs(const char *cp, int affcnt, int (*outc)(int c));
+};

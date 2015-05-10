@@ -168,3 +168,43 @@ void erl::assert_error(const char *expr, const char *func, const char *file, int
 #endif
   ::abort();
 }
+
+/* Termcap functions. */
+extern "C" {
+  int tgetent(char *bp, char *name);
+  int tgetnum(char *cap);
+  int tgetflag(char *cap);
+  char *tgetstr(char *cap, char **buf);
+  char *tgoto(char *cm, int col, int line);
+  int tputs(char *cp, int affcnt, int (*outc)(int c));
+}
+
+int Termcap::tgetent(const char *bp, const char *name)
+{
+  return ::tgetent(const_cast<char *>(bp), const_cast<char *>(name));
+}
+
+int Termcap::tgetnum(const char *cap)
+{
+  return ::tgetnum(const_cast<char *>(cap));
+}
+
+int Termcap::tgetflag(const char *cap)
+{
+  return ::tgetflag(const_cast<char *>(cap));
+}
+
+char *Termcap::tgetstr(const char *cap, char **buf)
+{
+  return ::tgetstr(const_cast<char *>(cap), buf);
+}
+
+char *Termcap::tgoto(const char *cm, int col, int line)
+{
+  return ::tgoto(const_cast<char *>(cm), col, line);
+}
+
+int Termcap::tputs(const char *cp, int affcnt, int (*outc)(int))
+{
+  return ::tputs(const_cast<char *>(cp), affcnt, outc);
+}

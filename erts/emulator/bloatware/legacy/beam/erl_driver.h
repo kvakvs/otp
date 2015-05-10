@@ -450,7 +450,7 @@ EXTERN int erl_drv_consume_timeslice(ErlDrvPort port, int percent);
 /*
  * Get plain-text error message from within a driver
  */
-EXTERN char *erl_errno_id(int error);
+EXTERN const char *erl_errno_id(int error);
 
 /*
  * The following functions are used to initiate a close of a port
@@ -639,7 +639,7 @@ EXTERN int null_func(void);
 #ifndef ERL_DRIVER_TYPES_ONLY
 
 /* make terms for driver_output_term and driver_send_term */
-EXTERN ErlDrvTermData driver_mk_atom(char *);
+EXTERN ErlDrvTermData driver_mk_atom(const char *);
 EXTERN ErlDrvTermData driver_mk_port(ErlDrvPort);
 EXTERN ErlDrvTermData driver_connected(ErlDrvPort);
 EXTERN ErlDrvTermData driver_caller(ErlDrvPort);
@@ -647,7 +647,7 @@ extern const ErlDrvTermData driver_term_nil;
 EXTERN ErlDrvTermData driver_mk_term_nil(void);
 EXTERN ErlDrvPort driver_create_port(ErlDrvPort creator_port,
                                      ErlDrvTermData connected, /* pid */
-                                     char *name, /* driver name */
+                                     const char *name, /* driver name */
                                      ErlDrvData drv_data);
 
 
@@ -706,8 +706,8 @@ EXTERN int driver_dl_close(void *);
 EXTERN const char *driver_dl_error(void);
 
 /* environment */
-EXTERN int erl_drv_putenv(char *key, char *value);
-EXTERN int erl_drv_getenv(char *key, char *value, size_t *value_size);
+EXTERN int erl_drv_putenv(const char *key, char *value);
+EXTERN int erl_drv_getenv(const char *key, char *value, size_t *value_size);
 
 #ifdef __OSE__
 typedef ErlDrvUInt ErlDrvOseEventId;

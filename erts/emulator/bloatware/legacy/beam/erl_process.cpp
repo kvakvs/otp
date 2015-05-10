@@ -657,7 +657,7 @@ erts_late_init_process(void)
 
   for (ix = 0; ix < ERTS_NO_PRIO_LEVELS; ix++) {
     Eterm atom;
-    char *atom_str;
+    const char *atom_str;
 
     switch (ix) {
     case PRIORITY_MAX:

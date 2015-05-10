@@ -204,7 +204,7 @@ BIF_RETTYPE maps_get_2(BIF_ALIST_2)
   if (is_map(BIF_ARG_2)) {
     Eterm *hp;
     Eterm value, error;
-    char *s_error;
+    const char *s_error;
 
     if (erts_maps_get(BIF_ARG_1, BIF_ARG_2, &value)) {
       BIF_RET(value);

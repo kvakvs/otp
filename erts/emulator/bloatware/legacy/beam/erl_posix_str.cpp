@@ -46,7 +46,7 @@
  *----------------------------------------------------------------------
  */
 
-char *erl_errno_id(int error)
+const char *erl_errno_id(int error)
 {
   switch (error) {
 #ifdef E2BIG

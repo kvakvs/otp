@@ -204,7 +204,7 @@ static void rfile_stop(ErlDrvData e)
 static int error_reply(RamFile *f, int err)
 {
   char response[256];   /* Response buffer. */
-  char *s;
+  const char *s;
   char *t;
 
   /*

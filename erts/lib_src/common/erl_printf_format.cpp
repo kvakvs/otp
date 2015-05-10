@@ -170,7 +170,7 @@ static char heX[] = "0123456789ABCDEF";
 int (*erts_printf_eterm_func)(fmtfn_t, void*, ErlPfEterm, long, ErlPfEterm*) = nullptr;
 
 static int
-noop_fn(void *vfp, char* buf, size_t len)
+noop_fn(void *vfp, const char* buf, size_t len)
 {
     return 0;
 }
@@ -468,10 +468,10 @@ static size_t my_strnlen(const char *s, size_t maxlen)
     return i;
 }
 
-int erts_printf_format(fmtfn_t fn, void* arg, char* fmt, va_list ap)
+int erts_printf_format(fmtfn_t fn, void* arg, const char* fmt, va_list ap)
 {
-    char* ptr0 = fmt;
-    char* ptr = ptr0;
+    const char* ptr0 = fmt;
+    const char* ptr = ptr0;
     int count = 0;
     int n;
     int res = 0;
@@ -876,14 +876,14 @@ erts_printf_char(fmtfn_t fn, void *arg, char c)
 }
 
 int
-erts_printf_string(fmtfn_t fn, void *arg, char *str)
+erts_printf_string(fmtfn_t fn, void *arg, const char *str)
 {
     size_t sz = strlen(str);
     return (*fn)(arg, str, sz);
 }
 
 int
-erts_printf_buf(fmtfn_t fn, void *arg, char *buf, size_t sz)
+erts_printf_buf(fmtfn_t fn, void *arg, const char *buf, size_t sz)
 {
     return (*fn)(arg, buf, sz);
 }

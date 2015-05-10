@@ -243,15 +243,15 @@ void enif_free(void *ptr)
   erts_free(ERTS_ALC_T_NIF, ptr);
 }
 
-typedef struct enif_msg_environment_t {
+typedef struct {
   ErlNifEnv env;
   Process phony_proc;
-};
+} enif_msg_environment_t;
 
 ErlNifEnv *enif_alloc_env(void)
 {
   auto msg_env = (enif_msg_environment_t *)erts_alloc_fnf(
-                   ERTS_ALC_T_NIF, sizeof(struct enif_msg_environment_t));
+                   ERTS_ALC_T_NIF, sizeof(enif_msg_environment_t));
   Eterm *phony_heap = (Eterm *) msg_env; /* dummy non-nullptr ptr */
 
   msg_env->env.hp = phony_heap;
@@ -287,7 +287,7 @@ static ERTS_INLINE void clear_offheap(ErlOffHeap *oh)
 
 void enif_clear_env(ErlNifEnv *env)
 {
-  struct enif_msg_environment_t *menv = (struct enif_msg_environment_t *)env;
+  enif_msg_environment_t *menv = (enif_msg_environment_t *)env;
   Process *p = &menv->phony_proc;
   ASSERT(p == menv->env.proc);
   ASSERT(p->common.id == ERTS_INVALID_PID);
@@ -310,7 +310,7 @@ void enif_clear_env(ErlNifEnv *env)
 int enif_send(ErlNifEnv *env, const ErlNifPid *to_pid,
               ErlNifEnv *msg_env, ERL_NIF_TERM msg)
 {
-  struct enif_msg_environment_t *menv = (struct enif_msg_environment_t *)msg_env;
+  enif_msg_environment_t *menv = (enif_msg_environment_t *)msg_env;
   ErtsProcLocks rp_locks = 0;
   Process *rp;
   Process *c_p;

@@ -164,7 +164,7 @@ extern ssize_t erts_no_of_not_connected_dist_entries;
 
 extern DistEntry *erts_this_dist_entry;
 extern ErlNode *erts_this_node;
-extern char *erts_this_node_sysname; /* must match erl_node_tables.c */
+extern const char *erts_this_node_sysname; /* must match erl_node_tables.c */
 
 DistEntry *erts_channel_no_to_dist_entry(size_t);
 DistEntry *erts_sysname_to_connected_dist_entry(Eterm);

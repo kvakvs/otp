@@ -305,7 +305,7 @@ static void insert_port_struct(void *vprt, Eterm data)
 
 #define ERTS_CREATE_PORT_FLAG_PARALLELISM   (1 << 0)
 
-static Port *create_port(char *name,
+static Port *create_port(const char *name,
                          erts_driver_t *driver,
                          erts_mtx_t *driver_lock,
                          int create_flags,
@@ -852,7 +852,7 @@ ERTS_SCHED_PREF_QUICK_ALLOC_IMPL(xports_list, ErtsXPortsList, 50, ERTS_ALC_T_XPO
 ErlDrvPort
 driver_create_port(ErlDrvPort creator_port_ix, /* Creating port */
                    ErlDrvTermData pid,    /* Owner/Caller */
-                   char *name,            /* Driver name */
+                   const char *name,            /* Driver name */
                    ErlDrvData drv_data)   /* Driver data */
 {
   int cprt_flgs = 0;
@@ -7892,7 +7892,7 @@ int driver_exit(ErlDrvPort ix, int err)
   if (err == 0) {
     return driver_failure_term(ix, am_normal, 0);
   } else {
-    char *err_str = erl_errno_id(err);
+    const char *err_str = erl_errno_id(err);
     Eterm am_err = erts_atom_put((uint8_t *) err_str, sys_strlen(err_str),
                                  ERTS_ATOM_ENC_LATIN1, 1);
     return driver_failure_term(ix, am_err, 0);
@@ -7927,7 +7927,7 @@ int driver_failure_eof(ErlDrvPort ix)
 
 
 
-ErlDrvTermData driver_mk_atom(char *string)
+ErlDrvTermData driver_mk_atom(const char *string)
 {
   Eterm am = erts_atom_put((uint8_t *) string,
                            sys_strlen(string),
@@ -8450,13 +8450,13 @@ int null_func(void)
 }
 
 int
-erl_drv_putenv(char *key, char *value)
+erl_drv_putenv(const char *key, char *value)
 {
   return erts_sys_putenv_raw(key, value);
 }
 
 int
-erl_drv_getenv(char *key, char *value, size_t *value_size)
+erl_drv_getenv(const char *key, char *value, size_t *value_size)
 {
   return erts_sys_getenv_raw(key, value, value_size);
 }

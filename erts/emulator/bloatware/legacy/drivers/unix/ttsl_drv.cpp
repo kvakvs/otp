@@ -61,16 +61,6 @@ static ErlDrvData ttysl_start(ErlDrvPort, char *);
 #define TRUE 1
 #define FALSE 0
 
-/* Termcap functions. */
-extern "C" {
-  int tgetent(char *bp, char *name);
-  int tgetnum(char *cap);
-  int tgetflag(char *cap);
-  char *tgetstr(char *cap, char **buf);
-  char *tgoto(char *cm, int col, int line);
-  int tputs(char *cp, int affcnt, int (*outc)(int c));
-}
-
 /* Terminal capabilites in which we are interested. */
 static char *capbuf;
 static char *up, *down, *left, *right;
@@ -1293,7 +1283,7 @@ static int start_termcap(void)
     env = envbuf;
   }
 
-  if (tgetent((char *)lbuf, env) <= 0) {
+  if (Termcap::tgetent((char *)lbuf, env) <= 0) {
     goto false_;
   }
 
@@ -1303,24 +1293,26 @@ static int start_termcap(void)
   }
 
   c = capbuf;
-  cols = tgetnum("co");
+  cols = Termcap::tgetnum("co");
 
   if (cols <= 0) {
     cols = DEF_WIDTH;
   }
 
-  xn = tgetflag("xn");
-  up = tgetstr("up", &c);
+  xn = Termcap::tgetflag("xn");
+  up = Termcap::tgetstr("up", &c);
 
-  if (!(down = tgetstr("do", &c))) {
+  if (!(down = Termcap::tgetstr("do", &c))) {
     down = "\n";
   }
 
-  if (!(left = (char *)(tgetflag("bs") ? "\b" : tgetstr("bc", &c)))) {
+  if (!(left = (char *)(Termcap::tgetflag("bs")
+                        ? "\b"
+                        : Termcap::tgetstr("bc", &c)))) {
     left = "\b";  /* Can't happen - but does on Solaris 2 */
   }
 
-  right = tgetstr("nd", &c);
+  right = Termcap::tgetstr("nd", &c);
 
   if (up && down && left && right) {
     return TRUE;
@@ -1353,7 +1345,7 @@ static int stop_termcap(void)
 static int move_left(int n)
 {
   while (n-- > 0) {
-    tputs(left, 1, outc);
+    Termcap::tputs(left, 1, outc);
   }
 
   return TRUE;
@@ -1362,7 +1354,7 @@ static int move_left(int n)
 static int move_right(int n)
 {
   while (n-- > 0) {
-    tputs(right, 1, outc);
+    Termcap::tputs(right, 1, outc);
   }
 
   return TRUE;
@@ -1371,7 +1363,7 @@ static int move_right(int n)
 static int move_up(int n)
 {
   while (n-- > 0) {
-    tputs(up, 1, outc);
+    Termcap::tputs(up, 1, outc);
   }
 
   return TRUE;
@@ -1380,7 +1372,7 @@ static int move_up(int n)
 static int move_down(int n)
 {
   while (n-- > 0) {
-    tputs(down, 1, outc);
+    Termcap::tputs(down, 1, outc);
   }
 
   return TRUE;

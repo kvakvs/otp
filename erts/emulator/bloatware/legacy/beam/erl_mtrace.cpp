@@ -173,13 +173,7 @@ do {                  \
 #define PUT_VSZ_UI  PUT_VSZ_UI32
 #endif /* #ifdef ARCH_64 */
 
-#define MAKE_TBUF_SZ(SZ)            \
-  (TRACE_BUF_SZ < (SZ)              \
-   ? (disable_trace(1, "Internal buffer overflow", 0), 0)   \
-   : (endp - tracep < (SZ) ? send_trace_buffer() : 1))
-
-
-static void disable_trace(int error, char *reason, int eno);
+static void disable_trace(int error, const char *reason, int eno);
 static int send_trace_buffer(void);
 
 #ifdef DEBUG
@@ -228,9 +222,15 @@ static ErtsAllocatorWrapper_t mtrace_wrapper;
 #error ERTS_MTRACE_SEGMENT_ID >= ERTS_ALC_A_MIN || ERTS_MTRACE_SEGMENT_ID < 0
 #endif
 
-char *erl_errno_id(int error);
+const char *erl_errno_id(int error);
 
 #define INVALID_TIME_INC (0xffffffff)
+
+inline size_t MAKE_TBUF_SZ(size_t SZ) {
+  return (TRACE_BUF_SZ < (SZ)
+   ? (disable_trace(1, "Internal buffer overflow", 0), 0)
+   : (endp - tracep < (SZ) ? send_trace_buffer() : 1));
+}
 
 static ERTS_INLINE uint32_t
 get_time_inc(void)
@@ -298,10 +298,10 @@ get_time_inc(void)
 
 
 static void
-disable_trace(int error, char *reason, int eno)
+disable_trace(int /*error*/, const char *reason, int eno)
 {
-  char *mt_dis = "Memory trace disabled";
-  char *eno_str;
+  const char *mt_dis = "Memory trace disabled";
+  const char *eno_str;
 
   erts_mtrace_enabled = 0;
   erts_sock_close(socket_desc);

@@ -22,8 +22,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-extern int (*erts_printf_stdout_func)(char *, va_list);
-extern int (*erts_printf_stderr_func)(char *, va_list);
+typedef int (*printf_fn_t)(const char *fmt, va_list);
+extern printf_fn_t erts_printf_stdout_func;
+extern printf_fn_t erts_printf_stderr_func;
 extern int erts_printf_add_cr_to_stdout;
 extern int erts_printf_add_cr_to_stderr;
 extern int (*erts_printf_block_fpe)(void);
