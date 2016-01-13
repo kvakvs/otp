@@ -2907,13 +2907,224 @@ BIF_RETTYPE integer_to_list_1(BIF_ALIST_1)
 /* convert a list of ascii ascii integer value to an integer */
 
 
-#define LTI_BAD_STRUCTURE 0
-#define LTI_NO_INTEGER 1
-#define LTI_SOME_INTEGER 2
-#define LTI_ALL_INTEGER 3
+typedef enum {
+    LTI_BAD_STRUCTURE = 0,
+    LTI_NO_INTEGER    = 1,
+    LTI_SOME_INTEGER  = 2,
+    LTI_ALL_INTEGER   = 3
+} LTI_result_t;
 
-static int do_list_to_integer(Process *p, Eterm orig_list, 
-			      Eterm *integer, Eterm *rest)
+/* Hoping for a tailcall to this function */
+static inline LTI_result_t lti_error(Eterm *integer, Eterm *rest, Eterm tail,
+                                  LTI_result_t result)
+{
+    *rest = tail;
+    *integer = make_small(0);
+    return result;
+}
+
+/* Counts list length cutting off at SMALL_DIGITS to quickly decide if it is
+ * going to be small or bigint
+ */
+static inline Uint lti_small_size(Eterm *lst_in_out, Uint *ui_out)
+{
+    Eterm lst = *lst_in_out;
+    Uint ui = 0;
+    Uint n = 0;
+
+    while(1) {
+        Eterm h = CAR(list_val(lst));
+        Uint as_uint;
+
+        if (is_not_small(h)) {
+            break;
+        }
+
+        as_uint = unsigned_val(h);
+        if (as_uint < '0' || as_uint > '9') {
+            break;
+        }
+
+        ui = ui * 10;
+        ui = ui + as_uint - '0';
+        n++;
+
+        lst = CDR(list_val(lst));
+        if (n > SMALL_DIGITS || is_nil(lst) || is_not_list(lst)) {
+            break;
+        }
+    }
+
+    *lst_in_out = lst;
+    *ui_out = ui;
+    return n;
+}
+
+static inline Uint lti_count_size(Eterm lst, Eterm *tail_out)
+{
+   Uint n = 0;
+
+   /* TODO: Input here can be very long. Chunks? */
+    while(1) {
+        Eterm h = CAR(list_val(lst));
+        Uint as_uint;
+
+        if (is_not_small(h)) {
+            break;
+        }
+
+        as_uint = unsigned_val(h);
+        if (as_uint < '0' || as_uint > '9') {
+            break;
+        }
+
+        n++;
+        lst = CDR(list_val(lst));
+
+        if (is_nil(lst) || is_not_list(lst)) {
+            break;
+        }
+    }
+    *tail_out = lst;
+    return n;
+}
+
+static inline LTI_result_t lti_parse_big(Process *p, int neg, Eterm lst,
+                                         Eterm *integer_out, Eterm *rest_out)
+{
+    /* so, since we cut counting at SMALL_DIGITS, for bigint we have
+     * to count again, stopping every X list cells
+     */
+    Uint n = lti_count_size(lst, rest_out);
+    int lg2;
+    Uint digits;
+
+    /* TODO: Input here can be very long. Chunks? */
+
+    /* Convert from log10 to log2 by multiplying with 1/log10(2)=3.3219
+       which we round up to (3 + 1/3) */
+    lg2 = (n+1)*3 + (n+1)/3 + 1;
+    digits = (lg2+D_EXP-1)/D_EXP; /* number of digits */
+    digits = BIG_NEED_SIZE(digits); /* number of words + thing */
+
+    /*do*/ {
+        Eterm* hp;
+        Eterm *hp_end;
+        Uint i;
+        Uint m;
+        Eterm res;
+
+        hp = HAlloc(p, digits);
+        hp_end = hp + digits;
+
+        // lst = orig_list;
+        // if (skip)
+        //    lst = CDR(list_val(lst));
+
+        /* load first digits (at least one digit) */
+        if ((i = (n % D_DECIMAL_EXP)) == 0)
+            i = D_DECIMAL_EXP;
+        n -= i;
+        m = 0;
+        while(i--) {
+            m = 10*m + (unsigned_val(CAR(list_val(lst))) - '0');
+            lst = CDR(list_val(lst));
+        }
+        res = small_to_big(m, hp);  /* load first digits */
+
+        while(n) {
+            i = D_DECIMAL_EXP;
+            n -= D_DECIMAL_EXP;
+            m = 0;
+            while(i--) {
+                m = 10*m + (unsigned_val(CAR(list_val(lst))) - '0');
+                lst = CDR(list_val(lst));
+            }
+            if (is_small(res))
+                res = small_to_big(signed_val(res), hp);
+            res = big_times_small(res, D_DECIMAL_BASE, hp);
+            if (is_small(res))
+                res = small_to_big(signed_val(res), hp);
+            res = big_plus_small(res, m, hp);
+        }
+
+        if (neg) {
+            if (is_small(res))
+                res = make_small(-signed_val(res));
+            else {
+                Uint *big = big_val(res); /* point to thing */
+                *big = bignum_header_neg(*big);
+            }
+        }
+
+        if (is_not_small(res)) {
+            res = big_plus_small(res, 0, hp); /* includes conversion to small */
+
+            if (is_not_small(res)) {
+                hp += (big_arity(res)+1);
+            }
+        }
+        HRelease(p,hp_end,hp);
+        *integer_out = res;
+    }
+
+    // set by count length function -> *rest_out = lst;
+    return (lst != NIL) ? LTI_SOME_INTEGER : LTI_ALL_INTEGER;
+}
+
+static LTI_result_t do_list_to_integer(Process *p, Eterm orig_list,
+                                       Eterm *integer_out, Eterm *rest_out)
+{
+    Eterm lst = orig_list;
+
+    if (is_nil(orig_list)) {
+        return lti_error(integer_out, rest_out, orig_list, LTI_NO_INTEGER);
+    }
+    if (is_not_list(orig_list)) {
+        return lti_error(integer_out, rest_out, orig_list, LTI_BAD_STRUCTURE);
+    }
+
+    /* do */ {
+        int neg = 0;
+//        int skip = 0;
+        Eterm h = CAR(list_val(lst));
+
+        if (h == make_small('-')) {
+            neg = 1;
+//            skip = 1;
+            lst = CDR(list_val(lst));
+            if (is_not_list(lst)) {
+              return lti_error(integer_out, rest_out, lst, LTI_NO_INTEGER);
+            }
+        } else if (h == make_small('+')) {
+//            skip = 1;
+            lst = CDR(list_val(lst));
+            if (is_not_list(lst)) {
+              return lti_error(integer_out, rest_out, lst, LTI_NO_INTEGER);
+            }
+        }
+
+        /* do */ {
+            Uint ui;
+            Eterm tail = lst;
+            Uint n = lti_small_size(&tail, &ui);
+
+            if (n > SMALL_DIGITS) {
+                return lti_parse_big(p, neg, lst, integer_out, rest_out);
+            }
+
+            /* we have small here, already parsed */
+            *integer_out = make_small(neg ? -(Sint)ui : (Sint)ui);
+            *rest_out = tail;
+            return (tail != NIL) ? LTI_SOME_INTEGER : LTI_ALL_INTEGER;
+        }
+    }
+    return LTI_BAD_STRUCTURE;
+}
+
+#if 0
+static LTI_result_t do_list_to_integer(Process *p, Eterm orig_list,
+                                           Eterm *integer, Eterm *rest)
 {
      Sint i = 0;
      Uint ui = 0;
@@ -2927,7 +3138,7 @@ static int do_list_to_integer(Process *p, Eterm orig_list,
      Eterm *hp_end;
      Eterm lst = orig_list;
      Eterm tail = lst;
-     int error_res = LTI_BAD_STRUCTURE;
+     LTI_result_t error_res = LTI_BAD_STRUCTURE;
 
      if (is_nil(lst)) {
        error_res = LTI_NO_INTEGER;
@@ -3021,7 +3232,7 @@ static int do_list_to_integer(Process *p, Eterm orig_list,
 	     m = 10*m + (unsigned_val(CAR(list_val(lst))) - '0');
 	     lst = CDR(list_val(lst));
 	 }
-	 res = small_to_big(m, hp);  /* load first digits */
+         res = small_to_big(m, hp);  /* load first dilti_return_errorgits */
 	 
 	 while(n) {
 	     i = D_DECIMAL_EXP;
@@ -3064,6 +3275,8 @@ static int do_list_to_integer(Process *p, Eterm orig_list,
      }
      return LTI_ALL_INTEGER;
 }
+#endif //0
+
 BIF_RETTYPE string_to_integer_1(BIF_ALIST_1)
 {
      Eterm res;
