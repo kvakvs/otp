@@ -2523,14 +2523,22 @@ int term_equals_2pow32(Eterm x)
 }
 
 
-#define IS_VALID_CHARACTER(CHAR,BASE) \
-  (CHAR < '0'				    \
-   || (CHAR > ('0' + BASE - 1)		    \
-       && !(BASE > 10							\
-	    && ((CHAR >= 'a' && CHAR < ('a' + BASE - 10))		\
-		|| (CHAR >= 'A' && CHAR < ('A' + BASE - 10))))))
-#define CHARACTER_FROM_BASE(CHAR)					\
-  ((CHAR <= '9') ? CHAR - '0' : 10 + ((CHAR <= 'Z') ? CHAR - 'A' : CHAR - 'a'))
+static inline int c2int_is_valid_char(byte ch, int base) {
+    return (ch < '0'
+            || (ch > ('0' + base - 1)
+                && !(base > 10
+                     && ((ch >= 'a' && ch < ('a' + base - 10))
+                         || (ch >= 'A' && ch < ('A' + base - 10))))));
+}
+
+static inline byte c2int_from_base(byte ch) {
+    return ((ch <= '9')
+            ? ch - '0'
+            : 10 + ((ch <= 'Z')
+                    ? ch - 'A'
+                    : ch - 'a'));
+}
+
 #define D_BASE_EXP(BASE) (d_base_exp_lookup[BASE-2])
 #define D_BASE_BASE(BASE) (d_base_base_lookup[BASE-2])
 #define LG2_LOOKUP(BASE)  (lg2_lookup[base-2])
@@ -2541,194 +2549,167 @@ int term_equals_2pow32(Eterm x)
  * end
  * How many bits are needed to store string of size n
  */
-const double lg2_lookup[] = { 1.0, 1.58496, 2, 2.32193, 2.58496, 2.80735, 3.0,
-	3.16993, 3.32193, 3.45943, 3.58496, 3.70044, 3.80735, 3.90689, 4.0,
-	4.08746, 4.16993, 4.24793, 4.32193, 4.39232, 4.45943, 4.52356, 4.58496,
-	4.64386, 4.70044, 4.75489, 4.80735, 4.85798, 4.90689, 4.9542, 5.0,
-	5.04439, 5.08746, 5.12928, 5.16993, 5.20945, 5.24793, 5.2854, 5.32193,
-	5.35755, 5.39232, 5.42626, 5.45943, 5.49185, 5.52356, 5.55459, 5.58496,
-	5.61471, 5.64386, 5.67243, 5.70044, 5.72792, 5.75489, 5.78136, 5.80735,
-	5.83289, 5.85798, 5.88264, 5.90689, 5.93074, 5.9542, 5.97728, 6.0 };
+static const double lg2_lookup[] = {
+    1.0,     1.58496, 2,       2.32193, 2.58496, 2.80735, 3.0,
+    3.16993, 3.32193, 3.45943, 3.58496, 3.70044, 3.80735, 3.90689, 4.0,
+    4.08746, 4.16993, 4.24793, 4.32193, 4.39232, 4.45943, 4.52356, 4.58496,
+    4.64386, 4.70044, 4.75489, 4.80735, 4.85798, 4.90689, 4.9542, 5.0,
+    5.04439, 5.08746, 5.12928, 5.16993, 5.20945, 5.24793, 5.2854, 5.32193,
+    5.35755, 5.39232, 5.42626, 5.45943, 5.49185, 5.52356, 5.55459, 5.58496,
+    5.61471, 5.64386, 5.67243, 5.70044, 5.72792, 5.75489, 5.78136, 5.80735,
+    5.83289, 5.85798, 5.88264, 5.90689, 5.93074, 5.9542, 5.97728, 6.0
+};
 
-/*
- * for i in 2..64 do
- *   d_base_exp_lookup[i-2] = 31 / lg2_lookup[i-2];
- * end
- * How many characters can fit in 31 bits
+/* Table of LCM (lowest common multiply) of N and 256 for N=2..36
+ * Produced by Wo.Alpha request: Table [LCM[m, 256], {m, 36}]
+ * and then first element thrown out
  */
-const byte d_base_exp_lookup[] = { 31, 19, 15, 13, 11, 11, 10, 9, 9, 8, 8, 8, 8,
-	7, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5,
-	5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-	5, 5 };
+static const unsigned short c2int_lcm_256[36-1] = {
+    256, 768, 256, 1280, 768, 1792, 256, 2304, 1280, 2816, 768, 3328, 1792,
+    3840, 256, 4352, 2304, 4864, 1280, 5376, 2816, 5888, 768, 6400, 3328, 6912,
+    1792, 7424, 3840, 7936, 256, 8448, 4352, 8960, 2304
+};
 
-/*
- * for i in 2..64 do
- *   d_base_base_lookup[i-2] = pow(i,d_base_exp_lookup[i-2]);
- * end
- * How much can the characters which fit in 31 bit represent
+/* Read some digits from the input (until Accum has enough bytes of data or
+ * until read_limit is reached).
  */
-const Uint d_base_base_lookup[] = { 2147483648u, 1162261467u, 1073741824u,
-	1220703125u, 362797056u, 1977326743u, 1073741824u, 387420489u,
-	1000000000u, 214358881u, 429981696u, 815730721u, 1475789056u,
-	170859375u, 268435456u, 410338673u, 612220032u, 893871739u, 1280000000u,
-	1801088541u, 113379904u, 148035889u, 191102976u, 244140625u, 308915776u,
-	387420489u, 481890304u, 594823321u, 729000000u, 887503681u, 1073741824u,
-	1291467969u, 1544804416u, 1838265625u, 60466176u, 69343957u, 79235168u,
-	90224199u, 102400000u, 115856201u, 130691232u, 147008443u, 164916224u,
-	184528125u, 205962976u, 229345007u, 254803968u, 282475249u, 312500000u,
-	345025251u, 380204032u, 418195493u, 459165024u, 503284375u, 550731776u,
-	601692057u, 656356768u, 714924299u, 777600000u, 844596301u, 916132832u,
-	992436543u, 1073741824u };
+static inline ErtsDigit c2int_parse_more(
+    ErtsDigit *accum, Uint base,
+    const byte **readp, const byte *read_limit, ErtsDigit flush_limit)
+{
+    ErtsDigit result = 0;
+    ErtsDigit multiplier = 1; /* base power when adding to accum */
+    Uint write_multiplier = 0; /* how many bits shift when adding to result */
+    Uint bcount = sizeof(ErtsDigit);
 
-Eterm erts_chars_to_integer(Process *BIF_P, char *bytes, 
-			   Uint size, const int base) {
-    Eterm res;
+    while (*readp >= read_limit) {
+        *accum += multiplier * c2int_from_base(*((*readp)--));
+        multiplier *= base;
+        if (multiplier >= flush_limit) {
+            /* Reached flush limit (LCM(256,base)) now we can take 8 bits
+             * of ready result */
+            result |= (ErtsDigit)((byte)*accum) << write_multiplier;
+            *accum >>= 8;
+            bcount--;
+            write_multiplier += 8;
+            if (!bcount) {
+                return result;
+            }
+
+            multiplier = 1;
+        }
+    }
+    result |= (ErtsDigit)((byte)*accum) << write_multiplier;
+    return result; /* word is unfinished but we reached input end anyway */
+}
+
+/* *
+ * A shortcut if we know that all chars are '0' < b < '9' and result
+ * fits into a small. This improves speed by about 10% over the generic
+ * small case.
+ * */
+static inline Eterm c2int_make_small_fast(
+    int neg, Uint size, const byte *bytes, Uint base)
+{
     Sint i = 0;
-    int n = 0;
+    while (size--) {
+        byte b = *bytes++;
+
+        if (b < '0' || b > ('0'+base-1))
+            return THE_NON_VALUE;
+
+        i = i * base + b - '0';
+    }
+    return make_small(neg ? -i : i);
+}
+
+/* *
+ * A shortcut if we know it will fit in a small.
+ * This improves speed by about 30%.
+ * */
+static inline Eterm c2int_make_small_generic(
+    int neg, Uint size, const byte *bytes, Uint base)
+{
+    Sint i = 0;
+    while (size) {
+        byte b = *bytes++;
+        size--;
+
+        if (c2int_is_valid_char(b,base))
+            return THE_NON_VALUE;
+
+        i = i * base + c2int_from_base(b);
+    }
+    return make_small(neg ? -i : i);
+}
+
+Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
+                            Uint size, const int base) {
     int neg = 0;
-    byte b;
-    Eterm *hp, *hp_end;
-    int m;
     int lg2;
 
     if (size == 0)
-	goto bytebuf_to_integer_1_error;
+        return THE_NON_VALUE;
 
     if (bytes[0] == '-') {
 	neg = 1;
 	bytes++;
 	size--;
-
     } else if (bytes[0] == '+') {
 	bytes++;
 	size--;
     }
 
     if (size == 0)
-	goto bytebuf_to_integer_1_error;
+        return THE_NON_VALUE;
 
     if (size < SMALL_DIGITS && base <= 10) {
-	/* *
-	 * Take shortcut if we know that all chars are '0' < b < '9' and
-	 * fit in a small. This improves speed by about 10% over the generic
-	 * small case.
-	 * */
-	while (size--) {
-	    b = *bytes++;
-
-	    if (b < '0' || b > ('0'+base-1))
-		goto bytebuf_to_integer_1_error;
-
-	    i = i * base + b - '0';
-	}
-
-	if (neg)
-	    i = -i;
-	res = make_small(i);
-	goto bytebuf_to_integer_1_done;
+        /* A shortcut if we know that all chars are '0' < b < '9' and result
+         * fits into a small */
+        return c2int_make_small_fast(neg, size, (byte *)bytes, base);
     }
 
-    /*
-     * Calculate the maximum number of bits which will
-     * be needed to represent the binary
-     */
+    /* Calculate the maximum number of bits which will
+     * be needed to represent the binary */
     lg2 = ((size+2)*LG2_LOOKUP(base)+1);
 
     if (lg2 < SMALL_BITS) {
-	/* Take shortcut if we know it will fit in a small.
-	 * This improves speed by about 30%.
-	 */
-	while (size) {
-	    b = *bytes++;
-	    size--;
-
-	    if (IS_VALID_CHARACTER(b,base))
-		goto bytebuf_to_integer_1_error;
-
-	    i = i * base + CHARACTER_FROM_BASE(b);
-
-	}
-
-	if (neg)
-	    i = -i;
-	res = make_small(i);
-	goto bytebuf_to_integer_1_done;
-
+        /* A shortcut if we know it will fit in a small */
+        return c2int_make_small_generic(neg, size, (byte *)bytes, base);
     }
 
-    /* Start calculating bignum */
-    m = (lg2 + D_EXP-1)/D_EXP;
-    m = BIG_NEED_SIZE(m);
+    /* Reverse iterate through input digits and build bignum from the back up
+     * Thus we are able to avoid re-multiplying by power of base like
+     * list_to_integer has to do (because it can't reverse iterate a list)
+     */
+    /*do*/ {
+      /* save start of string later to read big input, force unsigned */
+        const byte *read_limit = (const byte *)bytes;
+        const byte *readp = (byte *)bytes + size - 1;
 
-    hp = HAlloc(BIF_P, m);
-    hp_end = hp + m;
+        ErtsDigit accum = 0;
+        const ErtsDigit flush_limit = c2int_lcm_256[base-2];
 
-    if ((i = (size % D_BASE_EXP(base))) == 0)
-	i = D_BASE_EXP(base);
+        ErtsDigit *writep;
 
-    n = size - i;
-    m = 0;
+        const Uint num_digits = (lg2 + D_EXP-1)/D_EXP;
+        Uint mem_words = BIG_NEED_SIZE(num_digits);
+        Eterm *hp;
 
-    while (i--) {
-	b = *bytes++;
+        hp = HAlloc(BIF_P, mem_words);
+        writep = BIG_V(hp);
 
-	if (IS_VALID_CHARACTER(b,base)) {
-	    HRelease(BIF_P, hp_end, hp);
-	    goto bytebuf_to_integer_1_error;
-	}
+        if (neg) {
+            *hp = make_neg_bignum_header(num_digits);
+        } else {
+            *hp = make_pos_bignum_header(num_digits);
+        }
 
-	m = base * m + CHARACTER_FROM_BASE(b);
+        while (readp >= read_limit) {
+            *(writep++) = c2int_parse_more(&accum, base, &readp, read_limit,
+                                           flush_limit);
+        }
+        /* No freing hp, as it has our result */
+        return make_big(hp);
     }
-
-    res = small_to_big(m, hp);
-
-    while (n) {
-	i = D_BASE_EXP(base);
-	n -= D_BASE_EXP(base);
-	m = 0;
-	while (i--) {
-	    b = *bytes++;
-
-	    if (IS_VALID_CHARACTER(b,base)) {
-	      HRelease(BIF_P, hp_end, hp);
-	      goto bytebuf_to_integer_1_error;
-	    }
-
-	    m = base * m + CHARACTER_FROM_BASE(b);
-	}
-	if (is_small(res)) {
-	    res = small_to_big(signed_val(res), hp);
-	}
-	res = big_times_small(res, D_BASE_BASE(base), hp);
-	if (is_small(res)) {
-	    res = small_to_big(signed_val(res), hp);
-	}
-	res = big_plus_small(res, m, hp);
-    }
-
-    if (neg) {
-	if (is_small(res))
-	    res = make_small(-signed_val(res));
-	else {
-	    Uint *big = big_val(res); /* point to thing */
-	    *big = bignum_header_neg(*big);
-	}
-    }
-
-    if (is_not_small(res)) {
-	res = big_plus_small(res, 0, hp); /* includes conversion to small */
-
-	if (is_not_small(res)) {
-	    hp += (big_arity(res) + 1);
-	}
-    }
-    HRelease(BIF_P, hp_end, hp);
-    goto bytebuf_to_integer_1_done;
-
-bytebuf_to_integer_1_error:
-    return THE_NON_VALUE;
-
-bytebuf_to_integer_1_done:
-    return res;
-
 }
