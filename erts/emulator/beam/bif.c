@@ -3055,7 +3055,6 @@ static inline LTI_result_t lti_parse_big(Process *p, int neg, Eterm lst,
         Eterm res;
         Eterm *hp = HAlloc(p, digits);
         Eterm *hp_end = hp + digits;
-        printf("digits=%zu\r\n", digits);
 
         /* load first digits (at least one digit) */
         if ((i = (n % D_DECIMAL_EXP)) == 0) {
