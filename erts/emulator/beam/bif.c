@@ -2960,20 +2960,23 @@ static inline Uint lti_small_size(Eterm *lst_in_out,
         Eterm h = CAR(list_val(lst));
         Uint as_uint;
 
-        if (is_not_small(h))
+        if (is_not_small(h)) {
             break;
+        }
 
         as_uint = unsigned_val(h);
-        if (as_uint < '0' || as_uint > '9')
+        if (as_uint < '0' || as_uint > '9') {
             break;
+        }
 
         ui = ui * 10;
         ui = ui + as_uint - '0';
         n++;
 
         lst = CDR(list_val(lst));
-        if (n >= LTI_FIRST_CHUNK || is_nil(lst) || is_not_list(lst))
+        if (n >= LTI_FIRST_CHUNK || is_nil(lst) || is_not_list(lst)) {
             break;
+        }
     }
 
     *lst_in_out = lst;
@@ -3001,18 +3004,21 @@ static inline Uint lti_continue_big_size(Uint n, Eterm lst,
         Eterm h = CAR(list_val(lst));
         Uint as_uint;
 
-        if (is_not_small(h))
+        if (is_not_small(h)) {
             break;
+        }
 
         as_uint = unsigned_val(h);
-        if (as_uint < '0' || as_uint > '9')
+        if (as_uint < '0' || as_uint > '9') {
             break;
+        }
 
         count++;
         lst = CDR(list_val(lst));
 
-        if (is_nil(lst) || is_not_list(lst))
+        if (is_nil(lst) || is_not_list(lst)) {
             break;
+        }
     }
     *tail_out = lst;
     return n + count;
@@ -3044,18 +3050,17 @@ static inline LTI_result_t lti_parse_big(Process *p, int neg, Eterm lst,
     digits = BIG_NEED_SIZE(digits); /* number of words + thing */
 
     /*do*/ {
-        Eterm* hp;
-        Eterm *hp_end;
         Uint i;
         Uint m;
         Eterm res;
-
-        hp = HAlloc(p, digits);
-        hp_end = hp + digits;
+        Eterm *hp = HAlloc(p, digits);
+        Eterm *hp_end = hp + digits;
+        printf("digits=%zu\r\n", digits);
 
         /* load first digits (at least one digit) */
-        if ((i = (n % D_DECIMAL_EXP)) == 0)
+        if ((i = (n % D_DECIMAL_EXP)) == 0) {
             i = D_DECIMAL_EXP;
+        }
         n -= i;
         m = lti_parse_segment(i, &lst);
         res = small_to_big(m, hp);  /* load first digits */
@@ -3065,11 +3070,13 @@ static inline LTI_result_t lti_parse_big(Process *p, int neg, Eterm lst,
             n -= D_DECIMAL_EXP;
             m = lti_parse_segment(D_DECIMAL_EXP, &lst);
 
-            if (is_small(res))
+            if (is_small(res)) {
                 res = small_to_big(signed_val(res), hp);
+            }
             res = big_times_small(res, D_DECIMAL_BASE, hp);
-            if (is_small(res))
+            if (is_small(res)) {
                 res = small_to_big(signed_val(res), hp);
+            }
             res = big_plus_small(res, m, hp);
         }
 
@@ -3087,37 +3094,33 @@ static inline LTI_result_t lti_parse_big(Process *p, int neg, Eterm lst,
             res = big_plus_small(res, 0, hp); /* includes conversion to small */
 
             if (is_not_small(res)) {
-                hp += (big_arity(res)+1);
+                hp += big_arity(res) + 1;
             }
         }
-        HRelease(p,hp_end,hp);
+        HRelease(p, hp_end, hp); /* Release extra remaining words */
         *integer_out = res;
     }
 
-    // set by count length function -> *rest_out = lst;
+    /* set by count length function -> *rest_out = lst; */
     return (lst != NIL) ? LTI_SOME_INTEGER : LTI_ALL_INTEGER;
 }
 
 static Eterm lti_use_erts_chars_to_integer(Process *BIF_P, Eterm lst,
-                                           Uint n, Uint base)
+                                           Uint num_el, Uint base)
 {
-    char *buf = (char *) erts_alloc(ERTS_ALC_T_TMP, n + 1);
+    char *buf = (char *) erts_alloc(ERTS_ALC_T_TMP, num_el + 1);
     Eterm res;
 
-    if (intlist_to_buf(lst, buf, n) < 0)
-        goto error;
+    if (intlist_to_buf(lst, buf, num_el) < 0) {
+        erts_free(ERTS_ALC_T_TMP, (void *) buf);
+        return THE_NON_VALUE;
+    }
 
-    buf[n] = '\0';		/* null terminal */
-
-    if ((res = erts_chars_to_integer(BIF_P, buf, n, base)) == THE_NON_VALUE)
-        goto error;
+    buf[num_el] = '\0';	  /* null terminal */
+    res = erts_chars_to_integer(BIF_P, buf, num_el, base);
 
     erts_free(ERTS_ALC_T_TMP, (void *) buf);
     return res;
-
-error:
-    erts_free(ERTS_ALC_T_TMP, (void *) buf);
-    return THE_NON_VALUE;
 }
 
 static LTI_result_t do_list_to_integer(Process *p, Eterm orig_list,
@@ -3162,10 +3165,13 @@ static LTI_result_t do_list_to_integer(Process *p, Eterm orig_list,
                  * length (with the help of simple tests) */
                 if (n > LTI_TOO_LONG_USE_CHARS2INT) {
                     Eterm res = lti_use_erts_chars_to_integer(p, orig_list, n, 10);
-                    if (res == THE_NON_VALUE) {
-                      return lti_error(integer_out, rest_out, lst, LTI_NO_INTEGER);
+                    if (is_non_value(res)) {
+                        return lti_error(integer_out, rest_out, lst,
+                                         LTI_NO_INTEGER);
                     }
-                    return res;
+                    *integer_out = res;
+                    *rest_out = NIL;
+                    return LTI_ALL_INTEGER;
                 }
                 return lti_parse_big(p, neg, lst, n, continue_lst,
                                      integer_out, rest_out);

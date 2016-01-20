@@ -2539,9 +2539,7 @@ static inline byte c2int_from_base(byte ch) {
                     : ch - 'a'));
 }
 
-#define D_BASE_EXP(BASE) (d_base_exp_lookup[BASE-2])
-#define D_BASE_BASE(BASE) (d_base_base_lookup[BASE-2])
-#define LG2_LOOKUP(BASE)  (lg2_lookup[base-2])
+//#define LG2_LOOKUP(BASE)  (lg2_lookup[base-2])
 
 /*
  * for i in 2..64 do
@@ -2549,22 +2547,25 @@ static inline byte c2int_from_base(byte ch) {
  * end
  * How many bits are needed to store string of size n
  */
-static const double lg2_lookup[] = {
-    1.0,     1.58496, 2,       2.32193, 2.58496, 2.80735, 3.0,
-    3.16993, 3.32193, 3.45943, 3.58496, 3.70044, 3.80735, 3.90689, 4.0,
-    4.08746, 4.16993, 4.24793, 4.32193, 4.39232, 4.45943, 4.52356, 4.58496,
-    4.64386, 4.70044, 4.75489, 4.80735, 4.85798, 4.90689, 4.9542, 5.0,
-    5.04439, 5.08746, 5.12928, 5.16993, 5.20945, 5.24793, 5.2854, 5.32193,
-    5.35755, 5.39232, 5.42626, 5.45943, 5.49185, 5.52356, 5.55459, 5.58496,
-    5.61471, 5.64386, 5.67243, 5.70044, 5.72792, 5.75489, 5.78136, 5.80735,
-    5.83289, 5.85798, 5.88264, 5.90689, 5.93074, 5.9542, 5.97728, 6.0
-};
+static inline double c2int_bits_per_digit_of_base(Uint base) {
+  static const double lg2_lookup_[] = {
+      1.0,     1.58496, 2,       2.32193, 2.58496, 2.80735, 3.0,
+      3.16993, 3.32193, 3.45943, 3.58496, 3.70044, 3.80735, 3.90689, 4.0,
+      4.08746, 4.16993, 4.24793, 4.32193, 4.39232, 4.45943, 4.52356, 4.58496,
+      4.64386, 4.70044, 4.75489, 4.80735, 4.85798, 4.90689, 4.9542, 5.0,
+      5.04439, 5.08746, 5.12928, 5.16993, 5.20945, 5.24793, 5.2854, 5.32193,
+      5.35755, 5.39232, 5.42626, 5.45943, 5.49185, 5.52356, 5.55459, 5.58496,
+      5.61471, 5.64386, 5.67243, 5.70044, 5.72792, 5.75489, 5.78136, 5.80735,
+      5.83289, 5.85798, 5.88264, 5.90689, 5.93074, 5.9542, 5.97728, 6.0
+  };
+  return lg2_lookup_[base - 2];
+}
 
 /* Table of LCM (lowest common multiply) of N and 256 for N=2..36
  * Produced by Wo.Alpha request: Table [LCM[m, 256], {m, 36}]
  * and then first element thrown out
  */
-static const unsigned short c2int_lcm_256[36-1] = {
+static const uint16_t c2int_lcm_256[36-1] = {
     256, 768, 256, 1280, 768, 1792, 256, 2304, 1280, 2816, 768, 3328, 1792,
     3840, 256, 4352, 2304, 4864, 1280, 5376, 2816, 5888, 768, 6400, 3328, 6912,
     1792, 7424, 3840, 7936, 256, 8448, 4352, 8960, 2304
@@ -2615,17 +2616,16 @@ static inline Eterm c2int_make_small_fast(
     while (size--) {
         byte b = *bytes++;
 
-        if (b < '0' || b > ('0'+base-1))
+        if (b < '0' || b > ('0'+base-1)) {
             return THE_NON_VALUE;
-
+        }
         i = i * base + b - '0';
     }
     return make_small(neg ? -i : i);
 }
 
 /* *
- * A shortcut if we know it will fit in a small.
- * This improves speed by about 30%.
+ * A shortcut if we know it will fit in a small. Slightly slower.
  * */
 static inline Eterm c2int_make_small_generic(
     int neg, Uint size, const byte *bytes, Uint base)
@@ -2635,9 +2635,9 @@ static inline Eterm c2int_make_small_generic(
         byte b = *bytes++;
         size--;
 
-        if (c2int_is_valid_char(b,base))
+        if (c2int_is_valid_char(b,base)) {
             return THE_NON_VALUE;
-
+        }
         i = i * base + c2int_from_base(b);
     }
     return make_small(neg ? -i : i);
@@ -2646,11 +2646,13 @@ static inline Eterm c2int_make_small_generic(
 Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
                             Uint size, const int base) {
     int neg = 0;
-    int lg2;
+    Uint estimated_bits;
 
-    if (size == 0)
+    if (size == 0) {
         return THE_NON_VALUE;
+    }
 
+    /* Read sign if its present */
     if (bytes[0] == '-') {
 	neg = 1;
 	bytes++;
@@ -2660,8 +2662,20 @@ Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
 	size--;
     }
 
-    if (size == 0)
+    /* Trim leading zeroes */
+    if (*bytes == '0') {
+        while (*bytes == '0' && size) {
+            bytes++;
+            size--;
+        }
+        if (size == 0) { /* A lot of leading zeroes and no actual content */
+            return make_small(0);
+        }
+    }
+
+    if (size == 0) {
         return THE_NON_VALUE;
+    }
 
     if (size < SMALL_DIGITS && base <= 10) {
         /* A shortcut if we know that all chars are '0' < b < '9' and result
@@ -2671,33 +2685,32 @@ Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
 
     /* Calculate the maximum number of bits which will
      * be needed to represent the binary */
-    lg2 = ((size+2)*LG2_LOOKUP(base)+1);
+    estimated_bits = (size + 2) * c2int_bits_per_digit_of_base(base) + 1;
 
-    if (lg2 < SMALL_BITS) {
+    if (estimated_bits < SMALL_BITS) {
         /* A shortcut if we know it will fit in a small */
         return c2int_make_small_generic(neg, size, (byte *)bytes, base);
     }
 
     /* Reverse iterate through input digits and build bignum from the back up
      * Thus we are able to avoid re-multiplying by power of base like
-     * list_to_integer has to do (because it can't reverse iterate a list)
+     * list_to_integer must do (because it can't reverse iterate a list)
      */
     /*do*/ {
       /* save start of string later to read big input, force unsigned */
         const byte *read_limit = (const byte *)bytes;
-        const byte *readp = (byte *)bytes + size - 1;
+        const byte *readp      = (byte *)bytes + size - 1;
 
-        ErtsDigit accum = 0;
+        ErtsDigit       accum = 0;
         const ErtsDigit flush_limit = c2int_lcm_256[base-2];
+        const Uint num_digits = (estimated_bits + D_EXP - 1) / D_EXP;
+        Uint       mem_words = BIG_NEED_SIZE(num_digits);
+        Eterm     *hp = HAlloc(BIF_P, mem_words);
+        Eterm     *hp_end = hp + mem_words;
+        ErtsDigit *writep = BIG_V(hp);
 
-        ErtsDigit *writep;
-
-        const Uint num_digits = (lg2 + D_EXP-1)/D_EXP;
-        Uint mem_words = BIG_NEED_SIZE(num_digits);
-        Eterm *hp;
-
-        hp = HAlloc(BIF_P, mem_words);
-        writep = BIG_V(hp);
+        printf("c2int: estimated bits: %zu; big digits: %zu, mem words: %zu\r\n",
+               estimated_bits, num_digits, mem_words);
 
         if (neg) {
             *hp = make_neg_bignum_header(num_digits);
@@ -2706,10 +2719,14 @@ Eterm erts_chars_to_integer(Process *BIF_P, char *bytes,
         }
 
         while (readp >= read_limit) {
+            ASSERT(writep < hp_end);
             *(writep++) = c2int_parse_more(&accum, base, &readp, read_limit,
                                            flush_limit);
         }
-        /* No freing hp, as it has our result */
+        ASSERT(writep <= hp_end);
+        while (writep < hp_end) { *writep = 0; writep++; } /* remaining words */
+
+        erts_printf("c2int: res=%T\r\n", make_big(hp));
         return make_big(hp);
     }
 }
