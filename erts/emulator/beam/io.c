@@ -1241,7 +1241,7 @@ typedef struct {
 /*
  * Try doing an immediate driver callback call from a process. If
  * this fail, the operation should be scheduled in the normal case...
- *
+ * Returns: ok to do the call, or error (lock busy, does not exist, etc)
  */
 static ERTS_INLINE ErtsTryImmDrvCallResult
 try_imm_drv_call(ErtsTryImmDrvCallState *sp)
@@ -3054,6 +3054,227 @@ erts_port_link(Process *c_p, Port *prt, Eterm to, Eterm *refp)
 					  port_sig_link);
 }
 
+/* Covers both monitor and demonitor failure */
+static void
+port_monitor_failure(Eterm port_id, Eterm origin)
+{
+    Process       *origin_p;
+    ErtsProcLocks rp_locks = ERTS_PROC_LOCK_LINK | ERTS_PROC_LOCKS_XSIG_SEND;
+    ASSERT(is_internal_pid(origin));
+
+    origin_p = erts_pid2proc(NULL, 0, origin, rp_locks);
+    if (! origin_p) { return; }
+
+    ErtsLink *rlnk = erts_remove_link(&ERTS_P_LINKS(origin_p), port_id);
+    if (! rlnk) { return; }
+
+    int xres = erts_send_exit_signal(NULL, port_id, origin_p, &rp_locks,
+                                     am_noproc, NIL, NULL, 0);
+    if (xres >= 0) {
+        /* We didn't exit the process and it is traced */
+        if (IS_TRACED_FL(origin_p, F_TRACE_PROCS)) {
+            trace_proc(NULL, 0, origin_p, am_demonitor, port_id);
+        }
+    }
+    if (rp_locks) {
+        erts_smp_proc_unlock(origin_p, rp_locks);
+    }
+}
+
+/* Origin wants to monitor port Prt. State contains possible error, which has
+ * happened just before. Name is either NIL or an atom, if user monitors
+ * a port by name. Ref is premade reference that will be returned to user */
+static void
+port_monitor(Port *prt, erts_aint32_t state, Eterm origin,
+             Eterm name, Eterm ref)
+{
+    ASSERT(is_pid(origin));
+    ASSERT(is_atom(name) || is_port(name) || name == NIL);
+    ASSERT(is_internal_ref(ref));
+
+    if (IS_TRACED_FL(prt, F_TRACE_PORTS)) {
+        trace_port(prt, am_monitor, origin);
+    }
+    if (!(state & ERTS_PORT_SFLGS_INVALID_LOOKUP)) {
+        ErtsProcLocks p_locks = ERTS_PROC_LOCK_MAIN | ERTS_PROC_LOCK_LINK;
+        Process *origin_p = erts_pid2proc(NULL, 0, origin, p_locks);
+
+        erts_add_monitor(&ERTS_P_MONITORS(origin_p), MON_ORIGIN, ref,
+                         prt->common.id, name);
+        erts_add_monitor(&ERTS_P_MONITORS(prt), MON_TARGET, ref,
+                         origin, name);
+
+        if (p_locks) {
+            erts_smp_proc_unlock(origin_p, p_locks);
+        }
+    } else {
+        port_monitor_failure(prt->common.id, origin);
+        if (IS_TRACED_FL(prt, F_TRACE_PORTS)) {
+            trace_port(prt, am_demonitor, origin);
+        }
+    }
+}
+
+static int
+port_sig_monitor(Port *prt, erts_aint32_t state, int op,
+                 ErtsProc2PortSigData *sigdp)
+{
+    if (op == ERTS_PROC2PORT_SIG_EXEC) {
+        Uint hp[REF_THING_SIZE];
+        Eterm ref = make_internal_ref((const Eterm *) &hp);
+        write_ref_thing(hp, sigdp->ref[0], sigdp->ref[1], sigdp->ref[2]);
+        /* erts_add_monitor call inside port_monitor will copy ref from hp */
+        port_monitor(prt, state,
+                     sigdp->u.monitor.origin,
+                     sigdp->u.monitor.name,
+                     ref);
+    } else {
+        port_monitor_failure(sigdp->u.monitor.origin, prt->common.id);
+    }
+    if (sigdp->flags & ERTS_P2P_SIG_DATA_FLG_REPLY) {
+        port_sched_op_reply(sigdp->caller, sigdp->ref, am_true, prt);
+    }
+    return ERTS_PORT_REDS_MONITOR;
+}
+
+/* Creates monitor between Origin and Target. Ref must be initialized to
+ * a reference (ref may be rewritten to be used to serve additionally as a
+ * signal id). Name is atom if user monitors port by name or NIL */
+ErtsPortOpResult
+erts_port_monitor(Process *origin, Port *port, Eterm name, Eterm *refp)
+{
+    ErtsProc2PortSigData *sigdp;
+    ASSERT(origin);
+    ASSERT(port);
+    ASSERT(is_atom(name) || is_port(name) || name == NIL);
+    ASSERT(refp);
+
+    ErtsTryImmDrvCallState try_call_state
+        = ERTS_INIT_TRY_IMM_DRV_CALL_STATE(
+                origin, port, ERTS_PORT_SFLGS_INVALID_LOOKUP,
+                0,
+                0,
+                am_monitor);
+
+    switch (try_imm_drv_call(&try_call_state)) {
+    case ERTS_TRY_IMM_DRV_CALL_OK:
+        port_monitor(port, try_call_state.state, origin->common.id, name, *refp);
+        finalize_imm_drv_call(&try_call_state);
+        BUMP_REDS(origin, ERTS_PORT_REDS_MONITOR);
+        return ERTS_PORT_OP_DONE;
+    case ERTS_TRY_IMM_DRV_CALL_INVALID_PORT:
+        return ERTS_PORT_OP_BADARG;
+    default:
+        break; /* Schedule call instead... */
+    }
+
+    sigdp = erts_port_task_alloc_p2p_sig_data();
+    sigdp->flags = ERTS_P2P_SIG_TYPE_MONITOR;
+    sigdp->u.monitor.origin = origin->common.id;
+    sigdp->u.monitor.name   = name; /* either named monitor, or THE_NON_V */
+
+    /* Ref contents will be initialized here */
+    return erts_schedule_proc2port_signal(origin, port, origin->common.id,
+                                          refp, sigdp, 0, NULL,
+                                          port_sig_monitor);
+}
+
+/* Origin wants to monitor port Prt. State contains possible error, which has
+ * happened just before. Name is either NIL or an atom, if user monitors
+ * a port by name. Ref is premade reference that will be returned to user */
+static void
+port_demonitor(Port *port, erts_aint32_t state, Eterm origin, Eterm ref)
+{
+    ASSERT(port);
+    ASSERT(is_pid(origin));
+    ASSERT(is_internal_ref(ref));
+
+    if (IS_TRACED_FL(port, F_TRACE_PORTS)) {
+        trace_port(port, am_demonitor, origin);
+    }
+
+    if (!(state & ERTS_PORT_SFLGS_INVALID_LOOKUP)) {
+        ErtsProcLocks p_locks = ERTS_PROC_LOCK_MAIN | ERTS_PROC_LOCK_LINK;
+        Process *origin_p = erts_pid2proc(NULL, 0, origin, p_locks);
+        ErtsMonitor *rmon = erts_remove_monitor(&ERTS_P_MONITORS(port), ref);
+
+        if (rmon != NULL) {
+            erts_destroy_monitor(rmon);
+        }
+        erts_smp_proc_unlock(origin_p, p_locks);
+    } else {
+        /* same failure handler for monitor and demonitor */
+        port_monitor_failure(port->common.id, origin);
+    }
+}
+
+static int
+port_sig_demonitor(Port *prt, erts_aint32_t state, int op,
+                   ErtsProc2PortSigData *sigdp)
+{
+    if (op == ERTS_PROC2PORT_SIG_EXEC) {
+        Uint hp[REF_THING_SIZE];
+        Eterm ref = make_internal_ref((const Eterm *) &hp);
+        write_ref_thing(hp, sigdp->u.demonitor.ref[0],
+                sigdp->u.demonitor.ref[1],
+                sigdp->u.demonitor.ref[2]);
+        port_demonitor(prt, state, sigdp->u.monitor.origin, ref);
+    } else {
+        /* same code for demonitor */
+        port_monitor_failure(sigdp->u.monitor.origin, prt->common.id);
+    }
+    if (sigdp->flags & ERTS_P2P_SIG_DATA_FLG_REPLY) {
+        port_sched_op_reply(sigdp->caller, sigdp->ref, am_true, prt);
+    }
+    return ERTS_PORT_REDS_DEMONITOR;
+}
+
+/* Removes monitor between origin and target, identified by ref. */
+ErtsPortOpResult erts_port_demonitor(Process *origin, Port *target, Eterm ref,
+                                     Eterm *trap_ref)
+{
+    ErtsProc2PortSigData *sigdp;
+    ASSERT(origin);
+    ASSERT(target);
+    ASSERT(is_internal_ref(ref));
+    ASSERT(trap_ref);
+
+    ErtsTryImmDrvCallState try_call_state
+        = ERTS_INIT_TRY_IMM_DRV_CALL_STATE(
+                origin, target, ERTS_PORT_SFLGS_INVALID_LOOKUP,
+                0, /* trap_ref is always set so !trap_ref always is false */
+                0,
+                am_demonitor);
+
+    switch (try_imm_drv_call(&try_call_state)) {
+    case ERTS_TRY_IMM_DRV_CALL_OK:
+        port_demonitor(target, try_call_state.state, origin->common.id, ref);
+        finalize_imm_drv_call(&try_call_state);
+        BUMP_REDS(origin, ERTS_PORT_REDS_DEMONITOR);
+        return ERTS_PORT_OP_DONE;
+    case ERTS_TRY_IMM_DRV_CALL_INVALID_PORT:
+    default:
+        return ERTS_PORT_OP_BADARG;
+        break; /* Schedule call instead... */
+    }
+
+    sigdp = erts_port_task_alloc_p2p_sig_data();
+    sigdp->flags = ERTS_P2P_SIG_TYPE_DEMONITOR;
+    sigdp->u.demonitor.origin = origin->common.id;
+    {
+        RefThing *reft = ref_thing_ptr(ref);
+        /* Start from 1 skip ref arity */
+        for (Uint i = 1; i < ERTS_REF_32BIT_WORDS; ++i) {
+            sigdp->u.demonitor.ref[i-1] = reft->data.ui32[i];
+        }
+    }
+
+    /* Ref contents will be initialized here */
+    return erts_schedule_proc2port_signal(origin, target, origin->common.id,
+                                          trap_ref, sigdp, 0, NULL,
+                                          port_sig_demonitor);
+}
+
 static void
 init_ack_send_reply(Port *port, Eterm resp)
 {
@@ -3925,21 +4146,29 @@ erts_terminate_port(Port *pp)
 
 static void sweep_one_monitor(ErtsMonitor *mon, void *vpsc)
 {
-    ErtsMonitor *rmon;
-    Process *rp;
+    switch (mon->type) {
+    case MON_ORIGIN: {
+        ErtsMonitor *rmon;
+        Process *rp;
 
-    ASSERT(mon->type == MON_ORIGIN);
-    ASSERT(is_internal_pid(mon->pid));
-    rp = erts_pid2proc(NULL, 0, mon->pid, ERTS_PROC_LOCK_LINK);
-    if (!rp) {
-	goto done;
+        ASSERT(is_internal_pid(mon->pid));
+        rp = erts_pid2proc(NULL, 0, mon->pid, ERTS_PROC_LOCK_LINK);
+        if (!rp) {
+            goto done;
+        }
+        rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), mon->ref);
+        erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
+        if (rmon == NULL) {
+            goto done;
+        }
+        erts_destroy_monitor(rmon);
+    } break;
+    case MON_TARGET: {
+        /* Monitor notification is done elsewhere: port_exit_fire_monitors/2
+         * That is done early in port closing scenario to catch normal exits
+        */
+    } break;
     }
-    rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), mon->ref);
-    erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
-    if (rmon == NULL) {
-	goto done;
-    }
-    erts_destroy_monitor(rmon);
  done:
     erts_destroy_monitor(mon);
 }
@@ -4020,6 +4249,59 @@ static void sweep_one_link(ErtsLink *lnk, void *vpsc)
     erts_destroy_link(lnk);
 }
 
+typedef struct {
+    Port *p;
+    Eterm reason;
+} PortFireMonitorCtx;
+
+static ERTS_INLINE void
+port_fire_one_monitor(ErtsMonitor *mon, void *ctx0)
+{
+    if (mon->type == MON_TARGET && is_pid(mon->pid)) {
+        /*
+         * Only if someone monitors us
+        */
+        ErtsProcLocks origin_locks = ERTS_PROC_LOCKS_MSG_SEND
+                                   | ERTS_PROC_LOCK_LINK;
+        PortFireMonitorCtx *ctx = (PortFireMonitorCtx *)ctx0;
+        Process         *origin;
+        ErtsMonitor     *rmon;
+        Eterm           watched;
+        DeclareTmpHeapNoproc(lhp,3);
+
+        origin = erts_pid2proc(NULL, 0, mon->pid, origin_locks);
+        if (origin == NULL) {
+            return;
+        }
+
+        watched = (is_atom(mon->name)
+                   ? TUPLE2(lhp, mon->name,
+                            erts_this_dist_entry->sysname)
+                   : ctx->p->common.id);
+        erts_queue_monitor_message(origin, &origin_locks, mon->ref, am_port,
+                                   watched, ctx->reason);
+        UnUseTmpHeapNoproc(3);
+
+        rmon = erts_remove_monitor(&ERTS_P_MONITORS(origin), mon->ref);
+        erts_smp_proc_unlock(origin, ERTS_PROC_LOCK_LINK);
+        origin_locks &= ~ERTS_PROC_LOCK_LINK;
+        if (rmon == NULL) {
+            return;
+        }
+
+        erts_destroy_monitor(rmon);
+        erts_smp_proc_unlock(origin, origin_locks);
+    }
+}
+
+static ERTS_INLINE void
+port_exit_fire_monitors(Port *p, Eterm reason)
+{
+    ErtsMonitor *moni = ERTS_P_MONITORS(p);
+    PortFireMonitorCtx ctx = {p, reason};
+    erts_sweep_monitors(moni, &port_fire_one_monitor, &ctx);
+}
+
 /* 'from' is sending 'this_port' an exit signal, (this_port must be internal).
  * If reason is normal we don't do anything, *unless* from is our connected
  * process in which case we close the port. Any other reason kills the port.
@@ -4055,6 +4337,8 @@ erts_deliver_port_exit(Port *p, Eterm from, Eterm reason, int send_closed,
        DTRACE4(port_exit, from_str, port_str, p->name, rreason_str);
    }
 #endif
+
+   port_exit_fire_monitors(p, reason);
 
    state = erts_atomic32_read_nob(&p->state);
    if (state & (ERTS_PORT_SFLGS_DEAD

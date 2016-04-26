@@ -11,7 +11,7 @@
       Licensed under the Apache License, Version 2.0 (the "License");
       you may not use this file except in compliance with the License.
       You may obtain a copy of the License at
- 
+
           http://www.apache.org/licenses/LICENSE-2.0
 
       Unless required by applicable law or agreed to in writing, software
@@ -186,7 +186,7 @@
       <name name="adler32" arity="2"/>
       <fsummary>Computes adler32 checksum.</fsummary>
       <desc>
-        <p>Continues computing the adler32 checksum by combining 
+        <p>Continues computing the adler32 checksum by combining
         the previous checksum, <c><anno>OldAdler</anno></c>, with
 	the checksum of <c><anno>Data</anno></c>.</p>
         <p>The following code:</p>
@@ -669,7 +669,7 @@
 	    process blocks until the operation has been performed.
 	  </p>
 	</note>
-        <p>See also 
+        <p>See also
           <seealso marker="#send_after/4"><c>erlang:send_after/4</c></seealso>,
           <seealso marker="#start_timer/4"><c>erlang:start_timer/4</c></seealso>,
           and
@@ -899,7 +899,7 @@
           <item>
             <p>The header is <em>not</em> stripped off.</p>
             <p>The meanings of the packet types are as follows:</p>
-            <taglist>     
+            <taglist>
               <tag><c>asn1</c> - ASN.1 BER</tag><item></item>
               <tag><c>sunrm</c> - Sun's RPC encoding</tag><item></item>
               <tag><c>cdr</c> - CORBA (GIOP 1.1)</tag><item></item>
@@ -927,7 +927,7 @@
                The following calls are to use <c>httph</c> to get
                <c><anno>HttpHeader</anno></c>s until
                <c>http_eoh</c> is returned, which marks the end of the
-               headers and the beginning of any following message body.</p> 
+               headers and the beginning of any following message body.</p>
             <p>The variants <c>http_bin</c> and <c>httph_bin</c> return
                strings (<c>HttpString</c>) as binaries instead of lists.</p>
           </item>
@@ -1336,7 +1336,7 @@ true</pre>
       <fsummary>Text representation of a float formatted using given options.</fsummary>
       <desc>
         <p>Returns a binary corresponding to the text
-          representation of <c><anno>Float</anno></c> using fixed decimal 
+          representation of <c><anno>Float</anno></c> using fixed decimal
           point formatting. <c><anno>Options</anno></c> behaves in the same
           way as <seealso marker="#float_to_list/2">float_to_list/2</seealso>.</p>
         <p>Examples:</p>
@@ -2375,7 +2375,7 @@ os_prompt% </pre>
       <name name="list_to_pid" arity="1"/>
       <fsummary>Converts from text representation to a pid.</fsummary>
       <desc>
-        <p>Returns a process identifier whose text representation is a 
+        <p>Returns a process identifier whose text representation is a
           <c><anno>String</anno></c>, for example:</p>
         <pre>
 > <input>list_to_pid("&lt;0.4.1>").</input>
@@ -2454,7 +2454,7 @@ os_prompt% </pre>
         the OS-dependent file extension (<c>.so</c> for Unix and
         <c>.dll</c> for Windows. For information on how to
         implement a NIF library, see
-        <seealso marker="erl_nif">erl_nif</seealso>.</p> 
+        <seealso marker="erl_nif">erl_nif</seealso>.</p>
         <p><c><anno>LoadInfo</anno></c> can be any term. It is passed on to
         the library as part of the initialization. A good practice is
         to include a module version number to support future code
@@ -2914,10 +2914,12 @@ os_prompt% </pre>
     <func>
       <name name="monitor" arity="2" clause_i="1"/>
       <name name="monitor" arity="2" clause_i="2"/>
+      <name name="monitor" arity="2" clause_i="3"/>
       <fsummary>Starts monitoring.</fsummary>
       <type name="registered_name"/>
       <type name="registered_process_identifier"/>
       <type name="monitor_process_identifier"/>
+      <type name="monitor_port_identifier"/>
       <desc>
 	<p>Send a monitor request of type <c><anno>Type</anno></c> to the
 	entity identified by <c><anno>Item</anno></c>. The caller of
@@ -2949,15 +2951,11 @@ os_prompt% </pre>
               <tag><c>RegisteredName</c></tag>
               <item>
 		<p>The process locally registered as <c>RegisteredName</c>
-		will become monitored.</p>
+		    will become monitored. Note, that name is resolved to pid only once
+            at the moment of monitor instantiation, later changes to the name
+            registration will not affect the monitor.</p>
               </item>
             </taglist>
-            <note><p>When a registered name is used, the
-	    process that has the registered name when the
-            monitor request reach its destination will be monitored.
-            The monitor is not effected if the registered name is
-            unregistered, or unregistered and later registered on another
-	    process.</p></note>
 	    <p>The monitor is triggered either when the monitored process
 	    terminates, is non existing, or if the connection to it is
 	    lost. In the case the connection to it is lost, we do not know
@@ -3014,6 +3012,60 @@ os_prompt% </pre>
 	      messages on the old format.</p>
 	    </note>
 	  </item>
+
+        <tag><marker id="monitor_port"/><c>port</c></tag>
+        <item>
+          <p>Monitor the existence of the port identified by
+            <c><anno>Item</anno></c>. Valid
+            <c><anno>Item</anno></c>s in combination with the
+            <c>port <anno>Type</anno></c> can be any of the following:</p>
+          <taglist>
+            <tag><c>port()</c></tag>
+            <item>
+                <p>The port identifier of the port to monitor.</p>
+            </item>
+            <tag><c>RegisteredName :: atom()</c></tag>
+            <item>
+              <p>The port locally registered as <c>RegisteredName</c>
+                will become monitored. Note, that name is resolved
+                to port id only once at the moment of monitor
+                instantiation, later changes to the name
+                registration will not affect the monitor.</p>
+            </item>
+          </taglist>
+          <p>The monitor is triggered either when the monitored port
+            closes or does not exist. After this type of monitor has been
+            triggered, the monitor is automatically removed.</p>
+          <p>When the monitor is triggered a <c>'DOWN'</c> message is
+            sent to the monitoring process. A <c>'DOWN'</c> message has
+            the following pattern:</p>
+          <code type="none">{'DOWN', MonitorRef, port, Object, Reason}</code>
+          <p>Here <c>MonitorRef</c> and <c>Type</c> are the same as
+            described earlier, and:</p>
+          <taglist>
+            <tag><c>Object</c></tag>
+            <item>
+              <p>equals:</p>
+              <taglist>
+                <tag><c><anno>Item</anno></c></tag>
+                <item>If <c><anno>Item</anno></c> is specified by a
+                    port identifier.</item>
+                <tag><c>{RegisteredName, LocalNode}</c></tag>
+                <item>If <c><anno>Item</anno></c> is specified as
+                  <c>RegisteredName</c> (an atom) it will be returned as a
+                  tuple with local node name.</item>
+              </taglist>
+            </item>
+            <tag><c>Reason</c></tag>
+            <item>
+              <p>contains shutdown reason, for example <c>normal</c>.</p>
+            </item>
+          </taglist>
+          <p>The monitoring is turned off when the <c>'DOWN'</c>
+            message is sent or when
+            <seealso marker="#demonitor/1">demonitor/1</seealso> is called.</p>
+        </item>
+
 	  <tag><marker id="monitor_time_offset"/><c>time_offset</c></tag>
 	  <item>
 	    <p>Monitor changes in
@@ -3060,7 +3112,7 @@ os_prompt% </pre>
 	    be sent to the monitoring process. A <c>'CHANGE'</c> message has
 	    the following pattern:</p>
             <code type="none">{'CHANGE', MonitorRef, Type, Item, NewTimeOffset}</code>
-            <p>where <c>MonitorRef</c>, <c><anno>Type</anno></c>, and 
+            <p>where <c>MonitorRef</c>, <c><anno>Type</anno></c>, and
 	    <c><anno>Item</anno></c> are the same as described above, and
 	    <c>NewTimeOffset</c> is the new time offset.</p>
 
@@ -3291,7 +3343,7 @@ os_prompt% </pre>
 	<warning><p><em>This function is deprecated! Do not use it!</em>
 	See the users guide chapter
 	<seealso marker="time_correction">Time and Time Correction</seealso>
-	for more information. Specifically the 
+	for more information. Specifically the
 	<seealso marker="time_correction#Dos_and_Donts">Dos and Dont's</seealso>
 	section for information on what to use instead of <c>erlang:now/0</c>.
 	</p></warning>
@@ -3496,7 +3548,7 @@ os_prompt% </pre>
 	    on some OSs, be desirable. How the program
 	    responds to this is highly system-dependent and no specific
 	    effect is guaranteed.</p>
-	  </item> 
+	  </item>
           <tag><c>exit_status</c></tag>
           <item>
             <p>Only valid for <c>{spawn, <anno>Command</anno>}</c>, where
@@ -3706,7 +3758,7 @@ os_prompt% </pre>
 	  (the connected process). If the calling process is linked to
           the port identified by <c><anno>Port</anno></c>, the exit
 	  signal from the port is guaranteed to be delivered before
-	  <c>port_close/1</c> returns.</p> 
+	  <c>port_close/1</c> returns.</p>
         <p>For comparison: <c><anno>Port</anno> ! {self(), close}</c>
 	  only fails with <c>badarg</c> if <c><anno>Port</anno></c> does
 	  not refer to a port or a process. If <c><anno>Port</anno></c>
@@ -3715,7 +3767,7 @@ os_prompt% </pre>
 	  the port replies with <c>{Port, closed}</c> when all buffers
 	  have been flushed and the port really closes. If the calling
 	  process is not the port owner, the <em>port owner</em> fails
-	  with <c>badsig</c>.</p> 
+	  with <c>badsig</c>.</p>
         <p>Notice that any process can close a port using
           <c><anno>Port</anno> ! {PortOwner, close}</c> as if it itself was
           the port owner, but the reply always goes to the port owner.</p>
@@ -3748,7 +3800,7 @@ os_prompt% </pre>
           only fails with <c>badarg</c> if <c><anno>Port</anno></c>
 	  does not refer to a port or a process. If
 	  <c><anno>Port</anno></c> is a closed port, the data message
-	  disappears 
+	  disappears
           without a sound. If <c><anno>Port</anno></c> is open and the calling
           process is not the port owner, the <em>port owner</em> fails
           with <c>badsig</c>. The port owner fails with <c>badsig</c>
@@ -3806,7 +3858,7 @@ os_prompt% </pre>
           <tag><c>nosuspend</c></tag>
           <item>The calling process is not suspended if the port is
 	        busy, instead the port command is aborted and
-		<c>false</c> is returned. 
+		<c>false</c> is returned.
           </item>
         </taglist>
         <note>
@@ -4148,6 +4200,22 @@ os_prompt% </pre>
 
     <func>
       <name name="port_info" arity="2" clause_i="8"/>
+      <fsummary>Which processes are monitoring this port.</fsummary>
+      <desc>
+        <p>Returns list of pids that are monitoring given port at the
+          moment.</p>
+        <p>If the port identified by <c><anno>Port</anno></c> is not open,
+          <c>undefined</c> is returned. If the port is closed and the
+          calling process was previously linked to the port, the exit
+          signal from the port is guaranteed to be delivered before
+          <c>port_info/2</c> returns <c>undefined</c>.</p>
+        <p>Failure: <c>badarg</c> if <c><anno>Port</anno></c> is not a local
+          port identifier, or an atom.</p>
+      </desc>
+    </func>
+
+    <func>
+      <name name="port_info" arity="2" clause_i="9"/>
       <fsummary>Information about the name of a port.</fsummary>
       <desc>
 	<p><c><anno>Name</anno></c> is the command name set by
@@ -4163,7 +4231,7 @@ os_prompt% </pre>
     </func>
 
     <func>
-      <name name="port_info" arity="2" clause_i="9"/>
+      <name name="port_info" arity="2" clause_i="10"/>
       <fsummary>Information about the OS pid of a port.</fsummary>
       <desc>
 	<p><c><anno>OsPid</anno></c> is the process identifier (or equivalent)
@@ -4182,7 +4250,7 @@ os_prompt% </pre>
     </func>
 
     <func>
-      <name name="port_info" arity="2" clause_i="10"/>
+      <name name="port_info" arity="2" clause_i="11"/>
       <fsummary>Information about the output of a port.</fsummary>
       <desc>
 	<p><c><anno>Bytes</anno></c> is the total number of bytes written
@@ -4201,7 +4269,7 @@ os_prompt% </pre>
     </func>
 
     <func>
-      <name name="port_info" arity="2" clause_i="11"/>
+      <name name="port_info" arity="2" clause_i="12"/>
       <fsummary>Information about the parallelism hint of a port.</fsummary>
       <desc>
 	<p><c><anno>Boolean</anno></c> corresponds to the port parallelism
@@ -4212,7 +4280,7 @@ os_prompt% </pre>
     </func>
 
     <func>
-      <name name="port_info" arity="2" clause_i="12"/>
+      <name name="port_info" arity="2" clause_i="13"/>
       <fsummary>Information about the queue size of a port.</fsummary>
       <desc>
 	<p><c><anno>Bytes</anno></c> is the total number
@@ -4229,7 +4297,7 @@ os_prompt% </pre>
     </func>
 
     <func>
-      <name name="port_info" arity="2" clause_i="13"/>
+      <name name="port_info" arity="2" clause_i="14"/>
       <fsummary>Information about the registered name of a port.</fsummary>
       <desc>
 	<p><c><anno>RegisteredName</anno></c> is the registered name of
@@ -4362,7 +4430,7 @@ os_prompt% </pre>
               </p>
               <p>
                 <c>size</c> is the entire heap of the process when garbage collection
-                is triggered, this includes all generational heaps, the process stack, 
+                is triggered, this includes all generational heaps, the process stack,
                 any <seealso marker="#process_flag_message_queue_data">
                 messages that are considered to be part of the heap</seealso> and any
                 extra memory that the garbage collector needs during collection.
@@ -4819,7 +4887,7 @@ os_prompt% </pre>
           </item>
           <tag><c>{links, <anno>PidsAndPorts</anno>}</c></tag>
           <item>
-            <p><c><anno>PidsAndPorts</anno></c> is a list of process identifiers 
+            <p><c><anno>PidsAndPorts</anno></c> is a list of process identifiers
 	    and port identifiers, with processes or ports to which the process
 	    has a link.</p>
           </item>
@@ -4868,10 +4936,19 @@ os_prompt% </pre>
             <p>A list of monitors (started by <c>monitor/2</c>)
               that are active for the process. For a local process
               monitor or a remote process monitor by a process
-              identifier, the list item is <c>{process, <anno>Pid</anno>}</c>.
-              For a remote process
-              monitor by name, the list item is
-              <c>{process, {<anno>RegName</anno>, <anno>Node</anno>}}</c>.</p>
+              identifier, the list consists of:</p>
+              <taglist>
+                <tag><c>{process, <anno>Pid</anno>}</c></tag>
+                <item>Process is monitored by pid.</item>
+                <tag><c>{process, {<anno>RegName</anno>, <anno>Node</anno>}}</c></tag>
+                <item>Local or remote process is monitored by name.</item>
+                <tag><c>{port, PortId}</c></tag>
+                <item>Local port is monitored by port id.</item>
+                <tag><c>{port, {<anno>RegName</anno>, <anno>Node</anno>}}</c></tag>
+                <item>Local port is monitored by name. Please note, that
+                  remote port monitors are not supported, so <c>Node</c> will
+                  always be the local node name.</item>
+              </taglist>
           </item>
           <tag><c>{message_queue_data, <anno>MQD</anno>}</c></tag>
           <item>
@@ -5158,7 +5235,7 @@ os_prompt% </pre>
 	    performed.
 	  </p>
 	</note>
-        <p>See also 
+        <p>See also
           <seealso marker="#send_after/4"><c>erlang:send_after/4</c></seealso>,
           <seealso marker="#start_timer/4"><c>erlang:start_timer/4</c></seealso>,
           and
@@ -6352,7 +6429,7 @@ ok
 	scheduled for execution until the process has been resumed.</p>
 	<p>A process can be suspended by multiple processes and can
 	be suspended multiple times by a single process. A suspended
-	process does not leave the suspended state until its suspend 
+	process does not leave the suspended state until its suspend
 	count reaches zero. The suspend count of
         <c><anno>Suspendee</anno></c> is decreased when
 	<seealso marker="#resume_process/1">erlang:resume_process(<anno>Suspendee</anno>)</seealso>
@@ -7477,7 +7554,7 @@ ok
           </item>
           <tag><c>heap_sizes</c></tag>
           <item>
-            <p>Returns a list of integers representing valid heap sizes 
+            <p>Returns a list of integers representing valid heap sizes
               in words. All Erlang heaps are sized from sizes in this
               list.</p>
           </item>
@@ -8270,7 +8347,7 @@ ok
           </item>
           <tag><c>runnable_ports</c></tag>
           <item>
-          <p>If a port is put into or removed from the run queue, a 
+          <p>If a port is put into or removed from the run queue, a
              message, <c>{profile, Port, State, 0, Ts}</c>, is sent to
 	     <c><anno>ProfilerPid</anno></c>.</p>
           </item>
@@ -8314,7 +8391,7 @@ ok
 	in <c>native</c>
 	<seealso marker="#type_time_unit">time unit</seealso>.</p>
 
-	<p>Calling <c>erlang:system_time()</c> is equivalent to: 
+	<p>Calling <c>erlang:system_time()</c> is equivalent to:
 	<seealso marker="#monotonic_time/0"><c>erlang:monotonic_time()</c></seealso><c>
 	+
         </c><seealso marker="#time_offset/0"><c>erlang:time_offset()</c></seealso>.</p>
@@ -8333,7 +8410,7 @@ ok
 	<seealso marker="time_correction#Erlang_System_Time">Erlang system time</seealso>
 	converted into the <c><anno>Unit</anno></c> passed as argument.</p>
 
-	<p>Calling <c>erlang:system_time(<anno>Unit</anno>)</c> is equivalent to: 
+	<p>Calling <c>erlang:system_time(<anno>Unit</anno>)</c> is equivalent to:
 	<seealso marker="#convert_time_unit/3"><c>erlang:convert_time_unit</c></seealso><c>(</c><seealso marker="#system_time/0"><c>erlang:system_time()</c></seealso><c>,
 	native, <anno>Unit</anno>)</c>.</p>
 
@@ -8476,7 +8553,7 @@ ok
 	<seealso marker="time_correction#Erlang_System_Time">Erlang system time</seealso>
 	converted into the <c><anno>Unit</anno></c> passed as argument.</p>
 
-	<p>Same as calling	
+	<p>Same as calling
 	<seealso marker="#convert_time_unit/3"><c>erlang:convert_time_unit</c></seealso><c>(</c><seealso marker="#time_offset/0"><c>erlang:time_offset()</c></seealso><c>, native, <anno>Unit</anno>)</c>
 	however optimized for commonly used <c><anno>Unit</anno></c>s.</p>
       </desc>
@@ -8488,7 +8565,7 @@ ok
       <desc>
 	<p>Returns current
 	<seealso marker="time_correction#Erlang_System_Time">Erlang system time</seealso>
-	on the format <c>{MegaSecs, Secs, MicroSecs}</c>. This format is 
+	on the format <c>{MegaSecs, Secs, MicroSecs}</c>. This format is
 	the same as <seealso marker="kernel:os#timestamp/0"><c>os:timestamp/0</c></seealso>
 	and the deprecated <seealso marker="#now/0"><c>erlang:now/0</c></seealso>
 	uses. The reason for the existence of <c>erlang:timestamp()</c> is
@@ -8625,7 +8702,7 @@ timestamp() ->
               a trace on many or even all processes in the system.
               The trace can then be activated and deactivated using the match
               specification function <c>{silent,Bool}</c>, giving
-              a high degree of control of which functions with which 
+              a high degree of control of which functions with which
               arguments that trigger the trace.</p>
               <p>Message tags: <c><seealso marker="#trace_3_trace_messages_call">call</seealso></c>,
               <c><seealso marker="#trace_3_trace_messages_return_from">return_from</seealso></c>, and
@@ -8886,7 +8963,7 @@ timestamp() ->
           <item>
             <p>When <c>Pid</c> exits <em>from</em> the specified
               function because of an exception. This trace message is
-              sent if flag <c>call</c> is set, and the function has 
+              sent if flag <c>call</c> is set, and the function has
               a match specification with an <c>exception_trace</c> action.</p>
           </item>
           <tag>
