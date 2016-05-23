@@ -305,7 +305,7 @@ static const struct {
 		{ERTS_I64_LITERAL(0xf0), 4},
 		{ERTS_I64_LITERAL(0xff00), 8},
 		{ERTS_I64_LITERAL(0xffff0000), 16},
-		{ERTS_I64_LITERAL(0xffffffff00000000), 32}};
+                {(Sint64)ERTS_I64_LITERAL(0xffffffff00000000), 32}};
 
 static ERTS_INLINE int
 fit_in_bits(Sint64 value, int start)
@@ -2365,7 +2365,7 @@ send_info_to_logger(Eterm gleader, char *buf, int len)
 }
 
 static ERTS_INLINE int
-send_warning_to_logger(Eterm gleader, char *buf, int len) 
+send_warning_to_logger(Eterm gleader, const char *buf, int len)
 {
     Eterm tag;
     switch (erts_error_logger_warnings) {

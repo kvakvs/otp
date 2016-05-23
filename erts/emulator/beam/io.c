@@ -3089,7 +3089,7 @@ erl_drv_init_ack(ErlDrvPort ix, ErlDrvData res) {
             resp = am_badarg;
             break;
         case -2: {
-            char *str = erl_errno_id(errno);
+            const char *str = erl_errno_id(errno);
             resp = erts_atom_put((byte *) str, strlen(str),
                                  ERTS_ATOM_ENC_LATIN1, 1);
             break;
@@ -7625,7 +7625,7 @@ int driver_exit(ErlDrvPort ix, int err)
     if (err == 0)
         return driver_failure_term(ix, am_normal, 0);
     else {
-        char* err_str = erl_errno_id(err);
+        const char* err_str = erl_errno_id(err);
         Eterm am_err = erts_atom_put((byte *) err_str, sys_strlen(err_str),
 				     ERTS_ATOM_ENC_LATIN1, 1);
         return driver_failure_term(ix, am_err, 0);
@@ -7638,7 +7638,7 @@ int driver_failure(ErlDrvPort ix, int code)
     return driver_failure_term(ix, make_small(code), code == 0);
 }
 
-int driver_failure_atom(ErlDrvPort ix, char* string)
+int driver_failure_atom(ErlDrvPort ix, const char* string)
 {
     return driver_failure_term(ix,
 			       erts_atom_put((byte *) string,
@@ -7660,9 +7660,9 @@ int driver_failure_eof(ErlDrvPort ix)
 
 
 
-ErlDrvTermData driver_mk_atom(char* string)
+ErlDrvTermData driver_mk_atom(const char* string)
 {
-    Eterm am = erts_atom_put((byte *) string,
+    Eterm am = erts_atom_put((const byte *) string,
 			     sys_strlen(string),
 			     ERTS_ATOM_ENC_LATIN1,
 			     1);

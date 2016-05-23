@@ -64,7 +64,7 @@ typedef struct hash_functions
 } HashFunctions;
 
 typedef struct {
-  char *name;
+  const char *name;
   int   size;
   int   used;
   int   objs;
@@ -76,7 +76,7 @@ struct hash
     HashFunctions fun;   /* Function block */
     int is_allocated;    /* 0 iff hash structure is on stack or is static */
     int meta_alloc_type; /* argument to pass to meta_alloc and meta_free */
-    char* name;          /* Table name (static string, for debugging) */
+    const char* name;          /* Table name (static string, for debugging) */
     int size;		 /* Number of slots */
     int shrink_threshold;
     int grow_threshold;

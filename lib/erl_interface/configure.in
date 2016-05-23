@@ -276,7 +276,9 @@ AC_SUBST(WFLAGS)
 if test "x$GCC" = xyes; then
   # Treat certain GCC warnings as errors
   LM_TRY_ENABLE_CFLAG([-Werror=return-type], [WERRORFLAGS])
-  WFLAGS="-Wall -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline"
+  WFLAGS="-Wall -Wmissing-declarations -Wnested-externs -Winline"
+  # -Wstrict-prototypes -Wmissing-prototypes
+
   # check which GCC version
   GCC_VERSION=`$CC -v 2>&1 | sed -n 's/gcc version //p'`
   # GCC 3.3 and later supports C99 strict aliasing

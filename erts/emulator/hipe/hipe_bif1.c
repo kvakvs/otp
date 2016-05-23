@@ -50,7 +50,7 @@ BIF_RETTYPE hipe_bifs_call_count_on_1(BIF_ALIST_1)
 	BIF_ERROR(BIF_P, BADARG);
     if (pc[0] == BeamOpCode(op_hipe_call_count))
 	BIF_RET(NIL);
-    hcc = erts_alloc(ERTS_ALC_T_HIPE, sizeof(*hcc));
+    hcc = (hipe_call_count *)erts_alloc(ERTS_ALC_T_HIPE, sizeof(*hcc));
     hcc->count = 0;
     hcc->opcode = pc[0];
     pc[-4] = (Eterm)hcc;

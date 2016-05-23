@@ -40,15 +40,18 @@
 #include "erl_map.h"
 
 static const char dashes[2*sizeof(long)+5] = {
-    [0 ... 2*sizeof(long)+3] = '-'
+    //[0 ... 2*sizeof(long)+3] = '-'
+        '-',
 };
 
 static const char dots[2*sizeof(long)+5] = {
-    [0 ... 2*sizeof(long)+3] = '.'
+//    [0 ... 2*sizeof(long)+3] = '.'
+        '.',
 };
 
 static const char stars[2*sizeof(long)+5] = {
-    [0 ... 2*sizeof(long)+3] = '*'
+//    [0 ... 2*sizeof(long)+3] = '*'
+        '*',
 };
 
 extern Uint beam_apply[];

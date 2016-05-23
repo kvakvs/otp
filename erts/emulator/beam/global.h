@@ -1060,7 +1060,7 @@ double erts_get_positive_zero_float(void);
 
 __decl_noreturn void __noreturn erts_exit(int n, char*, ...);
 __decl_noreturn void __noreturn erts_flush_async_exit(int n, const char*, ...);
-void erl_error(char*, va_list);
+void erl_error(const char*, va_list);
 
 /* This controls whether sharing-preserving copy is used by Erlang */
 

@@ -873,15 +873,15 @@ efile_altname(Efile_error* errInfo, char* name, char* buffer, size_t size)
 }
 
 int
-efile_link(Efile_error* errInfo, char* old, char* new)
+efile_link(Efile_error* errInfo, char* old, char* new_)
 {
-    return check_error(link(old, new), errInfo);
+    return check_error(link(old, new_), errInfo);
 }
 
 int
-efile_symlink(Efile_error* errInfo, char* old, char* new)
+efile_symlink(Efile_error* errInfo, char* old, char* new_)
 {
-    return check_error(symlink(old, new), errInfo);
+    return check_error(symlink(old, new_), errInfo);
 }
 
 int

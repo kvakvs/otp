@@ -140,7 +140,7 @@ start_new_child(int pipes[])
         goto child_error;
     }
 
-    buff = malloc(size);
+    buff = (char *)malloc(size);
 
     DEBUG_PRINT("size = %d", size);
 
@@ -178,7 +178,7 @@ start_new_child(int pipes[])
 
     cnt = get_int32(buff);
     buff += sizeof(Sint32);
-    new_environ = malloc(sizeof(char*)*(cnt + 1));
+    new_environ = (char **)malloc(sizeof(char*)*(cnt + 1));
 
     DEBUG_PRINT("env_len = %ld", cnt);
     for (i = 0; i < cnt; i++, buff++) {
@@ -191,7 +191,7 @@ start_new_child(int pipes[])
         /* This is a spawn executable call */
         cnt = get_int32(buff);
         buff += sizeof(Sint32);
-        args = malloc(sizeof(char*)*(cnt + 1));
+        args = (char **)malloc(sizeof(char*)*(cnt + 1));
         for (i = 0; i < cnt; i++, buff++) {
             args[i] = buff;
             while(*buff != '\0') buff++;
@@ -426,7 +426,7 @@ main(int argc, char *argv[])
 
             /* We write an ack here, but expect the reply on
                the pipes[0] inside the fork */
-            proto.action = ErtsSysForkerProtoAction_Go;
+            proto.action = ErtsSysForkerProto::ErtsSysForkerProtoAction_Go;
             proto.u.go.os_pid = os_pid;
             proto.u.go.error_number = errno;
             while (write(pipes[1], &proto, sizeof(proto)) < 0 && errno == EINTR)
@@ -459,7 +459,7 @@ main(int argc, char *argv[])
             if (proto.u.sigchld.port_id == THE_NON_VALUE)
                 continue; /* exit status report not requested */
 
-            proto.action = ErtsSysForkerProtoAction_SigChld;
+            proto.action = ErtsSysForkerProto::ErtsSysForkerProtoAction_SigChld;
             proto.u.sigchld.error_number = ibuff[1];
             DEBUG_PRINT("send %s to %d", buff, uds_fd);
             if (write(uds_fd, &proto, sizeof(proto)) < 0) {
@@ -499,7 +499,7 @@ static Eterm get_port_id(pid_t os_pid)
     ErtsSysExitStatus est, *es;
     Eterm port_id;
     est.os_pid = os_pid;
-    es = hash_remove(forker_hash, &est);
+    es = (ErtsSysExitStatus *)hash_remove(forker_hash, &est);
     if (!es) return THE_NON_VALUE;
     port_id = es->port_id;
     free(es);
@@ -508,14 +508,14 @@ static Eterm get_port_id(pid_t os_pid)
 
 static int fcmp(void *a, void *b)
 {
-    ErtsSysExitStatus *sa = a;
-    ErtsSysExitStatus *sb = b;
+    ErtsSysExitStatus *sa = (ErtsSysExitStatus *)a;
+    ErtsSysExitStatus *sb = (ErtsSysExitStatus *)b;
     return !(sa->os_pid == sb->os_pid);
 }
 
 static HashValue fhash(void *e)
 {
-    ErtsSysExitStatus *se = e;
+    ErtsSysExitStatus *se = (ErtsSysExitStatus *)e;
     Uint32 val = se->os_pid;
     val = (val+0x7ed55d16) + (val<<12);
     val = (val^0xc761c23c) ^ (val>>19);
@@ -528,8 +528,8 @@ static HashValue fhash(void *e)
 
 static void *falloc(void *e)
 {
-    ErtsSysExitStatus *se = e;
-    ErtsSysExitStatus *ne = malloc(sizeof(ErtsSysExitStatus));
+    ErtsSysExitStatus *se = (ErtsSysExitStatus *)e;
+    ErtsSysExitStatus *ne = (ErtsSysExitStatus *)malloc(sizeof(ErtsSysExitStatus));
     ne->os_pid = se->os_pid;
     ne->port_id = se->port_id;
     return ne;

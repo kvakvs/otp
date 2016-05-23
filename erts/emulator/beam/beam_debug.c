@@ -298,7 +298,7 @@ erts_debug_disassemble_1(BIF_ALIST_1)
 	    n = code_hdr->num_functions;
 	    for (i = 0; i < n; i++) {
 		code_ptr = code_hdr->functions[i];
-		if (code_ptr[3] == name && code_ptr[4] == arity) {
+                if (code_ptr[3] == name && (Sint)code_ptr[4] == arity) {
 		    funcinfo = code_ptr+2;
 		    break;
 		}
@@ -381,15 +381,15 @@ print_op(int to, void *to_arg, int op, int size, BeamInstr* addr)
 {
     int i;
     BeamInstr tag;
-    char* sign;
-    char* start_prog;		/* Start of program for packer. */
-    char* prog;			/* Current position in packer program. */
+    const char* sign;
+    const char* start_prog;	/* Start of program for packer. */
+    const char* prog;		/* Current position in packer program. */
     BeamInstr stack[8];		/* Stack for packer. */
-    BeamInstr* sp = stack;		/* Points to next free position. */
-    BeamInstr packed = 0;		/* Accumulator for packed operations. */
+    BeamInstr* sp = stack;	/* Points to next free position. */
+    BeamInstr packed = 0;	/* Accumulator for packed operations. */
     BeamInstr args[8];		/* Arguments for this instruction. */
-    BeamInstr* ap;			/* Pointer to arguments. */
-    BeamInstr* unpacked;		/* Unpacked arguments */
+    BeamInstr* ap;		/* Pointer to arguments. */
+    BeamInstr* unpacked;	/* Unpacked arguments */
 
     start_prog = opc[op].pack;
 

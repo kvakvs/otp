@@ -56,7 +56,7 @@
 #define erts_circleq_push_head(Q, N)  \
     do {                              \
         (N)->next = (Q)->next;        \
-        (N)->prev = (void *)(Q);      \
+        (N)->prev = (cache_t *)(Q);      \
         (Q)->next->prev = (N);        \
         (Q)->next = (N);              \
     } while(0)
@@ -64,7 +64,7 @@
 #define erts_circleq_push_tail(Q, N)  \
     do {                              \
         (N)->prev = (Q)->prev;        \
-        (N)->next = (void *)(Q);      \
+        (N)->next = (cache_t *)(Q);      \
         (Q)->prev->next = (N);        \
         (Q)->prev = (N);              \
     } while(0)

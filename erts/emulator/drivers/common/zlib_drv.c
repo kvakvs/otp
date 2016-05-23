@@ -99,7 +99,7 @@ ErlDrvEntry zlib_driver_entry = {
     zlib_flush,
     NULL,                           /* call */
     NULL,                           /* event */
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     ERL_DRV_FLAG_USE_PORT_LOCKING,
@@ -142,7 +142,7 @@ static __inline__ int i32(char* buf)
 		  (((int)((unsigned char*)buf)[3]) << 0));
 }
 
-static char* zlib_reason(int code, int* err)
+static const char* zlib_reason(int code, int* err)
 {
     switch(code) {
     case Z_OK:
@@ -180,7 +180,7 @@ static ErlDrvSSizeT zlib_return(int code, char** rbuf, ErlDrvSizeT rlen)
 {
     int msg_code = 0; /* 0=ok, 1=error */
     char* dst = *rbuf;
-    char* src;
+    const char* src;
     ErlDrvSizeT len = 0;
 
     src = zlib_reason(code, &msg_code);
@@ -263,7 +263,7 @@ static int zlib_inflate(ZLibData* d, int flush)
 	int len;
 	int possibly_more_output = 0;
 
-	d->s.next_in = iov[0].iov_base;
+        d->s.next_in = (Bytef *)iov[0].iov_base;
 	d->s.avail_in = iov[0].iov_len;
 	while((possibly_more_output || (d->s.avail_in > 0)) && (res != Z_STREAM_END)) {
 	    res = inflate(&d->s, Z_NO_FLUSH);
@@ -320,7 +320,7 @@ static int zlib_inflate_chunk(ZLibData* d)
 	SysIOVec* iov = driver_peekq(d->port, &vlen);
 	int len;
 
-	d->s.next_in = iov[0].iov_base;
+        d->s.next_in = (Bytef *)iov[0].iov_base;
 	d->s.avail_in = iov[0].iov_len;
 	while((d->s.avail_in > 0) && (d->s.avail_out > 0) && (res != Z_STREAM_END)) {
 	    res = inflate(&d->s, Z_NO_FLUSH);
@@ -371,7 +371,7 @@ static int zlib_deflate(ZLibData* d, int flush)
 	SysIOVec* iov = driver_peekq(d->port, &vlen);
 	int len;
 
-	d->s.next_in = iov[0].iov_base;
+        d->s.next_in = (Bytef *)iov[0].iov_base;
 	d->s.avail_in = iov[0].iov_len;
 
 	while((d->s.avail_in > 0) && (res != Z_STREAM_END)) {
@@ -384,7 +384,7 @@ static int zlib_deflate(ZLibData* d, int flush)
 	}
 	len = iov[0].iov_len - d->s.avail_in;
 	if (d->want_crc) {
-	    d->crc = crc32(d->crc, iov[0].iov_base, len);
+            d->crc = crc32(d->crc, (const Bytef *)iov[0].iov_base, len);
 	}
 	driver_deq(d->port, len);
     }
@@ -595,7 +595,7 @@ static ErlDrvSSizeT zlib_ctl(ErlDrvData drv_data, unsigned int command, char *bu
 	    int vlen;
 	    SysIOVec* iov = driver_peekq(d->port, &vlen);
 
-	    d->s.next_in = iov[0].iov_base;
+            d->s.next_in = (Bytef *)iov[0].iov_base;
 	    d->s.avail_in = iov[0].iov_len;
 	    res = inflateSync(&d->s);
 	}

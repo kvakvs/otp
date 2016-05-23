@@ -47,7 +47,8 @@
 #define PTR_SIZE 2*(int)sizeof(long)
 
 static const char dashes[PTR_SIZE+3] = {
-    [0 ... PTR_SIZE+1] = '-'
+    //[0 ... PTR_SIZE+1] = '-'
+    '-',
 };
 #endif
 

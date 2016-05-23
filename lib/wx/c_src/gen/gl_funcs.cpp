@@ -45,7 +45,7 @@ case 5010: { // gluBuild1DMipmapLevels
  void *data = (void *) bins[0];
  GLint result = wegluBuild1DMipmapLevels(*target,*internalFormat,*width,*format,*type,*level,*base,*max,data);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -59,7 +59,7 @@ case 5011: { // gluBuild1DMipmaps
  void *data = (void *) bins[0];
  GLint result = wegluBuild1DMipmaps(*target,*internalFormat,*width,*format,*type,data);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -77,7 +77,7 @@ case 5012: { // gluBuild2DMipmapLevels
  void *data = (void *) bins[0];
  GLint result = wegluBuild2DMipmapLevels(*target,*internalFormat,*width,*height,*format,*type,*level,*base,*max,data);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -92,7 +92,7 @@ case 5013: { // gluBuild2DMipmaps
  void *data = (void *) bins[0];
  GLint result = wegluBuild2DMipmaps(*target,*internalFormat,*width,*height,*format,*type,data);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -111,7 +111,7 @@ case 5014: { // gluBuild3DMipmapLevels
  void *data = (void *) bins[0];
  GLint result = wegluBuild3DMipmapLevels(*target,*internalFormat,*width,*height,*depth,*format,*type,*level,*base,*max,data);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -127,7 +127,7 @@ case 5015: { // gluBuild3DMipmaps
  void *data = (void *) bins[0];
  GLint result = wegluBuild3DMipmaps(*target,*internalFormat,*width,*height,*depth,*format,*type,data);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -139,7 +139,7 @@ case 5016: { // gluCheckExtension
  int extStringLen[1] = {(int)strlen((char *)extString)}; bp += extStringLen[0]+1+((8-((1+extStringLen[0]+0)%8))%8);
  GLboolean result = wegluCheckExtension(extName,extString);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -169,7 +169,7 @@ case 5020: { // gluErrorString
  GLenum *error = (GLenum *) bp; bp += 4;
  const GLubyte *  result = wegluErrorString(*error);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) result; rt[AP++] = strlen((char *) result);
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -178,7 +178,7 @@ case 5021: { // gluGetString
  GLenum *name = (GLenum *) bp; bp += 4;
  const GLubyte *  result = wegluGetString(*name);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) result; rt[AP++] = strlen((char *) result);
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -198,7 +198,7 @@ case 5022: { // gluLookAt
 case 5023: { // gluNewQuadric
  GLUquadric *  result = wegluNewQuadric();
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -247,7 +247,7 @@ case 5028: { // gluProject
  GLdouble winZ[1] = {0.0};
  GLint result = wegluProject(*objX,*objY,*objZ,model,proj,view,winX,winY,winZ);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) winX;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) winY;
@@ -288,7 +288,7 @@ case 5033: { // gluScaleImage
  GLvoid *dataOut = (GLvoid *) bins[1];
  GLint result = wegluScaleImage(*format,*wIn,*hIn,*typeIn,dataIn,*wOut,*hOut,*typeOut,dataOut);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -312,7 +312,7 @@ case 5035: { // gluUnProject
  GLdouble objZ[1] = {0.0};
  GLint result = wegluUnProject(*winX,*winY,*winZ,model,proj,view,objX,objY,objZ);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) objX;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) objY;
@@ -337,7 +337,7 @@ case 5036: { // gluUnProject4
  GLdouble objW[1] = {0.0};
  GLint result = wegluUnProject4(*winX,*winY,*winZ,*clipW,model,proj,view,*nearVal,*farVal,objX,objY,objZ,objW);
  int AP = 0; ErlDrvTermData rt[16];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) objX;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) objY;
@@ -426,7 +426,7 @@ case 5053: { // glGetPolygonStipple
  ErlDrvBinary *mask = driver_alloc_binary(128);
  weglGetPolygonStipple((GLubyte*) mask->orig_bytes);
  int AP = 0; ErlDrvTermData rt[8];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_BINARY; rt[AP++] = (ErlDrvTermData) mask; rt[AP++] = 128; rt[AP++] = 0;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -454,7 +454,7 @@ case 5057: { // glGetClipPlane
  GLdouble equation[4] = {0.0,0.0,0.0,0.0};
  weglGetClipPlane(*plane,equation);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble *equationTmp = equation;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) equationTmp++;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) equationTmp++;
@@ -484,7 +484,7 @@ case 5062: { // glIsEnabled
  GLenum *cap = (GLenum *) bp; bp += 4;
  GLboolean result = weglIsEnabled(*cap);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -502,7 +502,7 @@ case 5065: { // glGetBooleanv
  GLboolean params[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetBooleanv(*pname,params);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLboolean *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -529,7 +529,7 @@ case 5066: { // glGetDoublev
  GLdouble params[16] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
  weglGetDoublev(*pname,params);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble *paramsTmp = params;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -556,7 +556,7 @@ case 5067: { // glGetFloatv
  GLfloat params[16] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
  weglGetFloatv(*pname,params);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[16], *paramsTmp = paramsConv; 
  for(int i=0; i < 16; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -584,7 +584,7 @@ case 5068: { // glGetIntegerv
  GLint params[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetIntegerv(*pname,params);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -624,7 +624,7 @@ case 5073: { // glRenderMode
  GLenum *mode = (GLenum *) bp; bp += 4;
  GLint result = weglRenderMode(*mode);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -632,7 +632,7 @@ case 5073: { // glRenderMode
 case 5074: { // glGetError
  GLenum result = weglGetError();
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -641,7 +641,7 @@ case 5075: { // glGetString
  GLenum *name = (GLenum *) bp; bp += 4;
  const GLubyte *  result = weglGetString(*name);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) result; rt[AP++] = strlen((char *) result);
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -782,7 +782,7 @@ case 5102: { // glIsList
  GLuint *list = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsList(*list);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -796,7 +796,7 @@ case 5104: { // glGenLists
  GLsizei *range = (GLsizei *) bp; bp += 4;
  GLuint result = weglGenLists(*range);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -1289,7 +1289,7 @@ case 5209: { // glGetLightfv
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetLightfv(*light,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -1306,7 +1306,7 @@ case 5210: { // glGetLightiv
  GLint params[4] = {0,0,0,0};
  weglGetLightiv(*light,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -1370,7 +1370,7 @@ case 5219: { // glGetMaterialfv
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetMaterialfv(*face,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -1387,7 +1387,7 @@ case 5220: { // glGetMaterialiv
  GLint params[4] = {0,0,0,0};
  weglGetMaterialiv(*face,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -1450,8 +1450,8 @@ case 5230: { // glGetPixelMapfv
  GLfloat *values = (GLfloat *) bins[0];
  weglGetPixelMapfv(*map,values);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -1460,8 +1460,8 @@ case 5231: { // glGetPixelMapuiv
  GLuint *values = (GLuint *) bins[0];
  weglGetPixelMapuiv(*map,values);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -1470,8 +1470,8 @@ case 5232: { // glGetPixelMapusv
  GLushort *values = (GLushort *) bins[0];
  weglGetPixelMapusv(*map,values);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -1505,8 +1505,8 @@ case 5235: { // glReadPixels
  GLvoid *pixels = (GLvoid *) bins[0];
  weglReadPixels(*x,*y,*width,*height,*format,*type,pixels);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -1599,7 +1599,7 @@ case 5249: { // glGetTexGendv
  GLdouble params[4] = {0.0,0.0,0.0,0.0};
  weglGetTexGendv(*coord,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble *paramsTmp = params;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -1615,7 +1615,7 @@ case 5250: { // glGetTexGenfv
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetTexGenfv(*coord,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -1632,7 +1632,7 @@ case 5251: { // glGetTexGeniv
  GLint params[4] = {0,0,0,0};
  weglGetTexGeniv(*coord,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -1674,7 +1674,7 @@ case 5256: { // glGetTexEnvfv
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetTexEnvfv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -1691,7 +1691,7 @@ case 5257: { // glGetTexEnviv
  GLint params[4] = {0,0,0,0};
  weglGetTexEnviv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -1733,7 +1733,7 @@ case 5262: { // glGetTexParameterfv
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetTexParameterfv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -1750,7 +1750,7 @@ case 5263: { // glGetTexParameteriv
  GLint params[4] = {0,0,0,0};
  weglGetTexParameteriv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -1767,7 +1767,7 @@ case 5264: { // glGetTexLevelParameterfv
  GLfloat params[1] = {0.0};
  weglGetTexLevelParameterfv(*target,*level,*pname,params);
  int AP = 0; ErlDrvTermData rt[8];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[1], *paramsTmp = paramsConv; 
  for(int i=0; i < 1; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -1782,7 +1782,7 @@ case 5265: { // glGetTexLevelParameteriv
  GLint params[1] = {0};
  weglGetTexLevelParameteriv(*target,*level,*pname,params);
  int AP = 0; ErlDrvTermData rt[8];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 1;
@@ -1843,8 +1843,8 @@ case 5270: { // glGetTexImage
  GLvoid *pixels = (GLvoid *) bins[0];
  weglGetTexImage(*target,*level,*format,*type,pixels);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -1855,7 +1855,7 @@ case 5271: { // glGenTextures
  weglGenTextures(*n,textures);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*n)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *n; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) textures[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*n)+1;
@@ -1889,7 +1889,7 @@ case 5275: { // glAreTexturesResident
  GLboolean result = weglAreTexturesResident(*texturesLen,textures,residences);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(11 + (*texturesLen)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  for(int i=0; i < *texturesLen; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) residences[i];}
@@ -1904,7 +1904,7 @@ case 5276: { // glIsTexture
  GLuint *texture = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsTexture(*texture);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -2046,8 +2046,8 @@ case 5289: { // glGetMapdv
  GLdouble *v = (GLdouble *) bins[0];
  weglGetMapdv(*target,*query,v);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -2057,8 +2057,8 @@ case 5290: { // glGetMapfv
  GLfloat *v = (GLfloat *) bins[0];
  weglGetMapfv(*target,*query,v);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -2068,8 +2068,8 @@ case 5291: { // glGetMapiv
  GLint *v = (GLint *) bins[0];
  weglGetMapiv(*target,*query,v);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -2173,8 +2173,8 @@ case 5308: { // glFeedbackBuffer
  GLfloat *buffer = (GLfloat *) bins[0];
  weglFeedbackBuffer(*size,*type,buffer);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -2187,8 +2187,8 @@ case 5310: { // glSelectBuffer
  GLuint *buffer = (GLuint *) bins[0];
  weglSelectBuffer(*size,buffer);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -2346,8 +2346,8 @@ case 5329: { // glGetColorTable
  GLvoid *table = (GLvoid *) bins[0];
  weglGetColorTable(*target,*format,*type,table);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -2357,7 +2357,7 @@ case 5330: { // glGetColorTableParameterfv
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetColorTableParameterfv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -2374,7 +2374,7 @@ case 5331: { // glGetColorTableParameteriv
  GLint params[4] = {0,0,0,0};
  weglGetColorTableParameteriv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -2486,8 +2486,8 @@ case 5343: { // glGetConvolutionFilter
  GLvoid *image = (GLvoid *) bins[0];
  weglGetConvolutionFilter(*target,*format,*type,image);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -2497,7 +2497,7 @@ case 5344: { // glGetConvolutionParameterfv
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetConvolutionParameterfv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -2514,7 +2514,7 @@ case 5345: { // glGetConvolutionParameteriv
  GLint params[4] = {0,0,0,0};
  weglGetConvolutionParameteriv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -2555,8 +2555,8 @@ case 5348: { // glGetHistogram
  GLvoid *values = (GLvoid *) bins[0];
  weglGetHistogram(*target,*reset,*format,*type,values);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -2566,7 +2566,7 @@ case 5349: { // glGetHistogramParameterfv
  GLfloat params[1] = {0.0};
  weglGetHistogramParameterfv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[8];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[1], *paramsTmp = paramsConv; 
  for(int i=0; i < 1; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -2580,7 +2580,7 @@ case 5350: { // glGetHistogramParameteriv
  GLint params[1] = {0};
  weglGetHistogramParameteriv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[8];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 1;
@@ -2596,8 +2596,8 @@ case 5351: { // glGetMinmax
  GLvoid *values = (GLvoid *) bins[0];
  weglGetMinmax(*target,*reset,*format,*types,values);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -2607,7 +2607,7 @@ case 5352: { // glGetMinmaxParameterfv
  GLfloat params[1] = {0.0};
  weglGetMinmaxParameterfv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[8];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[1], *paramsTmp = paramsConv; 
  for(int i=0; i < 1; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -2621,7 +2621,7 @@ case 5353: { // glGetMinmaxParameteriv
  GLint params[1] = {0};
  weglGetMinmaxParameteriv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[8];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 1;
@@ -2802,8 +2802,8 @@ case 5372: { // glGetCompressedTexImage
  GLvoid *img = (GLvoid *) bins[0];
  weglGetCompressedTexImage(*target,*lod,img);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -3053,7 +3053,7 @@ case 5422: { // glGenQueries
  weglGenQueries(*n,ids);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*n)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *n; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) ids[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*n)+1;
@@ -3071,7 +3071,7 @@ case 5424: { // glIsQuery
  GLuint *id = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsQuery(*id);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3091,7 +3091,7 @@ case 5427: { // glGetQueryiv
  GLint params[1] = {0};
  weglGetQueryiv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3102,7 +3102,7 @@ case 5428: { // glGetQueryObjectiv
  GLint params[1] = {0};
  weglGetQueryObjectiv(*id,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3113,7 +3113,7 @@ case 5429: { // glGetQueryObjectuiv
  GLuint params[1] = {0};
  weglGetQueryObjectuiv(*id,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3135,7 +3135,7 @@ case 5432: { // glGenBuffers
  weglGenBuffers(*n,buffers);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*n)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *n; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) buffers[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*n)+1;
@@ -3148,7 +3148,7 @@ case 5433: { // glIsBuffer
  GLuint *buffer = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsBuffer(*buffer);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3193,8 +3193,8 @@ case 5438: { // glGetBufferSubData
  GLvoid *data = (GLvoid *) bins[0];
  weglGetBufferSubData(*target,offset,size,data);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -3204,7 +3204,7 @@ case 5439: { // glGetBufferParameteriv
  GLint params[1] = {0};
  weglGetBufferParameteriv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3257,7 +3257,7 @@ case 5447: { // glCompileShader
 case 5448: { // glCreateProgram
  GLuint result = weglCreateProgram();
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3266,7 +3266,7 @@ case 5449: { // glCreateShader
  GLenum *type = (GLenum *) bp; bp += 4;
  GLuint result = weglCreateShader(*type);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3303,7 +3303,7 @@ case 5455: { // glGetActiveAttrib
  name = (GLchar *) driver_alloc(sizeof(GLchar) * *bufSize);
  weglGetActiveAttrib(*program,*index,*bufSize,length,size,type,name);
  int AP = 0; ErlDrvTermData rt[13];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *size;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *type;
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) name; rt[AP++] = *length;
@@ -3323,7 +3323,7 @@ case 5456: { // glGetActiveUniform
  name = (GLchar *) driver_alloc(sizeof(GLchar) * *bufSize);
  weglGetActiveUniform(*program,*index,*bufSize,length,size,type,name);
  int AP = 0; ErlDrvTermData rt[13];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *size;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *type;
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) name; rt[AP++] = *length;
@@ -3341,7 +3341,7 @@ case 5457: { // glGetAttachedShaders
  weglGetAttachedShaders(*program,*maxCount,count,obj);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*count)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *count; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) obj[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*count)+1;
@@ -3356,7 +3356,7 @@ case 5458: { // glGetAttribLocation
  int nameLen[1] = {(int)strlen((char *)name)}; bp += nameLen[0]+1+((8-((1+nameLen[0]+4)%8))%8);
  GLint result = weglGetAttribLocation(*program,name);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3367,7 +3367,7 @@ case 5459: { // glGetProgramiv
  GLint params[1] = {0};
  weglGetProgramiv(*program,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3380,7 +3380,7 @@ case 5460: { // glGetProgramInfoLog
  infoLog = (GLchar *) driver_alloc(sizeof(GLchar) * *bufSize);
  weglGetProgramInfoLog(*program,*bufSize,length,infoLog);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) infoLog; rt[AP++] = *length;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3392,7 +3392,7 @@ case 5461: { // glGetShaderiv
  GLint params[1] = {0};
  weglGetShaderiv(*shader,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3405,7 +3405,7 @@ case 5462: { // glGetShaderInfoLog
  infoLog = (GLchar *) driver_alloc(sizeof(GLchar) * *bufSize);
  weglGetShaderInfoLog(*shader,*bufSize,length,infoLog);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) infoLog; rt[AP++] = *length;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3419,7 +3419,7 @@ case 5463: { // glGetShaderSource
  source = (GLchar *) driver_alloc(sizeof(GLchar) * *bufSize);
  weglGetShaderSource(*shader,*bufSize,length,source);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) source; rt[AP++] = *length;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3431,7 +3431,7 @@ case 5464: { // glGetUniformLocation
  int nameLen[1] = {(int)strlen((char *)name)}; bp += nameLen[0]+1+((8-((1+nameLen[0]+4)%8))%8);
  GLint result = weglGetUniformLocation(*program,name);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3442,7 +3442,7 @@ case 5465: { // glGetUniformfv
  GLfloat params[16] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
  weglGetUniformfv(*program,*location,params);
  int AP = 0; ErlDrvTermData rt[38];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[16], *paramsTmp = paramsConv; 
  for(int i=0; i < 16; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -3471,7 +3471,7 @@ case 5466: { // glGetUniformiv
  GLint params[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetUniformiv(*program,*location,params);
  int AP = 0; ErlDrvTermData rt[38];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -3499,7 +3499,7 @@ case 5467: { // glGetVertexAttribdv
  GLdouble params[4] = {0.0,0.0,0.0,0.0};
  weglGetVertexAttribdv(*index,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble *paramsTmp = params;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -3515,7 +3515,7 @@ case 5468: { // glGetVertexAttribfv
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetVertexAttribfv(*index,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -3532,7 +3532,7 @@ case 5469: { // glGetVertexAttribiv
  GLint params[4] = {0,0,0,0};
  weglGetVertexAttribiv(*index,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -3546,7 +3546,7 @@ case 5470: { // glIsProgram
  GLuint *program = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsProgram(*program);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3555,7 +3555,7 @@ case 5471: { // glIsShader
  GLuint *shader = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsShader(*shader);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -3909,7 +3909,7 @@ case 5527: { // glGetBooleani_v
  GLboolean data[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetBooleani_v(*target,*index,data);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLboolean *dataTmp = data;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *dataTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *dataTmp++;
@@ -3937,7 +3937,7 @@ case 5528: { // glGetIntegeri_v
  GLint data[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetIntegeri_v(*target,*index,data);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *dataTmp = data;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *dataTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *dataTmp++;
@@ -3974,7 +3974,7 @@ case 5531: { // glIsEnabledi
  GLuint *index = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsEnabledi(*target,*index);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -4025,7 +4025,7 @@ case 5537: { // glGetTransformFeedbackVarying
  name = (GLchar *) driver_alloc(sizeof(GLchar) * *bufSize);
  weglGetTransformFeedbackVarying(*program,*index,*bufSize,length,size,type,name);
  int AP = 0; ErlDrvTermData rt[13];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *size;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *type;
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) name; rt[AP++] = *length;
@@ -4069,7 +4069,7 @@ case 5543: { // glGetVertexAttribIiv
  GLint params[4] = {0,0,0,0};
  weglGetVertexAttribIiv(*index,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -4085,7 +4085,7 @@ case 5544: { // glGetVertexAttribIuiv
  GLuint params[4] = {0,0,0,0};
  weglGetVertexAttribIuiv(*index,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLuint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -4161,7 +4161,7 @@ case 5557: { // glGetUniformuiv
  GLuint params[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetUniformuiv(*program,*location,params);
  int AP = 0; ErlDrvTermData rt[38];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLuint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -4196,7 +4196,7 @@ case 5559: { // glGetFragDataLocation
  int nameLen[1] = {(int)strlen((char *)name)}; bp += nameLen[0]+1+((8-((1+nameLen[0]+4)%8))%8);
  GLint result = weglGetFragDataLocation(*program,name);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -4271,7 +4271,7 @@ case 5570: { // glGetTexParameterIiv
  GLint params[4] = {0,0,0,0};
  weglGetTexParameterIiv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -4287,7 +4287,7 @@ case 5571: { // glGetTexParameterIuiv
  GLuint params[4] = {0,0,0,0};
  weglGetTexParameterIuiv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLuint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -4330,7 +4330,7 @@ case 5576: { // glGetStringi
  GLuint *index = (GLuint *) bp; bp += 4;
  const GLubyte *  result = weglGetStringi(*name,*index);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) result; rt[AP++] = strlen((char *) result);
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -4374,7 +4374,7 @@ case 5582: { // glGetInteger64i_v
  GLint64 data[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetInteger64i_v(*target,*index,data);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint64 *dataTmp = data;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *dataTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *dataTmp++;
@@ -4402,7 +4402,7 @@ case 5583: { // glGetBufferParameteri64v
  GLint64 params[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetBufferParameteri64v(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint64 *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -4568,7 +4568,7 @@ case 5611: { // glGenProgramsARB
  weglGenProgramsARB(*n,programs);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*n)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *n; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) programs[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*n)+1;
@@ -4643,7 +4643,7 @@ case 5620: { // glGetProgramEnvParameterdvARB
  GLdouble params[4] = {0.0,0.0,0.0,0.0};
  weglGetProgramEnvParameterdvARB(*target,*index,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble *paramsTmp = params;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -4659,7 +4659,7 @@ case 5621: { // glGetProgramEnvParameterfvARB
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetProgramEnvParameterfvARB(*target,*index,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -4676,7 +4676,7 @@ case 5622: { // glGetProgramLocalParameterdvARB
  GLdouble params[4] = {0.0,0.0,0.0,0.0};
  weglGetProgramLocalParameterdvARB(*target,*index,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble *paramsTmp = params;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -4692,7 +4692,7 @@ case 5623: { // glGetProgramLocalParameterfvARB
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetProgramLocalParameterfvARB(*target,*index,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -4709,8 +4709,8 @@ case 5624: { // glGetProgramStringARB
  GLvoid *string = (GLvoid *) bins[0];
  weglGetProgramStringARB(*target,*pname,string);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -4720,7 +4720,7 @@ case 5625: { // glGetBufferParameterivARB
  GLint params[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetBufferParameterivARB(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -4750,7 +4750,7 @@ case 5627: { // glGetHandleARB
  GLenum *pname = (GLenum *) bp; bp += 4;
  GLhandleARB result = weglGetHandleARB(*pname);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -4764,7 +4764,7 @@ case 5629: { // glCreateShaderObjectARB
  GLenum *shaderType = (GLenum *) bp; bp += 4;
  GLhandleARB result = weglCreateShaderObjectARB(*shaderType);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -4788,7 +4788,7 @@ case 5631: { // glCompileShaderARB
 case 5632: { // glCreateProgramObjectARB
  GLhandleARB result = weglCreateProgramObjectARB();
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -4816,7 +4816,7 @@ case 5637: { // glGetObjectParameterfvARB
  GLfloat params[1] = {0.0};
  weglGetObjectParameterfvARB(obj,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv = (double) *params; 
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) &paramsConv;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
@@ -4828,7 +4828,7 @@ case 5638: { // glGetObjectParameterivARB
  GLint params[1] = {0};
  weglGetObjectParameterivARB(obj,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -4841,7 +4841,7 @@ case 5639: { // glGetInfoLogARB
  infoLog = (GLchar *) driver_alloc(sizeof(GLchar) * *maxLength);
  weglGetInfoLogARB(obj,*maxLength,length,infoLog);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) infoLog; rt[AP++] = *length;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -4856,7 +4856,7 @@ case 5640: { // glGetAttachedObjectsARB
  weglGetAttachedObjectsARB(containerObj,*maxCount,count,obj);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*count)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *count; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) obj[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*count)+1;
@@ -4871,7 +4871,7 @@ case 5641: { // glGetUniformLocationARB
  int nameLen[1] = {(int)strlen((char *)name)}; bp += nameLen[0]+1+((8-((1+nameLen[0]+0)%8))%8);
  GLint result = weglGetUniformLocationARB(programObj,name);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -4887,7 +4887,7 @@ case 5642: { // glGetActiveUniformARB
  name = (GLchar *) driver_alloc(sizeof(GLchar) * *maxLength);
  weglGetActiveUniformARB(programObj,*index,*maxLength,length,size,type,name);
  int AP = 0; ErlDrvTermData rt[13];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *size;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *type;
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) name; rt[AP++] = *length;
@@ -4902,7 +4902,7 @@ case 5643: { // glGetUniformfvARB
  GLfloat params[16] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
  weglGetUniformfvARB(programObj,*location,params);
  int AP = 0; ErlDrvTermData rt[38];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[16], *paramsTmp = paramsConv; 
  for(int i=0; i < 16; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -4931,7 +4931,7 @@ case 5644: { // glGetUniformivARB
  GLint params[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetUniformivARB(programObj,*location,params);
  int AP = 0; ErlDrvTermData rt[38];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -4961,7 +4961,7 @@ case 5645: { // glGetShaderSourceARB
  source = (GLchar *) driver_alloc(sizeof(GLchar) * *maxLength);
  weglGetShaderSourceARB(obj,*maxLength,length,source);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) source; rt[AP++] = *length;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -4985,7 +4985,7 @@ case 5647: { // glGetActiveAttribARB
  name = (GLchar *) driver_alloc(sizeof(GLchar) * *maxLength);
  weglGetActiveAttribARB(programObj,*index,*maxLength,length,size,type,name);
  int AP = 0; ErlDrvTermData rt[13];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *size;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *type;
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) name; rt[AP++] = *length;
@@ -5000,7 +5000,7 @@ case 5648: { // glGetAttribLocationARB
  int nameLen[1] = {(int)strlen((char *)name)}; bp += nameLen[0]+1+((8-((1+nameLen[0]+0)%8))%8);
  GLint result = weglGetAttribLocationARB(programObj,name);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5009,7 +5009,7 @@ case 5649: { // glIsRenderbuffer
  GLuint *renderbuffer = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsRenderbuffer(*renderbuffer);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5031,7 +5031,7 @@ case 5652: { // glGenRenderbuffers
  weglGenRenderbuffers(*n,renderbuffers);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*n)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *n; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) renderbuffers[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*n)+1;
@@ -5053,7 +5053,7 @@ case 5654: { // glGetRenderbufferParameteriv
  GLint params[1] = {0};
  weglGetRenderbufferParameteriv(*target,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5062,7 +5062,7 @@ case 5655: { // glIsFramebuffer
  GLuint *framebuffer = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsFramebuffer(*framebuffer);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5084,7 +5084,7 @@ case 5658: { // glGenFramebuffers
  weglGenFramebuffers(*n,framebuffers);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*n)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *n; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) framebuffers[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*n)+1;
@@ -5097,7 +5097,7 @@ case 5659: { // glCheckFramebufferStatus
  GLenum *target = (GLenum *) bp; bp += 4;
  GLenum result = weglCheckFramebufferStatus(*target);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5141,7 +5141,7 @@ case 5664: { // glGetFramebufferAttachmentParameteriv
  GLint params[1] = {0};
  weglGetFramebufferAttachmentParameteriv(*target,*attachment,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5210,7 +5210,7 @@ case 5673: { // glGenVertexArrays
  weglGenVertexArrays(*n,arrays);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*n)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *n; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) arrays[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*n)+1;
@@ -5223,7 +5223,7 @@ case 5674: { // glIsVertexArray
  GLuint *array = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsVertexArray(*array);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5242,7 +5242,7 @@ case 5675: { // glGetUniformIndices
  weglGetUniformIndices(*program,*uniformNamesLen,(const GLchar **) uniformNames,uniformIndices);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*uniformNamesLen)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *uniformNamesLen; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) uniformIndices[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*uniformNamesLen)+1;
@@ -5262,7 +5262,7 @@ case 5676: { // glGetActiveUniformsiv
  weglGetActiveUniformsiv(*program,*uniformIndicesLen,uniformIndices,*pname,params);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*uniformIndicesLen)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *uniformIndicesLen; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) params[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*uniformIndicesLen)+1;
@@ -5280,7 +5280,7 @@ case 5677: { // glGetActiveUniformName
  uniformName = (GLchar *) driver_alloc(sizeof(GLchar) * *bufSize);
  weglGetActiveUniformName(*program,*uniformIndex,*bufSize,length,uniformName);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) uniformName; rt[AP++] = *length;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5292,7 +5292,7 @@ case 5678: { // glGetUniformBlockIndex
  int uniformBlockNameLen[1] = {(int)strlen((char *)uniformBlockName)}; bp += uniformBlockNameLen[0]+1+((8-((1+uniformBlockNameLen[0]+4)%8))%8);
  GLuint result = weglGetUniformBlockIndex(*program,uniformBlockName);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5304,8 +5304,8 @@ case 5679: { // glGetActiveUniformBlockiv
  GLint *params = (GLint *) bins[0];
  weglGetActiveUniformBlockiv(*program,*uniformBlockIndex,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "ok");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("ok");
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
 }; break;
@@ -5318,7 +5318,7 @@ case 5680: { // glGetActiveUniformBlockName
  uniformBlockName = (GLchar *) driver_alloc(sizeof(GLchar) * *bufSize);
  weglGetActiveUniformBlockName(*program,*uniformBlockIndex,*bufSize,length,uniformBlockName);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) uniformBlockName; rt[AP++] = *length;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5401,7 +5401,7 @@ case 5690: { // glFenceSync
  GLbitfield *flags = (GLbitfield *) bp; bp += 4;
  GLsync result = weglFenceSync(*condition,*flags);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5410,7 +5410,7 @@ case 5691: { // glIsSync
  GLsync sync = (GLsync) * (GLuint64EXT *) bp; bp += 8;
  GLboolean result = weglIsSync(sync);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5426,7 +5426,7 @@ case 5693: { // glClientWaitSync
  GLuint64 timeout = (GLuint64) * (GLuint64EXT *) bp; bp += 8;
  GLenum result = weglClientWaitSync(sync,*flags,timeout);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5443,7 +5443,7 @@ case 5695: { // glGetInteger64v
  GLint64 params[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetInteger64v(*pname,params);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint64 *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -5475,7 +5475,7 @@ case 5696: { // glGetSynciv
  weglGetSynciv(sync,*pname,*bufSize,length,values);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*length)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *length; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) values[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*length)+1;
@@ -5509,7 +5509,7 @@ case 5699: { // glGetMultisamplefv
  GLfloat val[2] = {0.0,0.0};
  weglGetMultisamplefv(*pname,*index,val);
  int AP = 0; ErlDrvTermData rt[10];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble valConv[2], *valTmp = valConv; 
  for(int i=0; i < 2; i++) valConv[i] = (GLdouble) val[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) valTmp++;
@@ -5553,7 +5553,7 @@ case 5704: { // glIsNamedStringARB
  int nameLen[1] = {(int)strlen((char *)name)}; bp += nameLen[0]+1+((8-((1+nameLen[0]+0)%8))%8);
  GLboolean result = weglIsNamedStringARB(*nameLen,name);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5567,7 +5567,7 @@ case 5705: { // glGetNamedStringARB
  string = (GLchar *) driver_alloc(sizeof(GLchar) * *bufSize);
  weglGetNamedStringARB(*nameLen,name,*bufSize,stringlen,string);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) string; rt[AP++] = *stringlen;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5580,7 +5580,7 @@ case 5706: { // glGetNamedStringivARB
  GLint params[1] = {0};
  weglGetNamedStringivARB(*nameLen,name,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5599,7 +5599,7 @@ case 5708: { // glGetFragDataIndex
  int nameLen[1] = {(int)strlen((char *)name)}; bp += nameLen[0]+1+((8-((1+nameLen[0]+4)%8))%8);
  GLint result = weglGetFragDataIndex(*program,name);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5611,7 +5611,7 @@ case 5709: { // glGenSamplers
  weglGenSamplers(*count,samplers);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*count)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *count; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) samplers[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*count)+1;
@@ -5629,7 +5629,7 @@ case 5711: { // glIsSampler
  GLuint *sampler = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsSampler(*sampler);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5685,7 +5685,7 @@ case 5719: { // glGetSamplerParameteriv
  GLint params[4] = {0,0,0,0};
  weglGetSamplerParameteriv(*sampler,*pname,params);
  int AP = 0; ErlDrvTermData rt[15];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -5701,7 +5701,7 @@ case 5720: { // glGetSamplerParameterIiv
  GLint params[4] = {0,0,0,0};
  weglGetSamplerParameterIiv(*sampler,*pname,params);
  int AP = 0; ErlDrvTermData rt[15];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -5717,7 +5717,7 @@ case 5721: { // glGetSamplerParameterfv
  GLfloat params[4] = {0.0,0.0,0.0,0.0};
  weglGetSamplerParameterfv(*sampler,*pname,params);
  int AP = 0; ErlDrvTermData rt[15];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble paramsConv[4], *paramsTmp = paramsConv; 
  for(int i=0; i < 4; i++) paramsConv[i] = (GLdouble) params[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -5734,7 +5734,7 @@ case 5722: { // glGetSamplerParameterIuiv
  GLuint params[4] = {0,0,0,0};
  weglGetSamplerParameterIuiv(*sampler,*pname,params);
  int AP = 0; ErlDrvTermData rt[15];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLuint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -5755,7 +5755,7 @@ case 5724: { // glGetQueryObjecti64v
  GLint64 params[1] = {0};
  weglGetQueryObjecti64v(*id,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5766,7 +5766,7 @@ case 5725: { // glGetQueryObjectui64v
  GLuint64 params[1] = {0};
  weglGetQueryObjectui64v(*id,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5929,7 +5929,7 @@ case 5747: { // glGetUniformdv
  GLdouble params[16] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
  weglGetUniformdv(*program,*location,params);
  int AP = 0; ErlDrvTermData rt[38];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble *paramsTmp = params;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -5958,7 +5958,7 @@ case 5748: { // glGetSubroutineUniformLocation
  int nameLen[1] = {(int)strlen((char *)name)}; bp += nameLen[0]+1+((8-((1+nameLen[0]+0)%8))%8);
  GLint result = weglGetSubroutineUniformLocation(*program,*shadertype,name);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5970,7 +5970,7 @@ case 5749: { // glGetSubroutineIndex
  int nameLen[1] = {(int)strlen((char *)name)}; bp += nameLen[0]+1+((8-((1+nameLen[0]+0)%8))%8);
  GLuint result = weglGetSubroutineIndex(*program,*shadertype,name);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -5985,7 +5985,7 @@ case 5750: { // glGetActiveSubroutineUniformName
  name = (GLchar *) driver_alloc(sizeof(GLchar) * *bufsize);
  weglGetActiveSubroutineUniformName(*program,*shadertype,*index,*bufsize,length,name);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) name; rt[AP++] = *length;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -6001,7 +6001,7 @@ case 5751: { // glGetActiveSubroutineName
  name = (GLchar *) driver_alloc(sizeof(GLchar) * *bufsize);
  weglGetActiveSubroutineName(*program,*shadertype,*index,*bufsize,length,name);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) name; rt[AP++] = *length;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -6019,7 +6019,7 @@ case 5753: { // glGetUniformSubroutineuiv
  GLuint params[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  weglGetUniformSubroutineuiv(*shadertype,*location,params);
  int AP = 0; ErlDrvTermData rt[38];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLuint *paramsTmp = params;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *paramsTmp++;
@@ -6048,7 +6048,7 @@ case 5754: { // glGetProgramStageiv
  GLint values[1] = {0};
  weglGetProgramStageiv(*program,*shadertype,*pname,values);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *values;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -6081,7 +6081,7 @@ case 5759: { // glGenTransformFeedbacks
  weglGenTransformFeedbacks(*n,ids);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*n)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *n; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) ids[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*n)+1;
@@ -6094,7 +6094,7 @@ case 5760: { // glIsTransformFeedback
  GLuint *id = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsTransformFeedback(*id);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -6134,7 +6134,7 @@ case 5767: { // glGetQueryIndexediv
  GLint params[1] = {0};
  weglGetQueryIndexediv(*target,*index,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -6157,7 +6157,7 @@ case 5770: { // glGetShaderPrecisionFormat
  GLint precision[1] = {0};
  weglGetShaderPrecisionFormat(*shadertype,*precisiontype,range,precision);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLint *rangeTmp = range;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *rangeTmp++;
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *rangeTmp++;
@@ -6184,7 +6184,7 @@ case 5773: { // glGetProgramBinary
  ErlDrvBinary *binary = driver_alloc_binary(*bufSize);
  weglGetProgramBinary(*program,*bufSize,length,binaryFormat,(GLvoid*) binary->orig_bytes);
  int AP = 0; ErlDrvTermData rt[12];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *binaryFormat;
  rt[AP++] = ERL_DRV_BINARY; rt[AP++] = (ErlDrvTermData) binary; rt[AP++] = *length; rt[AP++] = 0;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
@@ -6227,7 +6227,7 @@ case 5778: { // glCreateShaderProgramv
  bp += (8 - ((0 + *stringsTotSize) % 8)) % 8;
  GLuint result = weglCreateShaderProgramv(*type,*stringsLen,(const GLchar **) strings);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -6249,7 +6249,7 @@ case 5781: { // glGenProgramPipelines
  weglGenProgramPipelines(*n,pipelines);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*n)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *n; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) pipelines[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*n)+1;
@@ -6262,7 +6262,7 @@ case 5782: { // glIsProgramPipeline
  GLuint *pipeline = (GLuint *) bp; bp += 4;
  GLboolean result = weglIsProgramPipeline(*pipeline);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -6273,7 +6273,7 @@ case 5783: { // glGetProgramPipelineiv
  GLint params[1] = {0};
  weglGetProgramPipelineiv(*pipeline,*pname,params);
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) *params;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -6684,7 +6684,7 @@ case 5835: { // glGetProgramPipelineInfoLog
  infoLog = (GLchar *) driver_alloc(sizeof(GLchar) * *bufSize);
  weglGetProgramPipelineInfoLog(*pipeline,*bufSize,length,infoLog);
  int AP = 0; ErlDrvTermData rt[7];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_STRING; rt[AP++] = (ErlDrvTermData) infoLog; rt[AP++] = *length;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -6736,7 +6736,7 @@ case 5842: { // glGetVertexAttribLdv
  GLdouble params[4] = {0.0,0.0,0.0,0.0};
  weglGetVertexAttribLdv(*index,*pname,params);
  int AP = 0; ErlDrvTermData rt[14];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble *paramsTmp = params;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) paramsTmp++;
@@ -6804,7 +6804,7 @@ case 5851: { // glGetFloati_v
  GLfloat data[16] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
  weglGetFloati_v(*target,*index,data);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble dataConv[16], *dataTmp = dataConv; 
  for(int i=0; i < 16; i++) dataConv[i] = (GLdouble) data[i];
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) dataTmp++;
@@ -6833,7 +6833,7 @@ case 5852: { // glGetDoublei_v
  GLdouble data[16] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
  weglGetDoublei_v(*target,*index,data);
  int AP = 0; ErlDrvTermData rt[39];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  GLdouble *dataTmp = data;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) dataTmp++;
  rt[AP++] = ERL_DRV_FLOAT; rt[AP++] = (ErlDrvTermData) dataTmp++;
@@ -6891,7 +6891,7 @@ case 5855: { // glGetDebugMessageLogARB
  GLuint result = weglGetDebugMessageLogARB(*count,*bufsize,sources,types,ids,severities,lengths,messageLog);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(23 + result*3 + result*2 + result*2 + result*2 + result*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  for(int i=0; i < (int) result; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) sources[i];}
@@ -6923,7 +6923,7 @@ case 5855: { // glGetDebugMessageLogARB
 case 5856: { // glGetGraphicsResetStatusARB
  GLenum result = weglGetGraphicsResetStatusARB();
  int AP = 0; ErlDrvTermData rt[6];
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) result;
  rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
  driver_send_term(port,caller,rt,AP);
@@ -6997,7 +6997,7 @@ case 5864: { // glGetInternalformativ
  weglGetInternalformativ(*target,*internalformat,*pname,*bufSize,params);
  int AP = 0; ErlDrvTermData *rt;
  rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData)*(7 + (*bufSize)*2));
- rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+ rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
  for(int i=0; i < *bufSize; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (ErlDrvSInt) params[i];}
  rt[AP++] = ERL_DRV_NIL; rt[AP++] = ERL_DRV_LIST; rt[AP++] = (*bufSize)+1;
@@ -7057,10 +7057,10 @@ case 5871: { // glStencilClearTagEXT
 }; break;
 }} catch (char *err_msg) {
 int AP = 0; ErlDrvTermData rt[12];
-rt[AP++] = ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_error_");
+rt[AP++] = ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_error_");
 rt[AP++] = ERL_DRV_INT; rt[AP++] = (int) op;
-rt[AP++] = ERL_DRV_ATOM; rt[AP++] = driver_mk_atom((char *) err_msg);
-// rt[AP++] = ERL_DRV_ATOM; rt[AP++] = driver_mk_atom((char *) gl_fns[op-GLE_GL_FUNC_START].name);
+rt[AP++] = ERL_DRV_ATOM; rt[AP++] = driver_mk_atom(err_msg);
+// rt[AP++] = ERL_DRV_ATOM; rt[AP++] = driver_mk_atom(gl_fns[op-GLE_GL_FUNC_START].name);
 // rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 2;
 rt[AP++] = ERL_DRV_TUPLE; rt[AP++] = 3;
 driver_send_term(port,caller,rt,AP);

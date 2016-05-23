@@ -95,7 +95,7 @@ BIF_RETTYPE hipe_bifs_write_u8_2(BIF_ALIST_2)
 {
     unsigned char *address;
 
-    address = term_to_address(BIF_ARG_1);
+    address = (unsigned char *)term_to_address(BIF_ARG_1);
     if (!address || is_not_small(BIF_ARG_2))
 	BIF_ERROR(BIF_P, BADARG);
     *address = unsigned_val(BIF_ARG_2);
@@ -107,7 +107,7 @@ BIF_RETTYPE hipe_bifs_write_u32_2(BIF_ALIST_2)
     Uint32 *address;
     Uint value;
 
-    address = term_to_address(BIF_ARG_1);
+    address = (Uint32 *)term_to_address(BIF_ARG_1);
     if (!address || !hipe_word32_address_ok(address))
 	BIF_ERROR(BIF_P, BADARG);
     if (!term_to_Uint(BIF_ARG_2, &value))
@@ -688,7 +688,7 @@ struct nbif {
 
 static struct nbif nbifs[BIF_SIZE] = {
 #define BIF_LIST(MOD,FUN,ARY,CFUN,IX)	\
-	{ {0,0}, MOD, FUN, ARY, &nbif_##CFUN },
+        { {0,0}, MOD, FUN, ARY, (void*)&nbif_##CFUN },
 #include "erl_bif_list.h"
 #undef BIF_LIST
 };
@@ -739,7 +739,7 @@ static const void *nbif_address(Eterm mod, Eterm fun, unsigned arity)
     tmpl.fun = fun;
     tmpl.arity = arity;
 
-    nbif = hash_get(&nbif_table, &tmpl);
+    nbif = (struct nbif *)hash_get(&nbif_table, &tmpl);
     return nbif ? nbif->address : NULL;
 }
 
@@ -780,7 +780,7 @@ struct primop {
 };
 
 static struct primop primops[] = {
-#define PRIMOP_LIST(ATOM,ADDRESS)	{ {0,_unchecked_atom_val(ATOM)}, ADDRESS },
+#define PRIMOP_LIST(ATOM,ADDRESS)	{ {0,_unchecked_atom_val(ATOM)}, (const void*)ADDRESS },
 #include "hipe_primops.h"
 #undef PRIMOP_LIST
 };
@@ -832,7 +832,7 @@ static struct primop *primop_table_get(Eterm name)
 
     init_primop_table();
     tmpl.bucket.hvalue = atom_val(name);
-    return hash_get(&primop_table, &tmpl);
+    return (primop *)hash_get(&primop_table, &tmpl);
 }
 
 #if defined(__arm__)
@@ -987,7 +987,7 @@ BIF_RETTYPE hipe_bifs_set_native_address_in_fe_2(BIF_ALIST_2)
     if (!native_address)
 	BIF_ERROR(BIF_P, BADARG);
 
-    fe->native_address = native_address;
+    fe->native_address = (UWord *)native_address;
     if (erts_refc_dectest(&fe->refc, 0) == 0)
 	erts_erase_fun_entry(fe);
     BIF_RET(am_true);
@@ -1064,7 +1064,8 @@ static inline void hipe_mfa_info_table_rwunlock(void)
 static struct hipe_mfa_info **hipe_mfa_info_table_alloc_bucket(unsigned int size)
 {
     unsigned long nbytes = size * sizeof(struct hipe_mfa_info*);
-    struct hipe_mfa_info **bucket = erts_alloc(ERTS_ALC_T_HIPE, nbytes);
+    struct hipe_mfa_info **bucket = (struct hipe_mfa_info **)
+            erts_alloc(ERTS_ALC_T_HIPE, nbytes);
     sys_memzero(bucket, nbytes);
     return bucket;
 }
@@ -1571,12 +1572,12 @@ BIF_RETTYPE hipe_bifs_add_ref_2(BIF_ALIST_2)
     callee_mfa = hipe_mfa_info_table_put_rwlocked(callee.mod, callee.fun, callee.ari);
     caller_mfa = hipe_mfa_info_table_put_rwlocked(caller.mod, caller.fun, caller.ari);
 
-    refers_to = erts_alloc(ERTS_ALC_T_HIPE, sizeof(*refers_to));
+    refers_to = (hipe_mfa_info_list *)erts_alloc(ERTS_ALC_T_HIPE, sizeof(*refers_to));
     refers_to->mfa = callee_mfa;
     refers_to->next = caller_mfa->refers_to;
     caller_mfa->refers_to = refers_to;
 
-    ref = erts_alloc(ERTS_ALC_T_HIPE, sizeof(*ref));
+    ref = (struct ref *)erts_alloc(ERTS_ALC_T_HIPE, sizeof(*ref));
     ref->caller_mfa = caller_mfa;
     ref->address = address;
     ref->trampoline = trampoline;
@@ -1884,7 +1885,7 @@ BIF_RETTYPE hipe_bifs_patch_insn_3(BIF_ALIST_3)
 {
     Uint *address, value;
 
-    address = term_to_address(BIF_ARG_1);
+    address = (Uint *)term_to_address(BIF_ARG_1);
     if (!address)
 	BIF_ERROR(BIF_P, BADARG);
     if (!term_to_Uint(BIF_ARG_2, &value))
@@ -1898,16 +1899,16 @@ BIF_RETTYPE hipe_bifs_patch_call_3(BIF_ALIST_3)
 {
     Uint *callAddress, *destAddress, *trampAddress;
 
-    callAddress = term_to_address(BIF_ARG_1);
+    callAddress = (Uint *)term_to_address(BIF_ARG_1);
     if (!callAddress)
 	BIF_ERROR(BIF_P, BADARG);
-    destAddress = term_to_address(BIF_ARG_2);
+    destAddress = (Uint *)term_to_address(BIF_ARG_2);
     if (!destAddress)
 	BIF_ERROR(BIF_P, BADARG);
     if (is_nil(BIF_ARG_3))
 	trampAddress = NULL;
     else {
-	trampAddress = term_to_address(BIF_ARG_3);
+        trampAddress = (Uint *)term_to_address(BIF_ARG_3);
 	if (!trampAddress)
 	    BIF_ERROR(BIF_P, BADARG);
     }

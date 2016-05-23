@@ -268,7 +268,12 @@ ETHR_PROTO_NORETURN__ ethr_fatal_error__(const char *file,
 #define __builtin_expect(X, Y) (X)
 #endif
 
-#if ETHR_AT_LEAST_GCC_VSN__(3, 1, 1)
+#ifndef __has_builtin         // Optional of course.
+  #define __has_builtin(x) 0  // Compatibility with non-clang compilers.
+#endif
+
+//#if ETHR_AT_LEAST_GCC_VSN__(3, 1, 1)
+#if __has_builtin(__builtin_choose_expr)
 #  define ETHR_CHOOSE_EXPR __builtin_choose_expr
 #else
 #  define ETHR_CHOOSE_EXPR(B, E1, E2) ((B) ? (E1) : (E2))

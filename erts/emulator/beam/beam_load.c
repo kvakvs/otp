@@ -251,7 +251,7 @@ typedef struct LoaderState {
      * The current logical file within the binary.
      */
 
-    char* file_name;		/* Name of file we are reading (usually chunk name). */
+    const char* file_name;	/* Name of file we are reading (usually chunk name). */
     byte* file_p;		/* Current pointer within file. */
     unsigned file_left;		/* Number of bytes left in file. */
     ErlDrvBinary* bin;		/* Binary holding BEAM file (or NULL) */
@@ -516,7 +516,7 @@ static int freeze_code(LoaderState* stp);
 
 static void final_touch(LoaderState* stp, struct erl_module_instance* inst_p);
 static void short_file(int line, LoaderState* stp, unsigned needed);
-static void load_printf(int line, LoaderState* context, char *fmt, ...);
+static void load_printf(int line, LoaderState* context, const char *fmt, ...);
 static int transform_engine(LoaderState* st);
 static void id_to_string(Uint id, char* s);
 static void new_genop(LoaderState* stp);
@@ -561,7 +561,7 @@ void init_load(void)
 }
 
 static void
-define_file(LoaderState* stp, char* name, int idx)
+define_file(LoaderState* stp, const char* name, int idx)
 {
     stp->file_name = name;
     stp->file_p = stp->chunks[idx].start;
@@ -1192,15 +1192,14 @@ scan_iff_file(LoaderState* stp, Uint* chunk_types, Uint num_types, Uint num_mand
 {
     Uint count;
     Uint id;
-    int i;
 
     /*
      * Initialize the chunks[] array in the state.
      */
 
-    for (i = 0; i < num_types; i++) {
-	stp->chunks[i].start = NULL;
-	stp->chunks[i].size = 0;
+    for (Uint i2 = 0; i2 < num_types; i2++) {
+        stp->chunks[i2].start = NULL;
+        stp->chunks[i2].size = 0;
     }
 
     /*
@@ -1213,8 +1212,8 @@ scan_iff_file(LoaderState* stp, Uint* chunk_types, Uint num_types, Uint num_mand
 	 * Read the chunk id and verify that it contains ASCII characters.
 	 */
 	GetInt(stp, 4, id);
-	for (i = 0; i < 4; i++) {
-	    unsigned c = (id >> i*8) & 0xff;
+        for (Uint i = 0; i < 4; i++) {
+            unsigned c = (id >> i*8) & 0xff;
 	    if (c < ' ' || c > 0x7E) {
 		LoadError1(stp, "non-ascii garbage '%lx' instead of chunk type id",
 			   id);
@@ -1234,10 +1233,10 @@ scan_iff_file(LoaderState* stp, Uint* chunk_types, Uint num_types, Uint num_mand
 	/*
 	 * See if the chunk is useful for the loader.
 	 */
-	for (i = 0; i < num_types; i++) {
-	    if (chunk_types[i] == id) {
-		stp->chunks[i].start = stp->file_p;
-		stp->chunks[i].size = count;
+        for (Uint i3 = 0; i3 < num_types; i3++) {
+            if (chunk_types[i3] == id) {
+                stp->chunks[i3].start = stp->file_p;
+                stp->chunks[i3].size = count;
 		break;
 	    }
 	}
@@ -1861,7 +1860,7 @@ load_code(LoaderState* stp)
     int i;
     int ci;
     int last_func_start = 0;	/* Needed by nif loading and line instructions */
-    char* sign;
+    const char* sign;
     int arg;			/* Number of current argument. */
     int num_specific;		/* Number of specific ops for current. */
     BeamInstr* code;
@@ -2421,7 +2420,7 @@ load_code(LoaderState* stp)
 	 * The packing engine.
 	 */
 	if (opc[stp->specific_op].pack[0]) {
-	    char* prog;		/* Program for packing engine. */
+            const char* prog;		/* Program for packing engine. */
 	    BeamInstr stack[8];	/* Stack. */
 	    BeamInstr* sp = stack;	/* Points to next free position. */
 	    BeamInstr packed = 0;	/* Accumulator for packed operations. */
@@ -5194,7 +5193,7 @@ short_file(int line, LoaderState* stp, unsigned needed)
 }
 
 static void
-load_printf(int line, LoaderState* context, char *fmt,...)
+load_printf(int line, LoaderState* context, const char *fmt,...)
 {
     erts_dsprintf_buf_t *dsbufp;
     va_list va;

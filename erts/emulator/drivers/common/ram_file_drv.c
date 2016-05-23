@@ -120,7 +120,7 @@ struct erl_drv_entry ram_file_driver_entry = {
     NULL, /* flush */
     NULL, /* call */
     NULL, /* event */
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0,
@@ -201,7 +201,7 @@ static void rfile_stop(ErlDrvData e)
 static int error_reply(RamFile *f, int err)
 {
     char response[256];		/* Response buffer. */
-    char* s;
+    const char* s;
     char* t;
     
     /*

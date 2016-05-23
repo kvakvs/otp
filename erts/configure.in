@@ -340,10 +340,10 @@ esac
 dnl Magic test for clearcase.
 OTP_RELEASE=
 if test "${ERLANG_COMMERCIAL_BUILD}" != ""; then
-	OTP_EXTRA_FLAGS=-DOTP_RELEASE
+	OTP_EXTRA_FLAGS=-DOTP_RELEASE -std=c++14
 	OTP_RELEASE=yes
 else
-	OTP_EXTRA_FLAGS=
+	OTP_EXTRA_FLAGS=-std=c++14
 fi
 AC_SUBST(OTP_RELEASE)
 
@@ -530,23 +530,23 @@ if test "x$GCC" = xyes; then
 
   # until the emulator can handle this, I suggest we turn it off!
   #WFLAGS="-Wall -Wshadow -Wcast-qual -Wmissing-declarations"
-  WFLAGS="-Wall -Wstrict-prototypes"
+  WFLAGS="-Wall" # -Wstrict-prototypes"
 
-  case "$host_cpu" in
-    tile*)
-      # tile-gcc is a bit stricter with -Wmissing-prototypes than other gccs,
-      # and too strict for our taste.
-      ;;
-    *)
-      WFLAGS="$WFLAGS -Wmissing-prototypes";;
-  esac
+#  case "$host_cpu" in
+#    tile*)
+#      # tile-gcc is a bit stricter with -Wmissing-prototypes than other gccs,
+#      # and too strict for our taste.
+#      ;;
+#    *)
+#      WFLAGS="$WFLAGS -Wmissing-prototypes";;
+#  esac
 
   saved_CFLAGS=$CFLAGS
-  CFLAGS="$CFLAGS -Wdeclaration-after-statement"
+#  CFLAGS="$CFLAGS -Wdeclaration-after-statement"
   AC_TRY_COMPILE([],[;], warn_decl_after_st=true, warn_decl_after_st=false)
-  if test "X$warn_decl_after_st" = "Xtrue"; then
-    WFLAGS="$WFLAGS -Wdeclaration-after-statement"
-  fi
+#  if test "X$warn_decl_after_st" = "Xtrue"; then
+#    WFLAGS="$WFLAGS -Wdeclaration-after-statement"
+#  fi
   CFLAGS=$saved_CFLAGS
 else
   WFLAGS=""

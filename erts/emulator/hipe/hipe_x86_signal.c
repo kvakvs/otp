@@ -185,7 +185,7 @@
 static int (*next_sigaction)(int, const struct sigaction*, struct sigaction*);
 static void do_init(void)
 {
-    next_sigaction = dlsym(RTLD_NEXT, NEXT_SIGACTION);
+    next_sigaction = (decltype(next_sigaction))dlsym(RTLD_NEXT, NEXT_SIGACTION);
     if (next_sigaction != 0)
 	return;
     perror("dlsym");

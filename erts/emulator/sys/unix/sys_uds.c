@@ -107,7 +107,7 @@ sys_uds_writev(int fd, struct iovec *iov, size_t iov_len,
         char *buff;
         for (i = 0; i < iov_len; i++)
             size += iov[i].iov_len;
-        buff = malloc(size);
+        buff = (char *)malloc(size);
 
         for (i = 0; i < iov_len; i++) {
             memcpy(buff, iov[i].iov_base, iov[i].iov_len);

@@ -161,7 +161,7 @@ static char heX[] = "0123456789ABCDEF";
 int (*erts_printf_eterm_func)(fmtfn_t, void*, ErlPfEterm, long) = NULL;
 
 static int
-noop_fn(void *vfp, char* buf, size_t len)
+noop_fn(void *vfp, const char* buf, size_t len)
 {
     return 0;
 }
@@ -459,10 +459,10 @@ static size_t my_strnlen(const char *s, size_t maxlen)
     return i;
 }
 
-int erts_printf_format(fmtfn_t fn, void* arg, char* fmt, va_list ap)
+int erts_printf_format(fmtfn_t fn, void* arg, const char* fmt, va_list ap)
 {
-    char* ptr0 = fmt;
-    char* ptr = ptr0;
+    const char* ptr0 = fmt;
+    const char* ptr = ptr0;
     int count = 0;
     int n;
     int res = 0;

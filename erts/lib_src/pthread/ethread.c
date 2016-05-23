@@ -126,7 +126,7 @@ int ethr_set_tse__(ethr_ts_event *tsep)
 
 ethr_ts_event *ethr_get_tse__(void)
 {
-    return pthread_getspecific(ethr_ts_event_key__);
+    return (ethr_ts_event *)pthread_getspecific(ethr_ts_event_key__);
 }
 
 #if defined(ETHR_PPC_RUNTIME_CONF__)

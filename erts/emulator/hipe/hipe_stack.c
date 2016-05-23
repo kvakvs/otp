@@ -46,7 +46,7 @@ struct hipe_sdesc_table hipe_sdesc_table;
 static struct sdesc **alloc_bucket(unsigned int size)
 {
     unsigned long nbytes = size * sizeof(struct sdesc*);
-    struct sdesc **bucket = erts_alloc(ERTS_ALC_T_HIPE, nbytes);
+    struct sdesc **bucket = (struct sdesc **)erts_alloc(ERTS_ALC_T_HIPE, nbytes);
     sys_memzero(bucket, nbytes);
     return bucket;
 }
@@ -166,11 +166,12 @@ struct sdesc *hipe_decode_sdesc(Eterm arg)
     /* If we have an exception handler use the
        special sdesc_with_exnra structure. */
     if (exnra) {
-	struct sdesc_with_exnra *sdesc_we = p;
+        struct sdesc_with_exnra *sdesc_we = (struct sdesc_with_exnra *)p;
 	sdesc_we->exnra = exnra;
 	sdesc = &(sdesc_we->sdesc);
-    } else
-	sdesc = p;
+    } else {
+        sdesc = (struct sdesc *)p;
+    }
 
     /* Initialise head of sdesc. */
     sdesc->bucket.next = 0;

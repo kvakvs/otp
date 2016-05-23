@@ -1084,7 +1084,7 @@ static struct erl_drv_entry tcp_inet_driver_entry =
     tcp_inet_flush,
     NULL,
     NULL,
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     ERL_DRV_FLAG_USE_PORT_LOCKING|ERL_DRV_FLAG_SOFT_BUSY,
@@ -1138,7 +1138,7 @@ static struct erl_drv_entry udp_inet_driver_entry =
     NULL,
     NULL,
     NULL,
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     ERL_DRV_FLAG_USE_PORT_LOCKING,
@@ -1173,7 +1173,7 @@ static struct erl_drv_entry sctp_inet_driver_entry =
     NULL,
     NULL,
     NULL,
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     ERL_DRV_FLAG_USE_PORT_LOCKING,
@@ -1273,10 +1273,10 @@ static ErlDrvTermData am_buffer;
 static ErlDrvTermData am_mode;
 static ErlDrvTermData am_list;
 static ErlDrvTermData am_binary;
-static ErlDrvTermData am_active;
+//static ErlDrvTermData am_active;
 static ErlDrvTermData am_once;
 static ErlDrvTermData am_multi;
-static ErlDrvTermData am_buffer;
+//static ErlDrvTermData am_buffer;
 static ErlDrvTermData am_linger;
 static ErlDrvTermData am_recbuf;
 static ErlDrvTermData am_sndbuf;
@@ -1294,7 +1294,7 @@ static ErlDrvTermData am_netns;
 
 
 static int inet_init(void);
-static ErlDrvSSizeT ctl_reply(int, char*, ErlDrvSizeT, char**, ErlDrvSizeT);
+static ErlDrvSSizeT ctl_reply(int, const char*, ErlDrvSizeT, char**, ErlDrvSizeT);
 
 struct erl_drv_entry inet_driver_entry = 
 {
@@ -1314,7 +1314,7 @@ struct erl_drv_entry inet_driver_entry =
     NULL, /* flush */
     NULL, /* call */
     NULL, /* event */
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0,
@@ -1572,10 +1572,10 @@ typedef struct {
 
 static InetDrvBufStk *get_bufstk(void)
 {
-    InetDrvBufStk *bs = erl_drv_tsd_get(buffer_stack_key);
+    InetDrvBufStk *bs = (InetDrvBufStk *)erl_drv_tsd_get(buffer_stack_key);
     if (bs)
 	return bs;
-    bs = driver_alloc(sizeof(InetDrvBufStk)
+    bs = (InetDrvBufStk *)driver_alloc(sizeof(InetDrvBufStk)
 		      + INET_DRV_CACHE_LINE_SIZE - 1);
     if (!bs)
 	return NULL;
@@ -1596,7 +1596,7 @@ static ErlDrvBinary* alloc_buffer(ErlDrvSizeT minsz)
 {
     InetDrvBufStk *bs = get_bufstk();
 
-    DEBUGF(("alloc_buffer: "LLU"\r\n", (llu_t)minsz));
+    DEBUGF(("alloc_buffer: " LLU "\r\n", (llu_t)minsz));
 
     if (bs && bs->buf.pos > 0) {
 	long size;
@@ -1770,7 +1770,7 @@ static struct erl_drv_entry dummy_sctp_driver_entry =
 #endif
 
 /* return lowercase string form of errno value */
-static char *errno_str(int err)
+static const char *errno_str(int err)
 {
     switch (err) {
     case INET_ERRNO_SYSTEM_LIMIT:
@@ -1781,13 +1781,13 @@ static char *errno_str(int err)
 }
 
 /* general control reply function */
-static ErlDrvSSizeT ctl_reply(int rep, char* buf, ErlDrvSizeT len,
+static ErlDrvSSizeT ctl_reply(int rep, const char* buf, ErlDrvSizeT len,
 			      char** rbuf, ErlDrvSizeT rsize)
 {
     char* ptr;
 
     if ((len+1) > rsize) {
-	ptr = ALLOC(len+1);
+        ptr = (char *)ALLOC(len+1);
 	*rbuf = ptr;
     }
     else
@@ -1800,7 +1800,7 @@ static ErlDrvSSizeT ctl_reply(int rep, char* buf, ErlDrvSizeT len,
 /* general control error reply function */
 static ErlDrvSSizeT ctl_error(int err, char** rbuf, ErlDrvSizeT rsize)
 {
-    char* s = errno_str(err);
+    const char* s = errno_str(err);
 
     return ctl_reply(INET_REP_ERROR, s, strlen(s), rbuf, rsize);
 }
@@ -1824,7 +1824,7 @@ static void enq_old_multi_op(tcp_descriptor *desc, int id, int req,
 {
     inet_async_multi_op *opp;
 
-    opp = ALLOC(sizeof(inet_async_multi_op));
+    opp = (inet_async_multi_op *)ALLOC(sizeof(inet_async_multi_op));
 
     opp->op.id = id;
     opp->op.caller = caller;
@@ -2296,18 +2296,18 @@ static int http_load_uri(tcp_descriptor* desc, ErlDrvTermData* spec, int i,
     ErlDrvTermData scheme;
 
     switch (uri->type) {
-    case URI_STAR:
+    case PacketHttpURI::URI_STAR:
         i = LOAD_ATOM(spec, i, am_star);
         break;
-    case URI_ABS_PATH:
+    case PacketHttpURI::URI_ABS_PATH:
         i = LOAD_ATOM(spec, i, am_abs_path);
         i = http_load_string(desc, spec, i, uri->s1_ptr, uri->s1_len);
         i = LOAD_TUPLE(spec, i, 2);
         break;
-    case URI_HTTP:
+    case PacketHttpURI::URI_HTTP:
         scheme = am_http;
         goto http_common;
-    case URI_HTTPS:
+    case PacketHttpURI::URI_HTTPS:
         scheme = am_https;
     http_common:
         i = LOAD_ATOM(spec, i, am_absoluteURI);
@@ -2322,10 +2322,10 @@ static int http_load_uri(tcp_descriptor* desc, ErlDrvTermData* spec, int i,
         i = LOAD_TUPLE(spec, i, 5);
         break;
 
-    case URI_STRING:
+    case PacketHttpURI::URI_STRING:
         i = http_load_string(desc, spec, i, uri->s1_ptr, uri->s1_len);
         break;
-    case URI_SCHEME:
+    case PacketHttpURI::URI_SCHEME:
         i = LOAD_ATOM(spec, i, am_scheme);
         i = http_load_string(desc, spec, i, uri->s1_ptr, uri->s1_len);
         i = http_load_string(desc, spec, i, uri->s2_ptr, uri->s2_len);
@@ -2612,7 +2612,7 @@ static int inet_async_data(inet_descriptor* desc, const char* buf, int len)
     i = LOAD_INT(spec, i, aid);
 
     i = LOAD_ATOM(spec, i, am_ok);
-    if ((desc->mode == INET_MODE_LIST) || (hsz > len)) {
+    if ((desc->mode == INET_MODE_LIST) || (hsz > (unsigned int)len)) {
 	i = LOAD_STRING(spec, i, buf, len); /* => [H1,H2,...Hn] */ 
 	i = LOAD_TUPLE(spec, i, 2);
 	i = LOAD_TUPLE(spec, i, 4);
@@ -3836,7 +3836,7 @@ static int inet_init()
 	    == 0) {
 	    void *ptr;
 	    if (erts_sys_ddll_sym(h_libsctp, "sctp_bindx", &ptr) == 0) {
-		p_sctp_bindx = ptr;
+                p_sctp_bindx = ptr;
 		if (erts_sys_ddll_sym(h_libsctp, "sctp_peeloff", &ptr) == 0) {
 		    p_sctp_peeloff = ptr;
 		}
@@ -10278,7 +10278,7 @@ static int tcp_sendv(tcp_descriptor* desc, ErlIOVec* ev)
     else {
 	int vsize = (ev->vsize > MAX_VSIZE) ? MAX_VSIZE : ev->vsize;
 	
-	DEBUGF(("tcp_sendv(%ld): s=%d, about to send "LLU","LLU" bytes\r\n",
+        DEBUGF(("tcp_sendv(%ld): s=%d, about to send " LLU "," LLU " bytes\r\n",
 		(long)desc->inet.port, desc->inet.s, (llu_t)h_len, (llu_t)len));
 
 	if (INETP(desc)->is_ignored) {
@@ -10306,7 +10306,7 @@ static int tcp_sendv(tcp_descriptor* desc, ErlIOVec* ev)
 	}
 	else {
 	    DEBUGF(("tcp_sendv(%ld): s=%d, only sent "
-		    LLU"/%d of "LLU"/%d bytes/items\r\n",
+                    LLU "/%d of " LLU "/%d bytes/items\r\n",
 		    (long)desc->inet.port, desc->inet.s,
 		    (llu_t)n, vsize, (llu_t)ev->size, ev->vsize));
 	}
@@ -10378,7 +10378,7 @@ static int tcp_send(tcp_descriptor* desc, char* ptr, ErlDrvSizeT len)
 	iov[1].iov_base = ptr;
 	iov[1].iov_len = len;
 
-	DEBUGF(("tcp_send(%ld): s=%d, about to send "LLU","LLU" bytes\r\n",
+        DEBUGF(("tcp_send(%ld): s=%d, about to send " LLU "," LLU " bytes\r\n",
 		(long)desc->inet.port, desc->inet.s, (llu_t)h_len, (llu_t)len));
 	if (INETP(desc)->is_ignored) {
 	    INETP(desc)->is_ignored |= INET_IGNORE_WRITE;

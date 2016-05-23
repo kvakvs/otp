@@ -157,7 +157,7 @@ void *hipe_make_native_stub(void *callee_exp, unsigned int beamArity)
       (P_CALLEE_EXP >= 128 ? 3 : 0) +
       ((P_CALLEE_EXP + 4) >= 128 ? 3 : 0) +
       (P_ARITY >= 128 ? 3 : 0);
-    codep = code = alloc_code(codeSize);
+    codep = code = (unsigned char *)alloc_code(codeSize);
     if (!code)
 	return NULL;
 

@@ -296,7 +296,7 @@ int erl_tess_impl(char* buff, ErlDrvPort port, ErlDrvTermData caller)
 
   AP = 0; ErlDrvTermData *rt;
   rt = (ErlDrvTermData *) driver_alloc(sizeof(ErlDrvTermData) * (13+egl_tess.index_n*2));
-  rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom((char *) "_egl_result_");
+  rt[AP++]=ERL_DRV_ATOM; rt[AP++]=driver_mk_atom("_egl_result_");
 
   for(i=0; i < egl_tess.index_n; i++) {
     rt[AP++] = ERL_DRV_INT; rt[AP++] = (int) egl_tess.tess_index_list[i];

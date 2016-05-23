@@ -58,7 +58,7 @@ BIF_RETTYPE hipe_bifs_write_u64_2(BIF_ALIST_2)
     Uint64 *address;
     Uint64 value;
 
-    address = term_to_address(BIF_ARG_1);
+    address = (Uint64 *)term_to_address(BIF_ARG_1);
     if (!address || !hipe_word64_address_ok(address))
 	BIF_ERROR(BIF_P, BADARG);
     if (!term_to_Uint(BIF_ARG_2, &value))

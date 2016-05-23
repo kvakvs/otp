@@ -383,8 +383,9 @@ static ethr_ts_event *ts_event_pool(int size, ethr_ts_event **endpp)
 {
     int i;
     ethr_aligned_ts_event *atsev;
-    atsev = ethr_mem__.std.alloc(sizeof(ethr_aligned_ts_event) * size
-				 + ETHR_CACHE_LINE_SIZE - 1);
+    atsev = (ethr_aligned_ts_event *)
+            ethr_mem__.std.alloc(sizeof(ethr_aligned_ts_event) * size
+                                 + ETHR_CACHE_LINE_SIZE - 1);
     if (!atsev)
 	return NULL;
     if ((((ethr_uint_t) atsev) & ETHR_CACHE_LINE_MASK) != 0)

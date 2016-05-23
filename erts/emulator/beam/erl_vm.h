@@ -91,7 +91,7 @@
 #define HAllocX(p, sz, xtra)		                              \
   (ASSERT((sz) >= 0),					              \
      ErtsHAllocLockCheck(p),					      \
-     (IS_FORCE_HEAP_FRAGS || (((HEAP_LIMIT(p) - HEAP_TOP(p)) < (sz))) \
+     (IS_FORCE_HEAP_FRAGS || (((UWord)(HEAP_LIMIT(p) - HEAP_TOP(p)) < (sz))) \
       ? erts_heap_alloc((p),(sz),(xtra))                              \
       : (INIT_HEAP_MEM(p,sz),		                              \
          HEAP_TOP(p) = HEAP_TOP(p) + (sz), HEAP_TOP(p) - (sz))))
@@ -140,12 +140,12 @@
  */
 
 typedef struct op_entry {
-   char* name;			/* Name of instruction. */
+   const char* name;			/* Name of instruction. */
    Uint32 mask[3];		/* Signature mask. */
    unsigned involves_r;		/* Needs special attention when matching. */
    int sz;			/* Number of loaded words. */
-   char* pack;			/* Instructions for packing engine. */
-   char* sign;			/* Signature string. */
+   const char* pack;			/* Instructions for packing engine. */
+   const char* sign;			/* Signature string. */
    unsigned count;		/* Number of times executed. */
 } OpEntry;
 

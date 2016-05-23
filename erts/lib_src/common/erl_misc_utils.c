@@ -222,7 +222,7 @@ set_thr_affinity(cpu_set_t *set)
 erts_cpu_info_t *
 erts_cpu_info_create(void)
 {
-    erts_cpu_info_t *cpuinfo = malloc(sizeof(erts_cpu_info_t));
+    erts_cpu_info_t *cpuinfo = (erts_cpu_info_t *)malloc(sizeof(erts_cpu_info_t));
     if (!cpuinfo)
 	return NULL;
 #if defined(ERTS_HAVE_MISC_UTIL_AFFINITY_MASK__)
@@ -724,7 +724,7 @@ cpu_cmp(const void *vx, const void *vy)
 static void
 adjust_processor_nodes(erts_cpu_info_t *cpuinfo, int no_nodes)
 {
-    erts_cpu_topology_t *prev, *this, *last;
+    erts_cpu_topology_t *prev, *this_, *last;
     if (no_nodes > 1) {
 	int processor = -1;
 	int processor_node = 0;
@@ -736,11 +736,11 @@ adjust_processor_nodes(erts_cpu_info_t *cpuinfo, int no_nodes)
 	      pn_cmp);
 
 	prev = NULL;
-	this = &cpuinfo->topology[0];
+        this_ = &cpuinfo->topology[0];
 	last = &cpuinfo->topology[cpuinfo->topology_size-1];
 	while (1) {
-	    if (processor == this->processor) {
-		if (node != this->node)
+            if (processor == this_->processor) {
+                if (node != this_->node)
 		    processor_node = 1;
 	    }
 	    else {
@@ -755,17 +755,17 @@ adjust_processor_nodes(erts_cpu_info_t *cpuinfo, int no_nodes)
 		    }
 		    processor_node = 0;
 		}
-		processor = this->processor;
-		node = this->node;
+                processor = this_->processor;
+                node = this_->node;
 	    }
-	    if (this == last) {
+            if (this_ == last) {
 		if (processor_node) {
-		    prev = this;
+                    prev = this_;
 		    goto make_processor_node;
 		}
 		break;
 	    }
-	    prev = this++;
+            prev = this_++;
 	}
     }
 }
@@ -828,7 +828,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
     if (cpuinfo->configured < 1)
 	goto error;
 
-    cpuinfo->topology = malloc(sizeof(erts_cpu_topology_t)
+    cpuinfo->topology = (erts_cpu_topology_t *)malloc(sizeof(erts_cpu_topology_t)
 			       * cpuinfo->configured);
     if (!cpuinfo->topology)
 	goto error;
@@ -927,7 +927,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
     if (!res || res < cpuinfo->online)
 	res = 0;
     else {
-	erts_cpu_topology_t *prev, *this, *last;
+        erts_cpu_topology_t *prev, *this_, *last;
 
 	cpuinfo->topology_size = res;
 
@@ -935,7 +935,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
 	    void *t = realloc(cpuinfo->topology, (sizeof(erts_cpu_topology_t)
 						  * cpuinfo->topology_size));
 	    if (t)
-		cpuinfo->topology = t;
+                cpuinfo->topology = (erts_cpu_topology_t *)t;
 	}
 
 	adjust_processor_nodes(cpuinfo, no_nodes);
@@ -945,23 +945,23 @@ read_topology(erts_cpu_info_t *cpuinfo)
 	      sizeof(erts_cpu_topology_t),
 	      cpu_cmp);
 
-	this = &cpuinfo->topology[0];
-	this->thread = 0;
+        this_ = &cpuinfo->topology[0];
+        this_->thread = 0;
 
 	if (res > 1) {
-	    prev = this++;
+            prev = this_++;
 	    last = &cpuinfo->topology[cpuinfo->topology_size-1];
 
 	    while (1) {
-		this->thread = ((this->node == prev->node
-				 && this->processor == prev->processor
-				 && this->processor_node == prev->processor_node
-				 && this->core == prev->core)
+                this_->thread = ((this_->node == prev->node
+                                 && this_->processor == prev->processor
+                                 && this_->processor_node == prev->processor_node
+                                 && this_->core == prev->core)
 				? prev->thread + 1
 				: 0);
-		if (this == last)
+                if (this_ == last)
 		    break;
-		prev = this++;
+                prev = this_++;
 	    }
 	}
     }
@@ -1084,7 +1084,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
     if (!res || res < cpuinfo->online)
 	res = 0;
     else {
-	erts_cpu_topology_t *prev, *this, *last;
+        erts_cpu_topology_t *prev, *this_, *last;
 
 	cpuinfo->topology_size = res;
 
@@ -1100,23 +1100,23 @@ read_topology(erts_cpu_info_t *cpuinfo)
 	      sizeof(erts_cpu_topology_t),
 	      cpu_cmp);
 
-	this = &cpuinfo->topology[0];
-	this->thread = 0;
+        this_ = &cpuinfo->topology[0];
+        this_->thread = 0;
 
 	if (res > 1) {
-	    prev = this++;
+            prev = this_++;
 	    last = &cpuinfo->topology[cpuinfo->topology_size-1];
 
 	    while (1) {
-		this->thread = ((this->node == prev->node
-				 && this->processor == prev->processor
-				 && this->processor_node == prev->processor_node
-				 && this->core == prev->core)
+                this_->thread = ((this_->node == prev->node
+                                 && this_->processor == prev->processor
+                                 && this_->processor_node == prev->processor_node
+                                 && this_->core == prev->core)
 				? prev->thread + 1
 				: 0);
-		if (this == last)
+                if (this_ == last)
 		    break;
-		prev = this++;
+                prev = this_++;
 	    }
 	}
     }
@@ -1249,7 +1249,7 @@ read_topology(erts_cpu_info_t *cpuinfo)
     packages = 0;
     nodes = 0;
     for (rix = 0; rix < no_slpi; rix++) {
-	PSYSTEM_LOGICAL_PROCESSOR_INFORMATION this = &slpip[rix];
+        PSYSTEM_LOGICAL_PROCESSOR_INFORMATION this_ = &slpip[rix];
 	for (l = sizeof(ULONG_PTR)*8 - 1; l > 0; l--) {
 	    if (slpip[rix].ProcessorMask & (((ULONG_PTR) 1) << l)) {
 		if (max_l < l)

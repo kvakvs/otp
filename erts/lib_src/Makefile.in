@@ -248,9 +248,9 @@ CREATE_DIRS += $(ERTS_LIB_INTERNAL_DIR)
 ERTS_INTERNAL_LIBS=
 
 ERTS_INTERNAL_LIB_SRCS = \
-	common/erl_printf_format.c \
-	common/erl_printf.c \
-	common/erl_misc_utils.c
+	common/erl_printf_format.cpp \
+	common/erl_printf.cpp \
+	common/erl_misc_utils.cpp
 
 ERTS_INTERNAL_LIB_NAME=erts_internal$(TYPE_SUFFIX)
 

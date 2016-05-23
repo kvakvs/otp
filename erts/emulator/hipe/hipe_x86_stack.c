@@ -62,7 +62,8 @@ void hipe_print_nstack(Process *p)
     unsigned int i;
     unsigned int nstkarity;
     static const char dashes[2*sizeof(long)+5] = {
-	[0 ... 2*sizeof(long)+3] = '-'
+        //[0 ... 2*sizeof(long)+3] = '-'
+            '-',
     };
 
     nsp = p->hipe.nsp;

@@ -180,7 +180,7 @@ do {									\
    : (endp - tracep < (SZ) ? send_trace_buffer() : 1))
 
 
-static void disable_trace(int error, char *reason, int eno);
+static void disable_trace(int error, const char *reason, int eno);
 static int send_trace_buffer(void);
 
 #ifdef DEBUG
@@ -229,7 +229,7 @@ static ErtsAllocatorWrapper_t mtrace_wrapper;
 #error ERTS_MTRACE_SEGMENT_ID >= ERTS_ALC_A_MIN || ERTS_MTRACE_SEGMENT_ID < 0
 #endif
 
-char* erl_errno_id(int error);
+const char* erl_errno_id(int error);
 
 #define INVALID_TIME_INC (0xffffffff)
 
@@ -301,10 +301,10 @@ get_time_inc(void)
 
 
 static void
-disable_trace(int error, char *reason, int eno)
+disable_trace(int error, const char *reason, int eno)
 {
-    char *mt_dis = "Memory trace disabled";
-    char *eno_str;
+    const char *mt_dis = "Memory trace disabled";
+    const char *eno_str;
 
     erts_mtrace_enabled = 0;
     erts_sock_close(socket_desc);
@@ -629,7 +629,7 @@ erts_mtrace_install_wrapper_functions(void)
     if (erts_mtrace_enabled) {
 	int i;
 	/* Install trace functions */
-	ERTS_CT_ASSERT(sizeof(erts_allctrs) == sizeof(real_allctrs));
+        ERTS_CT_ASSERT(sizeof(erts_allctrs) == sizeof(real_allctrs));
 
 	sys_memcpy((void *) real_allctrs,
 		   (void *) erts_allctrs,

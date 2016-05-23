@@ -398,7 +398,7 @@ EXTERN const char* erl_errno_id(int error);
  * from a driver.
  */
 EXTERN int driver_failure_eof(ErlDrvPort port);
-EXTERN int driver_failure_atom(ErlDrvPort port, char *string);
+EXTERN int driver_failure_atom(ErlDrvPort port, const char *string);
 EXTERN int driver_failure_posix(ErlDrvPort port, int error);
 EXTERN int driver_failure(ErlDrvPort port, int error);
 EXTERN int driver_exit (ErlDrvPort port, int err);
@@ -580,7 +580,7 @@ EXTERN int null_func(void);
 #ifndef ERL_DRIVER_TYPES_ONLY
 
 /* make terms for driver_output_term and driver_send_term */
-EXTERN ErlDrvTermData driver_mk_atom(char*);
+EXTERN ErlDrvTermData driver_mk_atom(const char*);
 EXTERN ErlDrvTermData driver_mk_port(ErlDrvPort);
 EXTERN ErlDrvTermData driver_connected(ErlDrvPort);
 EXTERN ErlDrvTermData driver_caller(ErlDrvPort);

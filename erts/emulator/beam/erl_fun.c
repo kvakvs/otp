@@ -49,7 +49,7 @@ static void fun_free(ErlFunEntry* obj);
  * to unloaded_fun[]. The -1 in unloaded_fun[0] will be interpreted
  * as an illegal arity when attempting to call a fun.
  */
-static BeamInstr unloaded_fun_code[3] = {NIL, -1, 0};
+static BeamInstr unloaded_fun_code[3] = {NIL, (BeamInstr)-1, 0};
 static BeamInstr* unloaded_fun = unloaded_fun_code + 2;
 
 void

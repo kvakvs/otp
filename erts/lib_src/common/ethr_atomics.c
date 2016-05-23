@@ -418,7 +418,7 @@ amc_read(ethr_amc_t *amc, int dw, ethr_sint_t *avar, ethr_sint_t *val)
 
 static ETHR_INLINE int
 amc_cmpxchg(ethr_amc_t *amc, int dw, ethr_sint_t *avar,
-	    ethr_sint_t *new, ethr_sint_t *xchg)
+            ethr_sint_t *new_, ethr_sint_t *xchg)
 {
     ethr_sint_t val[2];
     ETHR_AMC_SINT_T__ state0;
@@ -446,9 +446,9 @@ amc_cmpxchg(ethr_amc_t *amc, int dw, ethr_sint_t *avar,
 	return 0; /* failed */
     }
 
-    avar[0] = new[0];
+    avar[0] = new_[0];
     if (dw)
-	avar[1] = new[1];
+        avar[1] = new_[1];
 
     amc_inc_mc_unset_excl(amc, state0);
     return 1;

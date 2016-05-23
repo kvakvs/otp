@@ -346,7 +346,7 @@ struct erl_drv_entry efile_driver_entry = {
     file_flush,
     NULL,
     NULL,
-    ERL_DRV_EXTENDED_MARKER,
+    (int)ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     ERL_DRV_FLAG_USE_PORT_LOCKING,
@@ -366,7 +366,7 @@ static int thread_short_circuit;
 #define DRIVER_ASYNC(level, desc, f_invoke, data, f_free) \
 if (thread_short_circuit >= (level)) { \
     (*(f_invoke))(data); \
-    file_async_ready((ErlDrvData)(desc), (data)); \
+    file_async_ready((ErlDrvData)(desc), (ErlDrvThreadData)(data)); \
 } else { \
     driver_async((desc)->port, KEY(desc), (f_invoke), (data), (f_free)); \
 }
@@ -840,7 +840,7 @@ static void free_data(void *data)
 
 static void reply_posix_error(file_descriptor *desc, int posix_errno) {
     char response[256];		/* Response buffer. */
-    char* s;
+    const char* s;
     char* t;
     
     /*
@@ -862,7 +862,7 @@ static void reply_posix_error(file_descriptor *desc, int posix_errno) {
 static void reply_Uint_posix_error(file_descriptor *desc, Uint num, 
 				   int posix_errno) {
     char response[256];		/* Response buffer. */
-    char* s;
+    const char* s;
     char* t;
     
     /*
@@ -1385,7 +1385,7 @@ static void invoke_preadv(void *data)
 }
 
 static void free_preadv(void *data) {
-    struct t_data *d = data;
+    struct t_data *d = (t_data *)data;
     int            i;
     ErlIOVec      *ev = &d->c.preadv.eiov;
     
@@ -1397,7 +1397,7 @@ static void free_preadv(void *data) {
 
 static void invoke_ipread(void *data)
 {
-    struct t_data   *d = data;
+    struct t_data   *d = (t_data *) data;
     struct t_preadv *c = &d->c.preadv;
     ErlIOVec        *ev = &c->eiov;
     size_t bytes_read = 0;
@@ -1497,7 +1497,7 @@ static void invoke_writev(void *data) {
 	 p < size && iovcnt < iovlen;
 	 p += iov0[iovcnt++].iov_len)
 	;
-    iov = EF_SAFE_ALLOC(sizeof(SysIOVec)*iovcnt);
+    iov = (SysIOVec *)EF_SAFE_ALLOC(sizeof(SysIOVec)*iovcnt);
     memcpy(iov,iov0,iovcnt*sizeof(SysIOVec));
     MUTEX_UNLOCK(d->c.writev.q_mtx);
     /* Let go of lock until we deque from original vector */
@@ -1620,7 +1620,7 @@ static void invoke_pwritev(void *data) {
     /* Lock the queue just for a while, we don't want it locked during write */
     MUTEX_LOCK(c->q_mtx);
     iov0 = driver_peekq(c->port, &iovlen);
-    iov = EF_SAFE_ALLOC(sizeof(SysIOVec)*iovlen);
+    iov = (SysIOVec *)EF_SAFE_ALLOC(sizeof(SysIOVec)*iovlen);
     memcpy(iov,iov0,sizeof(SysIOVec)*iovlen);
     MUTEX_UNLOCK(c->q_mtx);
 
@@ -1810,7 +1810,7 @@ static void invoke_readdir(void *data)
     do {
 	total   = READDIR_BUFSIZE;
 	n       = 1;
-	b       = EF_SAFE_ALLOC(sizeof(struct t_readdir_buf));
+        b       = (t_readdir_buf *)EF_SAFE_ALLOC(sizeof(struct t_readdir_buf));
 	b->next = NULL;
 	
 	if (d->c.read_dir.last_buf) {
@@ -1853,7 +1853,7 @@ static void invoke_open(void *data)
 	status = efile_openfile(&d->errInfo, d->b, d->flags, &fd, NULL);
 	d->fd = fd;
     } else {
-	char* mode = NULL;
+        const char* mode = NULL;
 
 	if (((d->flags & (EFILE_MODE_READ_WRITE)) == EFILE_MODE_READ_WRITE) ||
 	    (d->flags & EFILE_MODE_APPEND)) {
@@ -2052,7 +2052,7 @@ static struct t_data *async_write(file_descriptor *desc, int *errp,
 #endif
 ) {
     struct t_data *d;
-    if (! (d = EF_ALLOC(sizeof(struct t_data) - 1))) {
+    if (! (d = (t_data *)EF_ALLOC(sizeof(struct t_data) - 1))) {
 	if (errp) *errp = ENOMEM;
 	return NULL;
     }
@@ -2157,7 +2157,7 @@ static struct t_data *async_lseek(file_descriptor *desc, int *errp, int reply,
 #endif
 				  ) {
     struct t_data *d;
-    if (! (d = EF_ALLOC(sizeof(struct t_data)))) {
+    if (! (d = (t_data *)EF_ALLOC(sizeof(struct t_data)))) {
 	*errp = ENOMEM;
 	return NULL;
     }
@@ -2249,7 +2249,7 @@ file_stop(ErlDrvData e)
     IF_THRDS {
 	flush_read(desc);
 	if (desc->fd != FILE_FD_INVALID) {
-	    struct t_data *d = EF_SAFE_ALLOC(sizeof(struct t_data));
+            struct t_data *d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data));
 	    d->command = FILE_CLOSE_ON_PORT_EXIT;
 	    d->reply = !0;
 	    d->fd = desc->fd;
@@ -2615,7 +2615,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 
     case FILE_MKDIR:
     {
-	d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) + FILENAME_CHARSIZE);
+        d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) + FILENAME_CHARSIZE);
 	
 	FILENAME_COPY(d->b, name);
 #ifdef USE_VM_PROBES
@@ -2630,7 +2630,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
     }
     case FILE_RMDIR:
     {
-	d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) + FILENAME_CHARSIZE);
+        d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) + FILENAME_CHARSIZE);
 	
 	FILENAME_COPY(d->b, name);
 #ifdef USE_VM_PROBES
@@ -2645,7 +2645,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
     }
     case FILE_DELETE:
     {
-	d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) + FILENAME_CHARSIZE);
+        d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) + FILENAME_CHARSIZE);
 	
 	FILENAME_COPY(d->b, name);
 #ifdef USE_VM_PROBES
@@ -2663,7 +2663,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 	    char* new_name;
 	    int namelen = FILENAME_BYTELEN(name)+FILENAME_CHARSIZE;
 	    new_name = name+namelen;
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1
 			      + namelen
 			      + FILENAME_BYTELEN(new_name) + FILENAME_CHARSIZE);
 	
@@ -2684,7 +2684,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 	}
     case FILE_CHDIR:
     {
-	d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) + FILENAME_CHARSIZE);
+        d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) + FILENAME_CHARSIZE);
 	
 	FILENAME_COPY(d->b, name);
 #ifdef USE_VM_PROBES
@@ -2699,7 +2699,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
     }
     case FILE_PWD:
         {
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + RESBUFSIZE + 1);
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + RESBUFSIZE + 1);
 	
 	    d->drive = *(uchar*)buf;
 #ifdef USE_VM_PROBES
@@ -2716,7 +2716,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 #ifdef USE_THREADS
 	if (sys_info.async_threads > 0)
 	{
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) + 
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) +
 			      FILENAME_CHARSIZE);
 	
 	    FILENAME_COPY(d->b, name);
@@ -2802,7 +2802,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 	}
     case FILE_OPEN:
 	{
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(buf+4) + 
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(buf+4) +
 			      FILENAME_CHARSIZE);
 	
 	    d->flags = get_int32((uchar*)buf);
@@ -2823,7 +2823,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 
     case FILE_FDATASYNC:
 	{
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data));
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data));
 	    
 	    d->fd = fd;
 #ifdef USE_VM_PROBES
@@ -2839,7 +2839,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 
     case FILE_FSYNC:
 	{
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data));
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data));
 	    
 	    d->fd = fd;
 #ifdef USE_VM_PROBES
@@ -2857,7 +2857,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
     case FILE_FSTAT: 
     case FILE_LSTAT:
 	{
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) + 
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + FILENAME_BYTELEN(name) +
 			      FILENAME_CHARSIZE);
 	    
 	    FILENAME_COPY(d->b, name);
@@ -2879,7 +2879,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 	
     case FILE_TRUNCATE:
         {
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data));
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data));
 	    
 	    d->flags = desc->flags;
 	    d->fd = fd;
@@ -2897,7 +2897,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 
     case FILE_WRITE_INFO:
 	{
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1
 			      + FILENAME_BYTELEN(buf + 9*4) + FILENAME_CHARSIZE);
 	    
 	    d->info.mode       = get_int32(buf + 0 * 4);
@@ -2924,7 +2924,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 
     case FILE_READLINK:
 	{
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + 
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1 +
 			      MAX(RESBUFSIZE, (FILENAME_BYTELEN(name) +  
 					       FILENAME_CHARSIZE))  + 1);
 	    FILENAME_COPY(d->b, name);
@@ -2941,7 +2941,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 
     case FILE_ALTNAME:
 	{
-	     d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1 + 
+             d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1 +
 			       MAX(RESBUFSIZE, (FILENAME_BYTELEN(name) +  
 						FILENAME_CHARSIZE))  + 1);
 	    FILENAME_COPY(d->b, name);
@@ -2963,7 +2963,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 	    int namelen = FILENAME_BYTELEN(name) + FILENAME_CHARSIZE;
 
 	    new_name = name+namelen;
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1
 			      + namelen
 			      + FILENAME_BYTELEN(new_name) + FILENAME_CHARSIZE);
 	
@@ -2989,7 +2989,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 	    int namelen = FILENAME_BYTELEN(name) + FILENAME_CHARSIZE;
 
 	    new_name = name+namelen;
-	    d = EF_SAFE_ALLOC(sizeof(struct t_data) - 1
+            d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data) - 1
 			      + namelen
 			      + FILENAME_BYTELEN(new_name) + FILENAME_CHARSIZE);
 	
@@ -3011,7 +3011,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 
     case FILE_FADVISE:
     {
-        d = EF_SAFE_ALLOC(sizeof(struct t_data));
+        d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data));
 
         d->fd = fd;
         d->command = command;
@@ -3033,7 +3033,7 @@ file_output(ErlDrvData e, char* buf, ErlDrvSizeT count)
 
     case FILE_FALLOCATE:
     {
-        d = EF_SAFE_ALLOC(sizeof(struct t_data));
+        d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data));
 
         d->fd = fd;
         d->command = command;
@@ -3124,7 +3124,7 @@ file_control(ErlDrvData e, unsigned int command,
     switch (command) {
     case 'K' :
 	if (rlen < 4) {
-	    *rbuf = EF_ALLOC(4);
+            *rbuf = (char *)EF_ALLOC(4);
 	}
 	(*rbuf)[0] = ((desc->key) >> 24) & 0xFF;
 	(*rbuf)[1] = ((desc->key) >> 16) & 0xFF;
@@ -3228,7 +3228,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	    goto done;
 	}
 	if (desc->fd != FILE_FD_INVALID) {
-	    if (! (d = EF_ALLOC(sizeof(struct t_data)))) {
+            if (! (d = (t_data *)EF_ALLOC(sizeof(struct t_data)))) {
 		reply_posix_error(desc, ENOMEM);
 	    } else {
 		d->command = command;
@@ -3349,7 +3349,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 		desc->read_binp = binp;
 	    }
 	} 
-	if (! (d = EF_ALLOC(sizeof(struct t_data)))) {
+        if (! (d = (t_data *)EF_ALLOC(sizeof(struct t_data)))) {
 	    reply_posix_error(desc, ENOMEM);
 	    goto done;
 	}
@@ -3442,7 +3442,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 		goto done;
 	    }
 	}	
-	if (! (d = EF_ALLOC(sizeof(struct t_data)))) {
+        if (! (d = (t_data *)EF_ALLOC(sizeof(struct t_data)))) {
 	    reply_posix_error(desc, ENOMEM);
 	    goto done;
 	}
@@ -3588,7 +3588,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	    reply_Uint_posix_error(desc, 0, EINVAL);
 	    goto done;
 	}
-	d = EF_ALLOC(sizeof(struct t_data) 
+        d = (t_data *)EF_ALLOC(sizeof(struct t_data)
 		     + (n * sizeof(struct t_pbuf_spec)));
 	if (! d) {
 	    reply_Uint_posix_error(desc, 0, ENOMEM);
@@ -3728,7 +3728,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	/* Create the thread data structure with the contained ErlIOVec 
 	 * and corresponding binaries for the response 
 	 */
-	d = EF_ALLOC(sizeof(*d)
+        d = (t_data *)EF_ALLOC(sizeof(*d)
 		     + (n * sizeof(*d->c.preadv.offsets))
 		     + ((1+n) * (sizeof(*res_ev->iov)
 				 + sizeof(*res_ev->binv))));
@@ -3750,8 +3750,13 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	res_ev = &d->c.preadv.eiov;
 	/* XXX possible alignment problems here for weird machines */
 	res_ev->vsize = 1+d->c.preadv.n;
-	res_ev->iov = void_ptr = &d->c.preadv.offsets[d->c.preadv.n];
-	res_ev->binv = void_ptr = &res_ev->iov[res_ev->vsize];
+
+        void_ptr = &d->c.preadv.offsets[d->c.preadv.n];
+        res_ev->iov = (SysIOVec *)void_ptr;
+
+        void_ptr = &res_ev->iov[res_ev->vsize];
+        res_ev->binv = (ErlDrvBinary **)void_ptr;
+
 	/* Read in the pos/size specs and allocate binaries for the results */
 	for (i = 1; i < 1+n; i++) {
 	    Uint32 sizeH, sizeL;
@@ -3883,7 +3888,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	}	
 #endif
 	filename = EV_CHAR_P(ev, p, q);
-	d = EF_ALLOC(sizeof(struct t_data) -1 + FILENAME_BYTELEN(filename) + FILENAME_CHARSIZE);
+        d = (t_data *)EF_ALLOC(sizeof(struct t_data) -1 + FILENAME_BYTELEN(filename) + FILENAME_CHARSIZE);
 	if (! d) {
 	    reply_posix_error(desc, ENOMEM);
 	    goto done;
@@ -3967,7 +3972,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	 * and corresponding binaries for the response 
 	 */
 	vsize = 2;
-	d = EF_ALLOC(sizeof(*d) + 
+        d = (t_data *)EF_ALLOC(sizeof(*d) +
 		     vsize*(sizeof(*res_ev->iov) + sizeof(*res_ev->binv)));
 	if (! d) {
 	    reply_posix_error(desc, ENOMEM);
@@ -3987,8 +3992,12 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 #endif
 	res_ev = &d->c.preadv.eiov;
 	/* XXX possible alignment problems here for weird machines */
-	res_ev->iov = void_ptr = d + 1;
-	res_ev->binv = void_ptr = res_ev->iov + vsize;
+        void_ptr = d + 1;
+        res_ev->iov = (SysIOVec *)void_ptr;
+
+        void_ptr = res_ev->iov + vsize;
+        res_ev->binv = (ErlDrvBinary **)void_ptr;
+
 	res_ev->size = 0;
 	res_ev->vsize = 0;
 	d->invoke = invoke_ipread;
@@ -4117,7 +4126,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
 	    goto done;
 	}
 
-	d = EF_SAFE_ALLOC(sizeof(struct t_data));
+        d = (t_data *)EF_SAFE_ALLOC(sizeof(struct t_data));
 	d->fd = desc->fd;
 	d->command = command;
 	d->invoke = invoke_sendfile;
@@ -4186,7 +4195,7 @@ file_outputv(ErlDrvData e, ErlIOVec *ev) {
     } else {
 	/* Flatten buffer and send it to file_output(desc, buf, len) */
 	int len = ev->size;
-	char *buf = EF_ALLOC(len);
+        char *buf = (char *)EF_ALLOC(len);
 	if (! buf) {
 	    reply_posix_error(desc, ENOMEM);
 	    goto done;

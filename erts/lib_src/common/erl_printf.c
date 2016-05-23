@@ -48,8 +48,8 @@
 typedef int ssize_t;
 #endif
 
-int (*erts_printf_stdout_func)(char *, va_list) = NULL;
-int (*erts_printf_stderr_func)(char *, va_list) = NULL;
+int (*erts_printf_stdout_func)(const char *, va_list) = NULL;
+int (*erts_printf_stderr_func)(const char *, va_list) = NULL;
 
 int erts_printf_add_cr_to_stdout = 0;
 int erts_printf_add_cr_to_stderr = 0;
@@ -134,7 +134,7 @@ get_error_result(void)
 
 
 static int
-write_f_add_cr(void *vfp, char* buf, size_t len)
+write_f_add_cr(void *vfp, const char* buf, size_t len)
 {
     size_t i;
     ASSERT(vfp);
@@ -148,7 +148,7 @@ write_f_add_cr(void *vfp, char* buf, size_t len)
 }
 
 static int
-write_f(void *vfp, char* buf, size_t len)
+write_f(void *vfp, const char* buf, size_t len)
 {
     ASSERT(vfp);
 #ifdef PUTC_ON_SMALL_WRITES
@@ -166,7 +166,7 @@ write_f(void *vfp, char* buf, size_t len)
 }
 
 static int
-write_fd(void *vfdp, char* buf, size_t len)
+write_fd(void *vfdp, const char* buf, size_t len)
 {
     ssize_t size;
     size_t res = len;
@@ -190,7 +190,7 @@ write_fd(void *vfdp, char* buf, size_t len)
 }
 
 static int
-write_s(void *vwbufpp, char* bufp, size_t len)
+write_s(void *vwbufpp, const char* bufp, size_t len)
 {
     char **wbufpp = (char **) vwbufpp;
     ASSERT(wbufpp && *wbufpp);
@@ -207,7 +207,7 @@ typedef struct {
 } write_sn_arg_t;
 
 static int
-write_sn(void *vwsnap, char* buf, size_t len)
+write_sn(void *vwsnap, const char* buf, size_t len)
 {
     int rv = 0;
     write_sn_arg_t *wsnap = (write_sn_arg_t *) vwsnap;
@@ -227,7 +227,7 @@ write_sn(void *vwsnap, char* buf, size_t len)
 }
 
 static int
-write_ds(void *vdsbufp, char* buf, size_t len)
+write_ds(void *vdsbufp, const char* buf, size_t len)
 {
     erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *) vdsbufp;
     size_t need_len = len + 1; /* Also trailing '\0' */
@@ -279,15 +279,15 @@ erts_fprintf(FILE *filep, const char *format, ...)
     else if (erts_printf_stderr_func && filep == stderr)
 	res = (*erts_printf_stderr_func)((char *) format, arglist);
     else {
-	int (*fmt_f)(void*, char*, size_t);
+        int (*fmt_f)(void*, const char*, size_t);
 	if (erts_printf_add_cr_to_stdout && filep == stdout)
-	    fmt_f = write_f_add_cr;
+            fmt_f = write_f_add_cr;
 	else if (erts_printf_add_cr_to_stderr && filep == stderr)
-	    fmt_f = write_f_add_cr;
+            fmt_f = write_f_add_cr;
 	else
-	    fmt_f = write_f;
+            fmt_f = write_f;
 	FLOCKFILE(filep);
-	res = erts_printf_format(fmt_f,(void *)filep,(char *)format,arglist);
+        res = erts_printf_format(fmt_f,(void *)filep,(const char *)format,arglist);
 	FUNLOCKFILE(filep);
     }
     va_end(arglist);
@@ -301,7 +301,7 @@ erts_fdprintf(int fd, const char *format, ...)
     va_list arglist;
     va_start(arglist, format);
     errno = 0;
-    res = erts_printf_format(write_fd,(void *)&fd,(char *)format,arglist);
+    res = erts_printf_format(write_fd,(void *)&fd,format,arglist);
     va_end(arglist);
     return res;
 }
@@ -314,7 +314,7 @@ erts_sprintf(char *buf, const char *format, ...)
     va_list arglist;
     va_start(arglist, format);
     errno = 0;
-    res = erts_printf_format(write_s, (void *) &p, (char *) format, arglist);
+    res = erts_printf_format(write_s, (void *) &p, (const char *) format, arglist);
     if (res < 0)
 	buf[0] = '\0';
     else
@@ -335,7 +335,7 @@ erts_snprintf(char *buf, size_t size, const char *format, ...)
     wsnap.len = size-1; /* Always need room for trailing '\0' */
     va_start(arglist, format);
     errno = 0;
-    res = erts_printf_format(write_sn, (void *)&wsnap, (char *)format, arglist);
+    res = erts_printf_format(write_sn, (void *)&wsnap, format, arglist);
     if (res < 0)
 	buf[0] = '\0';
     else if (res < size)
@@ -355,7 +355,7 @@ erts_dsprintf(erts_dsprintf_buf_t *dsbufp, const char *format, ...)
 	return -EINVAL;
     va_start(arglist, format);
     errno = 0;
-    res = erts_printf_format(write_ds, (void *)dsbufp, (char *)format, arglist);
+    res = erts_printf_format(write_ds, (void *)dsbufp, format, arglist);
     if (dsbufp->str) {
 	if (res < 0)
 	    dsbufp->str[0] = '\0';
@@ -371,14 +371,14 @@ erts_vprintf(const char *format, va_list arglist)
 {	
     int res;
     if (erts_printf_stdout_func)
-	res = (*erts_printf_stdout_func)((char *) format, arglist);
+        res = (*erts_printf_stdout_func)(format, arglist);
     else {
 	errno = 0;
 	res = erts_printf_format(erts_printf_add_cr_to_stdout
 				 ? write_f_add_cr
 				 : write_f,
 				 (void *) stdout,
-				 (char *) format,
+                                 format,
 				 arglist);
     }
     return res;
@@ -393,7 +393,7 @@ erts_vfprintf(FILE *filep, const char *format, va_list arglist)
     else if (erts_printf_stderr_func && filep == stderr)
 	res = (*erts_printf_stderr_func)((char *) format, arglist);
     else {
-	int (*fmt_f)(void*, char*, size_t);
+        int (*fmt_f)(void*, const char*, size_t);
 	errno = 0;
 	if (erts_printf_add_cr_to_stdout && filep == stdout)
 	    fmt_f = write_f_add_cr;
@@ -401,7 +401,7 @@ erts_vfprintf(FILE *filep, const char *format, va_list arglist)
 	    fmt_f = write_f_add_cr;
 	else
 	    fmt_f = write_f;
-	res = erts_printf_format(fmt_f,(void *)filep,(char *)format,arglist);
+        res = erts_printf_format(fmt_f,(void *)filep,format,arglist);
     }
     return res;
 }
@@ -411,7 +411,7 @@ erts_vfdprintf(int fd, const char *format, va_list arglist)
 {
     int res;
     errno = 0;
-    res = erts_printf_format(write_fd,(void *)&fd,(char *)format,arglist);
+    res = erts_printf_format(write_fd,(void *)&fd,format,arglist);
     return res;
 }
 
@@ -421,7 +421,7 @@ erts_vsprintf(char *buf, const char *format, va_list arglist)
     int res;
     char *p = buf;
     errno = 0;
-    res = erts_printf_format(write_s, (void *) &p, (char *) format, arglist);
+    res = erts_printf_format(write_s, (void *) &p, format, arglist);
     if (res < 0)
 	buf[0] = '\0';
     else
@@ -439,7 +439,7 @@ erts_vsnprintf(char *buf, size_t size, const char *format,  va_list arglist)
     wsnap.buf = buf;
     wsnap.len = size-1; /* Always need room for trailing '\0' */
     errno = 0;
-    res = erts_printf_format(write_sn, (void *)&wsnap, (char *)format, arglist);
+    res = erts_printf_format(write_sn, (void *)&wsnap, format, arglist);
     if (res < 0)
 	buf[0] = '\0';
     else if (res < size)

@@ -54,7 +54,7 @@ static int num_errcodes_allocated = 0;
 
 static char *my_strdup_in(ErtsAlcType_t type, char *what)
 {
-    char *res = erts_alloc(type, strlen(what) + 1);
+    char *res = (char *)erts_alloc(type, strlen(what) + 1);
     strcpy(res, what);
     return res;
 }
@@ -76,9 +76,9 @@ static int find_errcode(char *string, ErtsSysDdllError* err)
     }
     if (num_errcodes_allocated == num_errcodes) {
 	errcodes = (num_errcodes_allocated == 0) 
-	    ? erts_alloc(ERTS_ALC_T_DDLL_ERRCODES, 
+            ? (char **)erts_alloc(ERTS_ALC_T_DDLL_ERRCODES,
 			 (num_errcodes_allocated = 10) * sizeof(char *)) 
-	    : erts_realloc(ERTS_ALC_T_DDLL_ERRCODES, errcodes,
+            : (char **)erts_realloc(ERTS_ALC_T_DDLL_ERRCODES, errcodes,
 			   (num_errcodes_allocated += 10) * sizeof(char *));
     }
     errcodes[num_errcodes++] = my_strdup(string);
@@ -109,7 +109,7 @@ int erts_sys_ddll_open(const char *full_name, void **handle, ErtsSysDdllError* e
     int len = sys_strlen(full_name);
     int ret;
     
-    dlname = erts_alloc(ERTS_ALC_T_TMP, len + EXT_LEN + 1);
+    dlname = (char *)erts_alloc(ERTS_ALC_T_TMP, len + EXT_LEN + 1);
     sys_strcpy(dlname, full_name);
     sys_strcpy(dlname+len, FILE_EXT);
     
@@ -215,7 +215,8 @@ int erts_sys_ddll_load_nif_init(void *handle, void **function, ErtsSysDdllError*
  * Call the driver_init function, whatever it's really called, simple on unix... 
 */
 void *erts_sys_ddll_call_init(void *function) {
-    void *(*initfn)(void) = function;
+    typedef void *(*Fn)(void);
+    Fn initfn = (Fn)function;
     return (*initfn)();
 }
 void *erts_sys_ddll_call_nif_init(void *function) {

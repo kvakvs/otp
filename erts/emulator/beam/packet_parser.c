@@ -179,7 +179,7 @@ static void http_hash_insert(const char* name, http_atom_t* entry,
     entry->h    = h;
     entry->name = name;
     entry->len  = len;
-    entry->atom = driver_mk_atom((char*)name);
+    entry->atom = driver_mk_atom((const char*)name);
 
     hash[ix] = entry;
 }

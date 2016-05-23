@@ -143,9 +143,9 @@ void gl_dispatch(int op, char *bp,ErlDrvTermData caller,WXEBinRef *bins){
       gl_active = caller;
     } else {
       ErlDrvTermData rt[] = // Error msg
-	{ERL_DRV_ATOM, driver_mk_atom((char *) "_egl_error_"),
+	{ERL_DRV_ATOM, driver_mk_atom("_egl_error_"),
 	 ERL_DRV_INT,  (ErlDrvTermData) op,
-	 ERL_DRV_ATOM, driver_mk_atom((char *) "no_gl_context"),
+	 ERL_DRV_ATOM, driver_mk_atom("no_gl_context"),
 	 ERL_DRV_TUPLE,3};
       erl_drv_send_term(WXE_DRV_PORT,caller,rt,8);
       return ;

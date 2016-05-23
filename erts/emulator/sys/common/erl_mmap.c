@@ -1447,7 +1447,7 @@ alloc_desc_insert_free_seg(ErtsMemMapper* mm,
 
 #if ERTS_HAVE_OS_MMAP
     if (!mm->no_os_mmap) {
-        ptr = os_mmap(mm->desc.new_area_hint, ERTS_PAGEALIGNED_SIZE, 0, 0);
+        ptr = (char *)os_mmap(mm->desc.new_area_hint, ERTS_PAGEALIGNED_SIZE, 0, 0);
         if (ptr) {
             mm->desc.new_area_hint = ptr+ERTS_PAGEALIGNED_SIZE;
             ERTS_MMAP_SIZE_OS_INC(ERTS_PAGEALIGNED_SIZE);
@@ -1659,13 +1659,13 @@ erts_mmap(ErtsMemMapper* mm, Uint32 flags, UWord *sizep)
     /* Map using OS primitives */
     if (!(ERTS_MMAPFLG_SUPERCARRIER_ONLY & flags) && !mm->no_os_mmap) {
 	if (!(ERTS_MMAPFLG_SUPERALIGNED & flags)) {
-	    seg = os_mmap(NULL, asize, 0, mm->executable);
+            seg = (char *)os_mmap(NULL, asize, 0, mm->executable);
 	    if (!seg)
 		goto failure;
 	}
 	else {
 	    asize = ERTS_SUPERALIGNED_CEILING(*sizep);
-	    seg = os_mmap(NULL, asize, 1, mm->executable);
+            seg = (char *)os_mmap(NULL, asize, 1, mm->executable);
 	    if (!seg)
 		goto failure;
 
@@ -1675,7 +1675,7 @@ erts_mmap(ErtsMemMapper* mm, Uint32 flags, UWord *sizep)
 
 		os_munmap(seg, asize);
 
-		ptr = os_mmap(NULL, asize + ERTS_SUPERALIGNED_SIZE, 1,
+                ptr = (char *)os_mmap(NULL, asize + ERTS_SUPERALIGNED_SIZE, 1,
                               mm->executable);
 		if (!ptr)
 		    goto failure;
@@ -2216,7 +2216,7 @@ erts_mmap_init(ErtsMemMapper* mm, ErtsMMapInit *init, int executable)
 	ptr = (char *) ERTS_PAGEALIGNED_CEILING(init->virtual_range.start);
 	end = (char *) ERTS_PAGEALIGNED_FLOOR(init->virtual_range.end);
 	sz = end - ptr;
-	start = os_mmap_virtual(ptr, sz, executable);
+        start = (char *)os_mmap_virtual(ptr, sz, executable);
 	if (!start || start > ptr || start >= end)
 	    erts_exit(1,
 		     "erts_mmap: Failed to create virtual range for super carrier\n");
@@ -2241,7 +2241,7 @@ erts_mmap_init(ErtsMemMapper* mm, ErtsMMapInit *init, int executable)
 	sz = ERTS_PAGEALIGNED_CEILING(init->scs);
 #ifdef ERTS_HAVE_OS_PHYSICAL_MEMORY_RESERVATION
 	if (!init->scrpm) {
-	    start = os_mmap_virtual(NULL, sz, executable);
+            start = (char *)os_mmap_virtual(NULL, sz, executable);
 	    mm->reserve_physical = os_reserve_physical;
 	    mm->unreserve_physical = os_unreserve_physical;
 	    virtual_map = 1;
@@ -2253,7 +2253,7 @@ erts_mmap_init(ErtsMemMapper* mm, ErtsMMapInit *init, int executable)
 	     * The whole supercarrier will by physically
 	     * reserved all the time.
 	     */
-	    start = os_mmap(NULL, sz, 1, executable);
+            start = (char *)os_mmap(NULL, sz, 1, executable);
 	}
 	if (!start)
 	    erts_exit(1,

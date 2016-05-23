@@ -23,8 +23,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-extern int (*erts_printf_stdout_func)(char *, va_list);
-extern int (*erts_printf_stderr_func)(char *, va_list);
+extern int (*erts_printf_stdout_func)(const char *, va_list);
+extern int (*erts_printf_stderr_func)(const char *, va_list);
 extern int erts_printf_add_cr_to_stdout;
 extern int erts_printf_add_cr_to_stderr;
 extern int (*erts_printf_block_fpe)(void);

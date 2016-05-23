@@ -640,7 +640,7 @@ erts_generic_breakpoint(Process* c_p, BeamInstr* I, Eterm* reg)
 
 	new_tracer = do_call_trace(c_p, I, reg, 1, bp->meta_ms, old_tracer);
 	if (!ERTS_TRACER_COMPARE(new_tracer, old_tracer)) {
-            if (old_tracer == erts_smp_atomic_cmpxchg_acqb(
+            if (old_tracer == (ErtsTracer)erts_smp_atomic_cmpxchg_acqb(
                     &bp->meta_tracer->tracer,
                     (erts_aint_t)new_tracer,
                     (erts_aint_t)old_tracer)) {
@@ -742,7 +742,7 @@ erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
 	if (!ERTS_TRACER_COMPARE(old_tracer, meta_tracer)) {
             ErtsTracer new_tracer = erts_tracer_nil;
             erts_tracer_update(&new_tracer, meta_tracer);
-	    if (old_tracer == erts_smp_atomic_cmpxchg_acqb(
+            if (old_tracer == (ErtsTracer)erts_smp_atomic_cmpxchg_acqb(
                     &bp->meta_tracer->tracer,
                     (erts_aint_t)new_tracer,
                     (erts_aint_t)old_tracer)) {
@@ -1512,14 +1512,13 @@ set_function_break(BeamInstr *pc, Binary *match_spec, Uint break_flags,
 	bp->count = bcp;
     } else if (break_flags & ERTS_BPF_TIME_TRACE) {
 	BpDataTime* bdt;
-	int i;
 
 	ASSERT((bp->flags & ERTS_BPF_TIME_TRACE) == 0);
         bdt = (BpDataTime *)Alloc(sizeof(BpDataTime));
 	erts_refc_init(&bdt->refc, 1);
 	bdt->n = erts_no_schedulers;
         bdt->hash = (bp_time_hash_t *)Alloc(sizeof(bp_time_hash_t)*(bdt->n));
-	for (i = 0; i < bdt->n; i++) {
+        for (Uint i = 0; i < bdt->n; i++) {
 	    bp_hash_init(&(bdt->hash[i]), 32);
 	}
 	bp->time = bdt;

@@ -461,7 +461,7 @@ event_wait(struct ethr_mutex_base_ *mtxb,
 	/* Set wait bit */
 
 	while (1) {
-	    ethr_sint32_t new, exp = act;
+            ethr_sint32_t new_, exp = act;
 	    need_try_complete_runlock = 0;
 	    transfer_read_lock = 0;
 
@@ -469,21 +469,21 @@ event_wait(struct ethr_mutex_base_ *mtxb,
 		if (is_freq_read && act == ETHR_RWMTX_R_FLG__)
 		    need_try_complete_runlock = 1;
 		if (act != 0)
-		    new = act | ETHR_RWMTX_W_WAIT_FLG__;
+                    new_ = act | ETHR_RWMTX_W_WAIT_FLG__;
 		else
-		    new = ETHR_RWMTX_W_FLG__; /* Try to get it */
+                    new_ = ETHR_RWMTX_W_FLG__; /* Try to get it */
 	    }
 	    else {
 		ETHR_ASSERT(is_rwmtx);
 
 		if (!is_freq_read) {
 		    if (act & (ETHR_RWMTX_W_FLG__| ETHR_RWMTX_W_WAIT_FLG__))
-			new = act | ETHR_RWMTX_R_WAIT_FLG__;
+                        new_ = act | ETHR_RWMTX_R_WAIT_FLG__;
 		    else
-			new = act + 1; /* Try to get it */
+                        new_ = act + 1; /* Try to get it */
 		}
 		else {
-		    new = act | ETHR_RWMTX_R_WAIT_FLG__;
+                    new_ = act | ETHR_RWMTX_R_WAIT_FLG__;
 		    if ((act & (ETHR_RWMTX_W_FLG__
 				| ETHR_RWMTX_W_WAIT_FLG__)) == 0) {
 			/* Transfer read lock to this thread. */
@@ -492,10 +492,10 @@ event_wait(struct ethr_mutex_base_ *mtxb,
 		}
 	    }
 
-	    act = ethr_atomic32_cmpxchg_acqb(&mtxb->flgs, new, exp);
+            act = ethr_atomic32_cmpxchg_acqb(&mtxb->flgs, new_, exp);
 	    if (exp == act) {
-		if (new & type) {
-		    act = new;
+                if (new_ & type) {
+                    act = new_;
 		    break;
 		}
 		else {
@@ -945,14 +945,14 @@ enqueue_mtx(ethr_mutex *mtx, ethr_ts_event *tse_start, ethr_ts_event *tse_end)
 	multi = tse_start != tse_end;
 
 	while (1) {
-	    ethr_sint32_t new, exp = act;
+            ethr_sint32_t new_, exp = act;
 
 	    if (multi || (act & ETHR_RWMTX_W_FLG__))
-		new = ETHR_RWMTX_W_FLG__|ETHR_RWMTX_W_WAIT_FLG__;
+                new_ = ETHR_RWMTX_W_FLG__|ETHR_RWMTX_W_WAIT_FLG__;
 	    else
-		new = ETHR_RWMTX_W_FLG__;
+                new_ = ETHR_RWMTX_W_FLG__;
 
-	    act = ethr_atomic32_cmpxchg(&mtx->mtxb.flgs, new, exp);
+            act = ethr_atomic32_cmpxchg(&mtx->mtxb.flgs, new_, exp);
 	    if (exp == act) {
 		ETHR_ASSERT(!mtx->mtxb.q);
 		if (act & ETHR_RWMTX_W_FLG__) {
@@ -2011,16 +2011,16 @@ rwmutex_try_complete_runlock(ethr_rwmutex *rwmtx,
 
     while (1) {
 	ethr_sint32_t exp = act;
-	ethr_sint32_t new = act+1;
+        ethr_sint32_t new_ = act+1;
 
 	ETHR_ASSERT((act & ETHR_RWMTX_R_ABRT_UNLCK_FLG__) == 0);
 
 	ETHR_ASSERT((act & ETHR_RWMTX_R_PEND_UNLCK_MASK__)
 		    < ETHR_RWMTX_R_PEND_UNLCK_MASK__);
 
-	act = ethr_atomic32_cmpxchg(&rwmtx->mtxb.flgs, new, exp);
+        act = ethr_atomic32_cmpxchg(&rwmtx->mtxb.flgs, new_, exp);
 	if (exp == act) {
-	    act = new;
+            act = new_;
 	    break;
 	}
 
@@ -2056,25 +2056,25 @@ rwmutex_try_complete_runlock(ethr_rwmutex *rwmtx,
     while (1) {
 	int finished_abort = 0;
 	ethr_sint32_t exp = act;
-	ethr_sint32_t new = act;
+        ethr_sint32_t new_ = act;
 
-	new--;
+        new_--;
 	if (act & ETHR_RWMTX_R_ABRT_UNLCK_FLG__) {
-	    if ((new & ETHR_RWMTX_R_PEND_UNLCK_MASK__) == 0) {
-		new &= ~ETHR_RWMTX_R_ABRT_UNLCK_FLG__;
+            if ((new_ & ETHR_RWMTX_R_PEND_UNLCK_MASK__) == 0) {
+                new_ &= ~ETHR_RWMTX_R_ABRT_UNLCK_FLG__;
 		finished_abort = 1;
 	    }
 	    ETHR_ASSERT(act & ETHR_RWMTX_R_FLG__);
 	}
 	else if ((act & ETHR_RWMTX_R_FLG__) && res != EBUSY) {
-	    new &= ~ETHR_RWMTX_R_FLG__;
+            new_ &= ~ETHR_RWMTX_R_FLG__;
 	}
 
 	ETHR_ASSERT(act & ETHR_RWMTX_R_PEND_UNLCK_MASK__);
 
-	act = ethr_atomic32_cmpxchg(&rwmtx->mtxb.flgs, new, exp);
+        act = ethr_atomic32_cmpxchg(&rwmtx->mtxb.flgs, new_, exp);
 	if (exp == act) {
-	    act = new;
+            act = new_;
 	    if (act & ETHR_RWMTX_W_FLG__)
 		return try_write_lock ? EBUSY : 0;
 	    if (finished_abort && (act & ETHR_RWMTX_WAIT_FLGS__))
@@ -2207,12 +2207,12 @@ rwmutex_freqread_rlock(ethr_rwmutex *rwmtx, ethr_ts_event *tse, int trylock)
 	int wake_other_readers;
 
 	while (1) {
-	    ethr_sint32_t exp, new;
+            ethr_sint32_t exp, new_;
 
 	    wake_other_readers = 0;
 
 	    if (act == 0)
-		new = act | ETHR_RWMTX_R_FLG__;
+                new_ = act | ETHR_RWMTX_R_FLG__;
 	    else if (act == ETHR_RWMTX_R_FLG__)
 		break; /* Got it */
 	    else if (act & (ETHR_RWMTX_W_FLG__|ETHR_RWMTX_W_WAIT_FLG__)) {
@@ -2235,13 +2235,13 @@ rwmutex_freqread_rlock(ethr_rwmutex *rwmtx, ethr_ts_event *tse, int trylock)
 		break;
 	    }
 	    else {
-		new = act | ETHR_RWMTX_R_FLG__;
+                new_ = act | ETHR_RWMTX_R_FLG__;
 		if (act & ETHR_RWMTX_R_PEND_UNLCK_MASK__) {
 		    /*
 		     * Someone is doing tryrwlock (no writer and no
 		     * write waiters); we will try to abort that...
 		     */
-		    new |= ETHR_RWMTX_R_ABRT_UNLCK_FLG__;
+                    new_ |= ETHR_RWMTX_R_ABRT_UNLCK_FLG__;
 		}
 
 		if (act & ETHR_RWMTX_R_WAIT_FLG__)
@@ -2249,7 +2249,7 @@ rwmutex_freqread_rlock(ethr_rwmutex *rwmtx, ethr_ts_event *tse, int trylock)
 	    }
 
 	    exp = act;
-	    act = ethr_atomic32_cmpxchg_acqb(&rwmtx->mtxb.flgs, new, exp);
+            act = ethr_atomic32_cmpxchg_acqb(&rwmtx->mtxb.flgs, new_, exp);
 	    if (act == exp)
 		break;
 	}
@@ -2348,10 +2348,10 @@ rwlock_wake_set_flags(ethr_rwmutex *rwmtx,
     act = act_initial;
     while (1) {
 	ethr_sint32_t exp = act;
-	ethr_sint32_t new = new_initial + (act & act_mask);
+        ethr_sint32_t new_ = new_initial + (act & act_mask);
 	if (chk_abrt_flg && (act & act_mask))
-	    new |= ETHR_RWMTX_R_ABRT_UNLCK_FLG__;
-	act = ethr_atomic32_cmpxchg(&rwmtx->mtxb.flgs, new, exp);
+            new_ |= ETHR_RWMTX_R_ABRT_UNLCK_FLG__;
+        act = ethr_atomic32_cmpxchg(&rwmtx->mtxb.flgs, new_, exp);
 	if (act == exp)
 	    break;
 	exp = act;
@@ -2445,7 +2445,7 @@ static void
 rwmutex_unlock_wake(ethr_rwmutex *rwmtx, int have_w, ethr_sint32_t initial,
 		    int transfer_read_lock)
 {
-    ethr_sint32_t new, act = initial;
+    ethr_sint32_t new_, act = initial;
     ethr_ts_event *tse;
 
     if (transfer_read_lock) {
@@ -2468,8 +2468,8 @@ rwmutex_unlock_wake(ethr_rwmutex *rwmtx, int have_w, ethr_sint32_t initial,
 	    else {
 		while ((act & ETHR_RWMTX_WAIT_FLGS__) == 0) {
 		    ethr_sint32_t exp = act;
-		    new = exp & ~ETHR_RWMTX_W_FLG__;
-		    act = ethr_atomic32_cmpxchg(&rwmtx->mtxb.flgs, new, exp);
+                    new_ = exp & ~ETHR_RWMTX_W_FLG__;
+                    act = ethr_atomic32_cmpxchg(&rwmtx->mtxb.flgs, new_, exp);
 		    if (act == exp)
 			return;
 		}
@@ -2522,13 +2522,13 @@ rwmutex_unlock_wake(ethr_rwmutex *rwmtx, int have_w, ethr_sint32_t initial,
 	 * we need to clear the write wait bit...
 	 */
 	if (!multiple_w_waiters(rwmtx)) {
-	    new = ETHR_RWMTX_W_FLG__;
+            new_ = ETHR_RWMTX_W_FLG__;
 	    if (tse->next != rwmtx->mtxb.q) {
 		ETHR_ASSERT(tse->next->uflgs == ETHR_RWMTX_R_WAIT_FLG__);
-		new |= ETHR_RWMTX_R_WAIT_FLG__;
+                new_ |= ETHR_RWMTX_R_WAIT_FLG__;
 	    }
 
-	    rwlock_wake_set_flags(rwmtx, new, act);
+            rwlock_wake_set_flags(rwmtx, new_, act);
 	}
 
 	wake_writer(&rwmtx->mtxb, 1);
@@ -2538,7 +2538,7 @@ rwmutex_unlock_wake(ethr_rwmutex *rwmtx, int have_w, ethr_sint32_t initial,
 
 	if (rwmtx->type == ETHR_RWMUTEX_TYPE_NORMAL) {
 	    rs = rwmtx->tdata.rs;
-	    new = (ethr_sint32_t) rs;
+            new_ = (ethr_sint32_t) rs;
 	    rwmtx->tdata.rs = 0;
 	}
 	else {
@@ -2559,13 +2559,13 @@ rwmutex_unlock_wake(ethr_rwmutex *rwmtx, int have_w, ethr_sint32_t initial,
 		}
 	    }
 
-	    new = ETHR_RWMTX_R_FLG__;
+            new_ = ETHR_RWMTX_R_FLG__;
 	}
 
 	if (rwmtx->rq_end->next != rwmtx->mtxb.q)
-	    new |= ETHR_RWMTX_W_WAIT_FLG__;
+            new_ |= ETHR_RWMTX_W_WAIT_FLG__;
 
-	rwlock_wake_set_flags(rwmtx, new, act);
+        rwlock_wake_set_flags(rwmtx, new_, act);
 
 	wake_readers(rwmtx, rs);
     }
