@@ -431,7 +431,7 @@ setup_nif_env(struct enif_msg_environment_t* msg_env,
 
 ErlNifEnv* enif_alloc_env(void)
 {
-    struct enif_msg_environment_t* msg_env =
+    struct enif_msg_environment_t* msg_env = (struct enif_msg_environment_t*)
 	erts_alloc_fnf(ERTS_ALC_T_NIF, sizeof(struct enif_msg_environment_t));
     setup_nif_env(msg_env, NULL, NULL);
     return &msg_env->env;
@@ -671,7 +671,8 @@ int enif_send(ErlNifEnv* env, const ErlNifPid* to_pid,
                 ErtsThrPrgrDelayHandle dhndl;
 #endif
 
-                msgq = erts_alloc(ERTS_ALC_T_TRACE_MSG_QUEUE,
+                msgq = (ErlTraceMessageQueue *)
+                        erts_alloc(ERTS_ALC_T_TRACE_MSG_QUEUE,
                                   sizeof(ErlTraceMessageQueue));
                 msgq->receiver = receiver;
                 msgq->first = mp;
@@ -957,7 +958,8 @@ int enif_inspect_iolist_as_binary(ErlNifEnv* env, Eterm term, ErlNifBinary* bin)
     }
 
     allocator = is_proc_bound(env) ? ERTS_ALC_T_TMP : ERTS_ALC_T_NIF;
-    tobj = erts_alloc(allocator, sz + sizeof(struct enif_tmp_obj_t));
+    tobj = (struct enif_tmp_obj_t *)
+            erts_alloc(allocator, sz + sizeof(struct enif_tmp_obj_t));
     tobj->allocator = allocator;
     tobj->next = env->tmp_obj_list;
     tobj->dtor = &tmp_alloc_dtor;
@@ -1017,7 +1019,7 @@ int enif_realloc_binary(ErlNifBinary* bin, size_t size)
 void enif_release_binary(ErlNifBinary* bin)
 {
     if (bin->ref_bin != NULL) {
-	Binary* refbin = bin->ref_bin;
+        Binary* refbin = (Binary *)bin->ref_bin;
 	ASSERT(bin->bin_term == THE_NON_VALUE);
 	if (erts_refc_dectest(&refbin->refc, 0) == 0) {
 	    erts_bin_free(refbin);
@@ -1050,7 +1052,7 @@ int enif_term_to_binary(ErlNifEnv *dst_env, ERL_NIF_TERM term,
     if (!enif_alloc_binary(size, bin))
         return 0;
 
-    refbin = bin->ref_bin;
+    refbin = (Binary *)bin->ref_bin;
 
     bp = bin->data;
 
@@ -1064,7 +1066,7 @@ int enif_term_to_binary(ErlNifEnv *dst_env, ERL_NIF_TERM term,
     return 1;
 }
 
-size_t enif_binary_to_term(ErlNifEnv *dst_env,
+static size_t enif_binary_to_term(ErlNifEnv *dst_env,
                            const unsigned char* data,
                            size_t data_sz,
                            ERL_NIF_TERM *term,
@@ -1169,7 +1171,7 @@ Eterm enif_make_binary(ErlNifEnv* env, ErlNifBinary* bin)
 	return bin->bin_term;
     }
     else if (bin->ref_bin != NULL) {
-	Binary* bptr = bin->ref_bin;
+        Binary* bptr = (Binary *)bin->ref_bin;
 	ProcBin* pb;
 	Eterm bin_term;
 	
@@ -1953,7 +1955,7 @@ enif_open_resource_type(ErlNifEnv* env,
     type = find_resource_type(module_am, name_am);
     if (type == NULL) {
 	if (flags & ERL_NIF_RT_CREATE) {
-	    type = erts_alloc(ERTS_ALC_T_NIF,
+            type = (ErlNifResourceType *)erts_alloc(ERTS_ALC_T_NIF,
 			      sizeof(struct enif_resource_type_t));
 	    type->module = module_am;
 	    type->name = name_am;
@@ -1976,8 +1978,8 @@ enif_open_resource_type(ErlNifEnv* env,
 	}
     }
     if (type != NULL) {
-	struct opened_resource_type* ort = erts_alloc(ERTS_ALC_T_TMP,
-						sizeof(struct opened_resource_type));
+        struct opened_resource_type* ort = (struct opened_resource_type*)
+                erts_alloc(ERTS_ALC_T_TMP, sizeof(struct opened_resource_type));
 	ort->op = op;
 	ort->type = type;
 	ort->new_dtor = dtor;
@@ -2061,7 +2063,7 @@ void* enif_alloc_resource(ErlNifResourceType* type, size_t size)
     Binary* bin = erts_create_magic_binary_x(SIZEOF_ErlNifResource(size),
                                              &nif_resource_dtor,
                                              1); /* unaligned */
-    ErlNifResource* resource = ERTS_MAGIC_BIN_UNALIGNED_DATA(bin);
+    ErlNifResource* resource = (ErlNifResource*)ERTS_MAGIC_BIN_UNALIGNED_DATA(bin);
 
     ASSERT(type->owner && type->next && type->prev); /* not allowed in load/upgrade */
     resource->type = type;
@@ -2257,7 +2259,7 @@ allocate_nif_sched_data(Process* proc, int argc)
     int i;
 
     total = sizeof(NifExport) + argc*sizeof(Eterm);
-    ep = erts_alloc(ERTS_ALC_T_NIF_TRAP_EXPORT, total);
+    ep = (NifExport *)erts_alloc(ERTS_ALC_T_NIF_TRAP_EXPORT, total);
     sys_memset((void*) ep, 0, total);
     ep->rootset_extra = argc;
     ep->rootset[0] = NIL;
@@ -2786,7 +2788,8 @@ int enif_map_iterator_create(ErlNifEnv *env,
     else if (is_hashmap(map)) {
         iter->map = map;
         iter->size = hashmap_size(map);
-        iter->u.hash.wstack = erts_alloc(ERTS_ALC_T_NIF, sizeof(ErtsDynamicWStack));
+        iter->u.hash.wstack = (ErtsDynamicWStack *)
+                erts_alloc(ERTS_ALC_T_NIF, sizeof(ErtsDynamicWStack));
         WSTACK_INIT(iter->u.hash.wstack, ERTS_ALC_T_NIF);
 
         switch (entry) {
@@ -2977,7 +2980,8 @@ static void add_taint(Eterm mod_atom)
 	    return;
 	}
     }
-    t = erts_alloc_fnf(ERTS_ALC_T_TAINT, sizeof(*t));
+    t = (struct tainted_module_t *)
+            erts_alloc_fnf(ERTS_ALC_T_TAINT, sizeof(*t));
     if (t != NULL) {
 	t->module_atom = mod_atom;
 	t->next = first_tainted_module;
@@ -3133,7 +3137,8 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
     ASSERT(module_p != NULL);
 
     mod_atomp = atom_tab(atom_val(mod_atom));
-    init_func = erts_static_nif_get_nif_init((char*)mod_atomp->name, mod_atomp->len);
+    init_func = (void *)erts_static_nif_get_nif_init((char*)mod_atomp->name,
+                                                     mod_atomp->len);
     if (init_func != NULL)
       handle = init_func;
 
@@ -3168,7 +3173,7 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
 	
     }
     else if ((add_taint(mod_atom),
-	      (entry = erts_sys_ddll_call_nif_init(init_func)) == NULL)) {
+              (entry = (ErlNifEntry *)erts_sys_ddll_call_nif_init(init_func)) == NULL)) {
 	ret = load_nif_error(BIF_P, bad_lib, "Library init-call unsuccessful");
     }
     else if (entry->major < ERL_NIF_MIN_REQUIRED_MAJOR_VERSION_ON_LOAD
@@ -3245,7 +3250,8 @@ BIF_RETTYPE load_nif_2(BIF_ALIST_2)
      */
 
 
-    lib = erts_alloc(ERTS_ALC_T_NIF, sizeof(struct erl_module_nif));
+    lib = (struct erl_module_nif *)
+            erts_alloc(ERTS_ALC_T_NIF, sizeof(struct erl_module_nif));
     lib->handle = handle;
     lib->entry = entry;
     erts_refc_init(&lib->rt_cnt, 0);

@@ -66,11 +66,11 @@
 
 /* Memory allocation macros */
 #define PD_ALLOC(Sz)				\
-     erts_alloc(ERTS_ALC_T_PROC_DICT, (Sz))
+     (ProcDict *)erts_alloc(ERTS_ALC_T_PROC_DICT, (Sz))
 #define PD_FREE(P, Sz)				\
      erts_free(ERTS_ALC_T_PROC_DICT, (P))
 #define PD_REALLOC(P, OSz, NSz) 		\
-     erts_realloc(ERTS_ALC_T_PROC_DICT, (P), (NSz))
+     (ProcDict *)erts_realloc(ERTS_ALC_T_PROC_DICT, (P), (NSz))
 
 
 #define TCAR(Term) CAR(list_val(Term))

@@ -677,7 +677,8 @@ erts_create_timer_service(void)
     ErtsYieldingTimeoutState init_yield = ERTS_TMR_YIELDING_TIMEOUT_STATE_INITER;
     ErtsHLTimerService *srv;
 
-    srv = erts_alloc_permanent_cache_aligned(ERTS_ALC_T_TIMER_SERVICE,
+    srv = (ErtsHLTimerService *)
+            erts_alloc_permanent_cache_aligned(ERTS_ALC_T_TIMER_SERVICE,
 					     sizeof(ErtsHLTimerService));
     srv->time_tree = NULL;
     srv->btm_tree = NULL;
@@ -1065,7 +1066,7 @@ create_hl_timer(ErtsSchedulerData *esdp,
 
     if (type != ERTS_TMR_BIF) {
 
-	tmr = erts_alloc(ERTS_ALC_T_HL_PTIMER,
+        tmr = (ErtsHLTimer *)erts_alloc(ERTS_ALC_T_HL_PTIMER,
 			 ERTS_HL_PTIMER_SIZE);
 	tmr->timeout = timeout_pos;
 
@@ -1121,7 +1122,7 @@ create_hl_timer(ErtsSchedulerData *esdp,
 				 ERTS_ABIF_TIMER_SIZE);
 	    else
 #endif
-		tmr = erts_alloc(ERTS_ALC_T_BIF_TIMER,
+                tmr = (ErtsHLTimer *)erts_alloc(ERTS_ALC_T_BIF_TIMER,
 				 ERTS_BIF_TIMER_SIZE);
 	}
 
@@ -1512,24 +1513,24 @@ static ERTS_INLINE int
 cq_enqueue(ErtsHLTCncldTmrQ *cq, ErtsTimer *tmr, int cinit)
 {
     erts_aint_t itmp;
-    ErtsTimer *enq, *this = tmr;
+    ErtsTimer *enq, *this_ = tmr;
 
-    erts_atomic_init_nob(&this->head.u.next, ERTS_AINT_NULL);
+    erts_atomic_init_nob(&this_->head.u.next, ERTS_AINT_NULL);
     /* Enqueue at end of list... */
 
     enq = (ErtsTimer *) erts_atomic_read_nob(&cq->tail.data.last);
     itmp = erts_atomic_cmpxchg_relb(&enq->head.u.next,
-				    (erts_aint_t) this,
+                                    (erts_aint_t) this_,
 				    ERTS_AINT_NULL);
     if (itmp == ERTS_AINT_NULL) {
 	/* We are required to move last pointer */
 #ifdef DEBUG
-	ASSERT(ERTS_AINT_NULL == erts_atomic_read_nob(&this->head.u.next));
+        ASSERT(ERTS_AINT_NULL == erts_atomic_read_nob(&this_->head.u.next));
 	ASSERT(((erts_aint_t) enq)
 	       == erts_atomic_xchg_relb(&cq->tail.data.last,
-					(erts_aint_t) this));
+                                        (erts_aint_t) this_));
 #else
-	erts_atomic_set_relb(&cq->tail.data.last, (erts_aint_t) this);
+        erts_atomic_set_relb(&cq->tail.data.last, (erts_aint_t) this_);
 #endif
 	return 1;
     }
@@ -1542,9 +1543,9 @@ cq_enqueue(ErtsHLTCncldTmrQ *cq, ErtsTimer *tmr, int cinit)
 
 	while (1) {
 	    erts_aint_t itmp2;
-	    erts_atomic_set_nob(&this->head.u.next, itmp);
+            erts_atomic_set_nob(&this_->head.u.next, itmp);
 	    itmp2 = erts_atomic_cmpxchg_relb(&enq->head.u.next,
-					     (erts_aint_t) this,
+                                             (erts_aint_t) this_,
 					     itmp);
 	    if (itmp == itmp2)
 		return 0; /* inserted this */
@@ -2163,8 +2164,9 @@ access_bif_timer(Process *c_p, Eterm tref, int cancel, int async, int info)
 	 * Schedule access for execution on
 	 * remote scheduler...
 	 */
-	ErtsBifTimerRequest *req = erts_alloc(ERTS_ALC_T_TIMER_REQUEST,
-					      sizeof(ErtsBifTimerRequest));
+        ErtsBifTimerRequest *req = (ErtsBifTimerRequest *)
+                erts_alloc(ERTS_ALC_T_TIMER_REQUEST,
+                           sizeof(ErtsBifTimerRequest));
 
 	req->flags = 0;
 	if (cancel)
@@ -2386,7 +2388,8 @@ int erts_cancel_bif_timers(Process *p, ErtsBifTimers *btm, void **vyspp)
     else {
 
 	if (ysp == &ys) {
-	    ysp = erts_alloc(ERTS_ALC_T_BTM_YIELD_STATE,
+            ysp = (ErtsBifTimerYieldState *)
+                    erts_alloc(ERTS_ALC_T_BTM_YIELD_STATE,
 			     sizeof(ErtsBifTimerYieldState));
 	    sys_memcpy((void *) ysp, (void *) &ys,
 		       sizeof(ErtsBifTimerYieldState));
@@ -2671,7 +2674,8 @@ erts_start_timer_callback(ErtsMonotonicTime tmo,
 			     arg);
     else {
 	ErtsStartCallbackTimerRequest *sctr;
-	sctr = erts_alloc(ERTS_ALC_T_TIMER_REQUEST,
+        sctr = (ErtsStartCallbackTimerRequest *)
+                erts_alloc(ERTS_ALC_T_TIMER_REQUEST,
 			  sizeof(ErtsStartCallbackTimerRequest));
 	sctr->twt = twt;
 	sctr->timeout_pos = timeout_pos;

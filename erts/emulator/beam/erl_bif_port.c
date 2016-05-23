@@ -49,13 +49,13 @@ static byte* convert_environment(Process* p, Eterm env);
 static char **convert_args(Eterm);
 static void free_args(char **);
 
-char *erts_default_arg0 = "default";
+char *erts_default_arg0 = (char *)"default";
 
 BIF_RETTYPE erts_internal_open_port_2(BIF_ALIST_2)
 {
     Port *port;
     Eterm res;
-    char *str;
+    const char *str;
     int err_type, err_num;
 
     port = open_port(BIF_P, BIF_ARG_1, BIF_ARG_2, &err_type, &err_num);
@@ -81,8 +81,9 @@ BIF_RETTYPE erts_internal_open_port_2(BIF_ALIST_2)
     if (port->drv_ptr->flags & ERL_DRV_FLAG_USE_INIT_ACK) {
 
         /* Copied from erl_port_task.c */
-        port->async_open_port = erts_alloc(ERTS_ALC_T_PRTSD,
-                                           sizeof(*port->async_open_port));
+        port->async_open_port = (_erl_drv_port::AsyncOpenPort *)
+                erts_alloc(ERTS_ALC_T_PRTSD,
+                           sizeof(_erl_drv_port::AsyncOpenPort));
         erts_make_ref_in_array(port->async_open_port->ref);
         port->async_open_port->to = BIF_P->common.id;
 
@@ -586,7 +587,7 @@ BIF_RETTYPE port_set_data_2(BIF_ALIST_2)
 	Eterm *hp;
 
 	hsize = size_object(BIF_ARG_2);
-	pdhp = erts_alloc(ERTS_ALC_T_PORT_DATA_HEAP,
+        pdhp = (ErtsPortDataHeap *)erts_alloc(ERTS_ALC_T_PORT_DATA_HEAP,
 			  sizeof(ErtsPortDataHeap) + (hsize-1)*sizeof(Eterm));
 	hp = &pdhp->heap[0];
 	pdhp->off_heap.first = NULL;
@@ -727,14 +728,14 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 		    opts.envir = (char *) bytes;
 		} else if (option == am_args) {
 		    char **av;
-		    char **oav = opts.argv;
+                    char **oav = opts.argv;
 		    if ((av = convert_args(*tp)) == NULL) {
 			goto badarg;
 		    }
 		    opts.argv = av;
 		    if (oav) {
 			opts.argv[0] = oav[0];
-			oav[0] = erts_default_arg0;
+                        oav[0] = erts_default_arg0;
 			free_args(oav);
 		    }
 
@@ -745,7 +746,7 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 			goto badarg;
 		    }
 		    if (opts.argv == NULL) {
-			opts.argv = erts_alloc(ERTS_ALC_T_TMP, 
+                        opts.argv = (char **)erts_alloc(ERTS_ALC_T_TMP,
 					       2 * sizeof(char **));
 			opts.argv[0] = a0;
 			opts.argv[1] = NULL;
@@ -881,7 +882,7 @@ open_port(Process* p, Eterm name, Eterm settings, int *err_typep, int *err_nump)
 	    opts.ofd = unsigned_val(tp[2]);
 
 	    /* Syntesize name from input and output descriptor. */
-	    name_buf = erts_alloc(ERTS_ALC_T_TMP,
+            name_buf = (char *)erts_alloc(ERTS_ALC_T_TMP,
 				  2*sizeof(struct Sint_buf) + 2); 
 	    p = Sint_to_buf(opts.ifd, &sbuf);
 	    n = sys_strlen(p);
@@ -993,7 +994,7 @@ static char **convert_args(Eterm l)
     if (n < 0)
         return NULL;
     /* We require at least one element in argv[0] + NULL at end */
-    pp = erts_alloc(ERTS_ALC_T_TMP, (n + 2) * sizeof(char **));
+    pp = (char **)erts_alloc(ERTS_ALC_T_TMP, (n + 2) * sizeof(char **));
     pp[i++] = erts_default_arg0;
     while (is_list(l)) {
 	str = CAR(list_val(l));
@@ -1182,28 +1183,28 @@ static Eterm http_bld_uri(struct packet_callback_args* pca,
 			  Eterm** hpp, Uint* szp, const PacketHttpURI* uri)
 {
     Eterm s1, s2;
-    if (uri->type == URI_STAR) {
+    if (uri->type == PacketHttpURI::URI_STAR) {
         return am_Times; /* '*' */
     }
 
     s1 = http_bld_string(pca, hpp, szp, uri->s1_ptr, uri->s1_len);
 
     switch (uri->type) {
-    case URI_ABS_PATH:
+    case PacketHttpURI::URI_ABS_PATH:
         return erts_bld_tuple(hpp, szp, 2, am_abs_path, s1);
-    case URI_HTTP:
-    case URI_HTTPS:
+    case PacketHttpURI::URI_HTTP:
+    case PacketHttpURI::URI_HTTPS:
         s2 = http_bld_string(pca, hpp, szp, uri->s2_ptr, uri->s2_len);
         return erts_bld_tuple
             (hpp, szp, 5, am_absoluteURI, 
-             ((uri->type==URI_HTTP) ? am_http : am_https),
+             ((uri->type==PacketHttpURI::URI_HTTP) ? am_http : am_https),
              s1, 
              ((uri->port==0) ? am_undefined : make_small(uri->port)),
              s2);
         
-    case URI_STRING:
+    case PacketHttpURI::URI_STRING:
         return s1;
-    case URI_SCHEME:
+    case PacketHttpURI::URI_SCHEME:
         s2 = http_bld_string(pca, hpp, szp, uri->s2_ptr, uri->s2_len);
         return erts_bld_tuple(hpp, szp, 3, am_scheme, s1, s2);
                               
@@ -1411,7 +1412,9 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
                     trunc_len = val;
                     goto next_option;
                 case am_line_delimiter:
-                    if (type == TCP_PB_LINE_LF && val >= 0 && val <= 255) {
+                    if (type == TCP_PB_LINE_LF
+                            /* && val >= 0 always true */
+                            && val <= 255) {
                         delimiter = (char)val;
                         goto next_option;
                     }
@@ -1428,7 +1431,7 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
     pca.bin_sz = binary_size(BIF_ARG_2);
     ERTS_GET_BINARY_BYTES(BIF_ARG_2, bin_ptr, pca.bin_bitoffs, bin_bitsz);  
     if (pca.bin_bitoffs != 0) {
-        pca.aligned_ptr = erts_alloc(ERTS_ALC_T_TMP, pca.bin_sz);
+        pca.aligned_ptr = (byte *)erts_alloc(ERTS_ALC_T_TMP, pca.bin_sz);
         erts_copy_bits(bin_ptr, pca.bin_bitoffs, 1, pca.aligned_ptr, 0, 1, pca.bin_sz*8);
     }
     else {

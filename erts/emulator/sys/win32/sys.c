@@ -38,7 +38,7 @@
 void erts_sys_init_float(void);
 
 void erl_start(int, char**);
-void erts_exit(int n, char*, ...);
+void erts_exit(int n, const char*, ...);
 void erl_error(char*, va_list);
 void erl_crash_dump(char*, int, char*, ...);
 

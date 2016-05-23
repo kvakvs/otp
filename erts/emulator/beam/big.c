@@ -426,9 +426,9 @@
 /* Forward declaration of lookup tables (See below in this file) used in list to
  * integer conversions for different bases. Also used in bignum printing.
  */
-static const byte digits_per_sint_lookup[36-1];
-static const byte digits_per_small_lookup[36-1];
-static const Sint largest_power_of_base_lookup[36-1];
+extern const byte digits_per_sint_lookup[36-1];
+extern const byte digits_per_small_lookup[36-1];
+extern const Sint largest_power_of_base_lookup[36-1];
 
 static ERTS_INLINE byte get_digits_per_signed_int(Uint base) {
     return digits_per_sint_lookup[base-2];
@@ -2600,7 +2600,7 @@ static ERTS_INLINE double lookup_log2(Uint base) {
  * How many digits can fit into a signed int (Sint) for given base, we take
  * one digit away just to be on the safer side (some corner cases).
  */
-static const byte digits_per_sint_lookup[36-1] = {
+const byte digits_per_sint_lookup[36-1] = {
 #if (SIZEOF_VOID_P == 4)
     /* Wo.Alpha formula: Table [Trunc[31 / log[2,n]]-1, {n, 2, 36}] */
     30, 18, 14, 12, 10, 10, 9, 8, 8, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5,
@@ -2617,7 +2617,7 @@ static const byte digits_per_sint_lookup[36-1] = {
 /*
  * How many digits can fit into Erlang Small (SMALL_BITS-1) counting sign bit
  */
-static const byte digits_per_small_lookup[36-1] = {
+const byte digits_per_small_lookup[36-1] = {
 #if (SIZEOF_VOID_P == 4)
     /* Wo.Alpha formula: Table [Trunc[27 / log[2,n]]-1, {n, 2, 36}] */
     27, 17, 13, 11, 10, 9, 9, 8, 8, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5,
@@ -2636,7 +2636,7 @@ static const byte digits_per_small_lookup[36-1] = {
  * Calculated by base 2..36 to the power of corresponding element from
  * digits_per_sint_lookup.
  */
-static const Sint largest_power_of_base_lookup[36-1] = {
+const Sint largest_power_of_base_lookup[36-1] = {
 #if (SIZEOF_VOID_P == 4)
     /* Wo.Alpha formula: Table [Pow[n, Trunc[31 / log[2,n]]-1], {n, 2, 36}] */
     1073741824, 387420489, 268435456, 244140625, 60466176, 282475249, 134217728,
@@ -2857,7 +2857,7 @@ LTI_result_t erts_list_to_integer(Process *BIF_P, Eterm orig_list,
      error:
          *tail_out = tail;
          *integer_out = make_small(0);
-         return error_res;
+         return (LTI_result_t)error_res;
      }
      if (is_not_list(lst))
        goto error;

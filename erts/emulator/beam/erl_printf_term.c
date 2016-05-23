@@ -369,7 +369,7 @@ print_term(fmtfn_t fn, void* arg, Eterm obj, long *dcount) {
 	    if (sz <= 64)
 		buf = &def_buf[0];
 	    else
-		buf = erts_alloc(ERTS_ALC_T_TMP, sz);
+                buf = (char *)erts_alloc(ERTS_ALC_T_TMP, sz);
 	    big_str = erts_big_to_string(wobj, buf, sz);
 	    print_res = erts_printf_string(fn, arg, big_str);
 	    if (buf != &def_buf[0])

@@ -478,7 +478,7 @@ int erts_do_net_exits(DistEntry *dep, Eterm reason)
 	    if (no_dist_port <= sizeof(def_buf)/sizeof(def_buf[0]))
 		dist_port = &def_buf[0];
 	    else
-		dist_port = erts_alloc(ERTS_ALC_T_TMP,
+                dist_port = (Eterm *)erts_alloc(ERTS_ALC_T_TMP,
 				       sizeof(Eterm)*no_dist_port);
 	    for (tdep = erts_hidden_dist_entries; tdep; tdep = tdep->next) {
 		ASSERT(is_internal_port(tdep->cid));
@@ -714,7 +714,7 @@ static void clear_dist_entry(DistEntry *dep)
 
 void erts_dsend_context_dtor(Binary* ctx_bin)
 {
-    ErtsSendContext* ctx = ERTS_MAGIC_BIN_DATA(ctx_bin);
+    ErtsSendContext *ctx = (ErtsSendContext *)ERTS_MAGIC_BIN_DATA(ctx_bin);
     switch (ctx->dss.phase) {
     case ERTS_DSIG_SEND_PHASE_MSG_SIZE:
 	DESTROY_SAVED_WSTACK(&ctx->dss.u.sc.wstack);
@@ -739,7 +739,7 @@ Eterm erts_dsend_export_trap_context(Process* p, ErtsSendContext* ctx)
     };
     Binary* ctx_bin = erts_create_magic_binary(sizeof(struct exported_ctx),
 					       erts_dsend_context_dtor);
-    struct exported_ctx* dst = ERTS_MAGIC_BIN_DATA(ctx_bin);
+    struct exported_ctx *dst = (struct exported_ctx *)ERTS_MAGIC_BIN_DATA(ctx_bin);
     Eterm* hp = HAlloc(p, PROC_BIN_SIZE);
 
     sys_memcpy(&dst->ctx, ctx, sizeof(ErtsSendContext));
@@ -1206,7 +1206,7 @@ int erts_net_message(Port *prt,
     }
 
     if (ctl_len > DIST_CTL_DEFAULT_SIZE) {
-	ctl = erts_alloc(ERTS_ALC_T_DCTRL_BUF, ctl_len * sizeof(Eterm));
+        ctl = (Eterm *)erts_alloc(ERTS_ALC_T_DCTRL_BUF, ctl_len * sizeof(Eterm));
     }
     hp = ctl;
 
@@ -1448,7 +1448,7 @@ int erts_net_message(Port *prt,
 		ErlHeapFragment *heap_frag;
 		ErlOffHeap *ohp;
 		ASSERT(xsize);
-		heap_frag = erts_dist_ext_trailer(ede_copy);
+                heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(ede_copy);
 		ERTS_INIT_HEAP_FRAG(heap_frag, token_size, token_size);
 		hp = heap_frag->mem;
 		ohp = &heap_frag->off_heap;
@@ -1497,7 +1497,7 @@ int erts_net_message(Port *prt,
 		ErlHeapFragment *heap_frag;
 		ErlOffHeap *ohp;
 		ASSERT(xsize);
-		heap_frag = erts_dist_ext_trailer(ede_copy);
+                heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(ede_copy);
 		ERTS_INIT_HEAP_FRAG(heap_frag, token_size, token_size);
 		hp = heap_frag->mem;
 		ohp = &heap_frag->off_heap;
@@ -2471,7 +2471,7 @@ typedef struct {
 
 static void doit_print_nodelink_info(ErtsLink *lnk, void *vpcontext)
 {
-    PrintNodeLinkContext *pcontext = vpcontext;
+    PrintNodeLinkContext *pcontext = (PrintNodeLinkContext *)vpcontext;
 
     if (is_internal_pid(lnk->pid) && erts_proc_lookup(lnk->pid))
 	erts_print(pcontext->ptd.to, pcontext->ptd.arg,
@@ -2969,7 +2969,7 @@ BIF_RETTYPE nodes_1(BIF_ALIST_1)
     int not_connected = 0;
     int visible = 0;
     int hidden = 0;
-    int this = 0;
+    int this_ = 0;
     DeclareTmpHeap(buf,2,BIF_P); /* For one cons-cell */
     DistEntry *dep;
     Eterm arg_list = BIF_ARG_1;
@@ -2986,8 +2986,8 @@ BIF_RETTYPE nodes_1(BIF_ALIST_1)
       switch(CAR(list_val(arg_list))) {
       case am_visible:   visible = 1;                                 break;
       case am_hidden:    hidden = 1;                                  break;
-      case am_known:     visible = hidden = not_connected = this = 1; break;
-      case am_this:      this = 1;                                    break;
+      case am_known:     visible = hidden = not_connected = this_ = 1; break;
+      case am_this:      this_ = 1;                                    break;
       case am_connected: visible = hidden = 1;                        break;
       default:           goto error;                                  break;
       }
@@ -3011,7 +3011,7 @@ BIF_RETTYPE nodes_1(BIF_ALIST_1)
       length += erts_no_of_hidden_dist_entries;
     if(visible)
       length += erts_no_of_visible_dist_entries;
-    if(this)
+    if(this_)
       length++;
 
     result = NIL;
@@ -3043,7 +3043,7 @@ BIF_RETTYPE nodes_1(BIF_ALIST_1)
 	result = CONS(hp, dep->sysname, result);
 	hp += 2;
       }
-    if(this) {
+    if(this_) {
 	result = CONS(hp, erts_this_dist_entry->sysname, result);
 	hp += 2;
     }
@@ -3461,7 +3461,7 @@ insert_nodes_monitor(Process *c_p, Uint32 opts)
     }
     else {
     alloc_new:
-	nmp = erts_alloc(ERTS_ALC_T_NODES_MON, sizeof(ErtsNodesMonitor));
+        nmp = (ErtsNodesMonitor *)erts_alloc(ERTS_ALC_T_NODES_MON, sizeof(ErtsNodesMonitor));
 	nmp->proc = c_p;
 	nmp->opts = opts;
 	nmp->no = no;

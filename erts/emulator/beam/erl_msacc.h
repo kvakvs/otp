@@ -63,7 +63,7 @@
 #define ERTS_MSACC_STATE_COUNT 7
 
 #if ERTS_MSACC_STATE_STRINGS && ERTS_ENABLE_MSACC
-static char *erts_msacc_states[] = {
+static const char *erts_msacc_states[] = {
     "aux",
     "check_io",
     "emulator",
@@ -163,7 +163,7 @@ extern int erts_msacc_enabled;
 
 void erts_msacc_early_init(void);
 void erts_msacc_init(void);
-void erts_msacc_init_thread(char *type, int id, int liberty);
+void erts_msacc_init_thread(const char *type, int id, int liberty);
 
 /* The defines below are used to instrument the vm code
  * with different state changes. There are two variants
@@ -231,7 +231,7 @@ void erts_msacc_init_thread(char *type, int id, int liberty);
     ERTS_DECLARE_DUMMY(Uint __erts_msacc_state) = ERTS_MSACC_STATE_OTHER;
 #define ERTS_MSACC_IS_ENABLED_CACHED() ERTS_UNLIKELY(__erts_msacc_cache != NULL)
 #define ERTS_MSACC_UPDATE_CACHE()                                       \
-    __erts_msacc_cache = erts_msacc_enabled ? ERTS_MSACC_TSD_GET() : NULL
+    __erts_msacc_cache = erts_msacc_enabled ? (ErtsMsAcc*)ERTS_MSACC_TSD_GET() : NULL
 
 
 /* The defines below implicitly declare and load a new cache */

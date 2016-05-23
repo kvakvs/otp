@@ -181,7 +181,7 @@ void erts_ptab_init_table(ErtsPTab *ptab,
 			  ErtsPTabElementCommon *invalid_element,
 			  int size,
 			  UWord element_size,
-			  char *name,
+                          const char *name,
 			  int legacy,
 			  int atomic_refc);
 int erts_ptab_new_element(ErtsPTab *ptab,

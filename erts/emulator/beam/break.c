@@ -154,7 +154,7 @@ typedef struct {
 
 static void doit_print_link(ErtsLink *lnk, void *vpcontext)
 {
-    PrintMonitorContext *pcontext = vpcontext;
+    PrintMonitorContext *pcontext = (PrintMonitorContext *)vpcontext;
     int to = pcontext->to;
     void *to_arg = pcontext->to_arg;
 
@@ -169,10 +169,10 @@ static void doit_print_link(ErtsLink *lnk, void *vpcontext)
 
 static void doit_print_monitor(ErtsMonitor *mon, void *vpcontext)
 {
-    PrintMonitorContext *pcontext = vpcontext;
+    PrintMonitorContext *pcontext = (PrintMonitorContext *)vpcontext;
     int to = pcontext->to;
     void *to_arg = pcontext->to_arg;
-    char *prefix = ", ";
+    const char *prefix = ", ";
  
     if (pcontext->is_first) {
 	pcontext->is_first = 0;

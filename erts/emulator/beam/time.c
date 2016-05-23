@@ -526,7 +526,8 @@ erts_create_timer_wheel(ErtsSchedulerData *esdp)
     ErtsMonotonicTime mtime;
     int i;
     ErtsTimerWheel *tiw;
-    tiw = erts_alloc_permanent_cache_aligned(ERTS_ALC_T_TIMER_WHEEL,
+    tiw = (ErtsTimerWheel *)
+            erts_alloc_permanent_cache_aligned(ERTS_ALC_T_TIMER_WHEEL,
 					     sizeof(ErtsTimerWheel));
     for(i = 0; i < ERTS_TIW_SIZE; i++)
 	tiw->w[i] = NULL;

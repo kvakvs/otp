@@ -217,7 +217,7 @@ erts_port_task_alloc_p2p_sig_data(void)
 ErtsProc2PortSigData *
 erts_port_task_alloc_p2p_sig_data_extra(size_t extra, void **extra_ptr)
 {
-    ErtsPortTask *ptp = erts_alloc(ERTS_ALC_T_PORT_TASK,
+    ErtsPortTask *ptp = (ErtsPortTask *)erts_alloc(ERTS_ALC_T_PORT_TASK,
                                    sizeof(ErtsPortTask) + extra);
 
     *extra_ptr = ptp+1;
@@ -364,7 +364,7 @@ busy_wait_move_to_busy_queue(Port *pp, ErtsPortTask *ptp)
 	if (tabp->pre_alloc_busy_caller.caller == am_undefined)
 	    bcp = &tabp->pre_alloc_busy_caller;
 	else
-	    bcp = erts_alloc(ERTS_ALC_T_BUSY_CALLER,
+            bcp = (ErtsPortTaskBusyCaller *)erts_alloc(ERTS_ALC_T_BUSY_CALLER,
 			     sizeof(ErtsPortTaskBusyCaller));
 	bcp->caller = caller;
 	bcp->count = 1;
@@ -1027,14 +1027,14 @@ prepare_exec(Port *pp, ErtsPortTask **execqp, int *processing_busy_q_p)
     ERTS_PT_DBG_CHK_TASK_QS(pp, *execqp, *processing_busy_q_p);
 
     while (1) {
-	erts_aint32_t new, exp;
+        erts_aint32_t new_, exp;
 
-	new = exp = act;
+        new_ = exp = act;
 
-	new &= ~ERTS_PTS_FLG_IN_RUNQ;
-	new |= ERTS_PTS_FLG_EXEC;
+        new_ &= ~ERTS_PTS_FLG_IN_RUNQ;
+        new_ |= ERTS_PTS_FLG_EXEC;
 
-	act = erts_smp_atomic32_cmpxchg_nob(&pp->sched.flags, new, exp);
+        act = erts_smp_atomic32_cmpxchg_nob(&pp->sched.flags, new_, exp);
 
 	ASSERT(act & ERTS_PTS_FLG_IN_RUNQ);
 
@@ -1070,15 +1070,15 @@ finalize_exec(Port *pp, ErtsPortTask **execq, int processing_busy_q)
 	erts_port_task_sched_lock(&pp->sched);
 
     while (1) {
-	erts_aint32_t new, exp;
+        erts_aint32_t new_, exp;
 
-	new = exp = act;
+        new_ = exp = act;
 
-	new &= ~ERTS_PTS_FLG_EXEC;
+        new_ &= ~ERTS_PTS_FLG_EXEC;
 	if (act & ERTS_PTS_FLG_HAVE_TASKS)
-	    new |= ERTS_PTS_FLG_IN_RUNQ;
+            new_ |= ERTS_PTS_FLG_IN_RUNQ;
 
-	act = erts_smp_atomic32_cmpxchg_relb(&pp->sched.flags, new, exp);
+        act = erts_smp_atomic32_cmpxchg_relb(&pp->sched.flags, new_, exp);
 
 	ERTS_LC_ASSERT(!(act & ERTS_PTS_FLG_IN_RUNQ));
 	ERTS_LC_ASSERT(!(act & ERTS_PTS_FLG_EXEC_IMM));
@@ -1507,7 +1507,8 @@ erts_port_task_schedule(Eterm id,
 	if (!(ptp->u.alive.flags & ERTS_PT_FLG_NOSUSPEND))
 	    set_tmp_handle(ptp, pthp);
 	else {
-	    ns_pthlp = erts_alloc(ERTS_ALC_T_PT_HNDL_LIST,
+            ns_pthlp = (ErtsPortTaskHandleList *)
+                    erts_alloc(ERTS_ALC_T_PT_HNDL_LIST,
 				  sizeof(ErtsPortTaskHandleList));
 	    set_handle(ptp, &ns_pthlp->handle);
 	}
@@ -1534,18 +1535,18 @@ erts_port_task_schedule(Eterm id,
 	erts_port_task_sched_lock(&pp->sched);
 
     while (1) {
-	erts_aint32_t new, exp;
+        erts_aint32_t new_, exp;
 
 	if ((act & add_flags) == add_flags
 	    && (act & (ERTS_PTS_FLG_IN_RUNQ|ERTS_PTS_FLG_EXEC)))
 	    goto done; /* Done */
 
-	new = exp = act;
-	new |= add_flags;
+        new_ = exp = act;
+        new_ |= add_flags;
 	if (!(act & (ERTS_PTS_FLG_IN_RUNQ|ERTS_PTS_FLG_EXEC)))
-	    new |= ERTS_PTS_FLG_IN_RUNQ;
+            new_ |= ERTS_PTS_FLG_IN_RUNQ;
 
-	act = erts_smp_atomic32_cmpxchg_relb(&pp->sched.flags, new, exp);
+        act = erts_smp_atomic32_cmpxchg_relb(&pp->sched.flags, new_, exp);
 
 	if (exp == act) {
 	    if (!(act & (ERTS_PTS_FLG_IN_RUNQ|ERTS_PTS_FLG_EXEC)))

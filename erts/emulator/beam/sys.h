@@ -587,7 +587,7 @@ static unsigned long zero_value = 0, one_value = 1;
 #  endif /* !__WIN32__ */
 #endif /* WANT_NONBLOCKING */
 
-__decl_noreturn void __noreturn erts_exit(int n, char*, ...);
+__decl_noreturn void __noreturn erts_exit(int n, const char*, ...);
 
 /* Some special erts_exit() codes: */
 #define ERTS_INTR_EXIT	-1		/* called from signal handler */
@@ -623,7 +623,7 @@ typedef struct {
     size_t size;
 } erts_print_sn_buf;
 
-int erts_print(int to, void *arg, char *format, ...);	/* in utils.c */
+int erts_print(int to, void *arg, const char *format, ...);	/* in utils.c */
 int erts_putc(int to, void *arg, char);			/* in utils.c */
 
 /* logger stuff is declared here instead of in global.h, so sys files
@@ -635,8 +635,8 @@ int erts_send_warning_to_logger(Eterm, erts_dsprintf_buf_t *);
 int erts_send_error_to_logger(Eterm, erts_dsprintf_buf_t *);
 int erts_send_error_term_to_logger(Eterm, erts_dsprintf_buf_t *, Eterm);
 int erts_send_info_to_logger_str(Eterm, char *); 
-int erts_send_warning_to_logger_str(Eterm, char *);
-int erts_send_error_to_logger_str(Eterm, char *);
+int erts_send_warning_to_logger_str(Eterm, const char *);
+int erts_send_error_to_logger_str(Eterm, const char *);
 int erts_send_info_to_logger_nogl(erts_dsprintf_buf_t *);
 int erts_send_warning_to_logger_nogl(erts_dsprintf_buf_t *);
 int erts_send_error_to_logger_nogl(erts_dsprintf_buf_t *);
@@ -849,7 +849,7 @@ int erts_sys_getenv(char *key, char *value, size_t *size);
 /* Simple variant used from drivers, raw eightbit interface */
 int erts_sys_getenv_raw(char *key, char *value, size_t *size);
 /* erts_sys_getenv__() is only allowed to be used in early init phase */
-int erts_sys_getenv__(char *key, char *value, size_t *size);
+int erts_sys_getenv__(const char *key, char *value, size_t *size);
 /* erst_sys_unsetenv() returns 0 on success and a value != 0 on failure. */
 int erts_sys_unsetenv(char *key);
 

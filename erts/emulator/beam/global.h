@@ -457,7 +457,7 @@ do {							\
 do {\
     if ((s).start == ESTK_DEF_STACK(s)) {\
 	UWord _wsz = ESTACK_COUNT(s);\
-	(dst)->start = erts_alloc((s).alloc_type,\
+        (dst)->start = (Eterm *)erts_alloc((s).alloc_type,\
 				  DEF_ESTACK_SIZE * sizeof(Eterm));\
 	memcpy((dst)->start, (s).start,_wsz*sizeof(Eterm));\
 	(dst)->sp = (dst)->start + _wsz;\
@@ -625,7 +625,7 @@ do {							\
 do {\
     if (s.wstart == WSTK_DEF_STACK(s)) {\
 	UWord _wsz = WSTACK_COUNT(s);\
-	(dst)->wstart = erts_alloc(s.alloc_type,\
+        (dst)->wstart = (UWord *)erts_alloc(s.alloc_type,\
 				  DEF_WSTACK_SIZE * sizeof(UWord));\
 	memcpy((dst)->wstart, s.wstart,_wsz*sizeof(UWord));\
 	(dst)->wsp = (dst)->wstart + _wsz;\
@@ -823,7 +823,7 @@ do {							\
 do {\
     if (s.pstart == (byte*)PSTK_DEF_STACK(s)) {\
 	UWord _pbytes = PSTACK_COUNT(s) * sizeof(PSTACK_TYPE);\
-	(dst)->pstart = erts_alloc(s.alloc_type,\
+        (dst)->pstart = (byte *)erts_alloc(s.alloc_type,\
 				   sizeof(PSTK_DEF_STACK(s)));\
 	sys_memcpy((dst)->pstart, s.pstart, _pbytes);\
 	(dst)->psp = (dst)->pstart + _pbytes - sizeof(PSTACK_TYPE);\
@@ -1059,7 +1059,7 @@ double erts_get_positive_zero_float(void);
 /* config.c */
 
 __decl_noreturn void __noreturn erts_exit(int n, char*, ...);
-__decl_noreturn void __noreturn erts_flush_async_exit(int n, char*, ...);
+__decl_noreturn void __noreturn erts_flush_async_exit(int n, const char*, ...);
 void erl_error(char*, va_list);
 
 /* This controls whether sharing-preserving copy is used by Erlang */

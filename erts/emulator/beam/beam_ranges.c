@@ -113,7 +113,7 @@ erts_start_staging_ranges(int num_new)
 
     need = r[dst].allocated = r[src].n + num_new;
     erts_smp_atomic_add_nob(&mem_used, need);
-    write_ptr = erts_alloc(ERTS_ALC_T_MODULE_REFS,
+    write_ptr = (Range *)erts_alloc(ERTS_ALC_T_MODULE_REFS,
 			   need * sizeof(Range));
     r[dst].modules = write_ptr;
 }
@@ -183,7 +183,7 @@ erts_update_ranges(BeamInstr* code, Uint size)
 	if (r[dst].modules == NULL) {
 	    Sint need = 128;
 	    erts_smp_atomic_add_nob(&mem_used, need);
-	    r[dst].modules = erts_alloc(ERTS_ALC_T_MODULE_REFS,
+            r[dst].modules = (Range *)erts_alloc(ERTS_ALC_T_MODULE_REFS,
 					need * sizeof(Range));
 	    r[dst].allocated = need;
 	    write_ptr = r[dst].modules;

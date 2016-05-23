@@ -261,7 +261,7 @@ erts_aoffalc_start(AOFFAllctr_t *alc,
     allctr->min_block_size = (aoffinit->flavor == AOFF_BF ?
 			      sizeof(AOFF_RBTreeList_t):sizeof(AOFF_RBTree_t));
 
-    allctr->vsn_str			= ERTS_ALC_AOFF_ALLOC_VSN_STR;
+    allctr->vsn_str			= (char*)ERTS_ALC_AOFF_ALLOC_VSN_STR;
 
 
     /* Callback functions */
@@ -965,7 +965,7 @@ static struct {
 #endif
 } am;
 
-static void ERTS_INLINE atom_init(Eterm *atom, char *name)
+static void ERTS_INLINE atom_init(Eterm *atom, const char *name)
 {
     *atom = am_atom_put(name, strlen(name));
 }

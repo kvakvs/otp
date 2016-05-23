@@ -182,7 +182,7 @@ endif
 # erts (public) library
 #
 
-ERTS_LIB_SRCS =	common/erl_memory_trace_parser.c
+ERTS_LIB_SRCS =	common/erl_memory_trace_parser.cpp
 
 ERTS_LIB_DIR=../lib/$(TARGET)
 CREATE_DIRS += $(ERTS_LIB_DIR)
@@ -199,10 +199,10 @@ CREATE_DIRS +=	$(MD_OBJ_DIR) \
 		$(MT_OBJ_DIR) \
 		$(MTd_OBJ_DIR)
 
-ERTS_MD_LIB_OBJS=$(addprefix $(MD_OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.c=.o)))
-ERTS_MDd_LIB_OBJS=$(addprefix $(MDd_OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.c=.o)))
-ERTS_MT_LIB_OBJS=$(addprefix $(MT_OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.c=.o)))
-ERTS_MTd_LIB_OBJS=$(addprefix $(MTd_OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.c=.o)))
+ERTS_MD_LIB_OBJS=$(addprefix $(MD_OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.cpp=.o)))
+ERTS_MDd_LIB_OBJS=$(addprefix $(MDd_OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.cpp=.o)))
+ERTS_MT_LIB_OBJS=$(addprefix $(MT_OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.cpp=.o)))
+ERTS_MTd_LIB_OBJS=$(addprefix $(MTd_OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.cpp=.o)))
 
 else # --- Not windows ---
 
@@ -210,9 +210,9 @@ else # --- Not windows ---
 ifneq ($(strip $(ETHR_LIB_NAME)),)
 r_OBJ_DIR = $(OBJ_DIR)/r
 CREATE_DIRS += $(r_OBJ_DIR)
-ERTS_r_LIB_OBJS=$(addprefix $(r_OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.c=.o)))
+ERTS_r_LIB_OBJS=$(addprefix $(r_OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.cpp=.o)))
 endif
-ERTS_LIB_OBJS=$(addprefix $(OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.c=.o)))
+ERTS_LIB_OBJS=$(addprefix $(OBJ_DIR)/,$(notdir $(ERTS_LIB_SRCS:.cpp=.o)))
 
 endif
 
@@ -257,14 +257,14 @@ ERTS_INTERNAL_LIB_NAME=erts_internal$(TYPE_SUFFIX)
 ifeq ($(USING_VC),yes)
 ifeq ($(TYPE),debug)
 ERTS_INTERNAL_LIB_OBJS = \
-	$(addprefix $(MTd_OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.c=.o)))
+	$(addprefix $(MTd_OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.cpp=.o)))
 else
 ERTS_INTERNAL_LIB_OBJS = \
-	$(addprefix $(MT_OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.c=.o)))
+	$(addprefix $(MT_OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.cpp=.o)))
 endif
 else
 ERTS_INTERNAL_LIB_OBJS = \
-	$(addprefix $(OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.c=.o)))
+	$(addprefix $(OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.cpp=.o)))
 endif
 
 ERTS_INTERNAL_LIB=$(ERTS_LIB_INTERNAL_DIR)/$(LIB_PREFIX)$(ERTS_INTERNAL_LIB_NAME)$(LIB_SUFFIX)
@@ -277,14 +277,14 @@ ERTS_INTERNAL_r_LIB_NAME=erts_internal_r$(TYPE_SUFFIX)
 ifeq ($(USING_VC),yes)
 ifeq ($(TYPE),debug)
 ERTS_INTERNAL_r_LIB_OBJS = \
-	$(addprefix $(MDd_OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.c=.o)))
+	$(addprefix $(MDd_OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.cpp=.o)))
 else
 ERTS_INTERNAL_r_LIB_OBJS = \
-	$(addprefix $(MD_OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.c=.o)))
+	$(addprefix $(MD_OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.cpp=.o)))
 endif
 else
 ERTS_INTERNAL_r_LIB_OBJS = \
-	$(addprefix $(r_OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.c=.o)))
+	$(addprefix $(r_OBJ_DIR)/,$(notdir $(ERTS_INTERNAL_LIB_SRCS:.cpp=.o)))
 endif
 
 ERTS_INTERNAL_r_LIB=$(ERTS_LIB_INTERNAL_DIR)/$(LIB_PREFIX)$(ERTS_INTERNAL_r_LIB_NAME)$(LIB_SUFFIX)
@@ -298,29 +298,29 @@ endif
 #
 ETHR_THR_LIB_BASE_DIR=@ETHR_THR_LIB_BASE_DIR@
 ifneq ($(strip $(ETHR_LIB_NAME)),)
-ETHREAD_LIB_SRC=common/ethr_aux.c \
-		common/ethr_atomics.c \
-		common/ethr_mutex.c \
-		common/ethr_cbf.c \
-		$(ETHR_THR_LIB_BASE_DIR)/ethread.c \
-		$(ETHR_THR_LIB_BASE_DIR)/ethr_event.c
+ETHREAD_LIB_SRC=common/ethr_aux.cpp \
+		common/ethr_atomics.cpp \
+		common/ethr_mutex.cpp \
+		common/ethr_cbf.cpp \
+		$(ETHR_THR_LIB_BASE_DIR)/ethread.cpp \
+		$(ETHR_THR_LIB_BASE_DIR)/ethr_event.cpp
 ETHR_X86_SSE2_ASM=@ETHR_X86_SSE2_ASM@
 ifeq ($(ETHR_X86_SSE2_ASM),yes)
-ETHREAD_LIB_SRC += pthread/ethr_x86_sse2_asm.c
+ETHREAD_LIB_SRC += pthread/ethr_x86_sse2_asm.cpp
 endif
 ETHREAD_LIB_NAME=ethread$(TYPE_SUFFIX)
 
 ifeq ($(USING_VC),yes)
 ifeq ($(TYPE),debug)
 ETHREAD_LIB_OBJS = \
-	$(addprefix $(MDd_OBJ_DIR)/,$(notdir $(ETHREAD_LIB_SRC:.c=.o)))
+	$(addprefix $(MDd_OBJ_DIR)/,$(notdir $(ETHREAD_LIB_SRC:.cpp=.o)))
 else
 ETHREAD_LIB_OBJS = \
-	$(addprefix $(MD_OBJ_DIR)/,$(notdir $(ETHREAD_LIB_SRC:.c=.o)))
+	$(addprefix $(MD_OBJ_DIR)/,$(notdir $(ETHREAD_LIB_SRC:.cpp=.o)))
 endif
 else
 ETHREAD_LIB_OBJS = \
-	$(addprefix $(r_OBJ_DIR)/,$(notdir $(ETHREAD_LIB_SRC:.c=.o)))
+	$(addprefix $(r_OBJ_DIR)/,$(notdir $(ETHREAD_LIB_SRC:.cpp=.o)))
 endif
 
 ETHREAD_LIB=$(ERTS_LIB_INTERNAL_DIR)/$(LIB_PREFIX)$(ETHREAD_LIB_NAME)$(LIB_SUFFIX)
@@ -413,45 +413,45 @@ $(ERTS_LIB): $(ERTS_LIB_OBJS)
 # Object files
 #
 
-$(r_OBJ_DIR)/ethr_x86_sse2_asm.o: pthread/ethr_x86_sse2_asm.c
+$(r_OBJ_DIR)/ethr_x86_sse2_asm.o: pthread/ethr_x86_sse2_asm.cpp
 	$(V_CC) -msse2 $(THR_DEFS) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(r_OBJ_DIR)/%.o: common/%.c
+$(r_OBJ_DIR)/%.o: common/%.cpp
 	$(V_CC) $(THR_DEFS) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(r_OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.c
+$(r_OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.cpp
 	$(V_CC) $(THR_DEFS) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(OBJ_DIR)/%.o: common/%.c
+$(OBJ_DIR)/%.o: common/%.cpp
 	$(V_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.c
+$(OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.cpp
 	$(V_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Win32 specific
 
-$(MD_OBJ_DIR)/%.o: common/%.c
+$(MD_OBJ_DIR)/%.o: common/%.cpp
 	$(V_CC) $(THR_DEFS) $(CFLAGS) -MD $(INCLUDES) -c $< -o $@
 
-$(MD_OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.c
+$(MD_OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.cpp
 	$(V_CC) $(THR_DEFS) $(CFLAGS) -MD $(INCLUDES) -c $< -o $@
 
-$(MDd_OBJ_DIR)/%.o: common/%.c
+$(MDd_OBJ_DIR)/%.o: common/%.cpp
 	$(V_CC) $(THR_DEFS) $(CFLAGS) -MDd $(INCLUDES) -c $< -o $@
 
-$(MDd_OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.c
+$(MDd_OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.cpp
 	$(V_CC) $(THR_DEFS) $(CFLAGS) -MDd $(INCLUDES) -c $< -o $@
 
-$(MT_OBJ_DIR)/%.o: common/%.c
+$(MT_OBJ_DIR)/%.o: common/%.cpp
 	$(V_CC) $(THR_DEFS) $(CFLAGS) -MT $(INCLUDES) -c $< -o $@
 
-$(MT_OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.c
+$(MT_OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.cpp
 	$(V_CC) $(THR_DEFS) $(CFLAGS) -MT $(INCLUDES) -c $< -o $@
 
-$(MTd_OBJ_DIR)/%.o: common/%.c
+$(MTd_OBJ_DIR)/%.o: common/%.cpp
 	$(V_CC) $(THR_DEFS) $(CFLAGS) -MTd $(INCLUDES) -c $< -o $@
 
-$(MTd_OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.c
+$(MTd_OBJ_DIR)/%.o: $(ETHR_THR_LIB_BASE_DIR)/%.cpp
 	$(V_CC) $(THR_DEFS) $(CFLAGS) -MTd $(INCLUDES) -c $< -o $@
 
 #

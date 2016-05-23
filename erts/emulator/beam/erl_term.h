@@ -1164,7 +1164,7 @@ ERTS_GLB_INLINE unsigned tag_val_def(Wterm x)
 #define line __LINE__
 #endif
 {
-    static char *msg = "tag_val_def error";
+    static const char *msg = "tag_val_def error";
 
     switch (x & _TAG_PRIMARY_MASK) {
     case TAG_PRIMARY_LIST:

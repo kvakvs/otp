@@ -179,8 +179,8 @@ static ErtsLink *create_link(Uint type, Eterm pid)
 
 static ErtsSuspendMonitor *create_suspend_monitor(Eterm pid)
 {
-    ErtsSuspendMonitor *smon = erts_alloc(ERTS_ALC_T_SUSPEND_MON,
-					  sizeof(ErtsSuspendMonitor));
+    ErtsSuspendMonitor *smon = (ErtsSuspendMonitor *)
+            erts_alloc(ERTS_ALC_T_SUSPEND_MON, sizeof(ErtsSuspendMonitor));
     smon->left = smon->right = NULL; /* Always the same initial value */
     smon->balance = 0;               /* Always the same initial value */
     smon->pending = 0;
@@ -258,13 +258,13 @@ static void insertion_rotation(int dstack[], int dpos,
 			       void *tstack[], int tpos, 
 			       int state) {
     
-    ErtsMonitorOrLink **this;
+    ErtsMonitorOrLink **this_;
     ErtsMonitorOrLink *p1, *p2, *p;
     int dir;
 
     while (state && ( dir = dstack[--dpos] ) != DIR_END) {
-	this = tstack[--tpos];
-	p = *this;
+        this_ = (ErtsMonitorOrLink **)tstack[--tpos];
+        p = *this_;
 	if (dir == DIR_LEFT) {
 	    switch (p->balance) {
 	    case 1:
@@ -280,7 +280,7 @@ static void insertion_rotation(int dstack[], int dpos,
 		    p->left = p1->right;
 		    p1->right = p;
 		    p->balance = 0;
-		    (*this) = p1;
+                    (*this_) = p1;
 		} else { /* Double RR rotation */
 		    p2 = p1->right;
 		    p1->right = p2->left;
@@ -289,9 +289,9 @@ static void insertion_rotation(int dstack[], int dpos,
 		    p2->right = p;
 		    p->balance = (p2->balance == -1) ? +1 : 0;
 		    p1->balance = (p2->balance == 1) ? -1 : 0;
-		    (*this) = p2;
+                    (*this_) = p2;
 		}
-		(*this)->balance = 0;
+                (*this_)->balance = 0;
 		state = 0;
 		break;
 	    }
@@ -310,7 +310,7 @@ static void insertion_rotation(int dstack[], int dpos,
 		    p->right = p1->left;
 		    p1->left = p;
 		    p->balance = 0;
-		    (*this) = p1;
+                    (*this_) = p1;
 		} else { /* Double RL rotation */
 		    p2 = p1->left;
 		    p1->left = p2->right;
@@ -319,9 +319,9 @@ static void insertion_rotation(int dstack[], int dpos,
 		    p2->left = p;
 		    p->balance = (p2->balance == 1) ? -1 : 0;
 		    p1->balance = (p2->balance == -1) ? 1 : 0;
-		    (*this) = p2;
+                    (*this_) = p2;
 		}
-		(*this)->balance = 0; 
+                (*this_)->balance = 0;
 		state = 0;
 		break;
 	    }
@@ -337,24 +337,24 @@ void erts_add_monitor(ErtsMonitor **root, Uint type, Eterm ref, Eterm pid,
     int dstack[STACK_NEED+1];
     int dpos = 1;
     int state = 0;
-    ErtsMonitor **this = root;
+    ErtsMonitor **this_ = root;
     Sint c;
   
     dstack[0] = DIR_END;
     for (;;) {
-	if (!*this) { /* Found our place */
+        if (!*this_) { /* Found our place */
 	    state = 1;
-	    *this = create_monitor(type,ref,pid,name);
+            *this_ = create_monitor(type,ref,pid,name);
 	    break;
-	} else if ((c = CMP_MON_REF(ref,(*this)->ref)) < 0) { 
+        } else if ((c = CMP_MON_REF(ref,(*this_)->ref)) < 0) {
 	    /* go left */
 	    dstack[dpos++] = DIR_LEFT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->left);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->left);
 	} else if (c > 0) { /* go right */
 	    dstack[dpos++] = DIR_RIGHT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->right);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->right);
 	} else { /* Equal key is an error for monitors */
 	    erts_exit(ERTS_ERROR_EXIT,"Insertion of already present monitor!");
 	    break;
@@ -372,24 +372,24 @@ int erts_add_link(ErtsLink **root, Uint type, Eterm pid)
     int dstack[STACK_NEED+1];
     int dpos = 1;
     int state = 0;
-    ErtsLink **this = root;
+    ErtsLink **this_ = root;
     Sint c;
   
     dstack[0] = DIR_END;
     for (;;) {
-	if (!*this) { /* Found our place */
+        if (!*this_) { /* Found our place */
 	    state = 1;
-	    *this = create_link(type,pid);
+            *this_ = create_link(type,pid);
 	    break;
-	} else if ((c = CMP(pid,(*this)->pid)) < 0) {
+        } else if ((c = CMP(pid,(*this_)->pid)) < 0) {
 	    /* go left */
 	    dstack[dpos++] = DIR_LEFT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->left);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->left);
 	} else if (c > 0) { /* go right */
 	    dstack[dpos++] = DIR_RIGHT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->right);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->right);
 	} else { /* Equal key is an error for monitors */
 	    return -1;
 	}
@@ -406,28 +406,28 @@ erts_add_or_lookup_suspend_monitor(ErtsSuspendMonitor **root, Eterm pid)
     int dstack[STACK_NEED+1];
     int dpos = 1;
     int state = 0;
-    ErtsSuspendMonitor **this = root;
+    ErtsSuspendMonitor **this_ = root;
     ErtsSuspendMonitor *res;
     Sint c;
   
     dstack[0] = DIR_END;
     for (;;) {
-	if (!*this) { /* Found our place */
+        if (!*this_) { /* Found our place */
 	    state = 1;
-	    res = *this = create_suspend_monitor(pid);
+            res = *this_ = create_suspend_monitor(pid);
 	    break;
-	} else if ((c = CMP(pid,(*this)->pid)) < 0) {
+        } else if ((c = CMP(pid,(*this_)->pid)) < 0) {
 	    /* go left */
 	    dstack[dpos++] = DIR_LEFT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->left);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->left);
 	} else if (c > 0) { /* go right */
 	    dstack[dpos++] = DIR_RIGHT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->right);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->right);
 	} else { /* Already here... */
-	    ASSERT((*this)->pid == pid);
-	    return *this;
+            ASSERT((*this_)->pid == pid);
+            return *this_;
 	}
     }
     insertion_rotation(dstack, dpos, tstack, tpos, state);
@@ -443,28 +443,28 @@ ErtsLink *erts_add_or_lookup_link(ErtsLink **root, Uint type, Eterm pid)
     int dstack[STACK_NEED+1];
     int dpos = 1;
     int state = 0;
-    ErtsLink **this = root;
+    ErtsLink **this_ = root;
     Sint c;
     ErtsLink *ret = NULL;
 
     dstack[0] = DIR_END;
     for (;;) {
-	if (!*this) { /* Found our place */
+        if (!*this_) { /* Found our place */
 	    state = 1;
-	    *this = create_link(type,pid);
-	    ret = *this;
+            *this_ = create_link(type,pid);
+            ret = *this_;
 	    break;
-	} else if ((c = CMP(pid,(*this)->pid)) < 0) {
+        } else if ((c = CMP(pid,(*this_)->pid)) < 0) {
 	    /* go left */
 	    dstack[dpos++] = DIR_LEFT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->left);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->left);
 	} else if (c > 0) { /* go right */
 	    dstack[dpos++] = DIR_RIGHT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->right);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->right);
 	} else { /* Equal key is an error for monitors */
-	    return *this;
+            return *this_;
 	}
     }
     insertion_rotation(dstack, dpos, tstack, tpos, state);
@@ -475,12 +475,12 @@ ErtsLink *erts_add_or_lookup_link(ErtsLink **root, Uint type, Eterm pid)
 /*
  * Deletion helpers
  */
-static int balance_left(ErtsMonitorOrLink **this) 
+static int balance_left(ErtsMonitorOrLink **this_)
 {
     ErtsMonitorOrLink *p, *p1, *p2;
     int b1, b2, h = 1;
     
-    p = *this;
+    p = *this_;
     switch (p->balance) {
     case -1:
 	p->balance = 0;
@@ -502,7 +502,7 @@ static int balance_left(ErtsMonitorOrLink **this)
 	    } else {
 		p->balance = p1->balance = 0;
 	    }
-	    (*this) = p1;
+            (*this_) = p1;
 	} else { /* Double RL rotation */
 	    p2 = p1->left;
 	    b2 = p2->balance;
@@ -513,19 +513,19 @@ static int balance_left(ErtsMonitorOrLink **this)
 	    p->balance = (b2 == 1) ? -1 : 0;
 	    p1->balance = (b2 == -1) ? 1 : 0;
 	    p2->balance = 0;
-	    (*this) = p2;
+            (*this_) = p2;
 	}
 	break;
     }
     return h;
 }
 
-static int balance_right(ErtsMonitorOrLink **this) 
+static int balance_right(ErtsMonitorOrLink **this_)
 {
     ErtsMonitorOrLink *p, *p1, *p2;
     int b1, b2, h = 1;
     
-    p = *this;
+    p = *this_;
     switch (p->balance) {
     case 1:
 	p->balance = 0;
@@ -547,7 +547,7 @@ static int balance_right(ErtsMonitorOrLink **this)
 	    } else {
 		p->balance = p1->balance = 0;
 	    }
-	    (*this) = p1;
+            (*this_) = p1;
 	} else { /* Double LR rotation */
 	    p2 = p1->right;
 	    b2 = p2->balance;
@@ -558,17 +558,17 @@ static int balance_right(ErtsMonitorOrLink **this)
 	    p->balance = (b2 == -1) ? 1 : 0;
 	    p1->balance = (b2 == 1) ? -1 : 0;
 	    p2->balance = 0;
-	    (*this) = p2;
+            (*this_) = p2;
 	}
     }
     return h;
 }
 
-static int delsub(ErtsMonitorOrLink **this) 
+static int delsub(ErtsMonitorOrLink **this_)
 {
     ErtsMonitorOrLink **tstack[STACK_NEED];
     int tpos = 0;
-    ErtsMonitorOrLink *q = (*this);
+    ErtsMonitorOrLink *q = (*this_);
     ErtsMonitorOrLink **r = &(q->left);
     int h;
 
@@ -583,12 +583,12 @@ static int delsub(ErtsMonitorOrLink **this)
 	tstack[tpos++] = r;
 	r = &((*r)->right);
     }
-    *this = *r;
+    *this_ = *r;
     *r = (*r)->left;
-    (*this)->left = q->left;
-    (*this)->right = q->right;
-    (*this)->balance = q->balance;
-    tstack[0] = &((*this)->left);
+    (*this_)->left = q->left;
+    (*this_)->right = q->right;
+    (*this_)->balance = q->balance;
+    tstack[0] = &((*this_)->left);
     h = 1;
     while (tpos && h) {
 	r = tstack[--tpos];
@@ -604,45 +604,45 @@ ErtsMonitor *erts_remove_monitor(ErtsMonitor **root, Eterm ref)
     int dstack[STACK_NEED+1];
     int dpos = 1;
     int state = 0;
-    ErtsMonitor **this = root;
+    ErtsMonitor **this_ = root;
     Sint c;
     int dir;
     ErtsMonitor *q = NULL;
 
     dstack[0] = DIR_END;
     for (;;) {
-	if (!*this) { /* Failure */
+        if (!*this_) { /* Failure */
 	    return NULL;
-	} else if ((c = CMP_MON_REF(ref,(*this)->ref)) < 0) { 
+        } else if ((c = CMP_MON_REF(ref,(*this_)->ref)) < 0) {
 	    dstack[dpos++] = DIR_LEFT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->left);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->left);
 	} else if (c > 0) { /* go right */
 	    dstack[dpos++] = DIR_RIGHT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->right);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->right);
 	} else { /* Equal key, found the one to delete */
-	    q = (*this);
+            q = (*this_);
 	    if (q->right == NULL) {
-		(*this) = q->left;
+                (*this_) = q->left;
 		state = 1;
 	    } else if (q->left == NULL) {
-		(*this) = q->right;
+                (*this_) = q->right;
 		state = 1;
 	    } else {
 		dstack[dpos++] = DIR_LEFT;
-		tstack[tpos++] = this;
-		state = delsub((ErtsMonitorOrLink **) this);
+                tstack[tpos++] = this_;
+                state = delsub((ErtsMonitorOrLink **) this_);
 	    }
 	    break;
 	}
     }
     while (state && ( dir = dstack[--dpos] ) != DIR_END) {
-	this = tstack[--tpos];
+        this_ = tstack[--tpos];
 	if (dir == DIR_LEFT) {
-	    state = balance_left((ErtsMonitorOrLink **) this);
+            state = balance_left((ErtsMonitorOrLink **) this_);
 	} else {
-	    state = balance_right((ErtsMonitorOrLink **) this);
+            state = balance_right((ErtsMonitorOrLink **) this_);
 	}
     }
     return q;
@@ -655,45 +655,45 @@ ErtsLink *erts_remove_link(ErtsLink **root, Eterm pid)
     int dstack[STACK_NEED+1];
     int dpos = 1;
     int state = 0;
-    ErtsLink **this = root;
+    ErtsLink **this_ = root;
     Sint c;
     int dir;
     ErtsLink *q = NULL;
 
     dstack[0] = DIR_END;
     for (;;) {
-	if (!*this) { /* Failure */
+        if (!*this_) { /* Failure */
 	    return NULL;
-	} else if ((c = CMP(pid,(*this)->pid)) < 0) {
+        } else if ((c = CMP(pid,(*this_)->pid)) < 0) {
 	    dstack[dpos++] = DIR_LEFT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->left);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->left);
 	} else if (c > 0) { /* go right */
 	    dstack[dpos++] = DIR_RIGHT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->right);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->right);
 	} else { /* Equal key, found the one to delete */
-	    q = (*this);
+            q = (*this_);
 	    if (q->right == NULL) {
-		(*this) = q->left;
+                (*this_) = q->left;
 		state = 1;
 	    } else if (q->left == NULL) {
-		(*this) = q->right;
+                (*this_) = q->right;
 		state = 1;
 	    } else {
 		dstack[dpos++] = DIR_LEFT;
-		tstack[tpos++] = this;
-		state = delsub((ErtsMonitorOrLink **) this);
+                tstack[tpos++] = this_;
+                state = delsub((ErtsMonitorOrLink **) this_);
 	    }
 	    break;
 	}
     }
     while (state && ( dir = dstack[--dpos] ) != DIR_END) {
-	this = tstack[--tpos];
+        this_ = tstack[--tpos];
 	if (dir == DIR_LEFT) {
-	    state = balance_left((ErtsMonitorOrLink **) this);
+            state = balance_left((ErtsMonitorOrLink **) this_);
 	} else {
-	    state = balance_right((ErtsMonitorOrLink **) this);
+            state = balance_right((ErtsMonitorOrLink **) this_);
 	}
     }
     return q;
@@ -707,47 +707,47 @@ erts_delete_suspend_monitor(ErtsSuspendMonitor **root, Eterm pid)
     int dstack[STACK_NEED+1];
     int dpos = 1;
     int state = 0;
-    ErtsSuspendMonitor **this = root;
+    ErtsSuspendMonitor **this_ = root;
     Sint c;
     int dir;
     ErtsSuspendMonitor *q = NULL;
 
     dstack[0] = DIR_END;
     for (;;) {
-	if (!*this) { /* Nothing found */
+        if (!*this_) { /* Nothing found */
 	    return;
-	} else if ((c = CMP(pid,(*this)->pid)) < 0) {
+        } else if ((c = CMP(pid,(*this_)->pid)) < 0) {
 	    dstack[dpos++] = DIR_LEFT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->left);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->left);
 	} else if (c > 0) { /* go right */
 	    dstack[dpos++] = DIR_RIGHT;
-	    tstack[tpos++] = this;
-	    this = &((*this)->right);
+            tstack[tpos++] = this_;
+            this_ = &((*this_)->right);
 	} else { /* Equal key, found the one to delete */
-	    q = (*this);
+            q = (*this_);
 	    ASSERT(q->pid == pid);
 	    if (q->right == NULL) {
-		(*this) = q->left;
+                (*this_) = q->left;
 		state = 1;
 	    } else if (q->left == NULL) {
-		(*this) = q->right;
+                (*this_) = q->right;
 		state = 1;
 	    } else {
 		dstack[dpos++] = DIR_LEFT;
-		tstack[tpos++] = this;
-		state = delsub((ErtsMonitorOrLink **) this);
+                tstack[tpos++] = this_;
+                state = delsub((ErtsMonitorOrLink **) this_);
 	    }
 	    erts_destroy_suspend_monitor(q);
 	    break;
 	}
     }
     while (state && ( dir = dstack[--dpos] ) != DIR_END) {
-	this = tstack[--tpos];
+        this_ = tstack[--tpos];
 	if (dir == DIR_LEFT) {
-	    state = balance_left((ErtsMonitorOrLink **) this);
+            state = balance_left((ErtsMonitorOrLink **) this_);
 	} else {
-	    state = balance_right((ErtsMonitorOrLink **) this);
+            state = balance_right((ErtsMonitorOrLink **) this_);
 	}
     }
 }
@@ -1028,7 +1028,7 @@ Eterm erts_debug_dump_links_1(BIF_ALIST_1)
 
 void erts_one_link_size(ErtsLink *lnk, void *vpu)
 {
-    Uint *pu = vpu;
+    Uint *pu = (Uint *)vpu;
     *pu += ERTS_LINK_SIZE*sizeof(Uint);
     if(!IS_CONST(lnk->pid))
 	*pu += NC_HEAP_SIZE(lnk->pid)*sizeof(Uint);
@@ -1038,7 +1038,7 @@ void erts_one_link_size(ErtsLink *lnk, void *vpu)
 }
 void erts_one_mon_size(ErtsMonitor *mon, void *vpu)
 {
-    Uint *pu = vpu;
+    Uint *pu = (Uint *)vpu;
     *pu += ERTS_MONITOR_SIZE*sizeof(Uint);
     if(!IS_CONST(mon->pid))
 	*pu += NC_HEAP_SIZE(mon->pid)*sizeof(Uint);

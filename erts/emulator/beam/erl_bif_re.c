@@ -513,7 +513,7 @@ re_compile(Process* p, Eterm arg1, Eterm arg2)
     if (erts_iolist_size(arg1, &slen)) {
         BIF_ERROR(p,BADARG);
     }
-    expr = erts_alloc(ERTS_ALC_T_RE_TMP_BUF, slen + 1);
+    expr = (char *)erts_alloc(ERTS_ALC_T_RE_TMP_BUF, slen + 1);
 #ifdef DEBUG
     buffres =
 #endif
@@ -602,7 +602,7 @@ static void cleanup_restart_context(RestartContext *rc)
 
 static void cleanup_restart_context_bin(Binary *bp)
 {
-    RestartContext *rc = ERTS_MAGIC_BIN_DATA(bp);
+    RestartContext *rc = (RestartContext *)ERTS_MAGIC_BIN_DATA(bp);
     cleanup_restart_context(rc);
 }
 
@@ -651,7 +651,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
 	    Eterm tpl;
 	    int i;
 	    if (ri->num_spec <= 0) {
-		tmp_vect = erts_alloc(ERTS_ALC_T_RE_TMP_BUF, 
+                tmp_vect = (Eterm *)erts_alloc(ERTS_ALC_T_RE_TMP_BUF,
 				      rc * 2 * sizeof(Eterm));
 		for(i = -(ri->num_spec) ;i < rc; ++i) {
 		    tmp_vect[i*2] = make_signed_integer(restartp->ovector[i*2],p);
@@ -668,7 +668,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
 	    } else {
 		int n = 0;
 		int x;
-		tmp_vect = erts_alloc(ERTS_ALC_T_RE_TMP_BUF, 
+                tmp_vect = (Eterm *)erts_alloc(ERTS_ALC_T_RE_TMP_BUF,
 				      ri->num_spec * 2 * sizeof(Eterm));
 		for (i = 0; i < ri->num_spec; ++i) {
 		    x = ri->v[i];
@@ -714,7 +714,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
 		ERTS_GET_REAL_BIN(orig_subject, orig, offset, bitoffs, bitsize);
 	    }
 	    if (ri->num_spec <= 0) {
-		tmp_vect = erts_alloc(ERTS_ALC_T_RE_TMP_BUF, 
+                tmp_vect = (Eterm *)erts_alloc(ERTS_ALC_T_RE_TMP_BUF,
 				      rc * sizeof(Eterm));
 		for(i = -(ri->num_spec) ;i < rc; ++i) { /* XXX: Unicode */
 		    char *cp;
@@ -760,7 +760,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
 	    } else {
 		int n = 0;
 		int x;
-		tmp_vect = erts_alloc(ERTS_ALC_T_RE_TMP_BUF, 
+                tmp_vect = (Eterm *)erts_alloc(ERTS_ALC_T_RE_TMP_BUF,
 				      ri->num_spec * sizeof(Eterm));
 		for (i = 0; i < ri->num_spec; ++i) {
 		    x = ri->v[i];
@@ -866,7 +866,7 @@ static void build_one_capture(const pcre *code, ReturnInfo **ri, int *sallocated
 		++(r->num_spec);
 		if(r->num_spec > (*sallocated)) {
 		    (*sallocated) += 10;
-		    r = erts_realloc(ERTS_ALC_T_RE_SUBJECT, r, 
+                    r = (ReturnInfo *)erts_realloc(ERTS_ALC_T_RE_SUBJECT, r,
 				      RINFO_SIZ((*sallocated)));
 		}
 		r->v[r->num_spec - 1] = PICK_INDEX(first);
@@ -886,7 +886,7 @@ static void build_one_capture(const pcre *code, ReturnInfo **ri, int *sallocated
 static ReturnInfo *
 build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 {
-    ReturnInfo *ri = erts_alloc(ERTS_ALC_T_RE_SUBJECT, RINFO_SIZ(0));
+    ReturnInfo *ri = (ReturnInfo *)erts_alloc(ERTS_ALC_T_RE_SUBJECT, RINFO_SIZ(0));
     int sallocated = 0;
     char *tmpb = NULL;
     int tmpbsiz = 0;
@@ -926,7 +926,7 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 	ri->num_spec = 1;
 	if(ri->num_spec > sallocated) {
 	    sallocated = ri->num_spec;
-	    ri = erts_realloc(ERTS_ALC_T_RE_SUBJECT, ri, RINFO_SIZ(sallocated));
+            ri = (ReturnInfo *)erts_realloc(ERTS_ALC_T_RE_SUBJECT, ri, RINFO_SIZ(sallocated));
 	}
 	ri->v[ri->num_spec - 1] = 0;
 	break;
@@ -960,7 +960,7 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 		    ++(ri->num_spec);
 		    if(ri->num_spec > sallocated) {
 			sallocated += 10;
-			ri = erts_realloc(ERTS_ALC_T_RE_SUBJECT, ri, RINFO_SIZ(sallocated));
+                        ri = (ReturnInfo *)erts_realloc(ERTS_ALC_T_RE_SUBJECT, ri, RINFO_SIZ(sallocated));
 		    }
 		    if (has_dupnames) {
 			/* This could be more effective, we actually have 
@@ -985,7 +985,7 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 		++(ri->num_spec);
 		if(ri->num_spec > sallocated) {
 		    sallocated += 10;
-		    ri = erts_realloc(ERTS_ALC_T_RE_SUBJECT, ri, RINFO_SIZ(sallocated));
+                    ri = (ReturnInfo *)erts_realloc(ERTS_ALC_T_RE_SUBJECT, ri, RINFO_SIZ(sallocated));
 		}
 		if (term_to_int(val,&x)) {
 		    ri->v[ri->num_spec - 1] = x;
@@ -999,9 +999,9 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 			Atom *ap = atom_tab(atom_val(val));
 			if ((ap->len + 1) > tmpbsiz) {
 			    if (!tmpbsiz) {
-				tmpb = erts_alloc(ERTS_ALC_T_RE_TMP_BUF,(tmpbsiz = ap->len + 1));
+                                tmpb = (char *)erts_alloc(ERTS_ALC_T_RE_TMP_BUF,(tmpbsiz = ap->len + 1));
 			    } else {
-				tmpb = erts_realloc(ERTS_ALC_T_RE_TMP_BUF,tmpb,
+                                tmpb = (char *)erts_realloc(ERTS_ALC_T_RE_TMP_BUF,tmpb,
 						    (tmpbsiz = ap->len + 1));
 			    }
 			}
@@ -1018,9 +1018,9 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 			}
 			if ((slen + 1) > tmpbsiz) {
 			    if (!tmpbsiz) {
-				tmpb = erts_alloc(ERTS_ALC_T_RE_TMP_BUF,(tmpbsiz = slen + 1));
+                                tmpb = (char *)erts_alloc(ERTS_ALC_T_RE_TMP_BUF,(tmpbsiz = slen + 1));
 			    } else {
-				tmpb = erts_realloc(ERTS_ALC_T_RE_TMP_BUF,tmpb,
+                                tmpb = (char *)erts_realloc(ERTS_ALC_T_RE_TMP_BUF,tmpb,
 						    (tmpbsiz = slen + 1));
 			    }
 			}
@@ -1116,7 +1116,7 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
 		BIF_ERROR(p,BADARG);
 	    }
 	    
-	    expr = erts_alloc(ERTS_ALC_T_RE_TMP_BUF, slen + 1);
+            expr = (char *)erts_alloc(ERTS_ALC_T_RE_TMP_BUF, slen + 1);
 	    
 #ifdef DEBUG
 	    buffres =
@@ -1166,7 +1166,7 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
 	    erts_pcre_fullinfo(result, NULL, PCRE_INFO_SIZE, &code_size);
 	    erts_pcre_fullinfo(result, NULL, PCRE_INFO_CAPTURECOUNT, &capture_count);
 	    ovsize = 3*(capture_count+1);
-	    restart.code = erts_alloc(ERTS_ALC_T_RE_SUBJECT, code_size);
+            restart.code = (pcre *)erts_alloc(ERTS_ALC_T_RE_SUBJECT, code_size);
 	    memcpy(restart.code, result, code_size);
 	    erts_pcre_free(result);
 	    erts_free(ERTS_ALC_T_RE_TMP_BUF, expr);
@@ -1208,14 +1208,14 @@ re_run(Process *p, Eterm arg1, Eterm arg2, Eterm arg3)
 	    erts_free_aligned_binary_bytes(temp_alloc);
 	    BIF_ERROR(p, BADARG);
 	}
-	restart.code = erts_alloc(ERTS_ALC_T_RE_SUBJECT, code_size);
+        restart.code = (pcre *)erts_alloc(ERTS_ALC_T_RE_SUBJECT, code_size);
 	memcpy(restart.code, code_tmp, code_size);
 	erts_free_aligned_binary_bytes(temp_alloc);
 
     }
 
 
-    restart.ovector =  erts_alloc(ERTS_ALC_T_RE_SUBJECT, ovsize * sizeof(int));
+    restart.ovector = (int *)erts_alloc(ERTS_ALC_T_RE_SUBJECT, ovsize * sizeof(int));
     restart.extra.flags = PCRE_EXTRA_TABLES | PCRE_EXTRA_LOOP_LIMIT;
     restart.extra.tables = default_table;
     restart.extra.loop_limit = ERTS_BIF_REDS_LEFT(p) * LOOP_FACTOR;
@@ -1286,7 +1286,7 @@ handle_iolist:
 	    }
 	    BIF_ERROR(p,BADARG);
 	}
-	restart.subject = erts_alloc(ERTS_ALC_T_RE_SUBJECT, slength);
+        restart.subject = (char *)erts_alloc(ERTS_ALC_T_RE_SUBJECT, slength);
 
 #ifdef DEBUG
 	buffres =
@@ -1318,7 +1318,7 @@ handle_iolist:
 	/* Trap */
 	Binary *mbp = erts_create_magic_binary(sizeof(RestartContext),
 					       cleanup_restart_context_bin);
-	RestartContext *restartp = ERTS_MAGIC_BIN_DATA(mbp);
+        RestartContext *restartp = (RestartContext *)ERTS_MAGIC_BIN_DATA(mbp);
 	Eterm magic_bin;
 	Eterm *hp;
 	memcpy(restartp,&restart,sizeof(RestartContext));
@@ -1483,7 +1483,7 @@ re_inspect_2(BIF_ALIST_2)
 	last = name;
 	name += entrysize;
     }
-    tmp_vec =  erts_alloc(ERTS_ALC_T_RE_TMP_BUF, 
+    tmp_vec = (Eterm *)erts_alloc(ERTS_ALC_T_RE_TMP_BUF,
 			  num_names * sizeof(Eterm));
     /* Re-iterate and fill tmp_vec */
     last = NULL;

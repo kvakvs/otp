@@ -74,10 +74,10 @@ typedef struct {
     int auto_finalize_dequeue;
 } ErtsThrQInit_t;
 
-typedef struct ErtsThrQElement_t_ ErtsThrQElement_t;
+//typedef struct ErtsThrQElement_t_ ErtsThrQElement_t;
 typedef struct ErtsThrQElement_t ErtsThrQPrepEnQ_t;
 
-struct ErtsThrQElement_t_ {
+struct ErtsThrQElement_t {
 #ifdef USE_THREADS
     erts_atomic_t next;
 #else

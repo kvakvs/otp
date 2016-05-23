@@ -959,7 +959,7 @@ erts_sys_putenv(char *key, char *value)
 }
 
 int
-erts_sys_getenv__(char *key, char *value, size_t *size)
+erts_sys_getenv__(const char *key, char *value, size_t *size)
 {
     int res;
     char *orig_value = getenv(key);

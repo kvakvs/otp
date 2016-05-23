@@ -90,7 +90,7 @@ typedef struct
     /* A: Lockless atomics */
 } SafeHash;
 
-SafeHash* safe_hash_init(ErtsAlcType_t, SafeHash*, char*, int, SafeHashFunctions);
+SafeHash* safe_hash_init(ErtsAlcType_t, SafeHash*, const char*, int, SafeHashFunctions);
 
 void  safe_hash_get_info(SafeHashInfo*, SafeHash*);
 int   safe_hash_table_sz(SafeHash *);

@@ -201,7 +201,10 @@ print "\nExport* bif_export[BIF_SIZE];\n";
 print "BifEntry bif_table[] = {\n";
 for ($i = 0; $i < @bif; $i++) {
     my $func = $bif[$i]->[3];
-    print "  {", join(', ', @{$bif[$i]}), "},\n";
+    my @x = @{$bif[$i]};
+    @x[3] = "(void *)" . @x[3];
+    @x[4] = "(void *)" . @x[4];
+    print "  {", join(', ', @x), "},\n";
 }
 print "};\n\n";
 

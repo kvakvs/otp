@@ -109,7 +109,7 @@ EMEM_INCLUDES =	-I$(ERL_TOP)/erts/include \
 		-I$(ERL_TOP)/erts/include/internal/$(TARGET)
 
 EMEM_HEADERS = erl_memory_trace_block_table.h
-EMEM_SRCS = erl_memory.c erl_memory_trace_block_table.c
+EMEM_SRCS = erl_memory.cpp erl_memory_trace_block_table.cpp
 
 EMEM_CFLAGS = $(THR_DEFS) $(subst O2,O3, $(CFLAGS)) $(EMEM_INCLUDES)
 EMEM_LDFLAGS = $(LDFLAGS)
@@ -139,7 +139,7 @@ EMEM_LIBS =	$(LIBS) \
 		-l$(EMEM_ERTS_LIB) \
 		$(EMEM_ETHR_LIBS)
 
-EMEM_OBJS = $(addprefix $(EMEM_OBJ_DIR)/,$(notdir $(EMEM_SRCS:.c=.o)))
+EMEM_OBJS = $(addprefix $(EMEM_OBJ_DIR)/,$(notdir $(EMEM_SRCS:.cpp=.o)))
 
 ERTS_LIB = $(ERL_TOP/erts/lib_src/obj/$(TARGET)/$(TYPE)/MADE
 

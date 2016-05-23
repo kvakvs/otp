@@ -862,7 +862,7 @@ erts_printf_char(fmtfn_t fn, void *arg, char c)
 }
 
 int
-erts_printf_string(fmtfn_t fn, void *arg, char *str)
+erts_printf_string(fmtfn_t fn, void *arg, const char *str)
 {
     size_t sz = strlen(str);
     return (*fn)(arg, str, sz);

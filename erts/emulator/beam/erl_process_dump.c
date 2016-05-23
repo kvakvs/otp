@@ -570,7 +570,7 @@ dump_externally(int to, void *to_arg, Eterm term)
 
 void erts_dump_process_state(int to, void *to_arg, erts_aint32_t psflg)
 {
-    char *s;
+    const char *s;
     switch (erts_process_state2status(psflg)) {
     case am_free: s = "Non Existing"; break; /* Should never happen */
     case am_exiting: s = "Exiting"; break;

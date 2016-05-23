@@ -155,7 +155,7 @@ int safe_hash_table_sz(SafeHash *h)
 ** Init a pre allocated or static hash structure
 ** and allocate buckets. NOT SAFE
 */
-SafeHash* safe_hash_init(ErtsAlcType_t type, SafeHash* h, char* name, int size, SafeHashFunctions fun)
+SafeHash* safe_hash_init(ErtsAlcType_t type, SafeHash* h, const char* name, int size, SafeHashFunctions fun)
 {
     int i, bytes;
 

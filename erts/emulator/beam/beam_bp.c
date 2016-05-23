@@ -233,7 +233,7 @@ erts_bp_match_export(BpFunctions* f, Eterm mfa[3], int specified)
 		continue;
 	    }
 	    ASSERT(*pc == (BeamInstr) BeamOp(op_i_generic_breakpoint));
-	} else if (erts_is_native_break(ep->addressv[code_ix])) {
+        } else if (erts_is_native_break((BeamInstr *)ep->addressv[code_ix])) {
 	    continue;
 	}
 
@@ -439,13 +439,13 @@ uninstall_breakpoint(BeamInstr* pc)
 void
 erts_set_trace_break(BpFunctions* f, Binary *match_spec)
 {
-    set_break(f, match_spec, ERTS_BPF_LOCAL_TRACE, 0, erts_tracer_true);
+    set_break(f, match_spec, ERTS_BPF_LOCAL_TRACE, ERTS_BREAK_NOP, erts_tracer_true);
 }
 
 void
 erts_set_mtrace_break(BpFunctions* f, Binary *match_spec, ErtsTracer tracer)
 {
-    set_break(f, match_spec, ERTS_BPF_META_TRACE, 0, tracer);
+    set_break(f, match_spec, ERTS_BPF_META_TRACE, ERTS_BREAK_NOP, tracer);
 }
 
 void
@@ -453,13 +453,13 @@ erts_set_call_trace_bif(BeamInstr *pc, Binary *match_spec, int local)
 {
     Uint flags = local ? ERTS_BPF_LOCAL_TRACE : ERTS_BPF_GLOBAL_TRACE;
 
-    set_function_break(pc, match_spec, flags, 0, erts_tracer_nil);
+    set_function_break(pc, match_spec, flags, ERTS_BREAK_NOP, erts_tracer_nil);
 }
 
 void
 erts_set_mtrace_bif(BeamInstr *pc, Binary *match_spec, ErtsTracer tracer)
 {
-    set_function_break(pc, match_spec, ERTS_BPF_META_TRACE, 0, tracer);
+    set_function_break(pc, match_spec, ERTS_BPF_META_TRACE, ERTS_BREAK_NOP, tracer);
 }
 
 void
@@ -477,7 +477,7 @@ erts_clear_time_trace_bif(BeamInstr *pc) {
 
 void
 erts_set_debug_break(BpFunctions* f) {
-    set_break(f, NULL, ERTS_BPF_DEBUG, 0, erts_tracer_nil);
+    set_break(f, NULL, ERTS_BPF_DEBUG, ERTS_BREAK_NOP, erts_tracer_nil);
 }
 
 void
@@ -697,7 +697,8 @@ Eterm
 erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
 {
     Eterm result;
-    Eterm (*func)(Process*, Eterm*, BeamInstr*);
+    typedef Eterm (*BifFn2)(Process*, Eterm*, BeamInstr*);
+    BifFn2 func;
     Export* ep = bif_export[bif_index];
     Uint32 flags = 0, flags_meta = 0;
     ErtsTracer meta_tracer = erts_tracer_nil;
@@ -760,7 +761,7 @@ erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
     /* Restore original continuation pointer (if changed). */
     p->cp = cp;
 
-    func = bif_table[bif_index].f;
+    func = (BifFn2)bif_table[bif_index].f;
 
     result = func(p, args, I);
 
@@ -794,7 +795,7 @@ erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
     if (is_non_value(result)) {
 	Uint reason = p->freason;
 	if (reason != TRAP) {
-	    Eterm class;
+            Eterm class_;
 	    Eterm value = p->fvalue;
 	    /* Expand error value like in handle_error() */
 	    if (reason & EXF_ARGLIST) {
@@ -814,14 +815,14 @@ erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
 	     * just be annoying.
 	     */
 	    value = expand_error_value(p, reason, value);
-	    class = exception_tag[GET_EXC_CLASS(reason)];
+            class_ = exception_tag[GET_EXC_CLASS(reason)];
 
 	    if (flags_meta & MATCH_SET_EXCEPTION_TRACE) {
-		erts_trace_exception(p, ep->code, class, value,
+                erts_trace_exception(p, ep->code, class_, value,
 				     &meta_tracer);
 	    }
 	    if (flags & MATCH_SET_EXCEPTION_TRACE) {
-		erts_trace_exception(p, ep->code, class, value,
+                erts_trace_exception(p, ep->code, class_, value,
 				     &ERTS_TRACER(p));
 	    }
 	    if ((flags & MATCH_SET_RETURN_TO_TRACE) && p->catches > 0) {
@@ -991,7 +992,7 @@ erts_trace_time_call(Process* c_p, BeamInstr* I, BpDataTime* bdt)
      */
     if (pbt == 0) {
 	/* First call of process to instrumented function */
-	pbt = Alloc(sizeof(process_breakpoint_time_t));
+        pbt = (process_breakpoint_time_t *)Alloc(sizeof(process_breakpoint_time_t));
 	(void) ERTS_PROC_SET_CALL_TIME(c_p, pbt);
     } else {
 	ASSERT(pbt->pc);
@@ -1439,7 +1440,7 @@ set_function_break(BeamInstr *pc, Binary *match_spec, Uint break_flags,
 	    /* Do not insert a new breakpoint */
 	    return;
 	}
-	g = Alloc(sizeof(GenericBp));
+        g = (GenericBp *)Alloc(sizeof(GenericBp));
 	g->orig_instr = *pc;
 	for (i = 0; i < ERTS_NUM_BP_IX; i++) {
 	    g->data[i].flags = 0;
@@ -1496,7 +1497,7 @@ set_function_break(BeamInstr *pc, Binary *match_spec, Uint break_flags,
         ErtsTracer meta_tracer = erts_tracer_nil;
 	MatchSetRef(match_spec);
 	bp->meta_ms = match_spec;
-	bmt = Alloc(sizeof(BpMetaTracer));
+        bmt = (BpMetaTracer *)Alloc(sizeof(BpMetaTracer));
 	erts_refc_init(&bmt->refc, 1);
         erts_tracer_update(&meta_tracer, tracer); /* copy tracer */
 	erts_smp_atomic_init_nob(&bmt->tracer, (erts_aint_t)meta_tracer);
@@ -1505,7 +1506,7 @@ set_function_break(BeamInstr *pc, Binary *match_spec, Uint break_flags,
 	BpCount* bcp;
 
 	ASSERT((bp->flags & ERTS_BPF_COUNT) == 0);
-	bcp = Alloc(sizeof(BpCount));
+        bcp = (BpCount *)Alloc(sizeof(BpCount));
 	erts_refc_init(&bcp->refc, 1);
 	erts_smp_atomic_init_nob(&bcp->acount, 0);
 	bp->count = bcp;
@@ -1514,10 +1515,10 @@ set_function_break(BeamInstr *pc, Binary *match_spec, Uint break_flags,
 	int i;
 
 	ASSERT((bp->flags & ERTS_BPF_TIME_TRACE) == 0);
-	bdt = Alloc(sizeof(BpDataTime));
+        bdt = (BpDataTime *)Alloc(sizeof(BpDataTime));
 	erts_refc_init(&bdt->refc, 1);
 	bdt->n = erts_no_schedulers;
-	bdt->hash = Alloc(sizeof(bp_time_hash_t)*(bdt->n));
+        bdt->hash = (bp_time_hash_t *)Alloc(sizeof(bp_time_hash_t)*(bdt->n));
 	for (i = 0; i < bdt->n; i++) {
 	    bp_hash_init(&(bdt->hash[i]), 32);
 	}

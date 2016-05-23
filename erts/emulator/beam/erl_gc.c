@@ -842,7 +842,7 @@ erts_garbage_collect_hibernate(Process* p)
     ASSERT(p->hend - p->stop == 0); /* Empty stack */
     ASSERT(actual_size < p->heap_sz);
 
-    heap = ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP, sizeof(Eterm)*heap_size);
+    heap = (Eterm *)ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP, sizeof(Eterm)*heap_size);
     sys_memcpy((void *) heap, (void *) p->heap, actual_size*sizeof(Eterm));
     ERTS_HEAP_FREE(ERTS_ALC_T_TMP_HEAP, p->heap, p->heap_sz*sizeof(Eterm));
 
@@ -2264,7 +2264,7 @@ move_msgq_to_heap(Process *p)
 		if (mp->data.dist_ext) {
 		    ASSERT(mp->data.dist_ext->heap_size >= 0);
 		    if (is_not_nil(ERL_MESSAGE_TOKEN(mp))) {
-			bp = erts_dist_ext_trailer(mp->data.dist_ext);
+                        bp = (ErlHeapFragment *)erts_dist_ext_trailer(mp->data.dist_ext);
 			ERL_MESSAGE_TOKEN(mp) = copy_struct(ERL_MESSAGE_TOKEN(mp),
 							    bp->used_size,
 							    &factory.hp,
@@ -2414,7 +2414,7 @@ setup_rootset(Process *p, Eterm *objv, int nobj, Rootset *rootset)
 	if (n + p->msg.len > rootset->size) {
 	    Uint new_size = n + p->msg.len;
 	    ERTS_GC_ASSERT(roots == rootset->def);
-	    roots = erts_alloc(ERTS_ALC_T_ROOTSET,
+            roots = (Roots *)erts_alloc(ERTS_ALC_T_ROOTSET,
 			       new_size*sizeof(Roots));
 	    sys_memcpy(roots, rootset->def, n*sizeof(Roots));
 	    rootset->size = new_size;
@@ -3039,7 +3039,7 @@ reply_gc_info(void *vgcirp)
     erts_proc_dec_refc(rp);
 
     if (erts_smp_atomic32_dec_read_nob(&gcirp->refc) == 0)
-	gcireq_free(vgcirp);
+        gcireq_free((ErtsGCInfoReq *)vgcirp);
 }
 
 Eterm
@@ -3161,7 +3161,7 @@ reached_max_heap_size(Process *p, Uint total_heap_size,
         Eterm *o_hp , *hp;
         erts_process_gc_info(p, &size, NULL, extra_heap_size,
                              extra_old_heap_size);
-        o_hp = hp = erts_alloc(ERTS_ALC_T_TMP, size * sizeof(Eterm));
+        o_hp = hp = (Eterm *)erts_alloc(ERTS_ALC_T_TMP, size * sizeof(Eterm));
         msg = erts_process_gc_info(p, NULL, &hp, extra_heap_size,
                                    extra_old_heap_size);
 
@@ -3182,7 +3182,7 @@ reached_max_heap_size(Process *p, Uint total_heap_size,
             erts_dsprintf(dsbufp, "     GC Info:          ~p~n");
 
             /* Build the args in reverse order */
-            o_hp = hp = erts_alloc(ERTS_ALC_T_TMP, 2*(alive ? 7 : 6) * sizeof(Eterm));
+            o_hp = hp = (Eterm *)erts_alloc(ERTS_ALC_T_TMP, 2*(alive ? 7 : 6) * sizeof(Eterm));
             args = CONS(hp, msg, args); hp += 2;
             args = CONS(hp, am_true, args); hp += 2;
             args = CONS(hp, (max_heap_flags & MAX_HEAP_SIZE_KILL ? am_true : am_false), args); hp += 2;

@@ -49,7 +49,7 @@ typedef int (*fmtfn_t)(void*, char*, size_t);
 extern int erts_printf_format(fmtfn_t, void*, char*, va_list);
 
 extern int erts_printf_char(fmtfn_t, void*, char);
-extern int erts_printf_string(fmtfn_t, void*, char *);
+extern int erts_printf_string(fmtfn_t, void*, const char *);
 extern int erts_printf_buf(fmtfn_t, void*, char *, size_t);
 extern int erts_printf_pointer(fmtfn_t, void*, void *);
 extern int erts_printf_uword(fmtfn_t, void*, char, int, int, ErlPfUWord);

@@ -135,7 +135,7 @@ static ERTS_INLINE void set_thresholds(Hash* h)
 ** init a pre allocated or static hash structure
 ** and allocate buckets.
 */
-Hash* hash_init(int type, Hash* h, char* name, int size, HashFunctions fun)
+Hash* hash_init(int type, Hash* h, const char* name, int size, HashFunctions fun)
 {
     int sz;
     int ix = 0;
@@ -167,11 +167,11 @@ Hash* hash_init(int type, Hash* h, char* name, int size, HashFunctions fun)
 /*
 ** Create a new hash table
 */
-Hash* hash_new(int type, char* name, int size, HashFunctions fun)
+Hash* hash_new(int type, const char* name, int size, HashFunctions fun)
 {
     Hash* h;
 
-    h = fun.meta_alloc(type, sizeof(Hash));
+    h = (Hash *)fun.meta_alloc(type, sizeof(Hash));
 
     h = hash_init(type, h, name, size, fun);
     h->is_allocated =  1;

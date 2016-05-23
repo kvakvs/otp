@@ -261,13 +261,13 @@ static ACTrie *create_acdata(MyAllocator *my, Uint len,
     ACTrie *act;
     ACNode *acn;
     Binary *mb = erts_create_magic_binary(datasize,cleanup_my_data_ac);
-    byte *data = ERTS_MAGIC_BIN_DATA(mb);
+    byte *data = (byte *)ERTS_MAGIC_BIN_DATA(mb);
 
     init_my_allocator(my, datasize, data);
-    act = my_alloc(my, sizeof(ACTrie)); /* Important that this is the first
+    act = (ACTrie *)my_alloc(my, sizeof(ACTrie)); /* Important that this is the first
 					   allocation */
     act->counter = 0;
-    act->root = acn = my_alloc(my, sizeof(ACNode));
+    act->root = acn = (ACNode *)my_alloc(my, sizeof(ACNode));
     acn->d = 0;
     acn->final = 0;
     acn->h = NULL;
@@ -276,7 +276,7 @@ static ACTrie *create_acdata(MyAllocator *my, Uint len,
     act->idc = 0;
     acn->id = 0;
 #endif
-    *qbuff = erts_alloc(ERTS_ALC_T_TMP, sizeof(ACNode *) * len);
+    *qbuff = (ACNode **)erts_alloc(ERTS_ALC_T_TMP, sizeof(ACNode *) * len);
     *the_bin = mb;
     return act;
 }
@@ -290,13 +290,13 @@ static BMData *create_bmdata(MyAllocator *my, byte *x, Uint len,
     Uint datasize = BM_SIZE(len);
     BMData *bmd;
     Binary *mb = erts_create_magic_binary(datasize,cleanup_my_data_bm);
-    byte *data = ERTS_MAGIC_BIN_DATA(mb);
+    byte *data = (byte *)ERTS_MAGIC_BIN_DATA(mb);
     init_my_allocator(my, datasize, data);
-    bmd = my_alloc(my, sizeof(BMData));
-    bmd->x = my_alloc(my,len);
+    bmd = (BMData *)my_alloc(my, sizeof(BMData));
+    bmd->x = (byte *)my_alloc(my,len);
     memcpy(bmd->x,x,len);
     bmd->len = len;
-    bmd->goodshift = my_alloc(my,sizeof(Uint) * len);
+    bmd->goodshift = (Sint *)my_alloc(my,sizeof(Uint) * len);
     *the_bin = mb;
     return bmd;
 }
@@ -332,7 +332,7 @@ static void ac_add_one_pattern(MyAllocator *my, ACTrie *act, byte *x, Uint len)
 	    ++i;
 	} else {
 	    /* allocate a new node */
-	    ACNode *nn = my_alloc(my,sizeof(ACNode));
+            ACNode *nn = (ACNode *)my_alloc(my,sizeof(ACNode));
 #ifdef HARDDEBUG
 	    nn->id = ++(act->idc);
 #endif
@@ -536,7 +536,8 @@ static void ac_restore_find_all(ACFindAllState *state,
 {
     memcpy(state, src, sizeof(ACFindAllState));
     if (state->allocated > 0) {
-	state->out = erts_alloc(ERTS_ALC_T_TMP, sizeof(FindallData) * (state->allocated));
+        state->out = (FindallData *)
+                erts_alloc(ERTS_ALC_T_TMP, sizeof(FindallData) * (state->allocated));
 	memcpy(state->out, src+1, sizeof(FindallData)*state->m);
     } else {
 	state->out = NULL;
@@ -625,11 +626,11 @@ static int ac_find_all_non_overlapping(ACFindAllState *state, byte *haystack,
 		    if (m >= allocated) {
 			if (!allocated) {
 			    allocated = 10;
-			    out = erts_alloc(ERTS_ALC_T_TMP,
+                            out = (FindallData *)erts_alloc(ERTS_ALC_T_TMP,
 					     sizeof(FindallData) * allocated);
 			} else {
 			    allocated *= 2;
-			    out = erts_realloc(ERTS_ALC_T_TMP, out,
+                            out = (FindallData *)erts_realloc(ERTS_ALC_T_TMP, out,
 					       sizeof(FindallData) *
 					       allocated);
 			}
@@ -717,7 +718,7 @@ static void compute_goodshifts(BMData *bmd)
     Sint m = bmd->len;
     byte *x = bmd->x;
     Sint i, j;
-    Sint *suffixes = erts_alloc(ERTS_ALC_T_TMP, m * sizeof(Sint));
+    Sint *suffixes = (Sint *)erts_alloc(ERTS_ALC_T_TMP, m * sizeof(Sint));
 
     compute_suffixes(x, m, suffixes);
 
@@ -812,7 +813,7 @@ static void bm_restore_find_all(BMFindAllState *state,
 {
     memcpy(state, src, sizeof(BMFindAllState));
     if (state->allocated > 0) {
-	state->out = erts_alloc(ERTS_ALC_T_TMP, sizeof(FindallData) *
+        state->out = (FindallData *)erts_alloc(ERTS_ALC_T_TMP, sizeof(FindallData) *
 				(state->allocated));
 	memcpy(state->out, src+1, sizeof(FindallData)*state->m);
     } else {
@@ -872,10 +873,10 @@ static Sint bm_find_all_non_overlapping(BMFindAllState *state,
 	    if (m >= allocated) {
 		if (!allocated) {
 		    allocated = 10;
-		    out = erts_alloc(ERTS_ALC_T_TMP, sizeof(FindallData) * allocated);
+                    out = (FindallData *)erts_alloc(ERTS_ALC_T_TMP, sizeof(FindallData) * allocated);
 		} else {
 		    allocated *= 2;
-		    out = erts_realloc(ERTS_ALC_T_TMP, out,
+                    out = (FindallData *)erts_realloc(ERTS_ALC_T_TMP, out,
 				       sizeof(FindallData) * allocated);
 		}
 	    }
@@ -2181,7 +2182,7 @@ static BIF_RETTYPE do_longest_common(Process *p, Eterm list, int direction)
 	for(i = 0; i < n; ++i) {
 	    if (cd[i].type == CL_TYPE_HEAP_NOALLOC) {
 		unsigned char *tmp = cd[i].buff;
-		cd[i].buff = erts_alloc(ERTS_ALC_T_BINARY_BUFFER, cd[i].bufflen);
+                cd[i].buff = (byte *)erts_alloc(ERTS_ALC_T_BINARY_BUFFER, cd[i].bufflen);
 		memcpy(cd[i].buff,tmp,cd[i].bufflen);
 		cd[i].type = CL_TYPE_HEAP;
 	    }
@@ -2634,7 +2635,7 @@ static BIF_RETTYPE do_binary_copy(Process *p, Eterm bin, Eterm en)
 	/* We will trap, set up the structure for trapping right away */
 	Binary *mb = erts_create_magic_binary(sizeof(CopyBinState),
 					      cleanup_copy_bin_state);
-	cbs = ERTS_MAGIC_BIN_DATA(mb);
+        cbs = (CopyBinState *)ERTS_MAGIC_BIN_DATA(mb);
 
 	cbs->temp_alloc = NULL;
 	cbs->source = NULL;
@@ -2658,7 +2659,7 @@ static BIF_RETTYPE do_binary_copy(Process *p, Eterm bin, Eterm en)
 						    ERTS_ALC_T_BINARY_BUFFER,
 						    0);
 	    if (!(cbs->temp_alloc)) { /* alignment not needed, need to copy */
-		byte *tmp = erts_alloc(ERTS_ALC_T_BINARY_BUFFER,size);
+                byte *tmp = (byte *)erts_alloc(ERTS_ALC_T_BINARY_BUFFER,size);
 		memcpy(tmp,cbs->source,size);
 		cbs->source = tmp;
 		cbs->source_type = BC_TYPE_HEAP;

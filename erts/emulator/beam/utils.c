@@ -160,10 +160,10 @@ erl_grow_estack(ErtsEStack* s, Uint need)
 	new_size = ((need / old_size) + 2) * old_size;
 
     if (s->start != s->edefault) {
-	s->start = erts_realloc(s->alloc_type, s->start,
+        s->start = (Eterm *)erts_realloc(s->alloc_type, s->start,
 				new_size*sizeof(Eterm));
     } else {
-	Eterm* new_ptr = erts_alloc(s->alloc_type, new_size*sizeof(Eterm));
+        Eterm* new_ptr = (Eterm *)erts_alloc(s->alloc_type, new_size*sizeof(Eterm));
 	sys_memcpy(new_ptr, s->start, old_size*sizeof(Eterm));
 	s->start = new_ptr;
     }
@@ -186,10 +186,10 @@ erl_grow_wstack(ErtsWStack* s, Uint need)
 	new_size = ((need / old_size) + 2) * old_size;
 
     if (s->wstart != s->wdefault) {
-	s->wstart = erts_realloc(s->alloc_type, s->wstart,
+        s->wstart = (UWord *)erts_realloc(s->alloc_type, s->wstart,
 				 new_size*sizeof(UWord));
     } else {
-	UWord* new_ptr = erts_alloc(s->alloc_type, new_size*sizeof(UWord));
+        UWord* new_ptr = (UWord *)erts_alloc(s->alloc_type, new_size*sizeof(UWord));
 	sys_memcpy(new_ptr, s->wstart, old_size*sizeof(UWord));
 	s->wstart = new_ptr;
     }
@@ -213,9 +213,9 @@ erl_grow_pstack(ErtsPStack* s, void* default_pstack, unsigned need_bytes)
 	new_size = ((need_bytes / old_size) + 2) * old_size;
 
     if (s->pstart != default_pstack) {
-	s->pstart = erts_realloc(s->alloc_type, s->pstart, new_size);
+        s->pstart = (byte *)erts_realloc(s->alloc_type, s->pstart, new_size);
     } else {
-	byte* new_ptr = erts_alloc(s->alloc_type, new_size);
+        byte* new_ptr = (byte *)erts_alloc(s->alloc_type, new_size);
 	sys_memcpy(new_ptr, s->pstart, old_size);
 	s->pstart = new_ptr;
     }
@@ -234,7 +234,7 @@ erl_grow_equeue(ErtsEQueue* q, Eterm* default_equeue)
     Uint new_size = old_size * 2;
     Uint first_part = (q->end - q->front);
     Uint second_part = (q->back - q->start);
-    Eterm* new_ptr = erts_alloc(q->alloc_type, new_size*sizeof(Eterm));
+    Eterm* new_ptr = (Eterm *)erts_alloc(q->alloc_type, new_size*sizeof(Eterm));
     ASSERT(q->back == q->front);   // of course the queue is full now!
     if (first_part > 0)
       sys_memcpy(new_ptr, q->front, first_part*sizeof(Eterm));
@@ -347,7 +347,7 @@ int erts_fit_in_bits_uint(Uint value)
 }
 
 int
-erts_print(int to, void *arg, char *format, ...)
+erts_print(int to, void *arg, const char *format, ...)
 {
     int res;
     va_list arg_list;
@@ -404,7 +404,7 @@ erts_putc(int to, void *arg, char c)
 \*                                                                           */
 
 Eterm
-erts_bld_atom(Uint **hpp, Uint *szp, char *str)
+erts_bld_atom(Uint **hpp, Uint *szp, const char *str)
 {
     if (hpp)
 	return erts_atom_put((byte *) str, sys_strlen(str), ERTS_ATOM_ENC_LATIN1, 1);
@@ -2272,7 +2272,7 @@ static void do_send_logger_message(Eterm *hp, ErlOffHeap *ohp, ErlHeapFragment *
    {notify,{info_msg,gleader,{emulator,format,[args]}}} |
    {notify,{error,gleader,{emulator,format,[args]}}} |
    {notify,{warning_msg,gleader,{emulator,format,[args}]}} */
-static int do_send_to_logger(Eterm tag, Eterm gleader, char *buf, int len)
+static int do_send_to_logger(Eterm tag, Eterm gleader, const char *buf, int len)
 {
     Uint sz;
     Eterm gl;
@@ -2377,7 +2377,7 @@ send_warning_to_logger(Eterm gleader, char *buf, int len)
 }
 
 static ERTS_INLINE int
-send_error_to_logger(Eterm gleader, char *buf, int len) 
+send_error_to_logger(Eterm gleader, const char *buf, int len)
 {
     return do_send_to_logger(am_error, gleader, buf, len);
 }
@@ -2417,8 +2417,9 @@ erts_dsprintf_buf_t *
 erts_create_logger_dsbuf(void)
 {
     erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_logger_dsbuf);
-    erts_dsprintf_buf_t *dsbufp = erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
-					     sizeof(erts_dsprintf_buf_t));
+    erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)
+            erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
+                       sizeof(erts_dsprintf_buf_t));
     sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
     dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
 				      LOGGER_DSBUF_INC_SZ);
@@ -2478,13 +2479,13 @@ erts_send_info_to_logger_str(Eterm gleader, char *str)
 }
 
 int
-erts_send_warning_to_logger_str(Eterm gleader, char *str)
+erts_send_warning_to_logger_str(Eterm gleader, const char *str)
 {
     return send_warning_to_logger(gleader, str, sys_strlen(str));
 }
 
 int
-erts_send_error_to_logger_str(Eterm gleader, char *str)
+erts_send_error_to_logger_str(Eterm gleader, const char *str)
 {
     return send_error_to_logger(gleader, str, sys_strlen(str));
 }
@@ -2554,8 +2555,8 @@ erts_create_tmp_dsbuf(Uint size)
 {
     Uint init_size = size ? size : TMP_DSBUF_INC_SZ;
     erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_tmp_dsbuf);
-    erts_dsprintf_buf_t *dsbufp = erts_alloc(ERTS_ALC_T_TMP_DSBUF,
-					     sizeof(erts_dsprintf_buf_t));
+    erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)
+            erts_alloc(ERTS_ALC_T_TMP_DSBUF, sizeof(erts_dsprintf_buf_t));
     sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
     dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_TMP_DSBUF, init_size);
     dsbufp->str[0] = '\0';
@@ -4555,13 +4556,13 @@ char *
 erts_read_env(char *key)
 {
     size_t value_len = 256;
-    char *value = erts_alloc(ERTS_ALC_T_TMP, value_len);
+    char *value = (char *)erts_alloc(ERTS_ALC_T_TMP, value_len);
     int res;
     while (1) {
 	res = erts_sys_getenv_raw(key, value, &value_len);
 	if (res <= 0)
 	    break;
-	value = erts_realloc(ERTS_ALC_T_TMP, value, value_len);
+        value = (char *)erts_realloc(ERTS_ALC_T_TMP, value, value_len);
     }
     if (res != 0) {
 	erts_free(ERTS_ALC_T_TMP, value);

@@ -184,7 +184,7 @@ erts_bfalc_start(BFAllctr_t *bfallctr,
 					   ? sizeof(RBTree_t)
 					   : sizeof(RBTreeList_t));
 
-    allctr->vsn_str			= (bfinit->ao
+    allctr->vsn_str			= (char *)(bfinit->ao
 					   ? ERTS_ALC_AOBF_ALLOC_VSN_STR
 					   : ERTS_ALC_BF_ALLOC_VSN_STR);
 
@@ -873,7 +873,7 @@ static struct {
 #endif
 } am;
 
-static void ERTS_INLINE atom_init(Eterm *atom, char *name)
+static void ERTS_INLINE atom_init(Eterm *atom, const char *name)
 {
     *atom = am_atom_put(name, strlen(name));
 }

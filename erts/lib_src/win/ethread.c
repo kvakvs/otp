@@ -534,7 +534,7 @@ ethr_equal_tids(ethr_tid tid1, ethr_tid tid2)
  */
 
 int
-ethr_tsd_key_create(ethr_tsd_key *keyp, char *keyname)
+ethr_tsd_key_create(ethr_tsd_key *keyp, const char *keyname)
 {
     DWORD key;
 #if ETHR_XCHK

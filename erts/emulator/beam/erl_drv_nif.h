@@ -28,8 +28,8 @@
 typedef struct {
     int driver_major_version;
     int driver_minor_version;
-    char *erts_version;
-    char *otp_release;
+    const char *erts_version;
+    const char *otp_release;
     int thread_support;
     int smp_support;
     int async_threads;

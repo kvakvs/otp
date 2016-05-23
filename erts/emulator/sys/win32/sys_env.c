@@ -88,7 +88,7 @@ erts_sys_getenv(char *key, char *value, size_t *size)
     return res;
 }
 int
-erts_sys_getenv__(char *key, char *value, size_t *size)
+erts_sys_getenv__(const char *key, char *value, size_t *size)
 {
     size_t req_size = 0;
     int res = 0;

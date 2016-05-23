@@ -86,8 +86,8 @@ struct hash
     HashBucket** bucket; /* Vector of bucket pointers (objects) */
 };
 
-Hash* hash_new(int, char*, int, HashFunctions);
-Hash* hash_init(int, Hash*, char*, int, HashFunctions);
+Hash* hash_new(int, const char*, int, HashFunctions);
+Hash* hash_init(int, Hash*, const char*, int, HashFunctions);
 
 void  hash_delete(Hash*);
 void  hash_get_info(HashInfo*, Hash*);

@@ -302,18 +302,18 @@ element_free(ErtsThrQ_t *q, ErtsThrQElement_t *el)
 #ifdef USE_THREADS
 
 static ERTS_INLINE ErtsThrQElement_t *
-enqueue_managed(ErtsThrQ_t *q, ErtsThrQElement_t *this)
+enqueue_managed(ErtsThrQ_t *q, ErtsThrQElement_t *this_)
 {
     erts_aint_t ilast, itmp;
 
-    erts_atomic_init_nob(&this->next, ERTS_AINT_NULL);
+    erts_atomic_init_nob(&this_->next, ERTS_AINT_NULL);
     /* Enqueue at end of list... */
 
     ilast = erts_atomic_read_nob(&q->tail.data.last);
     while (1) {
 	ErtsThrQElement_t *last = (ErtsThrQElement_t *) ilast;
 	itmp = erts_atomic_cmpxchg_mb(&last->next,
-				      (erts_aint_t) this,
+                                      (erts_aint_t) this_,
 				      ERTS_AINT_NULL);
 	if (itmp == ERTS_AINT_NULL)
 	    break;
@@ -322,16 +322,16 @@ enqueue_managed(ErtsThrQ_t *q, ErtsThrQElement_t *this)
 
     /* Move last pointer forward... */
     while (1) {
-	if (erts_atomic_read_rb(&this->next) != ERTS_AINT_NULL) {
+        if (erts_atomic_read_rb(&this_->next) != ERTS_AINT_NULL) {
 	    /* Someone else will move it forward */
 	    ilast = erts_atomic_read_rb(&q->tail.data.last);
 	    return (ErtsThrQElement_t *) ilast;
 	}
 	itmp = erts_atomic_cmpxchg_mb(&q->tail.data.last,
-				      (erts_aint_t) this,
+                                      (erts_aint_t) this_,
 				      ilast);
 	if (ilast == itmp)
-	    return this;
+            return this_;
 	ilast = itmp;
     }
 }
@@ -493,7 +493,8 @@ check_thr_progress:
     if (q->head.next.thr_progress_reached)
 #endif
     {
-	int um_refc_ix = q->head.next.um_refc_ix;
+        int um_refc_ix;
+        um_refc_ix = q->head.next.um_refc_ix;
 	if (erts_atomic_read_acqb(&q->tail.data.um_refc[um_refc_ix]) == 0) {
 	dirty:
 	    if (do_notify)
@@ -566,18 +567,18 @@ erts_thr_q_inspect(ErtsThrQ_t *q, int ensure_empty)
 }
 
 static void
-enqueue(ErtsThrQ_t *q, void *data, ErtsThrQElement_t *this)
+enqueue(ErtsThrQ_t *q, void *data, ErtsThrQElement_t *this_)
 {
 #ifndef USE_THREADS
     ASSERT(data);
 
-    this->next = NULL;
-    this->data.ptr = data;
+    this_->next = NULL;
+    this_->data.ptr = data;
 
     if (q->last)
-	q->last->next = this;
+        q->last->next = this_;
     else {
-	q->first = q->last = this;
+        q->first = q->last = this_;
 	q->init.notify(q->init.arg);
     }
 #else
@@ -594,7 +595,7 @@ enqueue(ErtsThrQ_t *q, void *data, ErtsThrQElement_t *this)
 
     ASSERT(!q->q.finalizing);
 
-    this->data.ptr = data;
+    this_->data.ptr = data;
 
 #ifdef ERTS_SMP
     unmanaged_thread = !erts_thr_progress_is_managed_thread();
@@ -613,7 +614,7 @@ enqueue(ErtsThrQ_t *q, void *data, ErtsThrQElement_t *this)
 	}
     }
 
-    notify = this == enqueue_managed(q, this);
+    notify = this_ == enqueue_managed(q, this_);
 	
 
 #ifdef ERTS_SMP

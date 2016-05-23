@@ -1422,7 +1422,7 @@ trap:  /* Yield */
     if (ctx == &local_ctx) {
         Binary* ctx_b = erts_create_magic_binary(sizeof(HashmapMergeContext),
                                                  hashmap_merge_ctx_destructor);
-        ctx = ERTS_MAGIC_BIN_DATA(ctx_b);
+        ctx = (HashmapMergeContext *)ERTS_MAGIC_BIN_DATA(ctx_b);
         sys_memcpy(ctx, &local_ctx, sizeof(HashmapMergeContext));
         hp = HAlloc(p, PROC_BIN_SIZE);
         ASSERT(ctx->trap_bin == THE_NON_VALUE);

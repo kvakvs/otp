@@ -1909,7 +1909,7 @@ send_time_offset_changed_notifications(void *new_offsetp)
 	/* + template max size */
 	alloc_sz += 6*sizeof(Eterm); /* 5-tuple */
 	alloc_sz += ERTS_MAX_SINT64_HEAP_SIZE*sizeof(Eterm); /* max offset size */
-	tmp = erts_alloc(ERTS_ALC_T_TMP, alloc_sz);
+        tmp = (char *)erts_alloc(ERTS_ALC_T_TMP, alloc_sz);
 
 	to_mon_info = (ErtsTimeOffsetMonitorInfo *) tmp;
 	cntxt.ix = 0;

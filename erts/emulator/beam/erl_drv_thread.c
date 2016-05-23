@@ -34,9 +34,9 @@
    + sizeof(((ErlDrvThreadOpts *) 0)->LAST_FIELD))
 
 static void
-fatal_error(int err, char *func)
+fatal_error(int err, const char *func)
 {
-    char *estr = strerror(err);
+    const char *estr = strerror(err);
     if (!estr) {
 	if (err == ENOTSUP)
 	    estr = "Not supported";
@@ -96,7 +96,7 @@ static char *no_name;
 static void
 thread_exit_handler(void)
 {
-    struct ErlDrvTid_ *dtid = ethr_tsd_get(tid_key);
+    struct ErlDrvTid_ *dtid = (ErlDrvTid_ *)ethr_tsd_get(tid_key);
     if (dtid) {
 	if (dtid->tsd)
 	    erts_free(ERTS_ALC_T_DRV_TSD, dtid->tsd);
@@ -136,7 +136,7 @@ void erl_drv_thr_init(void)
     next_tsd_key = 0;
     max_used_tsd_key = -1;
     used_tsd_keys_len = ERL_DRV_TSD_KEYS_INC;
-    used_tsd_keys = erts_alloc(ERTS_ALC_T_DRV_TSD,
+    used_tsd_keys = (char **)erts_alloc(ERTS_ALC_T_DRV_TSD,
 			       sizeof(char *)*ERL_DRV_TSD_KEYS_INC);
     for (i = 0; i < ERL_DRV_TSD_KEYS_INC; i++)
 	used_tsd_keys[i] = NULL;
@@ -153,7 +153,7 @@ ErlDrvMutex *
 erl_drv_mutex_create(char *name)
 {
 #ifdef USE_THREADS
-    ErlDrvMutex *dmtx = erts_alloc_fnf(ERTS_ALC_T_DRV_MTX,
+    ErlDrvMutex *dmtx = (ErlDrvMutex *)erts_alloc_fnf(ERTS_ALC_T_DRV_MTX,
 				       (sizeof(ErlDrvMutex)
 					+ (name ? sys_strlen(name) + 1 : 0)));
     if (dmtx) {
@@ -234,7 +234,7 @@ ErlDrvCond *
 erl_drv_cond_create(char *name)
 {
 #ifdef USE_THREADS
-    ErlDrvCond *dcnd = erts_alloc_fnf(ERTS_ALC_T_DRV_CND,
+    ErlDrvCond *dcnd = (ErlDrvCond *)erts_alloc_fnf(ERTS_ALC_T_DRV_CND,
 				      (sizeof(ErlDrvCond)
 				       + (name ? sys_strlen(name) + 1 : 0)));
     if (dcnd) {
@@ -318,7 +318,7 @@ ErlDrvRWLock *
 erl_drv_rwlock_create(char *name)
 {
 #ifdef USE_THREADS
-    ErlDrvRWLock *drwlck = erts_alloc_fnf(ERTS_ALC_T_DRV_RWLCK,
+    ErlDrvRWLock *drwlck = (ErlDrvRWLock *)erts_alloc_fnf(ERTS_ALC_T_DRV_RWLCK,
 					  (sizeof(ErlDrvRWLock)
 					   + (name ? sys_strlen(name) + 1 : 0)));
     if (drwlck) {
@@ -437,7 +437,7 @@ erl_drv_tsd_key_create(char *name, ErlDrvTSDKey *key)
     if (!name)
 	name_copy = no_name;
     else {
-	name_copy = erts_alloc_fnf(ERTS_ALC_T_DRV_TSD,
+        name_copy = (char *)erts_alloc_fnf(ERTS_ALC_T_DRV_TSD,
 				   sizeof(char)*(strlen(name) + 1));
 	if (!name_copy) {
 	    *key = -1;
@@ -469,7 +469,7 @@ erl_drv_tsd_key_create(char *name, ErlDrvTSDKey *key)
 	    else {
 		char **new_used_tsd_keys;
 		used_tsd_keys_len += ERL_DRV_TSD_KEYS_INC;
-		new_used_tsd_keys = erts_realloc_fnf(ERTS_ALC_T_DRV_TSD,
+                new_used_tsd_keys = (char **)erts_realloc_fnf(ERTS_ALC_T_DRV_TSD,
 						     used_tsd_keys,
 						     (sizeof(char *)
 						      * used_tsd_keys_len));
@@ -536,7 +536,7 @@ erl_drv_tsd_set(ErlDrvTSDKey key, void *data)
     if (!ERL_DRV_TSD__) {
 	ErlDrvTSDKey i;
 	ERL_DRV_TSD_LEN__ = key + ERL_DRV_TSD_EXTRA;
-	ERL_DRV_TSD__ = erts_alloc(ERTS_ALC_T_DRV_TSD,
+        ERL_DRV_TSD__ = (void **)erts_alloc(ERTS_ALC_T_DRV_TSD,
 				   sizeof(void *)*ERL_DRV_TSD_LEN__);
 	for (i = 0; i < ERL_DRV_TSD_LEN__; i++)
 	    ERL_DRV_TSD__[i] = NULL;
@@ -544,7 +544,7 @@ erl_drv_tsd_set(ErlDrvTSDKey key, void *data)
     else if (ERL_DRV_TSD_LEN__ <= key) {
 	ErlDrvTSDKey i = ERL_DRV_TSD_LEN__;
 	ERL_DRV_TSD_LEN__ = key + ERL_DRV_TSD_EXTRA;
-	ERL_DRV_TSD__ = erts_realloc(ERTS_ALC_T_DRV_TSD,
+        ERL_DRV_TSD__ = (void **)erts_realloc(ERTS_ALC_T_DRV_TSD,
 				     ERL_DRV_TSD__,
 				     sizeof(void *)*ERL_DRV_TSD_LEN__);
 	for (; i < ERL_DRV_TSD_LEN__; i++)
@@ -557,7 +557,7 @@ void *
 erl_drv_tsd_get(ErlDrvTSDKey key)
 {
 #ifdef USE_THREADS
-    struct ErlDrvTid_ *dtid = ethr_tsd_get(tid_key);
+    struct ErlDrvTid_ *dtid = (ErlDrvTid_ *)ethr_tsd_get(tid_key);
 #endif
     if (key < 0 || max_used_tsd_key < key || !used_tsd_keys[key])
 	fatal_error(EINVAL, "erl_drv_tsd_get()");
@@ -576,8 +576,9 @@ erl_drv_tsd_get(ErlDrvTSDKey key)
 ErlDrvThreadOpts *
 erl_drv_thread_opts_create(char *name)
 {
-    ErlDrvThreadOpts *opts = erts_alloc_fnf(ERTS_ALC_T_DRV_THR_OPTS,
-					    sizeof(ErlDrvThreadOpts));
+    ErlDrvThreadOpts *opts = (ErlDrvThreadOpts *)
+            erts_alloc_fnf(ERTS_ALC_T_DRV_THR_OPTS,
+                           sizeof(ErlDrvThreadOpts));
     if (!opts)
 	return NULL;
     opts->suggested_stack_size = -1;
@@ -615,7 +616,7 @@ erl_drv_thread_create(char *name,
 	use_opts = &ethr_opts;
     }
 
-    dtid = erts_alloc_fnf(ERTS_ALC_T_DRV_TID,
+    dtid = (struct ErlDrvTid_ *)erts_alloc_fnf(ERTS_ALC_T_DRV_TID,
 			  (sizeof(struct ErlDrvTid_)
 			   + (name ? sys_strlen(name) + 1 : 0)));
     if (!dtid)
@@ -662,12 +663,13 @@ ErlDrvTid
 erl_drv_thread_self(void)
 {
 #ifdef USE_THREADS
-    struct ErlDrvTid_ *dtid = ethr_tsd_get(tid_key);
+    struct ErlDrvTid_ *dtid = (struct ErlDrvTid_ *)ethr_tsd_get(tid_key);
     if (!dtid) {
 	int res;
 	/* This is a thread not spawned by this interface. thread_exit_handler()
 	   will clean it up when it terminates. */
-	dtid = erts_alloc(ERTS_ALC_T_DRV_TID, sizeof(struct ErlDrvTid_));
+        dtid = (struct ErlDrvTid_ *)
+                erts_alloc(ERTS_ALC_T_DRV_TID, sizeof(struct ErlDrvTid_));
 	dtid->drv_thr = 0; /* Not a driver thread */
 	dtid->tid = ethr_self();
 	dtid->func = NULL;
@@ -711,7 +713,7 @@ void
 erl_drv_thread_exit(void *res)
 {
 #ifdef USE_THREADS
-    struct ErlDrvTid_ *dtid = ethr_tsd_get(tid_key);
+    struct ErlDrvTid_ *dtid = (struct ErlDrvTid_ *)ethr_tsd_get(tid_key);
     if (dtid && dtid->drv_thr) {
 	ethr_thr_exit(res);
 	fatal_error(0, "erl_drv_thread_exit()");

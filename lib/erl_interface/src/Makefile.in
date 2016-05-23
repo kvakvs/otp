@@ -158,7 +158,7 @@ BINDIR     = $(ERL_TOP)/lib/erl_interface/bin/$(TARGET)
 # -Wno-char-subscripts
 # -Wshadow
 
-vpath %.c connect:encode:decode:misc:epmd:legacy:registry
+vpath %.cpp connect:encode:decode:misc:epmd:legacy:registry
 
 ###########################################################################
 #  List targets
@@ -330,170 +330,170 @@ EISOURCES = \
 	$(REGISTRYSRC)
 
 CONNECTSRC = \
-	connect/ei_connect.c \
-	connect/ei_resolve.c \
-	connect/eirecv.c \
-	connect/send.c \
-	connect/send_exit.c \
-	connect/send_reg.c
+	connect/ei_connect.cpp \
+	connect/ei_resolve.cpp \
+	connect/eirecv.cpp \
+	connect/send.cpp \
+	connect/send_exit.cpp \
+	connect/send_reg.cpp
 
 DECODESRC = \
-	decode/decode_atom.c \
-	decode/decode_big.c \
-	decode/decode_bignum.c \
-	decode/decode_binary.c \
-	decode/decode_boolean.c \
-	decode/decode_char.c \
-	decode/decode_double.c \
-	decode/decode_fun.c \
-	decode/decode_intlist.c \
-	decode/decode_list_header.c \
-	decode/decode_long.c \
-	decode/decode_pid.c \
-	decode/decode_port.c \
-	decode/decode_ref.c \
-	decode/decode_skip.c \
-	decode/decode_string.c \
-	decode/decode_trace.c \
-	decode/decode_tuple_header.c \
-	decode/decode_ulong.c \
-	decode/decode_version.c \
+	decode/decode_atom.cpp \
+	decode/decode_big.cpp \
+	decode/decode_bignum.cpp \
+	decode/decode_binary.cpp \
+	decode/decode_boolean.cpp \
+	decode/decode_char.cpp \
+	decode/decode_double.cpp \
+	decode/decode_fun.cpp \
+	decode/decode_intlist.cpp \
+	decode/decode_list_header.cpp \
+	decode/decode_long.cpp \
+	decode/decode_pid.cpp \
+	decode/decode_port.cpp \
+	decode/decode_ref.cpp \
+	decode/decode_skip.cpp \
+	decode/decode_string.cpp \
+	decode/decode_trace.cpp \
+	decode/decode_tuple_header.cpp \
+	decode/decode_ulong.cpp \
+	decode/decode_version.cpp \
 	$(DECODESRC_LONGLONG)
 
 ifneq ($(findstring vxworks,$(TARGET)),vxworks)
 DECODESRC_LONGLONG = \
-	decode/decode_longlong.c \
-	decode/decode_ulonglong.c
+	decode/decode_longlong.cpp \
+	decode/decode_ulonglong.cpp
 else
 DECODESRC_LONGLONG =
 endif
 
 
 ENCODESRC = \
-	encode/encode_atom.c \
-	encode/encode_big.c \
-	encode/encode_bignum.c \
-	encode/encode_binary.c \
-	encode/encode_boolean.c \
-	encode/encode_char.c \
-	encode/encode_double.c \
-	encode/encode_fun.c \
-	encode/encode_list_header.c \
-	encode/encode_long.c \
-	encode/encode_pid.c \
-	encode/encode_port.c \
-	encode/encode_ref.c \
-	encode/encode_string.c \
-	encode/encode_trace.c \
-	encode/encode_tuple_header.c \
-	encode/encode_ulong.c \
-	encode/encode_version.c \
+	encode/encode_atom.cpp \
+	encode/encode_big.cpp \
+	encode/encode_bignum.cpp \
+	encode/encode_binary.cpp \
+	encode/encode_boolean.cpp \
+	encode/encode_char.cpp \
+	encode/encode_double.cpp \
+	encode/encode_fun.cpp \
+	encode/encode_list_header.cpp \
+	encode/encode_long.cpp \
+	encode/encode_pid.cpp \
+	encode/encode_port.cpp \
+	encode/encode_ref.cpp \
+	encode/encode_string.cpp \
+	encode/encode_trace.cpp \
+	encode/encode_tuple_header.cpp \
+	encode/encode_ulong.cpp \
+	encode/encode_version.cpp \
 	$(ENCODESRC_LONGLONG)
 
 ifneq ($(findstring vxworks,$(TARGET)),vxworks)
 ENCODESRC_LONGLONG = \
-	encode/encode_longlong.c \
-	encode/encode_ulonglong.c
+	encode/encode_longlong.cpp \
+	encode/encode_ulonglong.cpp
 else
 ENCODESRC_LONGLONG =
 endif
 
 
 EPMDSRC = \
-	epmd/epmd_port.c \
-	epmd/epmd_publish.c \
-	epmd/epmd_unpublish.c
+	epmd/epmd_port.cpp \
+	epmd/epmd_publish.cpp \
+	epmd/epmd_unpublish.cpp
 
 MISCSRC = \
-	misc/ei_decode_term.c \
-	misc/ei_format.c \
-	misc/ei_locking.c \
-	misc/ei_malloc.c \
-	misc/ei_portio.c \
-	misc/ei_printterm.c \
-	misc/ei_pthreads.c \
-	misc/ei_trace.c \
-	misc/ei_x_encode.c \
-	misc/eimd5.c \
-	misc/get_type.c \
-	misc/show_msg.c \
-	misc/ei_compat.c
+	misc/ei_decode_term.cpp \
+	misc/ei_format.cpp \
+	misc/ei_locking.cpp \
+	misc/ei_malloc.cpp \
+	misc/ei_portio.cpp \
+	misc/ei_printterm.cpp \
+	misc/ei_pthreads.cpp \
+	misc/ei_trace.cpp \
+	misc/ei_x_encode.cpp \
+	misc/eimd5.cpp \
+	misc/get_type.cpp \
+	misc/show_msg.cpp \
+	misc/ei_compat.cpp
 
 REGISTRYSRC = \
-	registry/hash_dohash.c \
-	registry/hash_foreach.c \
-	registry/hash_freetab.c \
-	registry/hash_insert.c \
-	registry/hash_isprime.c \
-	registry/hash_lookup.c \
-	registry/hash_newtab.c \
-	registry/hash_remove.c \
-	registry/hash_resize.c \
-	registry/hash_rlookup.c \
-	registry/reg_close.c \
-	registry/reg_delete.c \
-	registry/reg_dirty.c \
-	registry/reg_dump.c \
-	registry/reg_free.c \
-	registry/reg_get.c \
-	registry/reg_getf.c \
-	registry/reg_geti.c \
-	registry/reg_getp.c \
-	registry/reg_gets.c \
-	registry/reg_make.c \
-	registry/reg_open.c \
-	registry/reg_purge.c \
-	registry/reg_resize.c \
-	registry/reg_restore.c \
-	registry/reg_set.c \
-	registry/reg_setf.c \
-	registry/reg_seti.c \
-	registry/reg_setp.c \
-	registry/reg_sets.c \
-	registry/reg_stat.c \
-	registry/reg_tabstat.c
+	registry/hash_dohash.cpp \
+	registry/hash_foreach.cpp \
+	registry/hash_freetab.cpp \
+	registry/hash_insert.cpp \
+	registry/hash_isprime.cpp \
+	registry/hash_lookup.cpp \
+	registry/hash_newtab.cpp \
+	registry/hash_remove.cpp \
+	registry/hash_resize.cpp \
+	registry/hash_rlookup.cpp \
+	registry/reg_close.cpp \
+	registry/reg_delete.cpp \
+	registry/reg_dirty.cpp \
+	registry/reg_dump.cpp \
+	registry/reg_free.cpp \
+	registry/reg_get.cpp \
+	registry/reg_getf.cpp \
+	registry/reg_geti.cpp \
+	registry/reg_getp.cpp \
+	registry/reg_gets.cpp \
+	registry/reg_make.cpp \
+	registry/reg_open.cpp \
+	registry/reg_purge.cpp \
+	registry/reg_resize.cpp \
+	registry/reg_restore.cpp \
+	registry/reg_set.cpp \
+	registry/reg_setf.cpp \
+	registry/reg_seti.cpp \
+	registry/reg_setp.cpp \
+	registry/reg_sets.cpp \
+	registry/reg_stat.cpp \
+	registry/reg_tabstat.cpp
 
 ERLSOURCES = \
-	legacy/decode_term.c \
-	legacy/encode_term.c \
-	legacy/erl_connect.c \
-	legacy/erl_error.c \
-	legacy/erl_eterm.c \
-	legacy/erl_fix_alloc.c \
-	legacy/erl_format.c \
-	legacy/erl_malloc.c \
-	legacy/erl_marshal.c \
-	legacy/erl_resolve.c \
-	legacy/erl_timeout.c \
-	legacy/global_names.c \
-	legacy/global_register.c \
-	legacy/global_unregister.c \
-	legacy/global_whereis.c
+	legacy/decode_term.cpp \
+	legacy/encode_term.cpp \
+	legacy/erl_connect.cpp \
+	legacy/erl_error.cpp \
+	legacy/erl_eterm.cpp \
+	legacy/erl_fix_alloc.cpp \
+	legacy/erl_format.cpp \
+	legacy/erl_malloc.cpp \
+	legacy/erl_marshal.cpp \
+	legacy/erl_resolve.cpp \
+	legacy/erl_timeout.cpp \
+	legacy/global_names.cpp \
+	legacy/global_register.cpp \
+	legacy/global_unregister.cpp \
+	legacy/global_whereis.cpp
 
 SOURCES = $(EISOURCES) $(ERLSOURCES)
 
 NEVERUSED = \
-	whereis.c \
-	ei_send.c \
-	ei_send_reg.c \
-	send_link.c
+	whereis.cpp \
+	ei_send.cpp \
+	ei_send_reg.cpp \
+	send_link.cpp
 
 ERLCALL = \
-	prog/erl_call.c \
-	prog/erl_start.c
+	prog/erl_call.cpp \
+	prog/erl_start.cpp
 
 
-# Note that encode/decode_term.c defines ei functions that is
+# Note that encode/decode_term.cpp defines ei functions that is
 # located in the erl_interface library, not ei library.
 
-ST_EIOBJECTS  = $(addprefix $(ST_OBJDIR)/,$(notdir $(EISOURCES:.c=.o)))
-ST_ERLOBJECTS = $(addprefix $(ST_OBJDIR)/,$(notdir $(ERLSOURCES:.c=.o)))
-MT_EIOBJECTS  = $(addprefix $(MT_OBJDIR)/,$(notdir $(EISOURCES:.c=.o)))
-MT_ERLOBJECTS = $(addprefix $(MT_OBJDIR)/,$(notdir $(ERLSOURCES:.c=.o)))
-MD_EIOBJECTS  = $(addprefix $(MD_OBJDIR)/,$(notdir $(EISOURCES:.c=.o)))
-MD_ERLOBJECTS = $(addprefix $(MD_OBJDIR)/,$(notdir $(ERLSOURCES:.c=.o)))
-MDD_EIOBJECTS  = $(addprefix $(MDD_OBJDIR)/,$(notdir $(EISOURCES:.c=.o)))
-MDD_ERLOBJECTS = $(addprefix $(MDD_OBJDIR)/,$(notdir $(ERLSOURCES:.c=.o)))
+ST_EIOBJECTS  = $(addprefix $(ST_OBJDIR)/,$(notdir $(EISOURCES:.cpp=.o)))
+ST_ERLOBJECTS = $(addprefix $(ST_OBJDIR)/,$(notdir $(ERLSOURCES:.cpp=.o)))
+MT_EIOBJECTS  = $(addprefix $(MT_OBJDIR)/,$(notdir $(EISOURCES:.cpp=.o)))
+MT_ERLOBJECTS = $(addprefix $(MT_OBJDIR)/,$(notdir $(ERLSOURCES:.cpp=.o)))
+MD_EIOBJECTS  = $(addprefix $(MD_OBJDIR)/,$(notdir $(EISOURCES:.cpp=.o)))
+MD_ERLOBJECTS = $(addprefix $(MD_OBJDIR)/,$(notdir $(ERLSOURCES:.cpp=.o)))
+MDD_EIOBJECTS  = $(addprefix $(MDD_OBJDIR)/,$(notdir $(EISOURCES:.cpp=.o)))
+MDD_ERLOBJECTS = $(addprefix $(MDD_OBJDIR)/,$(notdir $(ERLSOURCES:.cpp=.o)))
 
 ###########################################################################
 #  Main targets
@@ -540,19 +540,19 @@ endif
 #  Default rules, normal and threaded
 ###########################################################################
 
-$(ST_OBJDIR)/%.o: %.c
+$(ST_OBJDIR)/%.o: %.cpp
 	$(V_CC) $(CFLAGS) -c $< -o $@
 
-$(MT_OBJDIR)/%.o: %.c
+$(MT_OBJDIR)/%.o: %.cpp
 	$(V_CC) $(MTFLAG) $(CFLAGS) $(THR_DEFS) -c $< -o $@
 
-$(MD_OBJDIR)/%.o: %.c
+$(MD_OBJDIR)/%.o: %.cpp
 	$(V_CC) -MD $(CFLAGS) $(THR_DEFS) -c $< -o $@
 
-$(MD_OBJDIR)/%.o: %.c
+$(MD_OBJDIR)/%.o: %.cpp
 	$(V_CC) -MD $(CFLAGS) $(THR_DEFS) -c $< -o $@
 
-$(MDD_OBJDIR)/%.o: %.c
+$(MDD_OBJDIR)/%.o: %.cpp
 	$(V_CC) -MDd $(CFLAGS) $(THR_DEFS) -c $< -o $@
 
 ###########################################################################
@@ -653,10 +653,10 @@ ifeq ($(findstring vxworks,$(TARGET)),vxworks)
 $(ERL_CALL): $(ST_OBJDIR)/erl_call.o $(ST_OBJDIR)/erl_start.o ../include/ei.h $(ST_EILIB)
 	$(V_LD) -r -d -o $@ $(ST_OBJDIR)/erl_call.o $(ST_OBJDIR)/erl_start.o -L$(OBJDIR) -lei $(LIBS)
 
-$(ST_OBJDIR)/erl_call.o: prog/erl_call.c
+$(ST_OBJDIR)/erl_call.o: prog/erl_call.cpp
 	$(V_CC) $(CFLAGS) -c $< -o $@
 
-$(ST_OBJDIR)/erl_start.o: prog/erl_start.c
+$(ST_OBJDIR)/erl_start.o: prog/erl_start.cpp
 	$(V_CC) $(CFLAGS) -c $< -o $@
 
 else
@@ -679,100 +679,100 @@ endif
 check: $(FAKE_TARGETS)
 
 ifndef THR_DEFS
-$(ST_OBJDIR)/erl_fake_prog_st$(EXE): prog/erl_fake_prog.c $(ST_ERLLIB) $(ST_EILIB)
+$(ST_OBJDIR)/erl_fake_prog_st$(EXE): prog/erl_fake_prog.cpp $(ST_ERLLIB) $(ST_EILIB)
 	$(V_CC) $(PROG_CFLAGS) -o $@ $< -L$(OBJDIR) -lerl_interface -lei \
 		$(LIBS)
 
-$(ST_OBJDIR)/ei_fake_prog_st$(EXE): prog/ei_fake_prog.c $(ST_EILIB)
+$(ST_OBJDIR)/ei_fake_prog_st$(EXE): prog/ei_fake_prog.cpp $(ST_EILIB)
 	$(V_CC) $(PROG_CFLAGS) -o $@ $< -L$(OBJDIR) -lei $(LIBS)
 
-$(ST_OBJDIR)/erl_fake_prog_cxx_st$(EXE): prog/erl_fake_prog.c \
+$(ST_OBJDIR)/erl_fake_prog_cxx_st$(EXE): prog/erl_fake_prog.cpp \
 		$(ST_ERLLIB) $(ST_EILIB)
 	$(V_CC) $(PROG_CFLAGS) -o $@ -xc++ $< -L$(OBJDIR) \
 		-lerl_interface -lei $(LIBS)
 
-$(ST_OBJDIR)/ei_fake_prog_cxx_st$(EXE): prog/ei_fake_prog.c $(ST_EILIB)
+$(ST_OBJDIR)/ei_fake_prog_cxx_st$(EXE): prog/ei_fake_prog.cpp $(ST_EILIB)
 	$(V_CC) $(PROG_CFLAGS) -o $@ -xc++ $< -L$(OBJDIR) -lei $(LIBS)
 
 else
 
-$(ST_OBJDIR)/erl_fake_prog_st$(EXE): prog/erl_fake_prog.c $(ST_ERLLIB) $(ST_EILIB)
+$(ST_OBJDIR)/erl_fake_prog_st$(EXE): prog/erl_fake_prog.cpp $(ST_ERLLIB) $(ST_EILIB)
 	$(V_CC) $(PROG_CFLAGS) -o $@ $< -L$(OBJDIR) -lerl_interface_st -lei_st \
 		$(LIBS)
 
-$(ST_OBJDIR)/ei_fake_prog_st$(EXE): prog/ei_fake_prog.c $(ST_EILIB)
+$(ST_OBJDIR)/ei_fake_prog_st$(EXE): prog/ei_fake_prog.cpp $(ST_EILIB)
 	$(V_CC) $(PROG_CFLAGS) -o $@ $< -L$(OBJDIR) -lei_st $(LIBS)
 
-$(ST_OBJDIR)/erl_fake_prog_cxx_st$(EXE): prog/erl_fake_prog.c \
+$(ST_OBJDIR)/erl_fake_prog_cxx_st$(EXE): prog/erl_fake_prog.cpp \
 		$(ST_ERLLIB) $(ST_EILIB)
 	$(V_CC) $(PROG_CFLAGS) -o $@ -xc++ $< -L$(OBJDIR) \
 		-lerl_interface_st -lei_st $(LIBS)
 
-$(ST_OBJDIR)/ei_fake_prog_cxx_st$(EXE): prog/ei_fake_prog.c $(ST_EILIB)
+$(ST_OBJDIR)/ei_fake_prog_cxx_st$(EXE): prog/ei_fake_prog.cpp $(ST_EILIB)
 	$(V_CC) $(PROG_CFLAGS) -o $@ -xc++ $< -L$(OBJDIR) -lei_st $(LIBS)
 
 endif
 
 ####
 
-$(MT_OBJDIR)/erl_fake_prog_mt$(EXE): prog/erl_fake_prog.c \
+$(MT_OBJDIR)/erl_fake_prog_mt$(EXE): prog/erl_fake_prog.cpp \
 		$(MT_ERLLIB) $(MT_EILIB)
 	$(V_CC) $(MTFLAG) $(PROG_CFLAGS) $(THR_DEFS) -o $@ $< -L$(OBJDIR) \
 		-lerl_interface -lei $(THR_LIBS) $(LIBS)
 
-$(MT_OBJDIR)/ei_fake_prog_mt$(EXE): prog/ei_fake_prog.c $(MT_EILIB)
+$(MT_OBJDIR)/ei_fake_prog_mt$(EXE): prog/ei_fake_prog.cpp $(MT_EILIB)
 	$(V_CC) $(MTFLAG) $(PROG_CFLAGS) $(THR_DEFS) -o $@ $< \
 		-L$(OBJDIR) -lei $(THR_LIBS) $(LIBS)
 
-$(MT_OBJDIR)/erl_fake_prog_mt_cxx$(EXE): prog/erl_fake_prog.c \
+$(MT_OBJDIR)/erl_fake_prog_mt_cxx$(EXE): prog/erl_fake_prog.cpp \
 		$(MT_ERLLIB) $(MT_EILIB)
 	$(V_CC) $(MTFLAG) $(PROG_CFLAGS) $(THR_DEFS) -o $@ -xc++ $< \
 		-L$(OBJDIR) -lerl_interface -lei \
 		$(THR_LIBS) $(LIBS)
 
-$(MT_OBJDIR)/ei_fake_prog_mt_cxx$(EXE): prog/ei_fake_prog.c $(MT_EILIB)
+$(MT_OBJDIR)/ei_fake_prog_mt_cxx$(EXE): prog/ei_fake_prog.cpp $(MT_EILIB)
 	$(V_CC) $(MTFLAG) $(PROG_CFLAGS) $(THR_DEFS) -o $@ -xc++ $< \
 		-L$(OBJDIR) -lei $(THR_LIBS) $(LIBS)
 
 ####
 
-$(MD_OBJDIR)/erl_fake_prog_md$(EXE): prog/erl_fake_prog.c \
+$(MD_OBJDIR)/erl_fake_prog_md$(EXE): prog/erl_fake_prog.cpp \
 		$(MD_ERLLIB) $(MD_EILIB)
 	$(V_CC) -MD $(PROG_CFLAGS) $(THR_DEFS) -o $@ $< -L$(OBJDIR) \
 		-lerl_interface_r -lei_r $(THR_LIBS) $(LIBS)
 
-$(MD_OBJDIR)/ei_fake_prog_md$(EXE): prog/ei_fake_prog.c $(MD_EILIB)
+$(MD_OBJDIR)/ei_fake_prog_md$(EXE): prog/ei_fake_prog.cpp $(MD_EILIB)
 	$(V_CC) -MD $(PROG_CFLAGS) $(THR_DEFS) -o $@ $< \
 		-L$(OBJDIR) -lei_r $(THR_LIBS) $(LIBS)
 
-$(MD_OBJDIR)/erl_fake_prog_md_cxx$(EXE): prog/erl_fake_prog.c \
+$(MD_OBJDIR)/erl_fake_prog_md_cxx$(EXE): prog/erl_fake_prog.cpp \
 		$(MD_ERLLIB) $(MD_EILIB)
 	$(V_CC) -MD $(PROG_CFLAGS) $(THR_DEFS) -o $@ -xc++ $< \
 		-L$(OBJDIR) -lerl_interface_r -lei_r \
 		$(THR_LIBS) $(LIBS)
 
-$(MD_OBJDIR)/ei_fake_prog_md_cxx$(EXE): prog/ei_fake_prog.c $(MD_EILIB)
+$(MD_OBJDIR)/ei_fake_prog_md_cxx$(EXE): prog/ei_fake_prog.cpp $(MD_EILIB)
 	$(V_CC) -MD $(PROG_CFLAGS) $(THR_DEFS) -o $@ -xc++ $< \
 		-L$(OBJDIR) -lei_r $(THR_LIBS) $(LIBS)
 
 ####
 
-$(MDD_OBJDIR)/erl_fake_prog_mdd$(EXE): prog/erl_fake_prog.c \
+$(MDD_OBJDIR)/erl_fake_prog_mdd$(EXE): prog/erl_fake_prog.cpp \
 		$(MDD_ERLLIB) $(MDD_EILIB)
 	$(V_CC) -MDD $(PROG_CFLAGS) $(THR_DEFS) -o $@ $< -L$(OBJDIR) \
 		-lerl_interface_r -lei_r $(THR_LIBS) $(LIBS)
 
-$(MDD_OBJDIR)/ei_fake_prog_mdd$(EXE): prog/ei_fake_prog.c $(MDD_EILIB)
+$(MDD_OBJDIR)/ei_fake_prog_mdd$(EXE): prog/ei_fake_prog.cpp $(MDD_EILIB)
 	$(V_CC) -MDD $(PROG_CFLAGS) $(THR_DEFS) -o $@ $< \
 		-L$(OBJDIR) -lei_r $(THR_LIBS) $(LIBS)
 
-$(MDD_OBJDIR)/erl_fake_prog_mdd_cxx$(EXE): prog/erl_fake_prog.c \
+$(MDD_OBJDIR)/erl_fake_prog_mdd_cxx$(EXE): prog/erl_fake_prog.cpp \
 		$(MDD_ERLLIB) $(MDD_EILIB)
 	$(V_CC) -MDD $(PROG_CFLAGS) $(THR_DEFS) -o $@ -xc++ $< \
 		-L$(OBJDIR) -lerl_interface_r -lei_r \
 		$(THR_LIBS) $(LIBS)
 
-$(MDD_OBJDIR)/ei_fake_prog_mdd_cxx$(EXE): prog/ei_fake_prog.c $(MDD_EILIB)
+$(MDD_OBJDIR)/ei_fake_prog_mdd_cxx$(EXE): prog/ei_fake_prog.cpp $(MDD_EILIB)
 	$(V_CC) -MDD $(PROG_CFLAGS) $(THR_DEFS) -o $@ -xc++ $< \
 		-L$(OBJDIR) -lei_r $(THR_LIBS) $(LIBS)
 

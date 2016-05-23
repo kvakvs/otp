@@ -232,7 +232,7 @@ erts_cleanup_messages(ErtsMessage *msgp)
 ErtsMessage *
 erts_realloc_shrink_message(ErtsMessage *mp, Uint sz, Eterm *brefs, Uint brefs_size)
 {
-    ErtsMessage *nmp = erts_realloc(ERTS_ALC_T_MSG, mp,
+    ErtsMessage *nmp = (ErtsMessage *)erts_realloc(ERTS_ALC_T_MSG, mp,
 				    sizeof(ErtsMessage) + (sz - 1)*sizeof(Eterm));
     if (nmp != mp) {
 	Eterm *sp = &mp->hfrag.mem[0];
@@ -567,7 +567,7 @@ erts_msg_attached_data_size_aux(ErtsMessage *msg)
 	/* Bad external; remove it */
 	if (is_not_nil(ERL_MESSAGE_TOKEN(msg))) {
 	    ErlHeapFragment *heap_frag;
-	    heap_frag = erts_dist_ext_trailer(msg->data.dist_ext);
+            heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(msg->data.dist_ext);
 	    erts_cleanup_offheap(&heap_frag->off_heap);
 	}
 	erts_free_dist_ext_copy(msg->data.dist_ext);
@@ -578,7 +578,7 @@ erts_msg_attached_data_size_aux(ErtsMessage *msg)
     msg->data.dist_ext->heap_size = sz;
     if (is_not_nil(msg->m[1])) {
 	ErlHeapFragment *heap_frag;
-	heap_frag = erts_dist_ext_trailer(msg->data.dist_ext);
+        heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(msg->data.dist_ext);
 	sz += heap_frag->used_size;
     }
     return sz;
@@ -1215,7 +1215,7 @@ change_to_off_heap:
 	erts_smp_atomic32_read_bor_nob(&c_p->state,
 				       ERTS_PSFLG_OFF_HEAP_MSGQ);
 	c_p->flags |= F_OFF_HEAP_MSGQ_CHNG;
-	cohmq = erts_alloc(ERTS_ALC_T_MSGQ_CHNG,
+        cohmq = (ErtsChangeOffHeapMessageQueue *)erts_alloc(ERTS_ALC_T_MSGQ_CHNG,
 			   sizeof(ErtsChangeOffHeapMessageQueue));
 	cohmq->pid = c_p->common.id;
 	erts_schedule_thr_prgr_later_op(change_off_heap_msgq,
@@ -1247,7 +1247,7 @@ erts_decode_dist_message(Process *proc, ErtsProcLocks proc_locks,
 	if (need < 0) {
 	    /* bad msg; remove it... */
 	    if (is_not_immed(ERL_MESSAGE_TOKEN(msgp))) {
-		bp = erts_dist_ext_trailer(msgp->data.dist_ext);
+                bp = (ErlHeapFragment *)erts_dist_ext_trailer(msgp->data.dist_ext);
 		erts_cleanup_offheap(&bp->off_heap);
 	    }
 	    erts_free_dist_ext_copy(msgp->data.dist_ext);
@@ -1259,7 +1259,7 @@ erts_decode_dist_message(Process *proc, ErtsProcLocks proc_locks,
     }
 
     if (is_not_immed(ERL_MESSAGE_TOKEN(msgp))) {
-	bp = erts_dist_ext_trailer(msgp->data.dist_ext);
+        bp = (ErlHeapFragment *)erts_dist_ext_trailer(msgp->data.dist_ext);
 	need += bp->used_size;
     }
 
@@ -1271,7 +1271,7 @@ erts_decode_dist_message(Process *proc, ErtsProcLocks proc_locks,
     ASSERT(msgp->data.dist_ext->heap_size >= 0);
     if (is_not_immed(ERL_MESSAGE_TOKEN(msgp))) {
 	ErlHeapFragment *heap_frag;
-	heap_frag = erts_dist_ext_trailer(msgp->data.dist_ext);
+        heap_frag = (ErlHeapFragment *)erts_dist_ext_trailer(msgp->data.dist_ext);
 	ERL_MESSAGE_TOKEN(msgp) = copy_struct(ERL_MESSAGE_TOKEN(msgp),
 					      heap_frag->used_size,
 					      &factory.hp,
@@ -1449,7 +1449,7 @@ void erts_factory_proc_prealloc_init(ErtsHeapFactory* factory,
 				     Sint size)
 {
     ErlHeapFragment *bp = p->mbuf;
-    factory->mode     = FACTORY_HALLOC;
+    factory->mode     = ErtsHeapFactory::FACTORY_HALLOC;
     factory->p        = p;
     factory->hp_start = HAlloc(p, size);
     factory->hp       = factory->hp_start;
@@ -1467,7 +1467,7 @@ void erts_factory_proc_prealloc_init(ErtsHeapFactory* factory,
 void erts_factory_heap_frag_init(ErtsHeapFactory* factory,
 				 ErlHeapFragment* bp)
 {
-    factory->mode     = FACTORY_HEAP_FRAGS;
+    factory->mode     = ErtsHeapFactory::FACTORY_HEAP_FRAGS;
     factory->p        = NULL;
     factory->hp_start = bp->mem;
     factory->hp       = bp->mem;
@@ -1515,13 +1515,13 @@ erts_factory_message_create(ErtsHeapFactory* factory,
     if (on_heap) {
 	ERTS_SMP_ASSERT(*proc_locksp & ERTS_PROC_LOCK_MAIN);
 	ASSERT(ohp == &proc->off_heap);
-	factory->mode = FACTORY_HALLOC;
+        factory->mode = ErtsHeapFactory::FACTORY_HALLOC;
 	factory->p = proc;
 	factory->heap_frags_saved = proc->mbuf;
 	factory->heap_frags_saved_used = proc->mbuf ? proc->mbuf->used_size : 0;
     }
     else {
-	factory->mode = FACTORY_MESSAGE;
+        factory->mode = ErtsHeapFactory::FACTORY_MESSAGE;
 	factory->p = NULL;
 	factory->heap_frags_saved = NULL;
 	factory->heap_frags_saved_used = 0;
@@ -1569,7 +1569,7 @@ void erts_factory_selfcontained_message_init(ErtsHeapFactory* factory,
 	bp = msgp->data.heap_frag;
 	factory->heap_frags = bp;
     }
-    factory->mode     = FACTORY_MESSAGE;
+    factory->mode     = ErtsHeapFactory::FACTORY_MESSAGE;
     factory->p        = NULL;
     factory->hp_start = bp->mem;
     factory->hp       = hp;
@@ -1594,7 +1594,7 @@ void erts_factory_static_init(ErtsHeapFactory* factory,
 			     Uint size,
 			     ErlOffHeap* off_heap)
 {
-    factory->mode     = FACTORY_STATIC;
+    factory->mode     = ErtsHeapFactory::FACTORY_STATIC;
     factory->hp_start = hp;
     factory->hp       = hp;
     factory->hp_end   = hp + size;
@@ -1609,7 +1609,7 @@ void erts_factory_static_init(ErtsHeapFactory* factory,
 void erts_factory_tmp_init(ErtsHeapFactory* factory, Eterm* hp, Uint size,
 			   Uint32 atype)
 {
-    factory->mode     = FACTORY_TMP;
+    factory->mode     = ErtsHeapFactory::FACTORY_TMP;
     factory->hp_start = hp;
     factory->hp       = hp;
     factory->hp_end   = hp + size;
@@ -1624,7 +1624,7 @@ void erts_factory_tmp_init(ErtsHeapFactory* factory, Eterm* hp, Uint size,
 */
 void erts_factory_dummy_init(ErtsHeapFactory* factory)
 {
-    factory->mode = FACTORY_CLOSED;
+    factory->mode = ErtsHeapFactory::FACTORY_CLOSED;
 }
 
 static void reserve_heap(ErtsHeapFactory*, Uint need, Uint xtra);
@@ -1656,21 +1656,21 @@ static void reserve_heap(ErtsHeapFactory* factory, Uint need, Uint xtra)
     ErlHeapFragment* bp;
 
     switch (factory->mode) {
-    case FACTORY_HALLOC:
+    case ErtsHeapFactory::FACTORY_HALLOC:
 	HRelease(factory->p, factory->hp_end, factory->hp);
 	factory->hp     = HAllocX(factory->p, need, xtra);
 	factory->hp_end = factory->hp + need;
 	return;
 
-    case FACTORY_MESSAGE:
+    case ErtsHeapFactory::FACTORY_MESSAGE:
 	if (!factory->heap_frags) {
 	    ASSERT(factory->message->data.attached == ERTS_MSG_COMBINED_HFRAG);
 	    bp = &factory->message->hfrag;
 	}
 	else {
 	    /* Fall through */
-	case FACTORY_HEAP_FRAGS:
-	case FACTORY_TMP:
+        case ErtsHeapFactory::FACTORY_HEAP_FRAGS:
+        case ErtsHeapFactory::FACTORY_TMP:
 	    bp = factory->heap_frags;
 	}
 
@@ -1694,8 +1694,8 @@ static void reserve_heap(ErtsHeapFactory* factory, Uint need, Uint xtra)
 	factory->hp_end = bp->mem + bp->alloc_size;
 	return;
 
-    case FACTORY_STATIC:
-    case FACTORY_CLOSED:
+    case ErtsHeapFactory::FACTORY_STATIC:
+    case ErtsHeapFactory::FACTORY_CLOSED:
     default:
 	ASSERT(!"Invalid factory mode");
     }
@@ -1706,11 +1706,11 @@ void erts_factory_close(ErtsHeapFactory* factory)
     ErlHeapFragment* bp;
 
     switch (factory->mode) {
-    case FACTORY_HALLOC:
+    case ErtsHeapFactory::FACTORY_HALLOC:
 	HRelease(factory->p, factory->hp_end, factory->hp);
 	break;
 
-    case FACTORY_MESSAGE:
+    case ErtsHeapFactory::FACTORY_MESSAGE:
 	if (!factory->heap_frags) {
 	    if (factory->message->data.attached == ERTS_MSG_COMBINED_HFRAG)
 		bp = &factory->message->hfrag;
@@ -1724,7 +1724,7 @@ void erts_factory_close(ErtsHeapFactory* factory)
 		factory->message->data.heap_frag = factory->heap_frags;
 
 	    /* Fall through */
-	case FACTORY_HEAP_FRAGS:
+        case ErtsHeapFactory::FACTORY_HEAP_FRAGS:
 	    bp = factory->heap_frags;
 	}
 
@@ -1736,15 +1736,15 @@ void erts_factory_close(ErtsHeapFactory* factory)
 	    bp->used_size = factory->hp - bp->mem;
         }
 	break;
-    case FACTORY_TMP:
+    case ErtsHeapFactory::FACTORY_TMP:
 	erts_factory_undo(factory);
 	break;
-    case FACTORY_STATIC: break;
-    case FACTORY_CLOSED: break;
+    case ErtsHeapFactory::FACTORY_STATIC: break;
+    case ErtsHeapFactory::FACTORY_CLOSED: break;
     default:
 	ASSERT(!"Invalid factory mode");
     }
-    factory->mode = FACTORY_CLOSED;
+    factory->mode = ErtsHeapFactory::FACTORY_CLOSED;
 }
 
 void erts_factory_trim_and_close(ErtsHeapFactory* factory,
@@ -1753,14 +1753,14 @@ void erts_factory_trim_and_close(ErtsHeapFactory* factory,
     ErlHeapFragment *bp;
 
     switch (factory->mode) {
-    case FACTORY_MESSAGE: {
+    case ErtsHeapFactory::FACTORY_MESSAGE: {
 	ErtsMessage *mp = factory->message;
 	if (mp->data.attached == ERTS_MSG_COMBINED_HFRAG) {
 	    if (!mp->hfrag.next) {
 		Uint sz = factory->hp - factory->hp_start;
 		mp = erts_shrink_message(mp, sz, brefs, brefs_size);
 		factory->message = mp;
-		factory->mode = FACTORY_CLOSED;
+                factory->mode = ErtsHeapFactory::FACTORY_CLOSED;
 		return;
 	    }
 	    /*else we don't trim multi fragmented messages for now (off_heap...) */
@@ -1768,7 +1768,7 @@ void erts_factory_trim_and_close(ErtsHeapFactory* factory,
 	}
 	/* Fall through... */
     }
-    case FACTORY_HEAP_FRAGS:
+    case ErtsHeapFactory::FACTORY_HEAP_FRAGS:
 	bp = factory->heap_frags;
 	if (!bp)
 	    break;
@@ -1783,9 +1783,9 @@ void erts_factory_trim_and_close(ErtsHeapFactory* factory,
 		bp = NULL;
 	    }
 	    factory->heap_frags = bp;
-	    if (factory->mode == FACTORY_MESSAGE)
+            if (factory->mode == ErtsHeapFactory::FACTORY_MESSAGE)
 		factory->message->data.heap_frag = bp;
-            factory->mode = FACTORY_CLOSED;
+            factory->mode = ErtsHeapFactory::FACTORY_CLOSED;
             return;
         }
         /*else we don't trim multi fragmented messages for now (off_heap...) */
@@ -1801,8 +1801,8 @@ void erts_factory_undo(ErtsHeapFactory* factory)
     struct erl_off_heap_header *hdr, **hdr_nextp;
 
     switch (factory->mode) {
-    case FACTORY_HALLOC:
-    case FACTORY_STATIC:
+    case ErtsHeapFactory::FACTORY_HALLOC:
+    case ErtsHeapFactory::FACTORY_STATIC:
 	/* Cleanup off-heap
 	 */
 	hdr_nextp = NULL;
@@ -1820,7 +1820,7 @@ void erts_factory_undo(ErtsHeapFactory* factory)
 	    factory->off_heap->overhead = factory->off_heap_saved.overhead;
         }
 
-        if (factory->mode == FACTORY_HALLOC) {
+        if (factory->mode == ErtsHeapFactory::FACTORY_HALLOC) {
             /* Free heap frags
              */
             bp = factory->p->mbuf;
@@ -1858,15 +1858,15 @@ void erts_factory_undo(ErtsHeapFactory* factory)
         }
         break;
 
-    case FACTORY_MESSAGE:
+    case ErtsHeapFactory::FACTORY_MESSAGE:
 	if (factory->message->data.attached == ERTS_MSG_COMBINED_HFRAG)
 	    factory->message->hfrag.next = factory->heap_frags;
 	else
 	    factory->message->data.heap_frag = factory->heap_frags;
 	erts_cleanup_messages(factory->message);
 	break;
-    case FACTORY_TMP:
-    case FACTORY_HEAP_FRAGS:
+    case ErtsHeapFactory::FACTORY_TMP:
+    case ErtsHeapFactory::FACTORY_HEAP_FRAGS:
 	erts_cleanup_offheap(factory->off_heap);
 	factory->off_heap->first = NULL;
 
@@ -1881,11 +1881,11 @@ void erts_factory_undo(ErtsHeapFactory* factory)
         }
 	break;
 
-    case FACTORY_CLOSED: break;
+    case ErtsHeapFactory::FACTORY_CLOSED: break;
     default:
 	ASSERT(!"Invalid factory mode");
     }
-    factory->mode = FACTORY_CLOSED;
+    factory->mode = ErtsHeapFactory::FACTORY_CLOSED;
 #ifdef DEBUG
     factory->p = NULL;
     factory->hp = NULL;

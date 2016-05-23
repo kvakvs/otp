@@ -55,7 +55,7 @@ index_table_sz(IndexTable *t)
 ** and allocate buckets.
 */
 IndexTable*
-erts_index_init(ErtsAlcType_t type, IndexTable* t, char* name,
+erts_index_init(ErtsAlcType_t type, IndexTable* t, const char* name,
 		int size, int limit, HashFunctions fun)
 {
     Uint base_size = ((limit+INDEX_PAGE_SIZE-1)/INDEX_PAGE_SIZE)*sizeof(IndexSlot*);
@@ -88,7 +88,7 @@ index_put_entry(IndexTable* t, void* tmpl)
 		     t->htable.name, t->limit);
 	}
 	sz = INDEX_PAGE_SIZE*sizeof(IndexSlot*);
-	t->seg_table[ix>>INDEX_PAGE_SHIFT] = erts_alloc(t->type, sz);
+        t->seg_table[ix>>INDEX_PAGE_SHIFT] = (IndexSlot **)erts_alloc(t->type, sz);
 	t->size += INDEX_PAGE_SIZE;
     }
     t->entries++;
@@ -127,7 +127,7 @@ void erts_index_merge(Hash* src, IndexTable* dst)
 			     dst->htable.name, dst->limit);
 		}
 		sz = INDEX_PAGE_SIZE*sizeof(IndexSlot*);
-		dst->seg_table[ix>>INDEX_PAGE_SHIFT] = erts_alloc(dst->type, sz);
+                dst->seg_table[ix>>INDEX_PAGE_SHIFT] = (IndexSlot **)erts_alloc(dst->type, sz);
 		dst->size += INDEX_PAGE_SIZE;
 	    }
 	    p = (IndexSlot*) b;

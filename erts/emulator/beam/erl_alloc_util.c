@@ -1795,24 +1795,24 @@ static ERTS_INLINE int
 ddq_managed_thread_enqueue(ErtsAllctrDDQueue_t *ddq, void *ptr, int cinit)
 {
     erts_aint_t itmp;
-    ErtsAllctrDDBlock_t *enq, *this = ptr;
+    ErtsAllctrDDBlock_t *enq, *this_ = (ErtsAllctrDDBlock_t *)ptr;
 
-    erts_atomic_init_nob(&this->atmc_next, ERTS_AINT_NULL);
+    erts_atomic_init_nob(&this_->atmc_next, ERTS_AINT_NULL);
     /* Enqueue at end of list... */
 
     enq = (ErtsAllctrDDBlock_t *) erts_atomic_read_nob(&ddq->tail.data.last);
     itmp = erts_atomic_cmpxchg_relb(&enq->atmc_next,
-				    (erts_aint_t) this,
+                                    (erts_aint_t) this_,
 				    ERTS_AINT_NULL);
     if (itmp == ERTS_AINT_NULL) {
 	/* We are required to move last pointer */
 #ifdef DEBUG
-	ASSERT(ERTS_AINT_NULL == erts_atomic_read_nob(&this->atmc_next));
+        ASSERT(ERTS_AINT_NULL == erts_atomic_read_nob(&this_->atmc_next));
 	ASSERT(((erts_aint_t) enq)
 	       == erts_atomic_xchg_relb(&ddq->tail.data.last,
-					(erts_aint_t) this));
+                                        (erts_aint_t) this_));
 #else
-	erts_atomic_set_relb(&ddq->tail.data.last, (erts_aint_t) this);
+        erts_atomic_set_relb(&ddq->tail.data.last, (erts_aint_t) this_);
 #endif
 	return 1;
     }
@@ -1825,12 +1825,12 @@ ddq_managed_thread_enqueue(ErtsAllctrDDQueue_t *ddq, void *ptr, int cinit)
 
 	while (1) {
 	    erts_aint_t itmp2;
-	    erts_atomic_set_nob(&this->atmc_next, itmp);
+            erts_atomic_set_nob(&this_->atmc_next, itmp);
 	    itmp2 = erts_atomic_cmpxchg_relb(&enq->atmc_next,
-					     (erts_aint_t) this,
+                                             (erts_aint_t) this_,
 					     itmp);
 	    if (itmp == itmp2)
-		return 0; /* inserted this */
+                return 0; /* inserted this */
 	    if ((i & 1) == 0)
 		itmp = itmp2;
 	    else {
@@ -2427,7 +2427,7 @@ mbc_alloc(Allctr_t *allctr, Uint size)
 {
     Block_t *blk;
     Uint blk_sz;
-    blk = mbc_alloc_block(allctr, size, &blk_sz);
+    blk = (Block_t *)mbc_alloc_block(allctr, size, &blk_sz);
     if (!blk)
 	return NULL;
     if (IS_MBC_BLK(blk))
@@ -3006,13 +3006,13 @@ cpool_init(erts_atomic_t *aptr, erts_aint_t val)
 }
 
 static ERTS_INLINE void
-cpool_set_mod_marked(erts_atomic_t *aptr, erts_aint_t new, erts_aint_t old)
+cpool_set_mod_marked(erts_atomic_t *aptr, erts_aint_t new_, erts_aint_t old)
 {
 #ifdef ERTS_ALC_CPOOL_DEBUG
-    erts_aint_t act = erts_atomic_xchg_relb(aptr, new);
+    erts_aint_t act = erts_atomic_xchg_relb(aptr, new_);
     ERTS_ALC_CPOOL_ASSERT(act == (old | ERTS_ALC_CPOOL_PTR_MOD_MRK));
 #else
-    erts_atomic_set_relb(aptr, new);
+    erts_atomic_set_relb(aptr, new_);
 #endif
 }
 
@@ -4284,7 +4284,7 @@ static struct {
 
 static Eterm fix_type_atoms[ERTS_ALC_NO_FIXED_SIZES];
 
-static ERTS_INLINE void atom_init(Eterm *atom, char *name)
+static ERTS_INLINE void atom_init(Eterm *atom, const char *name)
 {
     *atom = am_atom_put(name, strlen(name));
 }
@@ -6197,7 +6197,7 @@ erts_alcu_start(Allctr_t *allctr, AllctrInit_t *init)
 
     if (init->fix) {
 	int i;
-	allctr->fix = init->fix;
+        allctr->fix = (ErtsAlcFixList_t *)init->fix;
 	allctr->fix_shrink_scheduled = 0;
 	for (i = 0; i < ERTS_ALC_NO_FIXED_SIZES; i++) {
 	    allctr->fix[i].type_size = init->fix_type_size[i];

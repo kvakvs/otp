@@ -148,10 +148,10 @@ trace_pattern(Process* p, Eterm MFA, Eterm Pattern, Eterm flaglist)
     
     if (Pattern == am_false) {
 	match_prog_set = NULL;
-	on = 0;
+        on = ERTS_BREAK_NOP;
     } else if (is_nil(Pattern) || Pattern == am_true) {
 	match_prog_set = NULL;
-	on = 1;
+        on = ERTS_BREAK_SET;
     } else if (Pattern == am_restart) {
 	match_prog_set = NULL;
 	on = ERTS_BREAK_RESTART;
@@ -162,7 +162,7 @@ trace_pattern(Process* p, Eterm MFA, Eterm Pattern, Eterm flaglist)
 	match_prog_set = erts_match_set_compile(p, Pattern, MFA);
 	if (match_prog_set) {
 	    MatchSetRef(match_prog_set);
-	    on = 1;
+            on = ERTS_BREAK_SET;
 	} else{
 	    goto error;
 	}
@@ -1447,7 +1447,7 @@ erts_set_trace_pattern(Process*p, Eterm* mfa, int specified,
 			m = 1;
 		    }
 		    if (flags.call_time) {
-			erts_set_time_trace_bif(pc, on);
+                        erts_set_time_trace_bif(pc, (enum erts_break_op)on);
 			/* I don't want to remove any other tracers */
 			m = 1;
 		    }
@@ -1486,10 +1486,10 @@ erts_set_trace_pattern(Process*p, Eterm* mfa, int specified,
 				      meta_tracer);
 	    }
 	    if (flags.call_count) {
-		erts_set_count_break(&finish_bp.f, on);
+                erts_set_count_break(&finish_bp.f, (enum erts_break_op)on);
 	    }
 	    if (flags.call_time) {
-		erts_set_time_break(&finish_bp.f, on);
+                erts_set_time_break(&finish_bp.f, (enum erts_break_op)on);
 	    }
 	}
     } else {
@@ -2399,7 +2399,7 @@ trace_delivered_1(BIF_ALIST_1)
 
     if (BIF_ARG_1 == am_all || is_internal_pid(BIF_ARG_1)) {
         Eterm *hp, ref;
-        ErtsTraceDeliveredAll *tdarp =
+        ErtsTraceDeliveredAll *tdarp = (ErtsTraceDeliveredAll *)
             erts_alloc(ERTS_ALC_T_MISC_AUX_WORK, sizeof(ErtsTraceDeliveredAll));
 
         tdarp->proc = BIF_P;

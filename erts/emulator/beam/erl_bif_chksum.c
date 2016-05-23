@@ -144,7 +144,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 		    for(;;) {
 			if (bsize >= numbytes) {
 			    if (!bytes) {
-				bytes = erts_alloc(ERTS_ALC_T_TMP, 
+                                bytes = (byte *)erts_alloc(ERTS_ALC_T_TMP,
 						   numbytes = 500);
 			    } else {
 				if (numbytes > left) {
@@ -152,7 +152,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 				} else {
 				    numbytes *= 2;
 				}
-				bytes = erts_realloc(ERTS_ALC_T_TMP, bytes,
+                                bytes = (byte *)erts_realloc(ERTS_ALC_T_TMP, bytes,
 						     numbytes);
 			    }
 			}  

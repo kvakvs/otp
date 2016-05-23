@@ -302,7 +302,7 @@ int packet_get_length(enum PacketParseType htype,
     case TCP_PB_LINE_LF: {
         /* TCP_PB_LINE_LF:  [Data ... Delimiter]  */
         const char* ptr2;
-        if ((ptr2 = memchr(ptr, delimiter, n)) == NULL) {
+        if ((ptr2 = (const char *)memchr(ptr, delimiter, n)) == NULL) {
             if (n > max_plen && max_plen != 0) { /* packet full */
                 DEBUGF((" => packet full (no NL)=%d\r\n", n));
                 goto error;
@@ -416,7 +416,7 @@ int packet_get_length(enum PacketParseType htype,
 	    }
 
             while (1) {
-                const char* ptr2 = memchr(ptr1, '\n', len);
+                const char* ptr2 = (const char *)memchr(ptr1, '\n', len);
                 
                 if (ptr2 == NULL) {
                     if (max_plen != 0) {
@@ -528,7 +528,7 @@ http_parse_absoluteURI(PacketHttpURI* uri, const char* uri_ptr, int uri_len)
 {
     const char* p;
     
-    if ((p = memchr(uri_ptr, '/', uri_len)) == NULL) {
+    if ((p = (const char *)memchr(uri_ptr, '/', uri_len)) == NULL) {
         /* host [":" port] */
         uri->s2_ptr = "/";
         uri->s2_len = 1;
@@ -543,7 +543,7 @@ http_parse_absoluteURI(PacketHttpURI* uri, const char* uri_ptr, int uri_len)
     uri->s1_ptr = uri_ptr;
     uri->port = 0; /* undefined */
     /* host[:port]  */
-    if ((p = memchr(uri_ptr, ':', uri_len)) == NULL) {
+    if ((p = (const char *)memchr(uri_ptr, ':', uri_len)) == NULL) {
         uri->s1_len = uri_len;
     }
     else {
@@ -596,34 +596,34 @@ http_parse_absoluteURI(PacketHttpURI* uri, const char* uri_ptr, int uri_len)
 static void http_parse_uri(PacketHttpURI* uri, const char* uri_ptr, int uri_len)
 {
     if ((uri_len == 1) && (uri_ptr[0] == '*'))
-        uri->type = URI_STAR;
+        uri->type = PacketHttpURI::URI_STAR;
     else if ((uri_len <= 1) || (uri_ptr[0] == '/')) {
-        uri->type = URI_ABS_PATH;
+        uri->type = PacketHttpURI::URI_ABS_PATH;
         uri->s1_ptr = uri_ptr;
         uri->s1_len = uri_len;
     }
     else if ((uri_len>=7) && (STRNCASECMP(uri_ptr, "http://", 7) == 0)) {
         uri_len -= 7;
         uri_ptr += 7;
-        uri->type = URI_HTTP;
+        uri->type = PacketHttpURI::URI_HTTP;
         http_parse_absoluteURI(uri, uri_ptr, uri_len);
     }
     else if ((uri_len>=8) && (STRNCASECMP(uri_ptr, "https://", 8) == 0)) {
         uri_len -= 8;
         uri_ptr += 8;    
-        uri->type = URI_HTTPS;
+        uri->type = PacketHttpURI::URI_HTTPS;
         http_parse_absoluteURI(uri, uri_ptr, uri_len);
     }
     else {
-        char* ptr;
-        if ((ptr = memchr(uri_ptr, ':', uri_len)) == NULL) {
-            uri->type = URI_STRING;
+        const char* ptr;
+        if ((ptr = (const char *)memchr(uri_ptr, ':', uri_len)) == NULL) {
+            uri->type = PacketHttpURI::URI_STRING;
             uri->s1_ptr = uri_ptr;
             uri->s1_len = uri_len;
         }        
         else {
             int slen = ptr - uri_ptr;
-            uri->type = URI_SCHEME;
+            uri->type = PacketHttpURI::URI_SCHEME;
             uri->s1_ptr = uri_ptr;
             uri->s1_len = slen;
             uri->s2_ptr = uri_ptr + (slen+1);

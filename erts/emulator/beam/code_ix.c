@@ -130,7 +130,8 @@ int erts_try_seize_code_write_permission(Process* c_p)
     else { /* Already locked */
 	struct code_write_queue_item* qitem;
 	ASSERT(code_writing_process != c_p);
-	qitem = erts_alloc(ERTS_ALC_T_CODE_IX_LOCK_Q, sizeof(*qitem));
+        qitem = (struct code_write_queue_item *)
+                erts_alloc(ERTS_ALC_T_CODE_IX_LOCK_Q, sizeof(*qitem));
 	qitem->p = c_p;
 	erts_proc_inc_refc(c_p);
 	qitem->next = code_write_queue;

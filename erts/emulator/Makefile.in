@@ -168,7 +168,7 @@ endif
 
 
 #
-# NOTE: When adding a new type update ERL_BUILD_TYPE_MARKER in sys/unix/sys.c
+# NOTE: When adding a new type update ERL_BUILD_TYPE_MARKER in sys/unix/sys.cpp
 #
 
 ifeq ($(FLAVOR),smp)
@@ -610,7 +610,7 @@ $(PRELOAD_SRC): $(ERL_TOP)/erts/preloaded/ebin/otp_ring0.beam \
 	$(gen_verbose)LANG=C $(PERL) utils/make_preload $(MAKE_PRELOAD_EXTRA) -rc $^ > $@
 else
 PRELOAD_OBJ = $(OBJDIR)/preload.o
-PRELOAD_SRC = $(TARGET)/preload.c
+PRELOAD_SRC = $(TARGET)/preload.cpp
 $(PRELOAD_SRC): $(ERL_TOP)/erts/preloaded/ebin/otp_ring0.beam \
 			$(ERL_TOP)/erts/preloaded/ebin/erts_code_purger.beam \
 			$(ERL_TOP)/erts/preloaded/ebin/init.beam \
@@ -656,7 +656,7 @@ COMMON_INCLUDES += -I../include/internal -I../include/internal/$(TARGET)
 INCLUDES  =  -I$(TTF_DIR) $(COMMON_INCLUDES)
 
 ifeq ($(TARGET),win32)
-$(OBJDIR)/dll_sys.o: sys/$(ERLANG_OSTYPE)/sys.c
+$(OBJDIR)/dll_sys.o: sys/$(ERLANG_OSTYPE)/sys.cpp
 	$(V_CC) $(CFLAGS) -DERL_RUN_SHARED_LIB=1 $(INCLUDES) -c $< -o $@
 
 $(OBJDIR)/beams.$(RES_EXT): $(TARGET)/beams.rc
@@ -665,38 +665,38 @@ $(OBJDIR)/beams.$(RES_EXT): $(TARGET)/beams.rc
 endif
 
 ifneq ($(filter tile-%,$(TARGET)),)
-$(OBJDIR)/beam_emu.o: beam/beam_emu.c
+$(OBJDIR)/beam_emu.o: beam/beam_emu.cpp
 	$(V_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) \
          $(INCLUDES) -c $< -o $@
 else
 # Usually the same as the default rule, but certain platforms (e.g. win32) mix
 # different compilers
-$(OBJDIR)/beam_emu.o: beam/beam_emu.c
+$(OBJDIR)/beam_emu.o: beam/beam_emu.cpp
 	$(V_EMU_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
 endif
 
-$(OBJDIR)/%.o: beam/%.c
+$(OBJDIR)/%.o: beam/%.cpp
 	$(V_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
 
-$(OBJDIR)/%.o: $(TARGET)/%.c
+$(OBJDIR)/%.o: $(TARGET)/%.cpp
 	$(V_CC) $(CFLAGS) $(INCLUDES) -Idrivers/common -c $< -o $@
 
-$(OBJDIR)/%.o: $(TTF_DIR)/%.c
+$(OBJDIR)/%.o: $(TTF_DIR)/%.cpp
 	$(V_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(OBJDIR)/%.o: sys/$(ERLANG_OSTYPE)/%.c
+$(OBJDIR)/%.o: sys/$(ERLANG_OSTYPE)/%.cpp
 	$(V_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(OBJDIR)/%.o: sys/common/%.c
+$(OBJDIR)/%.o: sys/common/%.cpp
 	$(V_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
 
-$(OBJDIR)/%.o: drivers/common/%.c
+$(OBJDIR)/%.o: drivers/common/%.cpp
 	$(V_CC) $(CFLAGS) -DLIBSCTP=$(LIBSCTP) $(INCLUDES) -Idrivers/common -Idrivers/$(ERLANG_OSTYPE) -c $< -o $@
 
-$(OBJDIR)/%.o: drivers/$(ERLANG_OSTYPE)/%.c
+$(OBJDIR)/%.o: drivers/$(ERLANG_OSTYPE)/%.cpp
 	$(V_CC) $(CFLAGS) $(INCLUDES) -Idrivers/common -Idrivers/$(ERLANG_OSTYPE) -I../etc/$(ERLANG_OSTYPE) -c $< -o $@
 
-$(OBJDIR)/%.o: nifs/common/%.c
+$(OBJDIR)/%.o: nifs/common/%.cpp
 	$(V_CC) $(CFLAGS) -DLIBSCTP=$(LIBSCTP) $(INCLUDES) -Inifs/common -Inifs/$(ERLANG_OSTYPE) -c $< -o $@
 
 # ----------------------------------------------------------------------
@@ -708,15 +708,15 @@ $(BINDIR)/$(CS_EXECUTABLE): $(TTF_DIR)/GENERATED $(PRELOAD_SRC) $(CS_OBJ) $(ERTS
 	$(ld_verbose)$(CS_PURIFY) $(LD) $(CS_LDFLAGS) -o $(BINDIR)/$(CS_EXECUTABLE) \
                $(CS_CFLAGS) $(COMMON_INCLUDES) $(CS_OBJ) $(CS_LIBS)
 
-$(OBJDIR)/%.kp.o: sys/common/%.c
+$(OBJDIR)/%.kp.o: sys/common/%.cpp
 	$(V_CC) -DERTS_KERNEL_POLL_VERSION $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
 
-$(OBJDIR)/%.nkp.o: sys/common/%.c
+$(OBJDIR)/%.nkp.o: sys/common/%.cpp
 	$(V_CC) -DERTS_NO_KERNEL_POLL_VERSION $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
 
 ifeq ($(GCC),yes)
 
-$(OBJDIR)/erl_goodfit_alloc.o: beam/erl_goodfit_alloc.c
+$(OBJDIR)/erl_goodfit_alloc.o: beam/erl_goodfit_alloc.cpp
 	$(V_CC) $(subst -O2, $(GEN_OPT_FLGS) $(UNROLL_FLG), $(CFLAGS)) $(INCLUDES) -c $< -o $@
 endif
 
@@ -932,7 +932,7 @@ $(OBJDIR)/%.o: $(TTF_DIR)/%.S
 $(OBJDIR)/%.o: hipe/%.S
 	$(V_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-$(OBJDIR)/%.o: hipe/%.c
+$(OBJDIR)/%.o: hipe/%.cpp
 	$(V_CC) $(subst O2,O3, $(CFLAGS)) $(INCLUDES) -c $< -o $@
 
 $(BINDIR)/hipe_mkliterals$(TF_MARKER):	$(OBJDIR)/hipe_mkliterals.o
@@ -984,7 +984,7 @@ $(OBJDIR)/hipe_arm_bifs.o:	$(TTF_DIR)/hipe_arm_bifs.S \
 
 # Use -fomit-frame-pointer to work around gcc (v4.5.2) bug causing
 # "error: r7 cannot be used in asm here" for DEBUG build.
-$(OBJDIR)/hipe_arm.o:           hipe/hipe_arm.c
+$(OBJDIR)/hipe_arm.o:           hipe/hipe_arm.cpp
 	$(V_CC) $(subst O2,O3, $(CFLAGS)) -fomit-frame-pointer $(INCLUDES) -c $< -o $@
 
 # end of HiPE section
@@ -1073,7 +1073,7 @@ DEP_FLAGS=-MM  $(subst -O2,,$(CFLAGS)) $(INCLUDES) -I../etc/win32 -Idrivers/comm
 # DEP_FLAGS += -U__GNUC__
 # endif
 # On windows we have the erl_poll implementation in sys/win32 (no longer...)
-# SYS_SRC=$(subst sys/common/erl_poll.c,,$(ALL_SYS_SRC))
+# SYS_SRC=$(subst sys/common/erl_poll.cpp,,$(ALL_SYS_SRC))
 
 else # !win32
 
@@ -1091,10 +1091,10 @@ endif
 
 .PHONY: $(TARGET)/gen_git_version.mk
 $(TARGET)/gen_git_version.mk:
-# We touch beam/erl_bif.info.c if we regenerated the git version to force a
+# We touch beam/erl_bif.info.cpp if we regenerated the git version to force a
 # rebuild.
 	$(gen_verbose)
-	$(V_at)if utils/gen_git_version $@; then touch beam/erl_bif_info.c; fi
+	$(V_at)if utils/gen_git_version $@; then touch beam/erl_bif_info.cpp; fi
 
 .PHONY: depend
 ifdef VOID_EMULATOR

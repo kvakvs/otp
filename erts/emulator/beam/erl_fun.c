@@ -41,7 +41,7 @@ static erts_smp_rwmtx_t erts_fun_table_lock;
 
 static HashValue fun_hash(ErlFunEntry* obj);
 static int fun_cmp(ErlFunEntry* obj1, ErlFunEntry* obj2);
-static ErlFunEntry* fun_alloc(ErlFunEntry* template);
+static ErlFunEntry* fun_alloc(ErlFunEntry* template_);
 static void fun_free(ErlFunEntry* obj);
 
 /*
@@ -99,15 +99,15 @@ int erts_fun_table_sz(void)
 ErlFunEntry*
 erts_put_fun_entry(Eterm mod, int uniq, int index)
 {
-    ErlFunEntry template;
+    ErlFunEntry template_;
     ErlFunEntry* fe;
     erts_aint_t refc;
     ASSERT(is_atom(mod));
-    template.old_uniq = uniq;
-    template.old_index = index;
-    template.module = mod;
+    template_.old_uniq = uniq;
+    template_.old_index = index;
+    template_.module = mod;
     erts_fun_write_lock();
-    fe = (ErlFunEntry *) hash_put(&erts_fun_table, (void*) &template);
+    fe = (ErlFunEntry *) hash_put(&erts_fun_table, (void*) &template_);
     sys_memset(fe->uniq, 0, sizeof(fe->uniq));
     fe->index = 0;
     refc = erts_refc_inctest(&fe->refc, 0);
@@ -121,16 +121,16 @@ ErlFunEntry*
 erts_put_fun_entry2(Eterm mod, int old_uniq, int old_index,
 		    byte* uniq, int index, int arity)
 {
-    ErlFunEntry template;
+    ErlFunEntry template_;
     ErlFunEntry* fe;
     erts_aint_t refc;
 
     ASSERT(is_atom(mod));
-    template.old_uniq = old_uniq;
-    template.old_index = old_index;
-    template.module = mod;
+    template_.old_uniq = old_uniq;
+    template_.old_index = old_index;
+    template_.module = mod;
     erts_fun_write_lock();
-    fe = (ErlFunEntry *) hash_put(&erts_fun_table, (void*) &template);
+    fe = (ErlFunEntry *) hash_put(&erts_fun_table, (void*) &template_);
     sys_memcpy(fe->uniq, uniq, sizeof(fe->uniq));
     fe->index = index;
     fe->arity = arity;
@@ -151,15 +151,15 @@ struct my_key {
 ErlFunEntry*
 erts_get_fun_entry(Eterm mod, int uniq, int index)
 {
-    ErlFunEntry template;
+    ErlFunEntry template_;
     ErlFunEntry *ret;
 
     ASSERT(is_atom(mod));
-    template.old_uniq = uniq;
-    template.old_index = index;
-    template.module = mod;
+    template_.old_uniq = uniq;
+    template_.old_index = index;
+    template_.module = mod;
     erts_fun_read_lock();
-    ret = (ErlFunEntry *) hash_get(&erts_fun_table, (void*) &template);
+    ret = (ErlFunEntry *) hash_get(&erts_fun_table, (void*) &template_);
     if (ret) {
 	erts_aint_t refc = erts_refc_inctest(&ret->refc, 1);
 	if (refc < 2) /* Pending delete */
@@ -219,7 +219,7 @@ erts_cleanup_funs_on_purge(BeamInstr* start, BeamInstr* end)
 	    if (start <= addr && addr < end) {
 		fe->address = unloaded_fun;
 		if (erts_refc_dectest(&fe->refc, 0) == 0) {
-		    fe->address = (void *) to_delete;
+                    fe->address = (BeamInstr *) to_delete;
 		    to_delete = fe;
 		}
 	    }
@@ -284,14 +284,14 @@ fun_cmp(ErlFunEntry* obj1, ErlFunEntry* obj2)
 }
 
 static ErlFunEntry*
-fun_alloc(ErlFunEntry* template)
+fun_alloc(ErlFunEntry* template_)
 {
     ErlFunEntry* obj = (ErlFunEntry *) erts_alloc(ERTS_ALC_T_FUN_ENTRY,
 						  sizeof(ErlFunEntry));
 
-    obj->old_uniq = template->old_uniq;
-    obj->old_index = template->old_index;
-    obj->module = template->module;
+    obj->old_uniq = template_->old_uniq;
+    obj->old_index = template_->old_index;
+    obj->module = template_->module;
     erts_refc_init(&obj->refc, -1);
     obj->address = unloaded_fun;
 #ifdef HIPE

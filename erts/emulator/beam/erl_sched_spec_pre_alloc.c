@@ -66,7 +66,8 @@ erts_sspa_create(size_t blk_sz, int pa_size)
     tot_size = ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(erts_sspa_data_t));
     tot_size += chunk_mem_size*erts_no_schedulers;
 
-    p = erts_alloc_permanent_cache_aligned(ERTS_ALC_T_PRE_ALLOC_DATA, tot_size);
+    p = (char *)erts_alloc_permanent_cache_aligned(ERTS_ALC_T_PRE_ALLOC_DATA,
+                                                   tot_size);
     data = (erts_sspa_data_t *) p;
     p += ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(erts_sspa_data_t));
     chunk_start = p;
@@ -119,28 +120,28 @@ erts_sspa_create(size_t blk_sz, int pa_size)
 
 static ERTS_INLINE void
 enqueue_remote_managed_thread(erts_sspa_chunk_header_t *chdr,
-			      erts_sspa_blk_t *this,
+                              erts_sspa_blk_t *this_,
 			      int cinit)
 {
     erts_aint_t itmp;
     erts_sspa_blk_t *enq;
 
-    erts_atomic_init_nob(&this->next_atmc, ERTS_AINT_NULL);
+    erts_atomic_init_nob(&this_->next_atmc, ERTS_AINT_NULL);
     /* Enqueue at end of list... */
 
     enq = (erts_sspa_blk_t *) erts_atomic_read_nob(&chdr->tail.data.last);
     itmp = erts_atomic_cmpxchg_relb(&enq->next_atmc,
-				    (erts_aint_t) this,
+                                    (erts_aint_t) this_,
 				    ERTS_AINT_NULL);
     if (itmp == ERTS_AINT_NULL) {
 	/* We are required to move last pointer */
 #ifdef DEBUG
-	ASSERT(ERTS_AINT_NULL == erts_atomic_read_nob(&this->next_atmc));
+        ASSERT(ERTS_AINT_NULL == erts_atomic_read_nob(&this_->next_atmc));
 	ASSERT(((erts_aint_t) enq)
 	       == erts_atomic_xchg_relb(&chdr->tail.data.last,
-				      (erts_aint_t) this));
+                                      (erts_aint_t) this_));
 #else
-	erts_atomic_set_relb(&chdr->tail.data.last, (erts_aint_t) this);
+        erts_atomic_set_relb(&chdr->tail.data.last, (erts_aint_t) this_);
 #endif
     }
     else {
@@ -152,9 +153,9 @@ enqueue_remote_managed_thread(erts_sspa_chunk_header_t *chdr,
 
 	while (1) {
 	    erts_aint_t itmp2;
-	    erts_atomic_set_nob(&this->next_atmc, itmp);
+            erts_atomic_set_nob(&this_->next_atmc, itmp);
 	    itmp2 = erts_atomic_cmpxchg_relb(&enq->next_atmc,
-					     (erts_aint_t) this,
+                                             (erts_aint_t) this_,
 					     itmp);
 	    if (itmp == itmp2)
 		break; /* inserted this */
@@ -262,7 +263,7 @@ fetch_remote(erts_sspa_chunk_header_t *chdr, int max)
     }
 
     if (new_local < max && chdr->head.first != chdr->head.unref_end) {
-	erts_sspa_blk_t *first, *this, *next, *last;
+        erts_sspa_blk_t *first, *this_, *next, *last;
 	first = chdr->head.first;
 	if (first == &chdr->tail.data.marker) {
 	    chdr->head.used_marker = 0;
@@ -274,19 +275,19 @@ fetch_remote(erts_sspa_chunk_header_t *chdr, int max)
 
 	    ERTS_SSPA_DBG_CHK_LCL(chdr);
 
-	    this = last = first;
+            this_ = last = first;
 	    do {
-		next = (erts_sspa_blk_t *) erts_atomic_read_nob(&this->next_atmc);
-		if (this == &chdr->tail.data.marker)
+                next = (erts_sspa_blk_t *) erts_atomic_read_nob(&this_->next_atmc);
+                if (this_ == &chdr->tail.data.marker)
 		    chdr->head.used_marker = 0;
 		else {
-		    last->next_ptr = this;
-		    last = this;
+                    last->next_ptr = this_;
+                    last = this_;
 		    new_local++;
 		}
-		this = next;
-	    } while (new_local < max && this != chdr->head.unref_end);
-	    chdr->head.first = this;
+                this_ = next;
+            } while (new_local < max && this_ != chdr->head.unref_end);
+            chdr->head.first = this_;
 	    if (!chdr->local.last)
 		chdr->local.first = first;
 	    else

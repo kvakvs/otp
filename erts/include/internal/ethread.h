@@ -511,7 +511,7 @@ int ethr_getname(ethr_tid, char *, size_t);
 void ethr_setname(char *);
 int ethr_equal_tids(ethr_tid, ethr_tid);
 
-int ethr_tsd_key_create(ethr_tsd_key *,char *);
+int ethr_tsd_key_create(ethr_tsd_key *, const char *);
 int ethr_tsd_key_delete(ethr_tsd_key);
 int ethr_tsd_set(ethr_tsd_key, void *);
 void *ethr_tsd_get(ethr_tsd_key);
@@ -646,7 +646,7 @@ extern pthread_key_t ethr_ts_event_key__;
 static ETHR_INLINE ethr_ts_event *
 ETHR_INLINE_FUNC_NAME_(ethr_get_ts_event)(void)
 {
-    ethr_ts_event *tsep = pthread_getspecific(ethr_ts_event_key__);
+    ethr_ts_event *tsep = (ethr_ts_event *)pthread_getspecific(ethr_ts_event_key__);
     if (!tsep) {
 	int res = ethr_make_ts_event__(&tsep);
 	if (res != 0)

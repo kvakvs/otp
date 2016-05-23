@@ -198,7 +198,7 @@ bld_bin_list(Uint **hpp, Uint *szp, ErlOffHeap* oh)
 
 static void do_calc_mon_size(ErtsMonitor *mon, void *vpsz)
 {
-    Uint *psz = vpsz;
+    Uint *psz = (Uint *)vpsz;
     *psz += IS_CONST(mon->ref) ? 0 : NC_HEAP_SIZE(mon->ref);
     *psz += IS_CONST(mon->pid) ? 0 : NC_HEAP_SIZE(mon->pid);
     *psz += 8; /* CONS + 5-tuple */ 
@@ -213,7 +213,7 @@ typedef struct {
 
 static void do_make_one_mon_element(ErtsMonitor *mon, void * vpmlc)
 {
-    MonListContext *pmlc = vpmlc;
+    MonListContext *pmlc = (MonListContext *)vpmlc;
     Eterm tup;
     Eterm r = (IS_CONST(mon->ref)
 	       ? mon->ref
@@ -258,7 +258,7 @@ make_monitor_list(Process *p, ErtsMonitor *root)
 
 static void do_calc_lnk_size(ErtsLink *lnk, void *vpsz)
 {
-    Uint *psz = vpsz;
+    Uint *psz = (Uint *)vpsz;
     *psz += IS_CONST(lnk->pid) ? 0 : NC_HEAP_SIZE(lnk->pid);
     if (lnk->type != LINK_NODE && ERTS_LINK_ROOT(lnk) != NULL) { 
 	/* Node links use this pointer as ref counter... */
@@ -276,7 +276,7 @@ typedef struct {
 
 static void do_make_one_lnk_element(ErtsLink *lnk, void * vpllc)
 {
-    LnkListContext *pllc = vpllc;
+    LnkListContext *pllc = (LnkListContext *)vpllc;
     Eterm tup;
     Eterm old_res, targets = NIL;
     Eterm p = (IS_CONST(lnk->pid)
@@ -382,11 +382,11 @@ typedef struct {
 #define EXTEND_MONITOR_INFOS(MICP)					\
 do {									\
     if ((MICP)->mi_i >= (MICP)->mi_max) {				\
-	(MICP)->mi = ((MICP)->mi ? erts_realloc(ERTS_ALC_T_TMP,		\
+        (MICP)->mi = ((MICP)->mi ? (MonitorInfo *)erts_realloc(ERTS_ALC_T_TMP,		\
 						(MICP)->mi,		\
 						((MICP)->mi_max+MI_INC)	\
 						* sizeof(MonitorInfo))	\
-		      : erts_alloc(ERTS_ALC_T_TMP,			\
+                      : (MonitorInfo *)erts_alloc(ERTS_ALC_T_TMP,			\
 				   MI_INC*sizeof(MonitorInfo)));	\
 	(MICP)->mi_max += MI_INC;					\
     }									\
@@ -400,7 +400,7 @@ do {							\
 
 static void collect_one_link(ErtsLink *lnk, void *vmicp)
 {
-    MonitorInfoCollection *micp = vmicp;
+    MonitorInfoCollection *micp = (MonitorInfoCollection *)vmicp;
     EXTEND_MONITOR_INFOS(micp);
     if (!(lnk->type == LINK_PID)) {
 	return;
@@ -412,7 +412,7 @@ static void collect_one_link(ErtsLink *lnk, void *vmicp)
 
 static void collect_one_origin_monitor(ErtsMonitor *mon, void *vmicp)
 {
-    MonitorInfoCollection *micp = vmicp;
+    MonitorInfoCollection *micp = (MonitorInfoCollection *)vmicp;
  
     if (mon->type != MON_ORIGIN) {
 	return;
@@ -441,7 +441,7 @@ static void collect_one_origin_monitor(ErtsMonitor *mon, void *vmicp)
 
 static void collect_one_target_monitor(ErtsMonitor *mon, void *vmicp)
 {
-    MonitorInfoCollection *micp = vmicp;
+    MonitorInfoCollection *micp = (MonitorInfoCollection *)vmicp;
  
     if (mon->type != MON_TARGET) {
 	return;
@@ -477,12 +477,12 @@ typedef struct {
 do {									\
     if ((SMICP)->smi_i >= (SMICP)->smi_max) {				\
 	(SMICP)->smi = ((SMICP)->smi					\
-			? erts_realloc(ERTS_ALC_T_TMP,			\
+                        ? (ErtsSuspendMonitor **)erts_realloc(ERTS_ALC_T_TMP,			\
 				       (SMICP)->smi,			\
 				       ((SMICP)->smi_max		\
 					+ ERTS_SMI_INC)			\
 				       * sizeof(ErtsSuspendMonitor *))	\
-			: erts_alloc(ERTS_ALC_T_TMP,			\
+                        : (ErtsSuspendMonitor **)erts_alloc(ERTS_ALC_T_TMP,			\
 				     ERTS_SMI_INC			\
 				     * sizeof(ErtsSuspendMonitor *)));	\
 	(SMICP)->smi_max += ERTS_SMI_INC;				\
@@ -499,7 +499,7 @@ do {									\
 static void
 collect_one_suspend_monitor(ErtsSuspendMonitor *smon, void *vsmicp)
 {
-    ErtsSuspendMonitorInfoCollection *smicp = vsmicp;
+    ErtsSuspendMonitorInfoCollection *smicp = (ErtsSuspendMonitorInfoCollection *)vsmicp;
     Process *suspendee = erts_pid2proc(smicp->c_p,
 				       smicp->c_p_locks,
 				       smon->pid,
@@ -781,14 +781,14 @@ process_info_list(Process *c_p, Eterm pid, Eterm list, int always_wrap,
 	res_elem_ix_ix++;
 	if (res_elem_ix_ix >= res_elem_ix_sz) {
 	    if (res_elem_ix != &def_res_elem_ix_buf[0])
-		res_elem_ix =
+                res_elem_ix = (int *)
 		    erts_realloc(ERTS_ALC_T_TMP,
 				 res_elem_ix,
 				 sizeof(int)*(res_elem_ix_sz
 					      += ERTS_PI_RES_ELEM_IX_BUF_INC));
 	    else {
 		int new_res_elem_ix_sz = ERTS_PI_RES_ELEM_IX_BUF_INC;
-		int *new_res_elem_ix = erts_alloc(ERTS_ALC_T_TMP,
+                int *new_res_elem_ix = (int *)erts_alloc(ERTS_ALC_T_TMP,
 						  sizeof(int)*new_res_elem_ix_sz);
 		sys_memcpy((void *) new_res_elem_ix,
 			   (void *) res_elem_ix,
@@ -1127,7 +1127,7 @@ process_info_aux(Process *BIF_P,
 	    Eterm *hp_end;
 #endif
 
-	    mip = erts_alloc(ERTS_ALC_T_TMP,
+            mip = (ErtsMessageInfo *)erts_alloc(ERTS_ALC_T_TMP,
 			     rp->msg.len*sizeof(ErtsMessageInfo));
 
 	    /*
@@ -1944,8 +1944,8 @@ erts_create_info_dsbuf(Uint size)
 {
     Uint init_size = size ? size : INFO_DSBUF_INC_SZ;
     erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_info_dsbuf);
-    erts_dsprintf_buf_t *dsbufp = erts_alloc(ERTS_ALC_T_INFO_DSBUF,
-					     sizeof(erts_dsprintf_buf_t));
+    erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)
+            erts_alloc(ERTS_ALC_T_INFO_DSBUF, sizeof(erts_dsprintf_buf_t));
     sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
     dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_INFO_DSBUF, init_size);
     dsbufp->str[0] = '\0';
@@ -3338,7 +3338,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
 	Eterm res, *hp, **hpp;
 	Uint sz, *szp;
 	int no_qs = erts_no_run_queues;
-	Uint *qszs = erts_alloc(ERTS_ALC_T_TMP,sizeof(Uint)*no_qs*2);
+        Uint *qszs = (Uint *)erts_alloc(ERTS_ALC_T_TMP,sizeof(Uint)*no_qs*2);
 	(void) erts_run_queues_len(qszs, 0, BIF_ARG_1 == am_active_tasks);
 	sz = 0;
 	szp = &sz;
@@ -3431,7 +3431,7 @@ BIF_RETTYPE statistics_1(BIF_ALIST_1)
 	Eterm res, *hp, **hpp;
 	Uint sz, *szp;
 	int no_qs = erts_no_run_queues;
-	Uint *qszs = erts_alloc(ERTS_ALC_T_TMP,sizeof(Uint)*no_qs*2);
+        Uint *qszs = (Uint *)erts_alloc(ERTS_ALC_T_TMP,sizeof(Uint)*no_qs*2);
 	(void) erts_run_queues_len(qszs, 0, 0);
 	sz = 0;
 	szp = &sz;
@@ -4476,13 +4476,13 @@ static void os_info_init(void)
     Eterm type = erts_atom_put((byte *) os_type, strlen(os_type), ERTS_ATOM_ENC_LATIN1, 1);
     Eterm flav;
     int major, minor, build;
-    char* buf = erts_alloc(ERTS_ALC_T_TMP, 1024); /* More than enough */
+    char* buf = (char *)erts_alloc(ERTS_ALC_T_TMP, 1024); /* More than enough */
     Eterm* hp;
 
     os_flavor(buf, 1024);
     flav = erts_atom_put((byte *) buf, strlen(buf), ERTS_ATOM_ENC_LATIN1, 1);
     erts_free(ERTS_ALC_T_TMP, (void *) buf);
-    hp = erts_alloc(ERTS_ALC_T_LITERAL, (3+4)*sizeof(Eterm));
+    hp = (Eterm *)erts_alloc(ERTS_ALC_T_LITERAL, (3+4)*sizeof(Eterm));
     os_type_tuple = TUPLE2(hp, type, flav);
     erts_set_literal_tag(&os_type_tuple, hp, 3);
 

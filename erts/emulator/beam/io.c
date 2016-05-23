@@ -258,7 +258,7 @@ static ERTS_INLINE void port_init_instr(Port *prt
 #ifdef ERTS_SMP
     ASSERT(prt->drv_ptr && prt->lock);
     if (!prt->drv_ptr->lock) {
-	char *lock_str = "port_lock";
+        const char *lock_str = "port_lock";
 	erts_mtx_init_locked_x(prt->lock, lock_str, id,
 #ifdef ERTS_ENABLE_LOCK_COUNT
 			       (erts_lcnt_rt_options & ERTS_LCNT_OPT_PORTLOCK)
@@ -341,7 +341,7 @@ static Port *create_port(char *name,
 
     size += sys_strlen(name) + 1;
 
-    p = erts_alloc_fnf(ERTS_ALC_T_PORT, size);
+    p = (char *)erts_alloc_fnf(ERTS_ALC_T_PORT, size);
     if (!p) {
 	if (enop)
 	    *enop = ENOMEM;
@@ -1283,7 +1283,7 @@ try_imm_drv_call(ErtsTryImmDrvCallState *sp)
     act = erts_smp_atomic32_read_nob(&prt->sched.flags);
 
     do {
-	erts_aint32_t new;
+        erts_aint32_t new_;
 	
 	if (act & invalid_sched_flags) {
 	    res = ERTS_TRY_IMM_DRV_CALL_INVALID_SCHED_FLAGS;
@@ -1291,8 +1291,8 @@ try_imm_drv_call(ErtsTryImmDrvCallState *sp)
 	    goto locked_fail;
 	}
 	exp = act;
-	new = act | ERTS_PTS_FLG_EXEC_IMM;
-	act = erts_smp_atomic32_cmpxchg_mb(&prt->sched.flags, new, exp);
+        new_ = act | ERTS_PTS_FLG_EXEC_IMM;
+        act = erts_smp_atomic32_cmpxchg_mb(&prt->sched.flags, new_, exp);
     } while (act != exp);
     
     sp->sched_flags = act;
@@ -2071,7 +2071,7 @@ erts_port_output_async(Port *prt, Eterm from, Eterm list)
         if (erts_iolist_size(list, &size))
             goto bad_value;
 
-        buf = erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, size + 1);
+        buf = (char *)erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, size + 1);
 
         r = erts_iolist_to_buf(list, buf, size);
         ASSERT(ERTS_IOLIST_TO_BUF_SUCCEEDED(r));
@@ -2212,7 +2212,7 @@ erts_port_output(Process *c_p,
 	else {
             char *ptr;
             if (try_call) {
-                ptr = erts_alloc(ERTS_ALC_T_TMP, alloc_size);
+                ptr = (char *)erts_alloc(ERTS_ALC_T_TMP, alloc_size);
             } else {
                 sigdp = erts_port_task_alloc_p2p_sig_data_extra(
                     alloc_size, (void**)&ptr);
@@ -2410,7 +2410,7 @@ erts_port_output(Process *c_p,
 	    if (erts_iolist_size(list, &size))
 		goto bad_value;
 
-	    buf = erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, size + 1);
+            buf = (char *)erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, size + 1);
 
 	    r = erts_iolist_to_buf(list, buf, size);
 	    ASSERT(ERTS_IOLIST_TO_BUF_SUCCEEDED(r));
@@ -2430,7 +2430,7 @@ erts_port_output(Process *c_p,
 	    /* Try with an 8KB buffer first (will often be enough I guess). */
 	    size = 8*1024;
 
-	    buf = erts_alloc(ERTS_ALC_T_TMP, size + 1);
+            buf = (char *)erts_alloc(ERTS_ALC_T_TMP, size + 1);
 	    r = erts_iolist_to_buf(list, buf, size);
 
 	    if (ERTS_IOLIST_TO_BUF_SUCCEEDED(r)) {
@@ -2444,7 +2444,7 @@ erts_port_output(Process *c_p,
 		ASSERT(r == ERTS_IOLIST_TO_BUF_OVERFLOW);
 		if (erts_iolist_size(list, &size))
 		    goto bad_value;
-		buf = erts_alloc(ERTS_ALC_T_TMP, size + 1); 
+                buf = (char *)erts_alloc(ERTS_ALC_T_TMP, size + 1);
 		r = erts_iolist_to_buf(list, buf, size);
 		ASSERT(ERTS_IOLIST_TO_BUF_SUCCEEDED(r));
 	    }
@@ -2489,7 +2489,7 @@ erts_port_output(Process *c_p,
 		break;
 	    }
 
-	    new_buf = erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, size + 1);
+            new_buf = (char *)erts_alloc(ERTS_ALC_T_DRV_CMD_DATA, size + 1);
 	    sys_memcpy(new_buf, buf, size);
 	    erts_free(ERTS_ALC_T_TMP, buf);
 	    buf = new_buf;
@@ -3275,8 +3275,7 @@ void erts_lcnt_enable_io_lock_count(int enable) {
  * Parameters:
  * bufsiz - The (maximum) size of the line buffer.
  */
-LineBuf *allocate_linebuf(bufsiz)
-int bufsiz;
+LineBuf *allocate_linebuf(int bufsiz)
 {
     int ovsiz = (bufsiz < LINEBUF_INITIAL) ? bufsiz : LINEBUF_INITIAL;
     LineBuf *lb = (LineBuf *) erts_alloc(ERTS_ALC_T_LINEBUF,
@@ -3682,7 +3681,8 @@ deliver_vec_message(Port* prt,			/* Port */
 	Eterm* thp = hp;
 	while (vsize--) {
 	    iov--;
-	    listp = buf_to_intlist(&thp, iov->iov_base, iov->iov_len, listp);
+            listp = buf_to_intlist(&thp, (const char *)iov->iov_base,
+                                   iov->iov_len, listp);
 	}
 	hp = thp;
     } else {
@@ -3701,7 +3701,7 @@ deliver_vec_message(Port* prt,			/* Port */
 	    } else {
 		/* Must increment reference count, caller calls free */
 		driver_binary_inc_refc(b);
-		base = iov->iov_base;
+                base = (byte *)iov->iov_base;
 	    }
 	    pb->thing_word = HEADER_PROC_BIN;
 	    pb->size = iov->iov_len;
@@ -3953,7 +3953,7 @@ typedef struct {
 
 static void sweep_one_link(ErtsLink *lnk, void *vpsc)
 {
-    SweepContext *psc = vpsc;
+    SweepContext *psc = (SweepContext *)vpsc;
     DistEntry *dep;
     Process *rp;
     Eterm port_id = psc->port->common.id;
@@ -4471,14 +4471,14 @@ erts_port_control(Process* c_p,
 	if (!try_call) {
 	    if (erts_iolist_size(data, &size))
 		return ERTS_PORT_OP_BADARG;
-	    bufp = erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA, size);
+            bufp = (char *)erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA, size);
 	    r = erts_iolist_to_buf(data, bufp, size);
 	    ASSERT(r == 0);
 	}
 	else {
 	    /* Try with an 8KB buffer first (will often be enough I guess). */
 	    size = 8*1024;
-	    bufp = erts_alloc(ERTS_ALC_T_TMP, size);
+            bufp = (char *)erts_alloc(ERTS_ALC_T_TMP, size);
 	    tmp_alloced = 1;
 
 	    r = erts_iolist_to_buf(data, bufp, size);
@@ -4495,7 +4495,7 @@ erts_port_control(Process* c_p,
 		    if (erts_iolist_size(data, &size))
 			return ERTS_PORT_OP_BADARG; /* Type error */
 		}
-		bufp = erts_alloc(ERTS_ALC_T_TMP, size);
+                bufp = (char *)erts_alloc(ERTS_ALC_T_TMP, size);
 		r = erts_iolist_to_buf(data, bufp, size);
 		ASSERT(r == 0);
 	    }
@@ -4588,7 +4588,7 @@ erts_port_control(Process* c_p,
 
     if (copy) {
 	char *old_bufp = bufp;
-	bufp = erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA, size);
+        bufp = (char *)erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA, size);
 	sys_memcpy(bufp, old_bufp, size);
 	if (tmp_alloced)
 	    erts_free(ERTS_ALC_T_TMP, old_bufp);
@@ -4799,11 +4799,11 @@ erts_port_call(Process* c_p,
     size = erts_encode_ext_size(data);
 
     if (!try_call)
-	bufp = erts_alloc(ERTS_ALC_T_DRV_CALL_DATA, size);
+        bufp = (char *)erts_alloc(ERTS_ALC_T_DRV_CALL_DATA, size);
     else if (size <= sizeof(input_buf))
 	bufp = &input_buf[0];
     else
-	bufp = erts_alloc(ERTS_ALC_T_TMP, size);
+        bufp = (char *)erts_alloc(ERTS_ALC_T_TMP, size);
 
     endp = (byte *) bufp;
     erts_encode_ext(data, &endp);
@@ -4881,7 +4881,7 @@ erts_port_call(Process* c_p,
     /* Convert data into something that can be scheduled */
 
     if (bufp == &input_buf[0] || try_call) {
-	char *new_bufp = erts_alloc(ERTS_ALC_T_DRV_CALL_DATA, size);
+        char *new_bufp = (char *)erts_alloc(ERTS_ALC_T_DRV_CALL_DATA, size);
 	sys_memcpy(new_bufp, bufp, size);
 	if (bufp != &input_buf[0])
 	    erts_free(ERTS_ALC_T_TMP, bufp);
@@ -5141,7 +5141,7 @@ erts_request_io_bytes(Process *c_p)
     Eterm ref;
     Uint32 *refn;
     ErtsSchedulerData *esdp = erts_proc_sched_data(c_p);
-    ErtsIOBytesReq *req = erts_alloc(ERTS_ALC_T_IOB_REQ,
+    ErtsIOBytesReq *req = (ErtsIOBytesReq *)erts_alloc(ERTS_ALC_T_IOB_REQ,
 				     sizeof(ErtsIOBytesReq));
 
     hp = HAlloc(c_p, REF_THING_SIZE);
@@ -5431,7 +5431,7 @@ int async_ready(Port *p, void* data)
                 LTTNG3(driver_ready_async, proc_str, port_str, p->name);
             }
 #endif
-	    (*p->drv_ptr->ready_async)((ErlDrvData)p->drv_data, data);
+            (*p->drv_ptr->ready_async)((ErlDrvData)p->drv_data, (ErlDrvThreadData)data);
 	    need_free = 0;
 	    ERTS_MSACC_POP_STATE_M();
 
@@ -5442,13 +5442,13 @@ int async_ready(Port *p, void* data)
 }
 
 static void
-report_missing_drv_callback(Port *p, char *drv_type, char *callback)
+report_missing_drv_callback(Port *p, const char *drv_type, const char *callback)
 {
     ErtsPortNames *pnp = erts_get_port_names(p->common.id,
 					     ERTS_Port2ErlDrvPort(p));
-    char *unknown = "<unknown>";
-    char *drv_name = pnp->driver_name ? pnp->driver_name : unknown;
-    char *prt_name = pnp->name ? pnp->name : unknown;
+    const char *unknown = "<unknown>";
+    const char *drv_name = pnp->driver_name ? pnp->driver_name : unknown;
+    const char *prt_name = pnp->name ? pnp->name : unknown;
     erts_dsprintf_buf_t *dsbufp = erts_create_logger_dsbuf();    
     erts_dsprintf(dsbufp, "%T: %s driver '%s' ", p->common.id, drv_type, drv_name);
     if (sys_strcmp(drv_name, prt_name) != 0)
@@ -5465,7 +5465,7 @@ erts_stale_drv_select(Eterm port,
 		      int mode,
 		      int deselect)
 {
-    char *type;
+    const char *type;
     ErtsPortNames *pnp;
     erts_dsprintf_buf_t *dsbufp;
 
@@ -5524,7 +5524,7 @@ erts_get_port_names(Eterm id, ErlDrvPort drv_port)
 	prt = erts_port_lookup_raw(id);
 
     if (!prt) {
-	pnp = erts_alloc(ERTS_ALC_T_PORT_NAMES, sizeof(ErtsPortNames));
+        pnp = (ErtsPortNames *)erts_alloc(ERTS_ALC_T_PORT_NAMES, sizeof(ErtsPortNames));
 	pnp->name = NULL;
 	pnp->driver_name = NULL;
     }
@@ -5536,14 +5536,14 @@ erts_get_port_names(Eterm id, ErlDrvPort drv_port)
 	pnp_len += 100; /* In most cases 100 characters will be enough... */
 	ASSERT(prt->common.id == id);
 #endif
-	pnp = erts_alloc(ERTS_ALC_T_PORT_NAMES, pnp_len);
+        pnp = (ErtsPortNames *)erts_alloc(ERTS_ALC_T_PORT_NAMES, pnp_len);
 	do {
 	    int nlen;
 	    char *name, *driver_name;
 	    if (len > 0) {
 		erts_free(ERTS_ALC_T_PORT_NAMES, pnp);
 		pnp_len = sizeof(ErtsPortNames) + len;
-		pnp = erts_alloc(ERTS_ALC_T_PORT_NAMES, pnp_len);
+                pnp = (ErtsPortNames *)erts_alloc(ERTS_ALC_T_PORT_NAMES, pnp_len);
 	    }
 	    name = prt->name;
 	    len = nlen = name ? sys_strlen(name) + 1 : 0;
@@ -5659,7 +5659,7 @@ grow_b2t_states(struct b2t_states__ *b2tsp)
 {
     if (b2tsp->state != &b2tsp->def_states[0]) {
 	b2tsp->len += ERTS_B2T_STATES_DEF_STATES_INC;
-	b2tsp->state = erts_realloc(ERTS_ALC_T_TMP,
+        b2tsp->state = (ErtsBinary2TermState *)erts_realloc(ERTS_ALC_T_TMP,
 				    b2tsp->state,
 				    sizeof(ErtsBinary2TermState)*b2tsp->len);
 #ifdef DEBUG
@@ -5670,7 +5670,7 @@ grow_b2t_states(struct b2t_states__ *b2tsp)
     }
     else {
 	ErtsBinary2TermState *new_states;
-	new_states = erts_alloc(ERTS_ALC_T_TMP,
+        new_states = (ErtsBinary2TermState *)erts_alloc(ERTS_ALC_T_TMP,
 				(sizeof(ErtsBinary2TermState)
 				 *ERTS_B2T_STATES_DEF_STATES_INC));
 	sys_memcpy((void *) new_states,
@@ -5735,7 +5735,7 @@ driver_deliver_term(Port *prt, Eterm to, ErlDrvTermData* data, int len)
     ERTS_UNDEF(mess,NIL);
     ERTS_UNDEF(scheduler,1);
 
-    factory.mode = FACTORY_CLOSED;
+    factory.mode = ErtsHeapFactory::FACTORY_CLOSED;
     init_b2t_states(&b2t);
 
     /*
@@ -5948,7 +5948,8 @@ driver_deliver_term(Port *prt, Eterm to, ErlDrvTermData* data, int len)
 
         /* We allocate a temporary heap to be used to create
            the message that may be sent using tracing */
-        erts_factory_tmp_init(&factory, erts_alloc(ERTS_ALC_T_DRIVER, need*sizeof(Eterm)),
+        erts_factory_tmp_init(&factory,
+                              (Eterm *)erts_alloc(ERTS_ALC_T_DRIVER, need*sizeof(Eterm)),
                               need, ERTS_ALC_T_DRIVER);
 
     } else {
@@ -6256,7 +6257,7 @@ driver_deliver_term(Port *prt, Eterm to, ErlDrvTermData* data, int len)
 	    b2t.used = b2t.ix;
 	for (b2t.ix = 0; b2t.ix < b2t.used; b2t.ix++)
 	    erts_binary2term_abort(&b2t.state[b2t.ix]);
-        if (factory.mode != FACTORY_CLOSED) {
+        if (factory.mode != ErtsHeapFactory::FACTORY_CLOSED) {
             ERL_MESSAGE_TERM(factory.message) = am_undefined;
             erts_factory_undo(&factory);
         }
@@ -6790,7 +6791,7 @@ driver_pdl_create(ErlDrvPort dp)
     Port *pp = erts_drvport2port(dp);
     if (pp == ERTS_INVALID_ERL_DRV_PORT || pp->port_data_lock)
 	return NULL;
-    pdl = erts_alloc(ERTS_ALC_T_PORT_DATA_LOCK,
+    pdl = (ErlDrvPDL)erts_alloc(ERTS_ALC_T_PORT_DATA_LOCK,
 		     sizeof(struct erl_drv_port_data_lock));
     erts_mtx_init_x(&pdl->mtx, "port_data_lock", pp->common.id, 1);
     pdl_init_refc(pdl);
@@ -6879,10 +6880,10 @@ static int expandq(ErlIOQueue* q, int n, int tail)
 	/* we may get little extra but it ok */
 	nvsz = (q->v_end - q->v_start) + n; 
 
-	niov = erts_alloc_fnf(ERTS_ALC_T_IOQ, nvsz * sizeof(SysIOVec));
+        niov = (SysIOVec *)erts_alloc_fnf(ERTS_ALC_T_IOQ, nvsz * sizeof(SysIOVec));
 	if (!niov)
 	    return -1;
-	nbinv = erts_alloc_fnf(ERTS_ALC_T_IOQ, nvsz * sizeof(ErlDrvBinary**));
+        nbinv = (ErlDrvBinary **)erts_alloc_fnf(ERTS_ALC_T_IOQ, nvsz * sizeof(ErlDrvBinary**));
 	if (!nbinv) {
 	    erts_free(ERTS_ALC_T_IOQ, (void *) niov);
 	    return -1;
@@ -7757,14 +7758,14 @@ void *driver_dl_open(char * path)
 {
     void *ptr;
     int res;
-    int *last_error_p = erts_smp_tsd_get(driver_list_last_error_key);
+    int *last_error_p = (int *)erts_smp_tsd_get(driver_list_last_error_key);
     int locked = maybe_lock_driver_list();
     if ((res = erts_sys_ddll_open(path, &ptr, NULL)) == 0) {
 	maybe_unlock_driver_list(locked);
 	return ptr;
     } else {
 	if (!last_error_p) {
-	    last_error_p = erts_alloc(ERTS_ALC_T_DDLL_ERRCODES, sizeof(int));
+            last_error_p = (int *)erts_alloc(ERTS_ALC_T_DDLL_ERRCODES, sizeof(int));
 	    erts_smp_tsd_set(driver_list_last_error_key,last_error_p);
 	}
 	*last_error_p = res;
@@ -7777,14 +7778,14 @@ void *driver_dl_sym(void * handle, char *func_name)
 {
     void *ptr;
     int res;
-    int *last_error_p = erts_smp_tsd_get(driver_list_lock_status_key);
+    int *last_error_p = (int *)erts_smp_tsd_get(driver_list_lock_status_key);
     int locked = maybe_lock_driver_list();
     if ((res = erts_sys_ddll_sym(handle, func_name, &ptr)) == 0) {
 	maybe_unlock_driver_list(locked);
 	return ptr;
     } else {
 	if (!last_error_p) {
-	    last_error_p = erts_alloc(ERTS_ALC_T_DDLL_ERRCODES, sizeof(int));
+            last_error_p = (int *)erts_alloc(ERTS_ALC_T_DDLL_ERRCODES, sizeof(int));
 	    erts_smp_tsd_set(driver_list_lock_status_key,last_error_p);
 	}
 	*last_error_p = res;
@@ -7805,7 +7806,7 @@ int driver_dl_close(void *handle)
 char *driver_dl_error(void) 
 {
     char *res;
-    int *last_error_p = erts_smp_tsd_get(driver_list_lock_status_key);
+    int *last_error_p = (int *)erts_smp_tsd_get(driver_list_lock_status_key);
     int locked = maybe_lock_driver_list();
     res = erts_ddll_error((last_error_p != NULL) ? (*last_error_p) : ERL_DE_ERROR_UNSPECIFIED); 
     maybe_unlock_driver_list(locked);
@@ -7945,11 +7946,11 @@ no_timeout_callback(ErlDrvData drv_data)
 }
 
 static void
-no_stop_select_callback(ErlDrvEvent event, void* private)
+no_stop_select_callback(ErlDrvEvent event, void* private_)
 {
     erts_dsprintf_buf_t *dsbufp = erts_create_logger_dsbuf();    
     erts_dsprintf(dsbufp, "Driver does not implement stop_select callback "
-			  "(event=%ld, private=%p)!\n", (long)event, private);
+                          "(event=%ld, private=%p)!\n", (long)event, private_);
     erts_send_error_to_logger_nogl(dsbufp);
 }
 
@@ -7970,8 +7971,8 @@ init_driver(erts_driver_t *drv, ErlDrvEntry *de, DE_Handle *handle)
     if (drv->flags & ERL_DRV_FLAG_USE_PORT_LOCKING)
 	drv->lock = NULL;
     else {
-	drv->lock = erts_alloc(ERTS_ALC_T_DRIVER_LOCK,
-			       sizeof(erts_mtx_t));
+        drv->lock = (erts_mtx_t *)erts_alloc(ERTS_ALC_T_DRIVER_LOCK,
+                                             sizeof(erts_mtx_t));
 	erts_mtx_init_x(drv->lock,
 			"driver_lock",
 #if defined(ERTS_ENABLE_LOCK_CHECK) || defined(ERTS_ENABLE_LOCK_COUNT)
@@ -8054,7 +8055,7 @@ void add_driver_entry(ErlDrvEntry *drv){
 
 int erts_add_driver_entry(ErlDrvEntry *de, DE_Handle *handle, int driver_list_locked)
 {
-    erts_driver_t *dp = erts_alloc(ERTS_ALC_T_DRIVER, sizeof(erts_driver_t));
+    erts_driver_t *dp = (erts_driver_t *)erts_alloc(ERTS_ALC_T_DRIVER, sizeof(erts_driver_t));
     int res;
 
     if (!driver_list_locked) {

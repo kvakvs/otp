@@ -1284,7 +1284,7 @@ BIF_RETTYPE exit_1(BIF_ALIST_1)
 BIF_RETTYPE raise_3(BIF_ALIST_3)
 {
     Process *c_p = BIF_P;
-    Eterm class = BIF_ARG_1;
+    Eterm class_ = BIF_ARG_1;
     Eterm value = BIF_ARG_2;
     Eterm stacktrace = BIF_ARG_3;
     Eterm reason;
@@ -1294,13 +1294,13 @@ BIF_RETTYPE raise_3(BIF_ALIST_3)
     int must_copy = 0;
     struct StackTrace *s;
 
-    if (class == am_error) {
+    if (class_ == am_error) {
 	c_p->fvalue = value;
 	reason = EXC_ERROR;
-    } else if (class == am_exit) {
+    } else if (class_ == am_exit) {
 	c_p->fvalue = value;
 	reason = EXC_EXIT;
-    } else if (class == am_throw) {
+    } else if (class_ == am_throw) {
 	c_p->fvalue = value;
 	reason = EXC_THROWN;
     } else goto error;
@@ -1573,7 +1573,7 @@ static BIF_RETTYPE process_flag_aux(Process *BIF_P,
 	   scb = NULL;
        else {
 	   Uint sz = sizeof(*scb) + (i-1) * sizeof(scb->ct[0]);
-	   scb = erts_alloc(ERTS_ALC_T_CALLS_BUF, sz);
+           scb = (struct saved_calls *)erts_alloc(ERTS_ALC_T_CALLS_BUF, sz);
 	   scb->len = i;
 	   scb->cur = 0;
 	   scb->n = 0;
@@ -1672,7 +1672,7 @@ BIF_RETTYPE process_flag_2(BIF_ALIST_2)
        BIF_RET(old_value);
    }
    else if (BIF_ARG_1 == am_scheduler) {
-       ErtsRunQueue *old, *new, *curr;
+       ErtsRunQueue *old, *new_, *curr;
        Sint sched;
        erts_aint32_t state;
 
@@ -1683,14 +1683,14 @@ BIF_RETTYPE process_flag_2(BIF_ALIST_2)
 	   goto error;
 
        if (sched == 0) {
-	   new = NULL;
+           new_ = NULL;
 	   state = erts_smp_atomic32_read_band_mb(&BIF_P->state,
 						  ~ERTS_PSFLG_BOUND);
        }
        else {
-	   new = erts_schedid2runq(sched);
+           new_ = erts_schedid2runq(sched);
 #ifdef ERTS_SMP
-	   erts_atomic_set_nob(&BIF_P->run_queue, (erts_aint_t) new);
+           erts_atomic_set_nob(&BIF_P->run_queue, (erts_aint_t) new_);
 #endif
 	   state = erts_smp_atomic32_read_bor_mb(&BIF_P->state,
 						 ERTS_PSFLG_BOUND);
@@ -1702,7 +1702,7 @@ BIF_RETTYPE process_flag_2(BIF_ALIST_2)
        ASSERT(!old || old == curr);
 
        old_value = old ? make_small(old->ix+1) : make_small(0);
-       if (new && new != curr)
+       if (new_ && new_ != curr)
 	   ERTS_BIF_YIELD_RETURN_X(BIF_P, old_value, am_scheduler);
        else
 	   BIF_RET(old_value);
@@ -3394,7 +3394,7 @@ BIF_RETTYPE binary_to_float_1(BIF_ALIST_1)
      *  (there is no nstrtod :( )
      */
 
-    buf = erts_alloc(ERTS_ALC_T_TMP, size + 1);
+    buf = (byte *)erts_alloc(ERTS_ALC_T_TMP, size + 1);
 
     real_bin = binary_val(binary);
     if (*real_bin == HEADER_SUB_BIN) {
@@ -4506,10 +4506,10 @@ BIF_RETTYPE system_flag_2(BIF_ALIST_2)
 	BIF_RET(am_true);
     } else if (BIF_ARG_1 == am_scheduler_wall_time) {
 	if (BIF_ARG_2 == am_true || BIF_ARG_2 == am_false) {
-	    erts_aint32_t new = BIF_ARG_2 == am_true ? 1 : 0;
+            erts_aint32_t new_ = BIF_ARG_2 == am_true ? 1 : 0;
 	    erts_aint32_t old = erts_smp_atomic32_xchg_nob(&sched_wall_time,
-							   new);
-	    Eterm ref = erts_sched_wall_time_request(BIF_P, 1, new);
+                                                           new_);
+            Eterm ref = erts_sched_wall_time_request(BIF_P, 1, new_);
 	    ASSERT(is_value(ref));
 	    BIF_TRAP2(await_sched_wall_time_mod_trap,
 		      BIF_P,
@@ -4569,9 +4569,9 @@ BIF_RETTYPE system_flag_2(BIF_ALIST_2)
     } else if (BIF_ARG_1 == am_microstate_accounting) {
       Eterm threads;
       if (BIF_ARG_2 == am_true || BIF_ARG_2 == am_false) {
-        erts_aint32_t new = BIF_ARG_2 == am_true ? ERTS_MSACC_ENABLE : ERTS_MSACC_DISABLE;
-	erts_aint32_t old = erts_smp_atomic32_xchg_nob(&msacc, new);
-	Eterm ref = erts_msacc_request(BIF_P, new, &threads);
+        erts_aint32_t new_ = BIF_ARG_2 == am_true ? ERTS_MSACC_ENABLE : ERTS_MSACC_DISABLE;
+        erts_aint32_t old = erts_smp_atomic32_xchg_nob(&msacc, new_);
+        Eterm ref = erts_msacc_request(BIF_P, new_, &threads);
         if (is_non_value(ref))
             BIF_RET(old ? am_true : am_false);
 	BIF_TRAP3(await_msacc_mod_trap,

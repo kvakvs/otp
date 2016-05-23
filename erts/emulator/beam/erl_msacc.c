@@ -77,7 +77,7 @@ void erts_msacc_early_init(void) {
 
 void erts_msacc_init(void) {
     int i;
-    erts_msacc_state_atoms = erts_alloc(ERTS_ALC_T_MSACC,
+    erts_msacc_state_atoms = (Eterm *)erts_alloc(ERTS_ALC_T_MSACC,
                                         sizeof(Eterm)*ERTS_MSACC_STATE_COUNT);
     for (i = 0; i < ERTS_MSACC_STATE_COUNT; i++) {
         erts_msacc_state_atoms[i] = am_atom_put(erts_msacc_states[i],
@@ -85,10 +85,8 @@ void erts_msacc_init(void) {
     }
 }
 
-void erts_msacc_init_thread(char *type, int id, int managed) {
-    ErtsMsAcc *msacc;
-
-    msacc = erts_alloc(ERTS_ALC_T_MSACC, sizeof(ErtsMsAcc));
+void erts_msacc_init_thread(const char *type, int id, int managed) {
+    ErtsMsAcc *msacc = (ErtsMsAcc *)erts_alloc(ERTS_ALC_T_MSACC, sizeof(ErtsMsAcc));
 
     msacc->type = strdup(type);
     msacc->id = make_small(id);
@@ -270,7 +268,7 @@ static void send_reply(ErtsMsAcc *msacc, ErtsMSAccReq *msaccrp) {
 static void
 reply_msacc(void *vmsaccrp)
 {
-    ErtsMsAcc *msacc = ERTS_MSACC_TSD_GET();
+    ErtsMsAcc *msacc = (ErtsMsAcc *)ERTS_MSACC_TSD_GET();
     ErtsMSAccReq *msaccrp = (ErtsMSAccReq *) vmsaccrp;
 
     ASSERT(!msacc || !msacc->unmanaged);
@@ -337,7 +335,7 @@ Eterm
 erts_msacc_request(Process *c_p, int action, Eterm *threads)
 {
 #ifdef ERTS_ENABLE_MSACC
-    ErtsMsAcc *msacc =  ERTS_MSACC_TSD_GET();
+    ErtsMsAcc *msacc = (ErtsMsAcc *)ERTS_MSACC_TSD_GET();
     ErtsSchedulerData *esdp = erts_proc_sched_data(c_p);
     Eterm ref;
     ErtsMSAccReq *msaccrp;
@@ -358,7 +356,8 @@ erts_msacc_request(Process *c_p, int action, Eterm *threads)
 
     ref = erts_make_ref(c_p);
 
-    msaccrp = erts_alloc(ERTS_ALC_T_MSACC, sizeof(ErtsMSAccReq));
+    msaccrp = (ErtsMSAccReq *)erts_alloc(ERTS_ALC_T_MSACC,
+                                         sizeof(ErtsMSAccReq));
     hp = &msaccrp->ref_heap[0];
 
     msaccrp->action = action;
@@ -399,7 +398,7 @@ erts_msacc_request(Process *c_p, int action, Eterm *threads)
            the msacc_mutex when sending messages */
         erts_rwmtx_rlock(&msacc_mutex);
         unmanaged_count = msacc_unmanaged_count;
-        unmanaged = erts_alloc(ERTS_ALC_T_MSACC,
+        unmanaged = (ErtsMsAcc **)erts_alloc(ERTS_ALC_T_MSACC,
                                sizeof(ErtsMsAcc*)*unmanaged_count);
 
         for (i = 0, msacc = msacc_unmanaged;

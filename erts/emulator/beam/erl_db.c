@@ -93,12 +93,13 @@ typedef union {
 static erts_meta_main_tab_lock_t *meta_main_tab_locks;
 
 #endif
-static struct {
+struct MetaMainTab {
     union {
 	DbTable *tb;     /* Only directly readable if slot is ALIVE */
 	UWord next_free;  /* (index<<2)|1 if slot is FREE */
     }u;
-} *meta_main_tab;
+};
+static MetaMainTab *meta_main_tab;
 
 /* A slot in meta_main_tab can have three states:
  * FREE : Free to use for new table. Part of linked free-list.
@@ -141,25 +142,26 @@ union {
     byte _cache_line_alignment[64];
 }meta_name_tab_rwlocks[META_NAME_TAB_LOCK_CNT];
 #endif
-static struct meta_name_tab_entry {
+struct MetaNameTabEntry {
     union {
 	Eterm name_atom;
 	Eterm mcnt; /* Length of mvec in multiple tab entry */
     }u;
     union {
 	DbTable *tb;
-	struct meta_name_tab_entry* mvec;
+        struct MetaNameTabEntry *mvec;
     }pu;
-} *meta_name_tab;
+};
+static MetaNameTabEntry *meta_name_tab;
 
 static unsigned meta_name_tab_mask;
 
 static ERTS_INLINE
-struct meta_name_tab_entry* meta_name_tab_bucket(Eterm name, 
-						 erts_smp_rwmtx_t** lockp)
+struct MetaNameTabEntry *meta_name_tab_bucket(Eterm name,
+                                              erts_smp_rwmtx_t** lockp)
 {
     unsigned bix = atom_val(name) & meta_name_tab_mask;
-    struct meta_name_tab_entry* bucket = &meta_name_tab[bix];
+    struct MetaNameTabEntry *bucket = &meta_name_tab[bix];
 #ifdef ERTS_SMP
     *lockp = &meta_name_tab_rwlocks[bix % META_NAME_TAB_LOCK_CNT].lck;
 #endif
@@ -274,7 +276,7 @@ static void schedule_free_dbtable(DbTable* tb)
 }
 
 static ERTS_INLINE void db_init_lock(DbTable* tb, int use_frequent_read_lock,
-				     char *rwname, char* fixname)
+                                     const char *rwname, const char* fixname)
 {
 #ifdef ERTS_SMP
     erts_smp_rwmtx_opt_t rwmtx_opt = ERTS_SMP_RWMTX_OPT_DEFAULT_INITER;
@@ -402,7 +404,7 @@ DbTable* db_get_table_aux(Process *p,
 	    tb = meta_main_tab[slot].u.tb;
     }
     else if (is_atom(id)) {
-	struct meta_name_tab_entry* bucket = meta_name_tab_bucket(id,&mtl);
+        struct MetaNameTabEntry *bucket = meta_name_tab_bucket(id,&mtl);
 	if (!meta_already_locked)
 	    erts_smp_rwmtx_rlock(mtl);
 	else{
@@ -467,8 +469,8 @@ static int insert_named_tab(Eterm name_atom, DbTable* tb, int have_lock)
 {
     int ret = 0;
     erts_smp_rwmtx_t* rwlock;
-    struct meta_name_tab_entry* new_entry;
-    struct meta_name_tab_entry* bucket = meta_name_tab_bucket(name_atom,
+    struct MetaNameTabEntry *new_entry;
+    struct MetaNameTabEntry *bucket = meta_name_tab_bucket(name_atom,
 							      &rwlock);
     if (!have_lock)
 	erts_smp_rwmtx_rwlock(rwlock);
@@ -477,7 +479,7 @@ static int insert_named_tab(Eterm name_atom, DbTable* tb, int have_lock)
 	new_entry = bucket;
     }
     else {
-	struct meta_name_tab_entry* entries;
+        struct MetaNameTabEntry *entries;
 	Uint cnt;
 	if (is_atom(bucket->u.name_atom)) { /* single */
 	    size_t size;
@@ -485,8 +487,9 @@ static int insert_named_tab(Eterm name_atom, DbTable* tb, int have_lock)
 		goto done;
 	    }
 	    cnt = 2;
-	    size = sizeof(struct meta_name_tab_entry)*cnt;
-	    entries = erts_db_alloc_nt(ERTS_ALC_T_DB_NTAB_ENT, size);
+            size = sizeof(struct MetaNameTabEntry)*cnt;
+            entries = (struct MetaNameTabEntry *)
+                    erts_db_alloc_nt(ERTS_ALC_T_DB_NTAB_ENT, size);
 	    ERTS_ETS_MISC_MEM_ADD(size);
 	    new_entry = &entries[0];
 	    entries[1] = *bucket;
@@ -500,9 +503,10 @@ static int insert_named_tab(Eterm name_atom, DbTable* tb, int have_lock)
 		    goto done;
 		}
 	    }
-	    old_size = sizeof(struct meta_name_tab_entry)*cnt;
-	    size = sizeof(struct meta_name_tab_entry)*(cnt+1);
-	    entries = erts_db_realloc_nt(ERTS_ALC_T_DB_NTAB_ENT,
+            old_size = sizeof(struct MetaNameTabEntry)*cnt;
+            size = sizeof(struct MetaNameTabEntry)*(cnt+1);
+            entries = (struct MetaNameTabEntry *)
+                    erts_db_realloc_nt(ERTS_ALC_T_DB_NTAB_ENT,
 					 bucket->pu.mvec,
 					 old_size,
 					 size);
@@ -528,7 +532,7 @@ static int remove_named_tab(DbTable *tb, int have_lock)
     int ret = 0;
     erts_smp_rwmtx_t* rwlock;
     Eterm name_atom = tb->common.id;
-    struct meta_name_tab_entry* bucket = meta_name_tab_bucket(name_atom,
+    struct MetaNameTabEntry* bucket = meta_name_tab_bucket(name_atom,
 							      &rwlock);
 #ifdef ERTS_SMP
     if (!have_lock && erts_smp_rwmtx_tryrwlock(rwlock) == EBUSY) {
@@ -562,9 +566,9 @@ static int remove_named_tab(DbTable *tb, int have_lock)
 	}
 	if (cnt == 2) { /* multi -> single */
 	    size_t size;
-	    struct meta_name_tab_entry* entries = bucket->pu.mvec;
+            struct MetaNameTabEntry* entries = bucket->pu.mvec;
 	    *bucket = entries[1-i];
-	    size = sizeof(struct meta_name_tab_entry)*cnt;
+            size = sizeof(struct MetaNameTabEntry)*cnt;
 	    erts_db_free_nt(ERTS_ALC_T_DB_NTAB_ENT, entries, size);
 	    ERTS_ETS_MISC_MEM_ADD(-size);
 	    ASSERT(is_atom(bucket->u.name_atom));
@@ -577,9 +581,10 @@ static int remove_named_tab(DbTable *tb, int have_lock)
 		/* reposition last one before realloc destroys it */
 		bucket->pu.mvec[i] = bucket->pu.mvec[cnt];
 	    }
-	    old_size = sizeof(struct meta_name_tab_entry)*(cnt+1);
-	    size = sizeof(struct meta_name_tab_entry)*cnt;
-	    bucket->pu.mvec = erts_db_realloc_nt(ERTS_ALC_T_DB_NTAB_ENT,
+            old_size = sizeof(struct MetaNameTabEntry)*(cnt+1);
+            size = sizeof(struct MetaNameTabEntry)*cnt;
+            bucket->pu.mvec = (struct MetaNameTabEntry *)
+                    erts_db_realloc_nt(ERTS_ALC_T_DB_NTAB_ENT,
 						 bucket->pu.mvec,
 						 old_size,
 						 size);
@@ -2908,7 +2913,7 @@ void init_db(ErtsDbSpinCount db_spin_count)
     if (erts_ets_rwmtx_spin_count >= 0)
 	rwmtx_opt.main_spincount = erts_ets_rwmtx_spin_count;
 
-    meta_main_tab_locks =
+    meta_main_tab_locks = (erts_meta_main_tab_lock_t *)
 	erts_alloc_permanent_cache_aligned(ERTS_ALC_T_DB_TABLES,
 					   sizeof(erts_meta_main_tab_lock_t)
 					   * ERTS_META_MAIN_TAB_LOCK_TAB_SIZE);
@@ -2940,8 +2945,8 @@ void init_db(ErtsDbSpinCount db_spin_count)
     meta_main_tab_slot_mask = (((Uint)1)<<bits) - 1;
     meta_main_tab_seq_incr = (((Uint)1)<<bits);
 
-    size = sizeof(*meta_main_tab)*db_max_tabs;
-    meta_main_tab = erts_db_alloc_nt(ERTS_ALC_T_DB_TABLES, size);
+    size = sizeof(MetaMainTab)*db_max_tabs;
+    meta_main_tab = (MetaMainTab *)erts_db_alloc_nt(ERTS_ALC_T_DB_TABLES, size);
     ERTS_ETS_MISC_MEM_ADD(size);
 
     meta_main_tab_cnt = 0;
@@ -2953,8 +2958,8 @@ void init_db(ErtsDbSpinCount db_spin_count)
     meta_main_tab_first_free = 0;
 
     meta_name_tab_mask = (((Uint) 1)<<(bits-1)) - 1; /* At least half the size of main tab */
-    size = sizeof(struct meta_name_tab_entry)*(meta_name_tab_mask+1);
-    meta_name_tab = erts_db_alloc_nt(ERTS_ALC_T_DB_TABLES, size);
+    size = sizeof(struct MetaNameTabEntry)*(meta_name_tab_mask+1);
+    meta_name_tab = (MetaNameTabEntry *)erts_db_alloc_nt(ERTS_ALC_T_DB_TABLES, size);
     ERTS_ETS_MISC_MEM_ADD(size);
 
     for (i=0; i<=meta_name_tab_mask; i++) {
@@ -3611,7 +3616,7 @@ static void set_heir(Process* me, DbTable* tb, Eterm heir, UWord heir_data)
 	/* Make a dummy 1-tuple around data to use DbTerm */
 	wrap_tpl = TUPLE1(tmp,heir_data);
 	size = size_object(wrap_tpl);
-	dbterm = erts_db_alloc(ERTS_ALC_T_DB_HEIR_DATA, (DbTable *)tb,
+        dbterm = (DbTerm *)erts_db_alloc(ERTS_ALC_T_DB_HEIR_DATA, (DbTable *)tb,
 			       (sizeof(DbTerm) + sizeof(Eterm)*(size-1)));
 	dbterm->size = size;
 	top = dbterm->tpl;
