@@ -320,7 +320,7 @@ int
 erts_print_system_version(int to, void *arg, Process *c_p)
 {
     int i, rc = -1;
-    char *rc_str = "";
+    const char *rc_str = "";
     char rc_buf[100];
     char *ov = otp_version;
 #ifdef ERTS_SMP
