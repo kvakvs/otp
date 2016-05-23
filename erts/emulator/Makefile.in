@@ -439,7 +439,7 @@ $(ERTS_LIB):
 .PHONY: clean
 clean:
 	$(RM) -f $(GENERATE)
-	$(RM) -rf $(TARGET)/*.c $(TARGET)/*.h $(TARGET)/*-GENERATED
+	$(RM) -rf $(TARGET)/*.c $(TARGET)/*.cpp $(TARGET)/*.h $(TARGET)/*-GENERATED
 	$(RM) -rf $(TARGET)/*/*
 	$(RM) -rf obj/$(TARGET)
 	$(RM) -rf pcre/obj/$(TARGET) $(PCRE_GENINC)
@@ -1044,19 +1044,19 @@ SED_DEPEND=sed '$(SED_PREFIX)$(SED_REPL_O);$(SED_REPL_TTF_DIR);$(SED_REPL_ERL_TO
 SED_DEPEND_ZLIB=sed '$(SED_PREFIX)$(SED_REPL_O_ZLIB)'
 
 ifdef HIPE_ENABLED
-HIPE_SRC=$(wildcard hipe/*.c)
+HIPE_SRC=$(wildcard hipe/*.cpp)
 else
 HIPE_SRC=
 endif
 
-BEAM_SRC=$(wildcard beam/*.c)
-DRV_COMMON_SRC=$(wildcard drivers/common/*.c)
-DRV_OSTYPE_SRC=$(wildcard drivers/$(ERLANG_OSTYPE)/*.c)
-NIF_COMMON_SRC=$(wildcard nifs/common/*.c)
-ALL_SYS_SRC=$(wildcard sys/$(ERLANG_OSTYPE)/*.c) $(wildcard sys/common/*.c)
+BEAM_SRC=$(wildcard beam/*.cpp)
+DRV_COMMON_SRC=$(wildcard drivers/common/*.cpp)
+DRV_OSTYPE_SRC=$(wildcard drivers/$(ERLANG_OSTYPE)/*.cpp)
+NIF_COMMON_SRC=$(wildcard nifs/common/*.cpp)
+ALL_SYS_SRC=$(wildcard sys/$(ERLANG_OSTYPE)/*.cpp) $(wildcard sys/common/*.cpp)
 # We use $(shell ls) here instead of wildcard as $(wildcard ) resolved at
 # loadtime of the makefile and at that time these files are not generated yet.
-TARGET_SRC=$(shell ls $(TARGET)/*.c) $(shell ls $(TTF_DIR)/*.c)
+TARGET_SRC=$(shell ls $(TARGET)/*.cpp) $(shell ls $(TTF_DIR)/*.cpp)
 
 # I do not want the -MG flag on windows, it does not work properly for a 
 # windows build.
