@@ -869,7 +869,7 @@ erts_printf_string(fmtfn_t fn, void *arg, const char *str)
 }
 
 int
-erts_printf_buf(fmtfn_t fn, void *arg, char *buf, size_t sz)
+erts_printf_buf(fmtfn_t fn, void *arg, const char *buf, size_t sz)
 {
     return (*fn)(arg, buf, sz);
 }

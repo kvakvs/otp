@@ -27,29 +27,29 @@
 /* Emulated code recursively calls native code.
    The return address is `nbif_return', which is exported so that
    tailcalls from native to emulated code can be identified. */
-extern unsigned int x86_call_to_native(Process*);
-extern void nbif_return(void);
+extern "C" unsigned int x86_call_to_native(Process*);
+extern "C" void nbif_return(void);
 
 /* Native-mode stubs for calling emulated-mode closures. */
-extern void nbif_ccallemu0(void);
-extern void nbif_ccallemu1(void);
-extern void nbif_ccallemu2(void);
-extern void nbif_ccallemu3(void);
-extern void nbif_ccallemu4(void);
-extern void nbif_ccallemu5(void);
-extern void nbif_ccallemu6(void);
+extern "C" void nbif_ccallemu0(void);
+extern "C" void nbif_ccallemu1(void);
+extern "C" void nbif_ccallemu2(void);
+extern "C" void nbif_ccallemu3(void);
+extern "C" void nbif_ccallemu4(void);
+extern "C" void nbif_ccallemu5(void);
+extern "C" void nbif_ccallemu6(void);
 
 /* Default exception handler for native code. */
-extern void nbif_fail(void);
+extern "C" void nbif_fail(void);
 
 /* Emulated code returns to its native code caller. */
-extern unsigned int x86_return_to_native(Process*);
+extern "C" unsigned int x86_return_to_native(Process*);
 
 /* Emulated code tailcalls native code. */
-extern unsigned int x86_tailcall_to_native(Process*);
+extern "C" unsigned int x86_tailcall_to_native(Process*);
 
 /* Emulated code throws an exception to its native code caller. */
-extern unsigned int x86_throw_to_native(Process*);
+extern "C" unsigned int x86_throw_to_native(Process*);
 
 static __inline__ unsigned int max(unsigned int x, unsigned int y)
 {

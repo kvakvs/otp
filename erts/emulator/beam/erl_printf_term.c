@@ -46,7 +46,7 @@ do {									\
 
 #define PRINT_BUF(CNT, FN, ARG, BUF, LEN)				\
 do {									\
-    int res__ = erts_printf_buf((FN), (ARG), (char*)(BUF), (LEN));	\
+    int res__ = erts_printf_buf((FN), (ARG), (const char *)(BUF), (LEN));	\
     if (res__ < 0)							\
 	return res__;							\
     (CNT) += res__;							\
@@ -530,7 +530,7 @@ print_term(fmtfn_t fn, void* arg, Eterm obj, long *dcount) {
 		Atom* name = atom_tab(atom_val(ep->code[1]));
 
 		PRINT_STRING(res, fn, arg, "#Fun<");
-		PRINT_BUF(res, fn, arg, module->name, module->len);
+                PRINT_BUF(res, fn, arg, module->name, module->len);
 		PRINT_CHAR(res, fn, arg, '.');
 		PRINT_BUF(res, fn, arg, name->name, name->len);
 		PRINT_CHAR(res, fn, arg, '.');

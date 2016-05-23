@@ -50,7 +50,7 @@ extern void *hipe_make_native_stub(void *beamAddress, unsigned int beamArity);
 #endif
 
 #if !defined(AEXTERN)
-#define AEXTERN(RET,NAME,PROTO)	extern RET NAME PROTO
+#define AEXTERN(RET,NAME,PROTO)	extern "C" RET NAME PROTO
 #endif
 
 #endif /* HIPE_ARCH_H */

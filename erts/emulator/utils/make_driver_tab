@@ -128,7 +128,7 @@ EOF
 foreach (@static_nifs) {
     my $d = ${_};
     $d =~ s/\.debug//; # strip .debug
-    print "void *".$d."_nif_init(void);\n";
+    print "extern \"C\" void *".$d."_nif_init(void);\n";
 }
 
 # The array itself

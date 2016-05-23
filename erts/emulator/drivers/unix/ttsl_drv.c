@@ -75,12 +75,14 @@ static ErlDrvData ttysl_start(ErlDrvPort, char*);
 #define FALSE 0
 
 /* Termcap functions. */
+extern "C" {
 int tgetent(char* bp, char *name);
 int tgetnum(char* cap);
 int tgetflag(char* cap);
 char *tgetstr(char* cap, char** buf);
 char *tgoto(char* cm, int col, int line);
 int tputs(char* cp, int affcnt, int (*outc)(int c));
+} // "C"
 
 /* Terminal capabilites in which we are interested. */
 static char *capbuf;

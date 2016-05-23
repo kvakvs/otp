@@ -31,8 +31,8 @@
 #include "hipe_x86_asm.h"	/* for NR_ARG_REGS */
 #endif
 
-extern void nbif_fail(void);
-extern void nbif_stack_trap_ra(void);
+extern "C" void nbif_fail(void);
+extern "C" void nbif_stack_trap_ra(void);
 
 /*
  * hipe_print_nstack() is called from hipe_bifs:show_nstack/1.

@@ -1361,7 +1361,7 @@ static void *alloc_wrapper(ErlDrvSizeT size){
 	erts_exit(ERTS_ERROR_EXIT,"Out of virtual memory in malloc (%s)", __FILE__);
     return ret;
 }
-#define ALLOC(X) alloc_wrapper(X)
+inline void *ALLOC(UWord X) { return alloc_wrapper(X); }
 
 static void *realloc_wrapper(void *current, ErlDrvSizeT size){
     void *ret = driver_realloc(current,size);
@@ -1369,7 +1369,7 @@ static void *realloc_wrapper(void *current, ErlDrvSizeT size){
 	erts_exit(ERTS_ERROR_EXIT,"Out of virtual memory in realloc (%s)", __FILE__);
     return ret;
 }
-#define REALLOC(X,Y) realloc_wrapper(X,Y)
+inline void *REALLOC(void *X, UWord Y) { return realloc_wrapper(X,Y); }
 #define FREE(P) driver_free((P))
 #else /* FATAL_MALLOC */
 
@@ -3836,28 +3836,29 @@ static int inet_init()
 	    == 0) {
 	    void *ptr;
 	    if (erts_sys_ddll_sym(h_libsctp, "sctp_bindx", &ptr) == 0) {
-                p_sctp_bindx = ptr;
+
+                p_sctp_bindx = (decltype(p_sctp_bindx))ptr;
 		if (erts_sys_ddll_sym(h_libsctp, "sctp_peeloff", &ptr) == 0) {
-		    p_sctp_peeloff = ptr;
+                    p_sctp_peeloff = (decltype(p_sctp_peeloff))ptr;
 		}
 		else p_sctp_peeloff = NULL;
 		if (erts_sys_ddll_sym(h_libsctp, "sctp_getladdrs", &ptr) == 0) {
-		    p_sctp_getladdrs = ptr;
+                    p_sctp_getladdrs = (decltype(p_sctp_getladdrs))ptr;
 		}
 		else p_sctp_getladdrs = NULL;
 		if (erts_sys_ddll_sym(h_libsctp, "sctp_freeladdrs", &ptr) == 0) {
-		    p_sctp_freeladdrs = ptr;
+                    p_sctp_freeladdrs = (decltype(p_sctp_freeladdrs))ptr;
 		}
 		else {
 		    p_sctp_freeladdrs = NULL;
 		    p_sctp_getladdrs = NULL;
 		}
 		if (erts_sys_ddll_sym(h_libsctp, "sctp_getpaddrs", &ptr) == 0) {
-		    p_sctp_getpaddrs = ptr;
+                    p_sctp_getpaddrs = (decltype(p_sctp_getpaddrs))ptr;
 		}
 		else p_sctp_getpaddrs = NULL;
 		if (erts_sys_ddll_sym(h_libsctp, "sctp_freepaddrs", &ptr) == 0) {
-		    p_sctp_freepaddrs = ptr;
+                    p_sctp_freepaddrs = (decltype(p_sctp_freepaddrs))ptr;
 		}
 		else {
 		    p_sctp_freepaddrs = NULL;
@@ -4103,7 +4104,7 @@ static ErlDrvSizeT reply_inet_addrs
 	rlen += s;
     }
 
-    if (rlen > rsize) (*rbuf) = ALLOC(rlen);
+    if (rlen > rsize) (*rbuf) = (char *)ALLOC(rlen);
 
     (*rbuf)[0] = INET_REP_OK;
     rlen = 1;
@@ -4673,7 +4674,7 @@ static ErlDrvSSizeT inet_ctl_ifset(inet_descriptor* desc,
 static int get_ifconf(SOCKET s, struct ifconf *ifcp) {
     int ifc_len = 0;
     int buflen = 100 * sizeof(struct ifreq);
-    char *buf = ALLOC(buflen);
+    char *buf = (char *)ALLOC(buflen);
 
     for (;;) {
 	ifcp->ifc_len = buflen;
@@ -4712,7 +4713,7 @@ static ErlDrvSSizeT inet_ctl_getiflist(inet_descriptor* desc,
 	return ctl_error(sock_errno(), rbuf, rsize);
     }
 
-    sp = sbuf = ALLOC(ifc.ifc_len+1);
+    sp = sbuf = (char *)ALLOC(ifc.ifc_len+1);
     *sp++ = INET_REP_OK;
     i = 0;
     for (;;) {
@@ -5565,7 +5566,7 @@ static ErlDrvSSizeT inet_ctl_getifaddrs(inet_descriptor* desc_p,
     char *buf_alloc_p;
 
     buf_size = GETIFADDRS_BUFSZ;
-    buf_alloc_p = ALLOC(GETIFADDRS_BUFSZ);
+    buf_alloc_p = (char *)ALLOC(GETIFADDRS_BUFSZ);
     buf_p = buf_alloc_p;
 #   define BUF_ENSURE(Size)						\
     do {								\
@@ -5573,7 +5574,7 @@ static ErlDrvSSizeT inet_ctl_getifaddrs(inet_descriptor* desc_p,
 	NEED_ = GOT_ + (Size);						\
 	if (NEED_ > buf_size) {						\
 	    buf_size = NEED_ + GETIFADDRS_BUFSZ;			\
-	    buf_alloc_p = REALLOC(buf_alloc_p, buf_size);		\
+            buf_alloc_p = (char *)REALLOC(buf_alloc_p, buf_size);		\
 	    buf_p = buf_alloc_p + GOT_;					\
 	}								\
     } while (0)
@@ -5586,7 +5587,7 @@ static ErlDrvSSizeT inet_ctl_getifaddrs(inet_descriptor* desc_p,
 					   buf_alloc_p+buf_size))) {	\
 		int GOT_ = buf_p - buf_alloc_p;				\
 		buf_size += GETIFADDRS_BUFSZ;				\
-		buf_alloc_p = REALLOC(buf_alloc_p, buf_size);		\
+                buf_alloc_p = (char *)REALLOC(buf_alloc_p, buf_size);		\
 		buf_p = buf_alloc_p + GOT_;				\
 	    }								\
 	    if (P_ == buf_p) {						\
@@ -5654,7 +5655,7 @@ static ErlDrvSSizeT inet_ctl_getifaddrs(inet_descriptor* desc_p,
 	*buf_p++ = '\0';
     }
     buf_size = buf_p - buf_alloc_p;
-    buf_alloc_p = REALLOC(buf_alloc_p, buf_size);
+    buf_alloc_p = (char *)REALLOC(buf_alloc_p, buf_size);
     /* buf_p is now unreliable */
     freeifaddrs(ifa_free_p);
     *rbuf_pp = buf_alloc_p;
@@ -5851,7 +5852,7 @@ static int inet_set_opts(inet_descriptor* desc, char* ptr, int len)
 	case INET_LOPT_PACKET:
 	    DEBUGF(("inet_set_opts(%ld): s=%d, PACKET=%d\r\n",
 		    (long)desc->port, desc->s, ival));
-	    desc->htype = ival;
+            desc->htype = (PacketParseType)ival;
 	    continue;
 
 	case INET_LOPT_PACKET_SIZE:
@@ -5947,7 +5948,7 @@ static int inet_set_opts(inet_descriptor* desc, char* ptr, int len)
 	    if (ival < 0) return -1;
 	    if (len < ival) return -1;
 	    if (desc->netns != NULL) FREE(desc->netns);
-	    desc->netns = ALLOC(((unsigned int) ival) + 1);
+            desc->netns = (char *)ALLOC(((unsigned int) ival) + 1);
 	    memcpy(desc->netns, ptr, ival);
 	    desc->netns[ival] = '\0';
 	    ptr += ival;
@@ -6330,7 +6331,7 @@ static int sctp_set_opts(inet_descriptor* desc, char* ptr, int len)
 	    ns_len = get_int32(curr);                   curr += 4;
 	    CHKLEN(curr, ns_len);
 	    if (desc->netns != NULL) FREE(desc->netns);
-	    desc->netns = ALLOC(ns_len + 1);
+            desc->netns = (char *)ALLOC(ns_len + 1);
 	    memcpy(desc->netns, curr, ns_len);
 	    desc->netns[ns_len] = '\0';
 	    curr += ns_len;
@@ -6787,10 +6788,10 @@ static ErlDrvSSizeT inet_fill_opts(inet_descriptor* desc,
 	if (need > dest_allocated) {					   \
 	    char *new_buffer;						   \
 	    if (dest_allocated == destlen) {				   \
-		new_buffer = ALLOC((dest_allocated = need + 10));	   \
+                new_buffer = (char *)ALLOC((dest_allocated = need + 10));	   \
 		memcpy(new_buffer,*dest,dest_used);			   \
 	    } else {							   \
-		new_buffer = REALLOC(*dest, (dest_allocated = need + 10)); \
+                new_buffer = (char *)REALLOC(*dest, (dest_allocated = need + 10)); \
 	    }								   \
 	    *dest = new_buffer;						   \
 	}								   \
@@ -7167,7 +7168,7 @@ static ErlDrvSSizeT sctp_fill_opts(inet_descriptor* desc,
     int length = 0; /* Number of result list entries */
     
     int spec_allocated = PACKET_ERL_DRV_TERM_DATA_LEN;
-    spec = ALLOC(sizeof(* spec) * spec_allocated);
+    spec = (ErlDrvTermData *)ALLOC(sizeof(* spec) * spec_allocated);
     
 #   define RETURN_ERROR(Spec, Errno) \
     do {                    \
@@ -7188,7 +7189,7 @@ static ErlDrvSSizeT sctp_fill_opts(inet_descriptor* desc,
 	    RETURN_ERROR((Spec), -ENOMEM);                      \
 	}                                                       \
 	if (need > spec_allocated) {                            \
-	    (Spec) = REALLOC((Spec),                            \
+            (Spec) = (ErlDrvTermData *)REALLOC((Spec),                            \
 			     sizeof(* (Spec))                   \
 			     * (spec_allocated = need + 20));   \
 	}                                                       \
@@ -11643,7 +11644,7 @@ static MultiTimerData *add_multi_timer(MultiTimerData **first, ErlDrvPort port,
 							   ErlDrvTermData caller))
 {
     MultiTimerData *mtd, *p, *s;
-    mtd = ALLOC(sizeof(MultiTimerData));
+    mtd = (MultiTimerData*)ALLOC(sizeof(MultiTimerData));
     mtd->when = erl_drv_monotonic_time(ERL_DRV_MSEC) + ((ErlDrvTime) timeout) + 1;
     mtd->timeout_function = timeout_fun;
     mtd->caller = caller;
@@ -11687,8 +11688,7 @@ static MultiTimerData *add_multi_timer(MultiTimerData **first, ErlDrvPort port,
 -----------------------------------------------------------------------------*/
 
 static int
-save_subscriber(subs, subs_pid)
-subs_list *subs; ErlDrvTermData subs_pid;
+save_subscriber(subs_list *subs, ErlDrvTermData subs_pid)
 {
   subs_list *tmp;
 
@@ -11698,7 +11698,7 @@ subs_list *subs; ErlDrvTermData subs_pid;
   }
   else {
     tmp = subs->next;
-    subs->next = ALLOC(sizeof(subs_list));
+    subs->next = (subs_list_ *)ALLOC(sizeof(subs_list));
     if(subs->next == NULL) {
       subs->next = tmp;
       return 0;
@@ -11710,17 +11710,16 @@ subs_list *subs; ErlDrvTermData subs_pid;
 }
 
 static void
-free_subscribers(subs)
-subs_list *subs;
+free_subscribers(subs_list *subs)
 {
-  subs_list *this;
+  subs_list *this_;
   subs_list *next;
 
-  this = subs->next;
-  while(this) {
-    next = this->next;
-    FREE((void *) this);
-    this = next;
+  this_ = subs->next;
+  while(this_) {
+    next = this_->next;
+    FREE((void *) this_);
+    this_ = next;
   }
 
   subs->subscriber = NO_PROCESS;
@@ -11736,25 +11735,25 @@ static void send_to_subscribers
     int msg_len
 )
 {
-  subs_list *this;
+  subs_list *this_;
   subs_list *next;
   int first = 1;
 
   if(NO_SUBSCRIBERS(subs))
     return;
 
-  this = subs;
-  while(this) {
+  this_ = subs;
+  while(this_) {
     
-    (void) erl_drv_send_term(port, this->subscriber, msg, msg_len);
+    (void) erl_drv_send_term(port, this_->subscriber, msg, msg_len);
 
     if(free_subs && !first) {
-      next = this->next;
-      FREE((void *) this);
-      this = next;
+      next = this_->next;
+      FREE((void *) this_);
+      this_ = next;
     }
     else
-      this = this->next;
+      this_ = this_->next;
     first = 0;
   }
 
