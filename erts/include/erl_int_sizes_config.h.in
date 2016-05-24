@@ -19,19 +19,19 @@
  */
 
 /* The number of bytes in a char.  */
-#undef SIZEOF_CHAR
+#define SIZEOF_CHAR ${CONF_CHAR_SIZE}
 
 /* The number of bytes in a short.  */
-#undef SIZEOF_SHORT
+#define SIZEOF_SHORT ${CONF_SHORT_SIZE}
 
 /* The number of bytes in a int.  */
-#undef SIZEOF_INT
+#define SIZEOF_INT ${CONF_INT_SIZE}
 
 /* The number of bytes in a long.  */
-#undef SIZEOF_LONG
+#define SIZEOF_LONG ${CONF_LONG_SIZE}
 
 /* The number of bytes in a long long.  */
-#undef SIZEOF_LONG_LONG
+#define SIZEOF_LONG_LONG ${CONF_LONG_LONG_SIZE}
 
 /* The size of a pointer. */
-#undef SIZEOF_VOID_P
+#define SIZEOF_VOID_P ${CONF_VOIDP_SIZE}
