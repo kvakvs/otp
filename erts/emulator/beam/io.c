@@ -3055,7 +3055,7 @@ erts_port_link(Process *c_p, Port *prt, Eterm to, Eterm *refp)
 }
 
 static void
-port_monitor_failure(Eterm port_id, Eterm origin)
+port_monitor_failure(Eterm port_id, Eterm origin, Eterm ref_DOWN)
 {
     Process       *origin_p;
     ErtsProcLocks p_locks = ERTS_PROC_LOCK_LINK | ERTS_PROC_LOCKS_XSIG_SEND;
@@ -3099,7 +3099,7 @@ port_monitor(Port *prt, erts_aint32_t state, Eterm origin,
         erts_smp_proc_unlock(origin_p, p_locks);
     } else {
 failure:
-        port_monitor_failure(prt->common.id, origin);
+        port_monitor_failure(prt->common.id, origin, ref);
     }
 }
 
@@ -3107,17 +3107,18 @@ static int
 port_sig_monitor(Port *prt, erts_aint32_t state, int op,
                  ErtsProc2PortSigData *sigdp)
 {
+    Eterm hp[ERTS_REF_WORDS];
+    Eterm ref = make_internal_ref(&hp);
+    write_ref_thing(hp, sigdp->ref[0], sigdp->ref[1], sigdp->ref[2]);
+
     if (op == ERTS_PROC2PORT_SIG_EXEC) {
-        Eterm hp[ERTS_REF_WORDS];
-        Eterm ref = make_internal_ref(&hp);
-        write_ref_thing(hp, sigdp->ref[0], sigdp->ref[1], sigdp->ref[2]);
         /* erts_add_monitor call inside port_monitor will copy ref from hp */
         port_monitor(prt, state,
                      sigdp->u.monitor.origin,
                      sigdp->u.monitor.name,
                      ref);
     } else {
-        port_monitor_failure(sigdp->u.monitor.origin, prt->common.id);
+        port_monitor_failure(sigdp->u.monitor.origin, prt->common.id, ref);
     }
     if (sigdp->flags & ERTS_P2P_SIG_DATA_FLG_REPLY) {
         port_sched_op_reply(sigdp->caller, sigdp->ref, am_true, prt);
@@ -3224,15 +3225,15 @@ static int
 port_sig_demonitor(Port *prt, erts_aint32_t state, int op,
                    ErtsProc2PortSigData *sigdp)
 {
+    Eterm hp[ERTS_REF_WORDS];
+    Eterm ref = make_internal_ref(&hp);
+    write_ref_thing(hp, sigdp->u.demonitor.ref[0],
+                    sigdp->u.demonitor.ref[1],
+                    sigdp->u.demonitor.ref[2]);
     if (op == ERTS_PROC2PORT_SIG_EXEC) {
-        Eterm hp[ERTS_REF_WORDS];
-        Eterm ref = make_internal_ref(&hp);
-        write_ref_thing(hp, sigdp->u.demonitor.ref[0],
-                sigdp->u.demonitor.ref[1],
-                sigdp->u.demonitor.ref[2]);
         port_demonitor(prt, state, sigdp->u.monitor.origin, ref);
     } else {
-        port_monitor_failure(sigdp->u.monitor.origin, prt->common.id);
+        port_demonitor_failure(sigdp->u.monitor.origin, prt->common.id, ref);
     }
     if (sigdp->flags & ERTS_P2P_SIG_DATA_FLG_REPLY) {
         port_sched_op_reply(sigdp->caller, sigdp->ref, am_true, prt);

@@ -1051,6 +1051,8 @@ typedef enum {
 ErtsPortOpResult erts_port_demonitor(Process *origin, ErtsDemonitorMode mode,
                                     Port *target, Eterm ref,
                                     Eterm *trap_ref);
+/* defined in erl_bif_port.c */
+Port *erts_sig_lookup_port(Process *c_p, Eterm id_or_name);
 
 int erts_port_output_async(Port *, Eterm, Eterm);
 

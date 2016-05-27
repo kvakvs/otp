@@ -705,10 +705,7 @@ static BIF_RETTYPE
 local_port_monitor(Process *origin, Eterm target)
 {
     BIF_RETTYPE ref = erts_make_ref(origin);
-    Port *port = erts_port_lookup(target,
-                                  (erts_port_synchronous_ops
-                                   ? ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP
-                                   : ERTS_PORT_SFLGS_INVALID_LOOKUP));
+    Port *port = erts_sig_lookup_port(origin, target);
     ErtsProcLocks p_locks = ERTS_PROC_LOCK_MAIN;
 
     if (!port ||
@@ -764,10 +761,7 @@ local_name_monitor(Process *self, Eterm type, Eterm target_name)
     } else if (is_internal_port(whereis)) {
         if (type == am_port) {
             /* Raw lookup does no locking */
-            port = erts_port_lookup(whereis,
-                                    (erts_port_synchronous_ops
-                                     ? ERTS_PORT_SFLGS_INVALID_DRIVER_LOOKUP
-                                     : ERTS_PORT_SFLGS_INVALID_LOOKUP));
+            port = erts_sig_lookup_port(self, whereis);
         } else {
             goto badarg;
         }
