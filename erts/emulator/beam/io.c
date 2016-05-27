@@ -386,7 +386,7 @@ static Port *create_port(char *name,
     sys_strcpy(p, name);
     prt->drv_ptr = driver;
     ERTS_P_LINKS(prt) = NULL;
-    ERTS_P_MONITORS(prt) = NULL;
+    ERTS_P_SET_MONITORS(prt, NULL);
     prt->linebuf = NULL;
     prt->suspended = NULL;
     erts_init_port_data(prt);
@@ -3091,9 +3091,9 @@ port_monitor(Port *prt, erts_aint32_t state, Eterm origin,
         if (! origin_p) {
             goto failure;
         }
-        erts_add_monitor(&ERTS_P_MONITORS(origin_p), MON_ORIGIN, ref,
+        erts_add_monitor(ERTS_P_MONITORS_PTR(origin_p), MON_ORIGIN, ref,
                          prt->common.id, name_or_nil);
-        erts_add_monitor(&ERTS_P_MONITORS(prt), MON_TARGET, ref,
+        erts_add_monitor(ERTS_P_MONITORS_PTR(prt), MON_TARGET, ref,
                          origin, name_or_nil);
 
         erts_smp_proc_unlock(origin_p, p_locks);
@@ -3179,7 +3179,7 @@ port_demonitor_failure(Eterm port_id, Eterm origin, Eterm ref)
     if (! origin_p) { return; }
 
     /* do not send any DOWN messages, drop monitors on process */
-    ErtsMonitor *mon1 = erts_remove_monitor(&ERTS_P_MONITORS(origin_p), ref);
+    ErtsMonitor *mon1 = erts_remove_monitor(ERTS_P_MONITORS_PTR(origin_p), ref);
     if (mon1 != NULL) {
         erts_destroy_monitor(mon1);
     }
@@ -3200,14 +3200,14 @@ port_demonitor(Port *port, erts_aint32_t state, Eterm origin, Eterm ref)
         ErtsProcLocks p_locks = ERTS_PROC_LOCK_LINK;
         Process *origin_p = erts_pid2proc(NULL, 0, origin, p_locks);
         if (origin_p) {
-            ErtsMonitor *mon1 = erts_remove_monitor(&ERTS_P_MONITORS(origin_p),
+            ErtsMonitor *mon1 = erts_remove_monitor(ERTS_P_MONITORS_PTR(origin_p),
                                                     ref);
             if (mon1 != NULL) {
                 erts_destroy_monitor(mon1);
             }
         }
         if (1) {
-            ErtsMonitor *mon2 = erts_remove_monitor(&ERTS_P_MONITORS(port),
+            ErtsMonitor *mon2 = erts_remove_monitor(ERTS_P_MONITORS_PTR(port),
                                                     ref);
             if (mon2 != NULL) {
                 erts_destroy_monitor(mon2);
@@ -4176,7 +4176,7 @@ static void sweep_one_monitor(ErtsMonitor *mon, void *vpsc)
         if (!rp) {
             goto done;
         }
-        rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), mon->ref);
+        rmon = erts_remove_monitor(ERTS_P_MONITORS_PTR(rp), mon->ref);
         erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
         if (rmon == NULL) {
             goto done;
@@ -4294,7 +4294,7 @@ port_fire_one_monitor(ErtsMonitor *mon, void *ctx0)
                                    watched, ctx->reason);
         UnUseTmpHeapNoproc(3);
 
-        rmon = erts_remove_monitor(&ERTS_P_MONITORS(origin), mon->ref);
+        rmon = erts_remove_monitor(ERTS_P_MONITORS_PTR(origin), mon->ref);
         erts_smp_proc_unlock(origin, origin_locks);
 
         if (rmon) {
@@ -4391,7 +4391,7 @@ erts_deliver_port_exit(Port *prt, Eterm from, Eterm reason, int send_closed,
    {
        SweepContext ctx = {prt, modified_reason};
        ErtsMonitor *moni = ERTS_P_MONITORS(prt);
-       ERTS_P_MONITORS(prt) = NULL;
+       ERTS_P_SET_MONITORS(prt, NULL);
        erts_sweep_monitors(moni, &sweep_one_monitor, &ctx);
    } 
    DRV_MONITOR_UNLOCK_PDL(prt);
@@ -7643,8 +7643,8 @@ static int do_driver_monitor_process(Port *prt,
     }
 
     ref = erts_make_ref_in_buffer(buf);
-    erts_add_monitor(&ERTS_P_MONITORS(prt), MON_ORIGIN, ref, rp->common.id, NIL);
-    erts_add_monitor(&ERTS_P_MONITORS(rp), MON_TARGET, ref, prt->common.id, NIL);
+    erts_add_monitor(ERTS_P_MONITORS_PTR(prt), MON_ORIGIN, ref, rp->common.id, NIL);
+    erts_add_monitor(ERTS_P_MONITORS_PTR(rp), MON_TARGET, ref, prt->common.id, NIL);
 
     erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
     ref_to_driver_monitor(ref,monitor);
@@ -7703,13 +7703,13 @@ static int do_driver_demonitor_process(Port *prt, Eterm *buf,
 			   to,
 			   ERTS_PROC_LOCK_LINK,
 			   ERTS_P2P_FLG_ALLOW_OTHER_X);
-    mon = erts_remove_monitor(&ERTS_P_MONITORS(prt), ref);
+    mon = erts_remove_monitor(ERTS_P_MONITORS_PTR(prt), ref);
     if (mon) {
 	erts_destroy_monitor(mon);
     }
     if (rp) {
 	ErtsMonitor *rmon;
-	rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), ref);
+        rmon = erts_remove_monitor(ERTS_P_MONITORS_PTR(rp), ref);
 	erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
 	if (rmon != NULL) {
 	    erts_destroy_monitor(rmon);
@@ -7838,7 +7838,7 @@ void erts_fire_port_monitor(Port *prt, Eterm ref)
     DRV_MONITOR_LOCK_PDL(prt);
     ERTS_MSACC_POP_STATE_M();
     /* remove monitor *after* callback */
-    rmon = erts_remove_monitor(&ERTS_P_MONITORS(prt), ref);
+    rmon = erts_remove_monitor(ERTS_P_MONITORS_PTR(prt), ref);
     DRV_MONITOR_UNLOCK_PDL(prt);
     if (rmon) {
 	erts_destroy_monitor(rmon);

@@ -264,7 +264,7 @@ static void doit_monitor_net_exits(ErtsMonitor *mon, void *vnecp)
 
     if (mon->type == MON_ORIGIN) {
 	/* local pid is beeing monitored */
-	rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), mon->ref);
+        rmon = erts_remove_monitor(ERTS_P_MONITORS_PTR(rp), mon->ref);
 	/* ASSERT(rmon != NULL); nope, can happen during process exit */
 	if (rmon != NULL) {
 	    erts_destroy_monitor(rmon);
@@ -274,7 +274,7 @@ static void doit_monitor_net_exits(ErtsMonitor *mon, void *vnecp)
 	Eterm watched;
 	UseTmpHeapNoproc(3);
 	ASSERT(mon->type == MON_TARGET);
-	rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), mon->ref);
+        rmon = erts_remove_monitor(ERTS_P_MONITORS_PTR(rp), mon->ref);
 	/* ASSERT(rmon != NULL); can happen during process exit */
 	if (rmon != NULL) {
 	    ASSERT(is_atom(rmon->name) || is_nil(rmon->name));
@@ -1357,7 +1357,7 @@ int erts_net_message(Port *prt,
 		watched = rp->common.id;
 	    erts_smp_de_links_lock(dep);
 	    erts_add_monitor(&(dep->monitors), MON_ORIGIN, ref, watched, name);
-	    erts_add_monitor(&ERTS_P_MONITORS(rp), MON_TARGET, ref, watcher, name);
+            erts_add_monitor(ERTS_P_MONITORS_PTR(rp), MON_TARGET, ref, watcher, name);
 	    erts_smp_de_links_unlock(dep);
 	    erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
 	}
@@ -1396,7 +1396,7 @@ int erts_net_message(Port *prt,
 	if (!rp) {
 	    break;
 	}
-	mon = erts_remove_monitor(&ERTS_P_MONITORS(rp), ref);
+        mon = erts_remove_monitor(ERTS_P_MONITORS_PTR(rp), ref);
 	erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
 	ASSERT(mon != NULL);
 	if (mon == NULL) {
@@ -1553,7 +1553,7 @@ int erts_net_message(Port *prt,
 	    break;
 	}
 
-	mon = erts_remove_monitor(&ERTS_P_MONITORS(rp), ref);
+        mon = erts_remove_monitor(ERTS_P_MONITORS_PTR(rp), ref);
 
 	if (mon == NULL) {
 	    erts_smp_proc_unlock(rp, rp_locks);

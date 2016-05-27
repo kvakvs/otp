@@ -322,7 +322,7 @@ remote_demonitor(Process *c_p, DistEntry *dep, Eterm ref, Eterm to)
 	    if (dmon)
 		erts_destroy_monitor(dmon);
 	}
-	mon = erts_remove_monitor(&ERTS_P_MONITORS(c_p), ref);
+        mon = erts_remove_monitor(ERTS_P_MONITORS_PTR(c_p), ref);
 	erts_smp_proc_unlock(c_p, ERTS_PROC_LOCK_LINK);
 
         res = am_true;
@@ -331,7 +331,7 @@ remote_demonitor(Process *c_p, DistEntry *dep, Eterm ref, Eterm to)
     case ERTS_DSIG_PREP_CONNECTED:
 
 	erts_smp_de_links_lock(dep);
-	mon = erts_remove_monitor(&ERTS_P_MONITORS(c_p), ref);
+        mon = erts_remove_monitor(ERTS_P_MONITORS_PTR(c_p), ref);
 	dmon = erts_remove_monitor(&dep->monitors, ref);
 	erts_smp_de_links_unlock(dep);
 	erts_smp_de_runlock(dep);
@@ -406,7 +406,7 @@ demonitor_local_process(Process *c_p, Eterm ref, Eterm to, Eterm *res)
                            to,
                            ERTS_PROC_LOCK_LINK,
                            ERTS_P2P_FLG_ALLOW_OTHER_X);
-    ErtsMonitor *mon = erts_remove_monitor(&ERTS_P_MONITORS(c_p), ref);
+    ErtsMonitor *mon = erts_remove_monitor(ERTS_P_MONITORS_PTR(c_p), ref);
 
 #ifndef ERTS_SMP
     ASSERT(mon);
@@ -421,7 +421,7 @@ demonitor_local_process(Process *c_p, Eterm ref, Eterm to, Eterm *res)
     }
     if (rp) {
         ErtsMonitor *rmon;
-        rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), ref);
+        rmon = erts_remove_monitor(ERTS_P_MONITORS_PTR(rp), ref);
         if (rp != c_p)
             erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
         if (rmon != NULL)
@@ -690,8 +690,8 @@ local_pid_monitor(Process *p, Eterm target, Eterm mon_ref, int boolean)
 	if (boolean)
 	    ret = am_true;
 
-	erts_add_monitor(&ERTS_P_MONITORS(p), MON_ORIGIN, mon_ref, target, NIL);
-	erts_add_monitor(&ERTS_P_MONITORS(rp), MON_TARGET, mon_ref, p->common.id, NIL);
+        erts_add_monitor(ERTS_P_MONITORS_PTR(p), MON_ORIGIN, mon_ref, target, NIL);
+        erts_add_monitor(ERTS_P_MONITORS_PTR(rp), MON_TARGET, mon_ref, p->common.id, NIL);
 
 	erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
     }
@@ -797,9 +797,9 @@ local_name_monitor(Process *self, Eterm type, Eterm target_name)
         }
     }
     else if (proc != self) {
-        erts_add_monitor(&ERTS_P_MONITORS(self), MON_ORIGIN, ret,
+        erts_add_monitor(ERTS_P_MONITORS_PTR(self), MON_ORIGIN, ret,
                          proc->common.id, target_name);
-        erts_add_monitor(&ERTS_P_MONITORS(proc), MON_TARGET, ret,
+        erts_add_monitor(ERTS_P_MONITORS_PTR(proc), MON_TARGET, ret,
                          self->common.id, target_name);
         erts_smp_proc_unlock(proc, ERTS_PROC_LOCK_LINK);
     }
@@ -852,7 +852,7 @@ remote_monitor(Process *p, Eterm bifarg1, Eterm bifarg2,
 
 	    erts_smp_de_links_lock(dep);
 
-	    erts_add_monitor(&ERTS_P_MONITORS(p), MON_ORIGIN, mon_ref, p_trgt,
+            erts_add_monitor(ERTS_P_MONITORS_PTR(p), MON_ORIGIN, mon_ref, p_trgt,
 			     p_name);
 	    erts_add_monitor(&(dep->monitors), MON_TARGET, mon_ref, p->common.id,
 			     d_name);
@@ -893,7 +893,7 @@ BIF_RETTYPE monitor_2(BIF_ALIST_2)
         }
 	ref = erts_make_ref(BIF_P);
 	erts_smp_proc_lock(BIF_P, ERTS_PROC_LOCK_LINK);
-	erts_add_monitor(&ERTS_P_MONITORS(BIF_P), MON_TIME_OFFSET,
+        erts_add_monitor(ERTS_P_MONITORS_PTR(BIF_P), MON_TIME_OFFSET,
 			 ref, am_clock_service, NIL);
 	erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_LINK);
 	erts_monitor_time_offset(BIF_P->common.id, ref);

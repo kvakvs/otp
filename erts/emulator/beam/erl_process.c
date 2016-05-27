@@ -11329,7 +11329,7 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
 
     p->common.u.alive.reg = NULL;
     ERTS_P_LINKS(p) = NULL;
-    ERTS_P_MONITORS(p) = NULL;
+    ERTS_P_SET_MONITORS(p, NULL);
     p->nodes_monitors = NULL;
     p->suspend_monitors = NULL;
 
@@ -11464,8 +11464,8 @@ erl_create_process(Process* parent, /* Parent of process (default group leader).
 	Eterm mref;
 
 	mref = erts_make_ref(parent);
-	erts_add_monitor(&ERTS_P_MONITORS(parent), MON_ORIGIN, mref, p->common.id, NIL);
-	erts_add_monitor(&ERTS_P_MONITORS(p), MON_TARGET, mref, parent->common.id, NIL);
+        erts_add_monitor(ERTS_P_MONITORS_PTR(parent), MON_ORIGIN, mref, p->common.id, NIL);
+        erts_add_monitor(ERTS_P_MONITORS_PTR(p), MON_TARGET, mref, parent->common.id, NIL);
 	so->mref = mref;
     }
 
@@ -11548,7 +11548,7 @@ void erts_init_empty_process(Process *p)
     p->msg_frag = NULL;
     p->mbuf_sz = 0;
     erts_smp_atomic_init_nob(&p->psd, (erts_aint_t) NULL);
-    ERTS_P_MONITORS(p) = NULL;
+    ERTS_P_SET_MONITORS(p, NULL);
     ERTS_P_LINKS(p) = NULL;         /* List of links */
     p->nodes_monitors = NULL;
     p->suspend_monitors = NULL;
@@ -12340,7 +12340,7 @@ static void doit_exit_monitor(ErtsMonitor *mon, void *vpcontext)
 		if (!rp) {
 		    goto done;
 		}
-		rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), mon->ref);
+                rmon = erts_remove_monitor(ERTS_P_MONITORS_PTR(rp), mon->ref);
 		erts_smp_proc_unlock(rp, ERTS_PROC_LOCK_LINK);
 		if (rmon == NULL) {
 		    goto done;
@@ -12404,7 +12404,7 @@ static void doit_exit_monitor(ErtsMonitor *mon, void *vpcontext)
 		goto done;
 	    }
 	    UseTmpHeapNoproc(3);
-	    rmon = erts_remove_monitor(&ERTS_P_MONITORS(rp), mon->ref);
+            rmon = erts_remove_monitor(ERTS_P_MONITORS_PTR(rp), mon->ref);
 	    if (rmon) {
 		erts_destroy_monitor(rmon);
 		watched = (is_atom(mon->name)

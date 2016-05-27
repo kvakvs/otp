@@ -501,6 +501,9 @@ ERTS_GLB_INLINE int erts_is_port_alive(Eterm);
 ERTS_GLB_INLINE int erts_is_valid_tracer_port(Eterm);
 ERTS_GLB_INLINE int erts_port_driver_callback_epilogue(Port *, erts_aint32_t *);
 
+/* Ensure that port has either general lock or data lock + thread check */
+ERTS_GLB_INLINE void erts_port_check_locks(Port *prt);
+
 #define erts_drvport2port(Prt) erts_drvport2port_state((Prt), NULL)
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
@@ -722,6 +725,21 @@ erts_thr_port_release(Port *prt)
 
 #endif
 
+ERTS_INLINE void erts_port_check_locks(Port *prt)
+{
+    if (!ERTS_IS_CRASH_DUMPING) {
+        if (erts_lc_is_emu_thr()) {
+            ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
+            ERTS_LC_ASSERT(!prt->port_data_lock
+                           || erts_lc_mtx_is_locked(&prt->port_data_lock->mtx));
+        }
+        else {
+            ERTS_LC_ASSERT(prt->port_data_lock);
+            ERTS_LC_ASSERT(erts_lc_mtx_is_locked(&prt->port_data_lock->mtx));
+        }
+    }
+}
+
 ERTS_GLB_INLINE Port *
 erts_thr_drvport2port(ErlDrvPort drvport, int lock_pdl)
 {
@@ -734,17 +752,7 @@ erts_thr_drvport2port(ErlDrvPort drvport, int lock_pdl)
 	driver_pdl_lock(prt->port_data_lock);
 
 #if ERTS_ENABLE_LOCK_CHECK
-    if (!ERTS_IS_CRASH_DUMPING) {
-	if (erts_lc_is_emu_thr()) {
-	    ERTS_SMP_LC_ASSERT(erts_lc_is_port_locked(prt));
-	    ERTS_LC_ASSERT(!prt->port_data_lock
-			   || erts_lc_mtx_is_locked(&prt->port_data_lock->mtx));
-	}
-	else {
-	    ERTS_LC_ASSERT(prt->port_data_lock);
-	    ERTS_LC_ASSERT(erts_lc_mtx_is_locked(&prt->port_data_lock->mtx));
-	}
-    }
+    erts_port_check_locks(prt);
 #endif
 
     if (erts_atomic32_read_nob(&prt->state)

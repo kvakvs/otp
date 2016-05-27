@@ -43,7 +43,6 @@
 #define ERTS_TRACE_FLAGS(P)	((P)->common.trace_flags)
 
 #define ERTS_P_LINKS(P)		((P)->common.u.alive.links)
-#define ERTS_P_MONITORS(P)	((P)->common.u.alive.monitors)
 
 #define IS_TRACED(p) \
     (ERTS_TRACER(p) != NIL)
@@ -74,6 +73,48 @@ typedef struct {
 	ErtsThrPrgrLaterOp release;
     } u;
 } ErtsPTabElementCommon;
+
+/* Read-only access, polymorphic accepts processes and ports */
+#define ERTS_P_MONITORS(P) erts_get_monitors(&(P)->common)
+#define ERTS_P_MONITORS_PTR(P) erts_get_monitors_ptr((void *)(P), &(P)->common)
+#define ERTS_P_SET_MONITORS(P,VAL) erts_set_monitors(&(P)->common, (VAL))
+
+/* Read-only access, use ERTS_P_MONITORS macro */
+ERTS_GLB_INLINE ErtsMonitor *erts_get_monitors(ErtsPTabElementCommon *common);
+/* Can modify monitors root or pass as address elsewhere, use
+ * ERTS_P_MONITORS_PTR macro */
+ERTS_GLB_INLINE ErtsMonitor **erts_get_monitors_ptr(void *p,
+                                                    ErtsPTabElementCommon *common);
+/* Modify the monitors root */
+ERTS_GLB_INLINE void erts_set_monitors(ErtsPTabElementCommon *common,
+                                       ErtsMonitor *new_val);
+
+#if ERTS_GLB_INLINE_INCL_FUNC_DEF
+ERTS_GLB_INLINE ErtsMonitor *erts_get_monitors(ErtsPTabElementCommon *common)
+{
+    return common->u.alive.monitors;
+}
+
+typedef struct _erl_drv_port Port;
+ERTS_GLB_INLINE void erts_port_check_locks(Port *prt); /* erl_port.h */
+ERTS_GLB_INLINE ErtsMonitor **erts_get_monitors_ptr(void *p,
+                                                    ErtsPTabElementCommon *common)
+{
+#ifdef DEBUG
+    /* If we're debugging, and this is a port - check locks! */
+    if (is_internal_port(common->id)) {
+        erts_port_check_locks((Port *)p);
+    }
+#endif
+    return &common->u.alive.monitors;
+}
+
+ERTS_GLB_INLINE void erts_set_monitors(ErtsPTabElementCommon *common,
+                                       ErtsMonitor *new_val)
+{
+    common->u.alive.monitors = new_val;
+}
+#endif /* ERTS_GLB_INLINE_INCL_FUNC_DEF */
 
 typedef struct ErtsPTabDeletedElement_ ErtsPTabDeletedElement;
 
