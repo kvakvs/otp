@@ -2456,14 +2456,20 @@ mon_port_local(doc) -> "monitor/2: Local port";
 mon_port_local(suite) -> [];
 mon_port_local(Config) when is_list(Config) ->
     Port1 = create_port(Config, ["-h1", "-q"]), % will close after we send 1 byte
-    erlang:monitor(port, Port1),
+    Ref1 = erlang:monitor(port, Port1),
     ?assertMatch({proc_monitors, true, port_monitored_by, true},
                  port_is_monitored(self(), Port1)),
     Port1 ! {self(), {command, <<"1">>}}, % port test will close self immediately
-    receive ExitP1 -> ?assertMatch({'DOWN', _, port, Port1, _}, ExitP1)
+    receive ExitP1 -> ?assertMatch({'DOWN', Ref1, port, Port1, _}, ExitP1)
     after 1000 -> ?assert(false) end,
     ?assertMatch({proc_monitors, false, port_monitored_by, false},
                  port_is_monitored(self(), Port1)),
+
+    %% Trying to re-monitor a port which exists but is not healthy will
+    %% succeed but then will immediately send DOWN
+    Ref2 = erlang:monitor(port, Port1),
+    receive ExitP2 -> ?assertMatch({'DOWN', Ref2, port, Port1, _}, ExitP2)
+    after 1000 -> ?assert(false) end,
     ok.
 
 %% @doc 3. With remote port on remote node (should fail)

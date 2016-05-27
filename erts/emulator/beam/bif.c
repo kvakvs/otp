@@ -711,7 +711,11 @@ local_port_monitor(Process *origin, Eterm target)
                                    : ERTS_PORT_SFLGS_INVALID_LOOKUP));
     ErtsProcLocks p_locks = ERTS_PROC_LOCK_MAIN;
 
-    if (!port) {
+    if (!port ||
+        erts_atomic32_read_nob(&port->state) & (ERTS_PORT_SFLGS_DEAD |
+                                                ERTS_PORT_SFLG_EXITING |
+                                                ERTS_PORT_SFLG_CLOSING))
+    {
 res_no_proc:
         /* Send the DOWN message immediately. Ref is made on the fly because
          * caller has never seen it yet. */
