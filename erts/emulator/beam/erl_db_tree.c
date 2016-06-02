@@ -717,7 +717,7 @@ static int db_get_tree(Process *p, DbTable *tbl, Eterm key, Eterm *ret)
 	hp = HAlloc(p, this->dbterm.size + 2);
 	hend = hp + this->dbterm.size + 2;
 	copy = db_copy_object_from_ets(&tb->common, &this->dbterm, &hp, &MSO(p));
-	*ret = CONS(hp, copy, NIL);
+	*ret = erts_cons(hp, copy, NIL);
 	hp += 2;
 	HRelease(p,hend,hp);
     }
@@ -828,7 +828,7 @@ static int db_slot_tree(Process *p, DbTable *tbl,
     hp = HAlloc(p, st->dbterm.size + 2);
     hend = hp + st->dbterm.size + 2;
     copy = db_copy_object_from_ets(&tb->common, &st->dbterm, &hp, &MSO(p));
-    *ret = CONS(hp, copy, NIL);
+    *ret = erts_cons(hp, copy, NIL);
     hp += 2;
     HRelease(p,hend,hp);
     return DB_ERROR_NONE;
@@ -871,9 +871,9 @@ static BIF_RETTYPE ets_select_reverse(BIF_ALIST_3)
 	    hp = HAlloc(p, 64);
 	    hend = hp + 64;
 	}
-	result = CONS(hp, CAR(pair), result);
+	result = erts_cons(hp, erts_car(pair), result);
 	hp += 2;
-	list = CDR(pair);
+	list = erts_cdr(pair);
     }
     if (is_not_nil(list))  {
 	goto error;
@@ -1726,7 +1726,7 @@ static int db_take_tree(Process *p, DbTable *tbl, Eterm key, Eterm *ret)
         hend = hp + this->dbterm.size + 2;
         copy = db_copy_object_from_ets(&tb->common,
                                        &this->dbterm, &hp, &MSO(p));
-        *ret = CONS(hp, copy, NIL);
+        *ret = erts_cons(hp, copy, NIL);
         hp += 2;
         HRelease(p, hend, hp);
         free_term(tb, this);
@@ -1981,7 +1981,7 @@ static int analyze_pattern(DbTableTree *tb, Eterm pattern,
     mpi->all_objects = 1;
     mpi->save_term = NULL;
 
-    for (lst = pattern; is_list(lst); lst = CDR(list_val(lst)))
+    for (lst = pattern; is_list(lst); lst = erts_cdr(list_val(lst)))
 	++num_heads;
 
     if (lst != NIL) {/* proper list... */
@@ -1996,9 +1996,9 @@ static int analyze_pattern(DbTableTree *tb, Eterm pattern,
     bodies = buff + (num_heads * 2);
 
     i = 0;
-    for(lst = pattern; is_list(lst); lst = CDR(list_val(lst))) {
+    for(lst = pattern; is_list(lst); lst = erts_cdr(list_val(lst))) {
 	Eterm body;
-	ttpl = CAR(list_val(lst));
+	ttpl = erts_car(list_val(lst));
 	if (!is_tuple(ttpl)) {
 	    if (buff != sbuff) { 
 		erts_free(ERTS_ALC_T_DB_TMP, buff);
@@ -2015,8 +2015,8 @@ static int analyze_pattern(DbTableTree *tb, Eterm pattern,
 	matches[i] = tpl = ptpl[1];
 	guards[i] = ptpl[2];
 	bodies[i] = body = ptpl[3];
-	if (!is_list(body) || CDR(list_val(body)) != NIL ||
-	    CAR(list_val(body)) != am_DollarUnderscore) {
+	if (!is_list(body) || erts_cdr(list_val(body)) != NIL ||
+	    erts_car(list_val(body)) != am_DollarUnderscore) {
 	    mpi->all_objects = 0;
 	}
 	++i;
@@ -2997,7 +2997,7 @@ static int doit_select(DbTableTree *tb, TreeDbTerm *this, void *ptr,
     ret = db_match_dbterm(&tb->common,sc->p,sc->mp,sc->all_objects,
 			  &this->dbterm, &hp, 2);
     if (is_value(ret)) {
-	sc->accum = CONS(hp, ret, sc->accum);
+	sc->accum = erts_cons(hp, ret, sc->accum);
     }
     if (MBUF(sc->p)) {
 	/*
@@ -3060,7 +3060,7 @@ static int doit_select_chunk(DbTableTree *tb, TreeDbTerm *this, void *ptr,
 			  &this->dbterm, &hp, 2);
     if (is_value(ret)) {
 	++(sc->got);
-	sc->accum = CONS(hp, ret, sc->accum);
+	sc->accum = erts_cons(hp, ret, sc->accum);
     }
     if (MBUF(sc->p)) {
 	/*

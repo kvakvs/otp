@@ -211,8 +211,8 @@ parse_options(Eterm listp, /* in */
 	copt = 0;
 	eopt = 0;
 	fl = 0;
-	for (;is_list(listp); listp = CDR(list_val(listp))) {
-	    item = CAR(list_val(listp));
+	for (;is_list(listp); listp = erts_cdr(list_val(listp))) {
+	    item = erts_car(list_val(listp));
 	    if (is_tuple(item)) {
 		Eterm *tp = tuple_val(item);
 		if (arityval(*tp) != 2 || is_not_atom(tp[1])) {
@@ -662,7 +662,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
 		for(i = rc-1 ;i >= -(ri->num_spec); --i) {
 		    tpl = TUPLE2(hp,tmp_vect[i*2],tmp_vect[i*2+1]);
 		    hp += 3;
-		    res = CONS(hp,tpl,res);
+		    res = erts_cons(hp,tpl,res);
 		    hp += 2;
 		}
 	    } else {
@@ -697,7 +697,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
 		for(i = n-1 ;i >= 0; --i) {
 		    tpl = TUPLE2(hp,tmp_vect[i*2],tmp_vect[i*2+1]);
 		    hp += 3;
-		    res = CONS(hp,tpl,res);
+		    res = erts_cons(hp,tpl,res);
 		    hp += 2;
 		}
 	    }
@@ -754,7 +754,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
 		hp = HAlloc(p, 3+2*(rc + ri->num_spec));
 		res = NIL;
 		for(i = rc-1 ;i >= -(ri->num_spec); --i) {
-		    res = CONS(hp,tmp_vect[i],res);
+		    res = erts_cons(hp,tmp_vect[i],res);
 		    hp += 2;
 		}
 	    } else {
@@ -821,7 +821,7 @@ static Eterm build_exec_return(Process *p, int rc, RestartContext *restartp, Ete
 		hp = HAlloc(p, 3+2*n);
 		res = NIL;
 		for(i = n-1 ;i >= 0; --i) {
-		    res = CONS(hp,tmp_vect[i],res);
+		    res = erts_cons(hp,tmp_vect[i],res);
 		    hp += 2;
 		}
 		
@@ -978,9 +978,9 @@ build_capture(Eterm capture_spec[CAPSPEC_SIZE], const pcre *code)
 	}
     default:
 	if (is_list(capture_spec[CAPSPEC_VALUES])) {
-	    for(l=capture_spec[CAPSPEC_VALUES];is_list(l);l = CDR(list_val(l))) {
+	    for(l=capture_spec[CAPSPEC_VALUES];is_list(l);l = erts_cdr(list_val(l))) {
 		int x;
-		Eterm val = CAR(list_val(l));
+		Eterm val = erts_car(list_val(l));
 		ASSERT(ri->num_spec >= 0);
 		++(ri->num_spec);
 		if(ri->num_spec > sallocated) {
@@ -1501,7 +1501,7 @@ re_inspect_2(BIF_ALIST_2)
     hp = HAlloc(BIF_P, 3+2*j);
     res = NIL;
     for(i = j-1 ;i >= 0; --i) {
-	res = CONS(hp,tmp_vec[i],res);
+	res = erts_cons(hp,tmp_vec[i],res);
 	hp += 2;
     }
     res = TUPLE2(hp,am_namelist,res);

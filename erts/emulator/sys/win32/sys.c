@@ -280,7 +280,7 @@ int erts_sys_prepare_crash_dump(int secs)
 
     if (heart_port) {
 
-	list = CONS(hp, make_small(8), list); hp += 2;
+	list = erts_cons(hp, make_small(8), list); hp += 2;
 
 	/* send to heart port, CMD = 8, i.e. prepare crash dump =o */
 	erts_port_output(NULL, ERTS_PORT_SIG_FLG_FORCE_IMM_CALL, heart_port,

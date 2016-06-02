@@ -1207,7 +1207,7 @@ int erts_is_time_break(Process *p, BeamInstr *pc, Eterm *retval) {
 				   make_small((Uint) sec),
 				   make_small((Uint) usec));
 			hp += 5;
-			*retval = CONS(hp, t, *retval); hp += 2;
+                        *retval = erts_cons(hp, t, *retval); hp += 2;
 		    }
 		}
 	    }

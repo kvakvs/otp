@@ -2980,10 +2980,10 @@ BIF_RETTYPE nodes_1(BIF_ALIST_1)
     UseTmpHeap(2,BIF_P);
 
     if (is_atom(BIF_ARG_1))
-      arg_list = CONS(buf, BIF_ARG_1, NIL);
+      arg_list = erts_cons(buf, BIF_ARG_1, NIL);
 
     while (is_list(arg_list)) {
-      switch(CAR(list_val(arg_list))) {
+      switch(erts_car(list_val(arg_list))) {
       case am_visible:   visible = 1;                                 break;
       case am_hidden:    hidden = 1;                                  break;
       case am_known:     visible = hidden = not_connected = this = 1; break;
@@ -2991,7 +2991,7 @@ BIF_RETTYPE nodes_1(BIF_ALIST_1)
       case am_connected: visible = hidden = 1;                        break;
       default:           goto error;                                  break;
       }
-      arg_list = CDR(list_val(arg_list));
+      arg_list = erts_cdr(list_val(arg_list));
     }
 
     if (is_not_nil(arg_list)) {
@@ -3029,22 +3029,22 @@ BIF_RETTYPE nodes_1(BIF_ALIST_1)
     if(not_connected)
       for(dep = erts_not_connected_dist_entries; dep; dep = dep->next) {
           if (dep != erts_this_dist_entry) {
-            result = CONS(hp, dep->sysname, result);
+            result = erts_cons(hp, dep->sysname, result);
             hp += 2;
           }
       }
     if(hidden)
       for(dep = erts_hidden_dist_entries; dep; dep = dep->next) {
-	result = CONS(hp, dep->sysname, result);
+	result = erts_cons(hp, dep->sysname, result);
 	hp += 2;
       }
     if(visible)
       for(dep = erts_visible_dist_entries; dep; dep = dep->next) {
-	result = CONS(hp, dep->sysname, result);
+	result = erts_cons(hp, dep->sysname, result);
 	hp += 2;
       }
     if(this) {
-	result = CONS(hp, erts_this_dist_entry->sysname, result);
+	result = erts_cons(hp, erts_this_dist_entry->sysname, result);
 	hp += 2;
     }
     ASSERT(endp == hp);
@@ -3078,8 +3078,8 @@ monitor_node(Process* p, Eterm Node, Eterm Bool, Eterm Options)
     ErtsLink *lnk;
     Eterm l;
 
-    for (l = Options; l != NIL && is_list(l); l = CDR(list_val(l))) {
-	Eterm t = CAR(list_val(l));
+    for (l = Options; l != NIL && is_list(l); l = erts_cdr(list_val(l))) {
+	Eterm t = erts_car(list_val(l));
 	/* allow_passive_connect the only available option right now */
 	if (t != am_allow_passive_connect) {
 	    BIF_ERROR(p, BADARG);
@@ -3289,7 +3289,7 @@ send_nodes_mon_msg(Process *rp,
 
 	    tup = TUPLE2(hp, am_node_type, type);
 	    hp += 3;
-	    info = CONS(hp, tup, info);
+	    info = erts_cons(hp, tup, info);
 	    hp += 2;
 	}
 
@@ -3306,7 +3306,7 @@ send_nodes_mon_msg(Process *rp,
 
 	    tup = TUPLE2(hp, am_nodedown_reason, rsn_cpy);
 	    hp += 3;
-	    info = CONS(hp, tup, info);
+	    info = erts_cons(hp, tup, info);
 	    hp += 2;
 	}
 
@@ -3587,8 +3587,8 @@ erts_monitor_nodes(Process *c_p, Eterm on, Eterm olist)
 
 	while (is_list(opts_list)) {
 	    Eterm *cp = list_val(opts_list);
-	    Eterm opt = CAR(cp);
-	    opts_list = CDR(cp);
+	    Eterm opt = erts_car(cp);
+	    opts_list = erts_cdr(cp);
 	    if (opt == am_nodedown_reason)
 		opts |= ERTS_NODES_MON_OPT_DOWN_REASON;
 	    else if (is_tuple(opt)) {

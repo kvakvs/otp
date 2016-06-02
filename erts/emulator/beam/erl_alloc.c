@@ -2213,12 +2213,12 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 	if (is_not_atom(earg))
 	    wanted_list = earg;
 	else {
-	    wanted_list = CONS(&tmp_heap[0], earg, NIL);
+	    wanted_list = erts_cons(&tmp_heap[0], earg, NIL);
 	    only_one_value = 1;
 	}
 	    
 	while (is_list(wanted_list)) {
-	    switch (CAR(list_val(wanted_list))) {
+	    switch (erts_car(list_val(wanted_list))) {
 	    case am_total:
 		if (!want.total) {
 		    want.total = 1;
@@ -2298,7 +2298,7 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 		UnUseTmpHeapNoproc(2);
 		return am_badarg;
 	    }
-	    wanted_list = CDR(list_val(wanted_list));
+	    wanted_list = erts_cdr(list_val(wanted_list));
 	}
 	UnUseTmpHeapNoproc(2);
 	if (is_not_nil(wanted_list))
@@ -2769,7 +2769,7 @@ erts_alloc_util_allocators(void *proc)
 	default: {
 	    char *alc_str = (char *) ERTS_ALC_A2AD(i);
 	    Eterm alc = am_atom_put(alc_str, sys_strlen(alc_str));
-	    res = CONS(hp, alc, res);
+	    res = erts_cons(hp, alc, res);
 	    hp += 2;
 	    break;
 	}
@@ -3396,7 +3396,7 @@ erts_request_alloc_info(struct process *c_p,
     while (is_list(alist)) {
 	int saved = 0;
 	Eterm* consp = list_val(alist);
-	Eterm alloc = CAR(consp);
+	Eterm alloc = erts_car(consp);
 
 	for (ai = ERTS_ALC_A_MIN; ai <= ERTS_ALC_A_MAX; ai++)
 	    if (erts_is_atom_str(erts_alc_a2ad[ai], alloc, 0))
@@ -3428,7 +3428,7 @@ erts_request_alloc_info(struct process *c_p,
 	if (!saved)
 	    return 0;
 
-	alist = CDR(consp);
+	alist = erts_cdr(consp);
     }
 
     if (is_not_nil(alist))

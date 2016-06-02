@@ -1174,7 +1174,7 @@ int enif_get_string(ErlNifEnv *env, ERL_NIF_TERM list, char* buf, unsigned len,
 	    buf[n-1] = '\0'; /* truncate */
 	    return -len;
 	}
-	list = CDR(listptr);
+	list = erts_cdr(listptr);
     }
     buf[n] = '\0';
     return n + 1;
@@ -1406,8 +1406,8 @@ int enif_get_list_cell(ErlNifEnv* env, Eterm term, Eterm* head, Eterm* tail)
     Eterm* val;
     if (is_not_list(term)) return 0;
     val = list_val(term);
-    *head = CAR(val);
-    *tail = CDR(val);
+    *head = erts_car(val);
+    *tail = erts_cdr(val);
     return 1;
 }
 
@@ -1566,8 +1566,8 @@ ERL_NIF_TERM enif_make_list_cell(ErlNifEnv* env, Eterm car, Eterm cdr)
     Eterm* hp = alloc_heap(env,2);
     Eterm ret = make_list(hp);
 
-    CAR(hp) = car;
-    CDR(hp) = cdr;
+    erts_set_car(hp, car);
+    erts_set_cdr(hp, cdr);
     return ret;
 }
 
@@ -1653,8 +1653,8 @@ int enif_make_reverse_list(ErlNifEnv* env, ERL_NIF_TERM term, ERL_NIF_TERM *list
 	}
 	hp = alloc_heap(env, 2);
 	listptr = list_val(term);
-	ret = CONS(hp, CAR(listptr), ret);
-	term = CDR(listptr);
+	ret = erts_cons(hp, erts_car(listptr), ret);
+	term = erts_cdr(listptr);
     }
     *list = ret;
     return 1;
@@ -2946,8 +2946,8 @@ int enif_map_iterator_get_pair(ErlNifEnv *env,
     else {
         ASSERT(is_hashmap(iter->map));
         if (iter->idx > 0 && iter->idx <= iter->size) {
-            *key   = CAR(iter->u.hash.kv);
-            *value = CDR(iter->u.hash.kv);
+            *key   = erts_car(iter->u.hash.kv);
+            *value = erts_cdr(iter->u.hash.kv);
             return 1;
         }
     }
@@ -3013,7 +3013,7 @@ Eterm erts_nif_taints(Process* p)
     }
     hp = HAlloc(p,cnt*2);
     for (t=first_tainted_module ; t!=NULL; t=t->next) {
-	list = CONS(hp, t->module_atom, list);
+	list = erts_cons(hp, t->module_atom, list);
 	hp += 2;
     }
     return list;

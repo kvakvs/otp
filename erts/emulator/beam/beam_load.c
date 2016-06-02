@@ -5522,7 +5522,7 @@ erts_module_info_0(Process* p, Eterm module)
     hp = HAlloc(p, 5); \
     tup = TUPLE2(hp, What, tup); \
     hp += 3; \
-    list = CONS(hp, tup, list)
+    list = erts_cons(hp, tup, list)
 
     BUILD_INFO(am_md5);
 #ifdef HIPE
@@ -5618,7 +5618,7 @@ functions_in_module(Process* p, /* Process whose heap to use. */
 	if (is_atom(name)) {
 	    tuple = TUPLE2(hp, name, make_small(arity));
 	    hp += 3;
-	    result = CONS(hp, tuple, result);
+            result = erts_cons(hp, tuple, result);
 	    hp += 2;
 	}
     }
@@ -5734,7 +5734,7 @@ exported_from_module(Process* p, /* Process whose heap to use. */
 	    }
 	    tuple = TUPLE2(hp, ep->code[1], make_small(ep->code[2]));
 	    hp += 3;
-	    result = CONS(hp, tuple, result);
+            result = erts_cons(hp, tuple, result);
 	    hp += 2;
 	}
     }
@@ -5826,11 +5826,11 @@ erts_build_mfa_item(FunctionInfo* fi, Eterm* hp, Eterm args, Eterm* mfa_p)
 
 	tuple = TUPLE2(hp, am_line, make_small(line));
 	hp += 3;
-	loc = CONS(hp, tuple, loc);
+        loc = erts_cons(hp, tuple, loc);
 	hp += 2;
 	tuple = TUPLE2(hp, am_file, file_term);
 	hp += 3;
-	loc = CONS(hp, tuple, loc);
+        loc = erts_cons(hp, tuple, loc);
 	hp += 2;
     }
 
@@ -5910,8 +5910,8 @@ code_get_chunk_2(BIF_ALIST_2)
 	    goto error;
 	}
 	chunkp = list_val(Chunk);
-	num = CAR(chunkp);
-	Chunk = CDR(chunkp);
+        num = erts_car(chunkp);
+        Chunk = erts_cdr(chunkp);
 	if (!is_byte(num)) {
 	    goto error;
 	}
@@ -6126,7 +6126,7 @@ patch(Eterm Addresses, Uint fe)
   while (!is_nil(Addresses)) {
     listp = list_val(Addresses);
 
-    tuple = CAR(listp);
+    tuple = erts_car(listp);
     if (is_not_tuple(tuple)) {
       return 0; /* Signal error */
     }
@@ -6147,7 +6147,7 @@ patch(Eterm Addresses, Uint fe)
     
     hipe_patch_address((Uint *)AddressToPatch, patchtype, fe);
 
-    Addresses = CDR(listp);
+    Addresses = erts_cdr(listp);
 
 
   }
@@ -6175,8 +6175,8 @@ patch_funentries(Eterm Patchlist)
     Uint native_address;
      
     listp = list_val(Patchlist);
-    tuple = CAR(listp);
-    Patchlist = CDR(listp);
+    tuple = erts_car(listp);
+    Patchlist = erts_cdr(listp);
 
     if (is_not_tuple(tuple)) {
       return 0; /* Signal error */
@@ -6399,8 +6399,8 @@ erts_make_stub_module(Process* p, Eterm Mod, Eterm Beam, Eterm Info)
 	    break;
 	}
 	listp = list_val(Funcs);
-	tuple = CAR(listp);
-	Funcs = CDR(listp);
+        tuple = erts_car(listp);
+        Funcs = erts_cdr(listp);
 
 	/* Error checking */
 	if (is_not_tuple(tuple)) {

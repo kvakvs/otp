@@ -666,7 +666,7 @@ BIF_RETTYPE registered_0(BIF_ALIST_0)
 	while (b != NULL) {
 	    RegProc *reg = (RegProc *) b;
 
-	    res = CONS(hp, reg->name, res);
+	    res = erts_cons(hp, reg->name, res);
 	    hp += 2;
 	    b = b->next;
 	}

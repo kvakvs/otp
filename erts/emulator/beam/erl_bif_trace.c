@@ -169,9 +169,9 @@ trace_pattern(Process* p, Eterm MFA, Eterm Pattern, Eterm flaglist)
     }
     
     is_global = 0;
-    for(l = flaglist; is_list(l); l = CDR(list_val(l))) {
-	if (is_tuple(CAR(list_val(l)))) {
-            meta_tracer = erts_term_to_tracer(am_meta, CAR(list_val(l)));
+    for(l = flaglist; is_list(l); l = erts_cdr(list_val(l))) {
+	if (is_tuple(erts_car(list_val(l)))) {
+            meta_tracer = erts_term_to_tracer(am_meta, erts_car(list_val(l)));
             if (meta_tracer == THE_NON_VALUE) {
                 meta_tracer = erts_tracer_nil;
                 goto error;
@@ -179,7 +179,7 @@ trace_pattern(Process* p, Eterm MFA, Eterm Pattern, Eterm flaglist)
 	    flags.breakpoint = 1;
 	    flags.meta       = 1;
 	} else {
-	    switch (CAR(list_val(l))) {
+	    switch (erts_car(list_val(l))) {
 	    case am_local:
 		if (is_global) {
 		    goto error;
@@ -468,7 +468,7 @@ erts_trace_flags(Eterm List,
     
     while (is_list(list)) {
 	Uint bit;
-	Eterm item = CAR(list_val(list));
+	Eterm item = erts_car(list_val(list));
 	if (is_atom(item) && (bit = erts_trace_flag2bit(item))) {
 	    mask |= bit;
 #ifdef HAVE_ERTS_NOW_CPU
@@ -480,7 +480,7 @@ erts_trace_flags(Eterm List,
             if (tracer == THE_NON_VALUE)
                 goto error;
 	} else goto error;
-	list = CDR(list_val(list));
+	list = erts_cdr(list_val(list));
     }
     if (is_not_nil(list)) goto error;
     
@@ -896,7 +896,7 @@ trace_info_pid(Process* p, Eterm pid_spec, Eterm key)
 	Eterm* limit;
 
 #define FLAG0(flag_mask,flag) \
-  if (trace_flags & (flag_mask)) { flag_list = CONS(hp, flag, flag_list); hp += 2; } else {}
+  if (trace_flags & (flag_mask)) { flag_list = erts_cons(hp, flag, flag_list); hp += 2; } else {}
 
 #if defined(DEBUG)
     /*
@@ -1157,17 +1157,17 @@ trace_info_func(Process* p, Eterm func_spec, Eterm key)
 	hp = HAlloc(p, (3+2)*6);
 	retval = NIL;
 	t = TUPLE2(hp, am_call_count, c); hp += 3;
-	retval = CONS(hp, t, retval); hp += 2;
+	retval = erts_cons(hp, t, retval); hp += 2;
 	t = TUPLE2(hp, am_call_time, ct); hp += 3;
-	retval = CONS(hp, t, retval); hp += 2;
+	retval = erts_cons(hp, t, retval); hp += 2;
 	t = TUPLE2(hp, am_meta_match_spec, match_spec_meta); hp += 3;
-	retval = CONS(hp, t, retval); hp += 2;
+	retval = erts_cons(hp, t, retval); hp += 2;
 	t = TUPLE2(hp, am_meta, m); hp += 3;
-	retval = CONS(hp, t, retval); hp += 2;
+	retval = erts_cons(hp, t, retval); hp += 2;
 	t = TUPLE2(hp, am_match_spec, match_spec); hp += 3;
-	retval = CONS(hp, t, retval); hp += 2;
+	retval = erts_cons(hp, t, retval); hp += 2;
 	t = TUPLE2(hp, am_traced, traced); hp += 3;
-	retval = CONS(hp, t, retval); hp += 2;
+	retval = erts_cons(hp, t, retval); hp += 2;
     }   break;
     default:
 	goto error;
@@ -1289,18 +1289,18 @@ trace_info_on_load(Process* p, Eterm key)
 	    t = TUPLE2(hp, am_call_count, 
 		       (erts_default_trace_pattern_flags.call_count
 			? am_true : am_false)); hp += 3;
-	    r = CONS(hp, t, r); hp += 2;
+	    r = erts_cons(hp, t, r); hp += 2;
 	    t = TUPLE2(hp, am_meta_match_spec, meta_match_spec); hp += 3;
-	    r = CONS(hp, t, r); hp += 2;
+	    r = erts_cons(hp, t, r); hp += 2;
 	    t = TUPLE2(hp, am_meta, m); hp += 3;
-	    r = CONS(hp, t, r); hp += 2;
+	    r = erts_cons(hp, t, r); hp += 2;
 	    t = TUPLE2(hp, am_match_spec, match_spec); hp += 3;
-	    r = CONS(hp, t, r); hp += 2;
+	    r = erts_cons(hp, t, r); hp += 2;
 	    t = TUPLE2(hp, am_traced,
 		       (! erts_default_trace_pattern_flags.breakpoint ?
 			am_global : (erts_default_trace_pattern_flags.local ?
 				     am_local : am_false))); hp += 3;
-	    r = CONS(hp, t, r); hp += 2;
+	    r = erts_cons(hp, t, r); hp += 2;
 	    return TUPLE2(hp, key, r);
 	}
     default:
@@ -2067,21 +2067,21 @@ static Eterm system_monitor_get(Process *p)
 	res = NIL;
 	if (long_gc != NIL) {
 	    Eterm t = TUPLE2(hp, am_long_gc, long_gc); hp += 3;
-	    res = CONS(hp, t, res); hp += 2;
+	    res = erts_cons(hp, t, res); hp += 2;
 	}
 	if (long_schedule != NIL) {
 	    Eterm t = TUPLE2(hp, am_long_schedule, long_schedule); hp += 3;
-	    res = CONS(hp, t, res); hp += 2;
+	    res = erts_cons(hp, t, res); hp += 2;
 	}
 	if (large_heap != NIL) {
 	    Eterm t = TUPLE2(hp, am_large_heap, large_heap); hp += 3;
-	    res = CONS(hp, t, res); hp += 2;
+	    res = erts_cons(hp, t, res); hp += 2;
 	}
 	if (erts_system_monitor_flags.busy_port) {
-	    res = CONS(hp, am_busy_port, res); hp += 2;
+	    res = erts_cons(hp, am_busy_port, res); hp += 2;
 	}
 	if (erts_system_monitor_flags.busy_dist_port) {
-	    res = CONS(hp, am_busy_dist_port, res); hp += 2;
+	    res = erts_cons(hp, am_busy_dist_port, res); hp += 2;
 	}
 	return TUPLE2(hp, system_monitor, res);
     }
@@ -2140,8 +2140,8 @@ system_monitor(Process *p, Eterm monitor_pid, Eterm list)
 	for (long_gc = 0, long_schedule = 0, large_heap = 0, 
 		 busy_port = 0, busy_dist_port = 0;
 	     is_list(list);
-	     list = CDR(list_val(list))) {
-	    Eterm t = CAR(list_val(list));
+	     list = erts_cdr(list_val(list))) {
+	    Eterm t = erts_car(list_val(list));
 	    if (is_tuple(t)) {
 		Eterm *tp = tuple_val(t);
 		if (arityval(tp[0]) != 2) goto error;
@@ -2224,16 +2224,16 @@ static Eterm system_profile_get(Process *p) {
 	hp = HAlloc(p, hsz);
 	res = NIL;
 	if (erts_system_profile_flags.runnable_ports) {
-	    res = CONS(hp, am_runnable_ports, res); hp += 2;
+	    res = erts_cons(hp, am_runnable_ports, res); hp += 2;
 	}
 	if (erts_system_profile_flags.runnable_procs) {
-	    res = CONS(hp, am_runnable_procs, res); hp += 2;
+	    res = erts_cons(hp, am_runnable_procs, res); hp += 2;
 	}
 	if (erts_system_profile_flags.scheduler) {
-	    res = CONS(hp, am_scheduler, res); hp += 2;
+	    res = erts_cons(hp, am_scheduler, res); hp += 2;
 	}
 	if (erts_system_profile_flags.exclusive) {
-	    res = CONS(hp, am_exclusive, res); hp += 2;
+	    res = erts_cons(hp, am_exclusive, res); hp += 2;
 	}
 
     	return TUPLE2(hp, system_profile, res);
@@ -2289,9 +2289,9 @@ BIF_RETTYPE system_profile_2(BIF_ALIST_2)
 	for (ts = ERTS_TRACE_FLG_NOW_TIMESTAMP, scheduler = 0,
 		 runnable_ports = 0, runnable_procs = 0, exclusive = 0;
 	    is_list(list);
-	    list = CDR(list_val(list))) {
+	    list = erts_cdr(list_val(list))) {
 	    
-	    Eterm t = CAR(list_val(list));
+	    Eterm t = erts_car(list_val(list));
 	    if (t == am_runnable_procs) {
 	   	 runnable_procs = !0;
 	    } else if (t == am_runnable_ports) {

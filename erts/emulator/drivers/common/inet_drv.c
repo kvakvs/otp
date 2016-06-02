@@ -2689,7 +2689,7 @@ static int inet_async_data(inet_descriptor* desc, const char* buf, int len)
 
 	i = LOAD_BUF2BINARY(spec, i, buf+hsz, sz);
 	if (hsz > 0)
-	    i = LOAD_STRING_CONS(spec, i, buf, hsz);
+            i = LOAD_STRING_CONS(spec, i, buf, hsz);
 	i = LOAD_TUPLE(spec, i, 2);
 	i = LOAD_TUPLE(spec, i, 4);
 	ASSERT(i <= 20);
@@ -3280,7 +3280,7 @@ inet_async_binary_data
 	int sz = len - hsz;
 	i = LOAD_BINARY(spec, i, bin, offs+hsz, sz);
 	if (hsz > 0)
-	    i = LOAD_STRING_CONS(spec, i, bin->orig_bytes+offs, hsz);
+            i = LOAD_STRING_CONS(spec, i, bin->orig_bytes+offs, hsz);
     }
     /* Close up the {ok, ...} or {error, ...} tuple: */
     i = LOAD_TUPLE(spec, i, 2);
@@ -3322,7 +3322,7 @@ static int tcp_message(inet_descriptor* desc, const char* buf, int len)
 
 	i = LOAD_BUF2BINARY(spec, i, buf+hsz, sz);
 	if (hsz > 0)
-	    i = LOAD_STRING_CONS(spec, i, buf, hsz);
+            i = LOAD_STRING_CONS(spec, i, buf, hsz);
 	i = LOAD_TUPLE(spec, i, 3);
 	ASSERT(i <= 20);
 	code = erl_drv_output_term(desc->dport, spec, i);
@@ -3356,7 +3356,7 @@ tcp_binary_message(inet_descriptor* desc, ErlDrvBinary* bin, int offs, int len)
 
 	i = LOAD_BINARY(spec, i, bin, offs+hsz, sz);
 	if (hsz > 0)
-	    i = LOAD_STRING_CONS(spec, i, bin->orig_bytes+offs, hsz);
+            i = LOAD_STRING_CONS(spec, i, bin->orig_bytes+offs, hsz);
     }
     i = LOAD_TUPLE(spec, i, 3);
     ASSERT(i <= 20);
@@ -3450,7 +3450,7 @@ static int packet_binary_message
 
 	    i = LOAD_BINARY(spec, i, bin, offs+hsz, sz);
 	    if (hsz > 0)
-		i = LOAD_STRING_CONS(spec, i, bin->orig_bytes+offs, hsz);
+                i = LOAD_STRING_CONS(spec, i, bin->orig_bytes+offs, hsz);
 	}
 #   ifdef HAVE_SCTP
     }

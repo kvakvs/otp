@@ -681,8 +681,8 @@ void** beam_ops;
   do {						\
     Eterm* tmp_ptr = list_val(Src);		\
     Eterm hd, tl;				\
-    hd = CAR(tmp_ptr);				\
-    tl = CDR(tmp_ptr);				\
+    hd = erts_car(tmp_ptr);				\
+    tl = erts_cdr(tmp_ptr);				\
     H = hd; T = tl;				\
   } while (0)
 
@@ -773,8 +773,8 @@ void** beam_ops;
     } else {					\
        Eterm* tmp_ptr = list_val(Src);		\
        Eterm hd, tl;				\
-       hd = CAR(tmp_ptr);			\
-       tl = CDR(tmp_ptr);			\
+       hd = erts_car(tmp_ptr);			\
+       tl = erts_cdr(tmp_ptr);			\
        H = hd; T = tl;				\
     }
 
@@ -5717,13 +5717,13 @@ terminate_proc(Process* c_p, Eterm Value)
 
         /* Build the args in reverse order */
 	hp = HAlloc(c_p, 2);
-	Args = CONS(hp, Value, Args);
+        Args = erts_cons(hp, Value, Args);
 	if (alive) {
 	    hp = HAlloc(c_p, 2);
-	    Args = CONS(hp, erts_this_node->sysname, Args);
+            Args = erts_cons(hp, erts_this_node->sysname, Args);
 	}
 	hp = HAlloc(c_p, 2);
-	Args = CONS(hp, c_p->common.id, Args);
+        Args = erts_cons(hp, c_p->common.id, Args);
 
 	erts_send_error_term_to_logger(c_p->group_leader, dsbufp, Args);
     }
@@ -5879,7 +5879,7 @@ save_stacktrace(Process* c_p, BeamInstr* pc, Eterm* reg, BifFunction bf,
 	    depth--;
 	}
 	s->pc = NULL;
-	args = make_arglist(c_p, reg, a); /* Overwrite CAR(c_p->ftrace) */
+        args = make_arglist(c_p, reg, a); /* Overwrite CAR(c_p->ftrace) */
     } else {
 	s->current = c_p->current;
         /* 
@@ -5891,7 +5891,7 @@ save_stacktrace(Process* c_p, BeamInstr* pc, Eterm* reg, BifFunction bf,
 	    int a;
 	    ASSERT(s->current);
 	    a = s->current[2];
-	    args = make_arglist(c_p, reg, a); /* Overwrite CAR(c_p->ftrace) */
+            args = make_arglist(c_p, reg, a); /* Overwrite CAR(c_p->ftrace) */
 	    /* Save first stack entry */
 	    ASSERT(c_p->cp);
 	    if (depth > 0) {
@@ -5912,7 +5912,7 @@ save_stacktrace(Process* c_p, BeamInstr* pc, Eterm* reg, BifFunction bf,
     {
 	Eterm *hp;
 	hp = HAlloc(c_p, 2);
-	c_p->ftrace = CONS(hp, args, make_big((Eterm *) s));
+        c_p->ftrace = erts_cons(hp, args, make_big((Eterm *) s));
     }
 
     /* Save the actual stack trace */
@@ -5983,7 +5983,7 @@ static struct StackTrace *get_trace_from_exc(Eterm exc) {
 	return NULL;
     } else {
 	ASSERT(is_list(exc));
-	return (struct StackTrace *) big_val(CDR(list_val(exc)));
+        return (struct StackTrace *) big_val(erts_cdr(list_val(exc)));
     }
 }
 
@@ -5992,7 +5992,7 @@ static Eterm get_args_from_exc(Eterm exc) {
 	return NIL;
     } else {
 	ASSERT(is_list(exc));
-	return CAR(list_val(exc));
+        return erts_car(list_val(exc));
     }
 }
 
@@ -6001,7 +6001,7 @@ static int is_raised_exc(Eterm exc) {
         return 0;
     } else {
         ASSERT(is_list(exc));
-        return bignum_header_is_neg(*big_val(CDR(list_val(exc))));
+        return bignum_header_is_neg(*big_val(erts_cdr(list_val(exc))));
     }
 }
 
@@ -6013,7 +6013,7 @@ make_arglist(Process* c_p, Eterm* reg, int a) {
     Eterm args = NIL;
     Eterm* hp = HAlloc(c_p, 2*a);
     while (a > 0) {
-        args = CONS(hp, reg[a-1], args);
+        args = erts_cons(hp, reg[a-1], args);
 	hp += 2;
 	a--;
     }
@@ -6100,11 +6100,11 @@ build_stacktrace(Process* c_p, Eterm exc) {
     while (stkp > stk) {
 	stkp--;
 	hp = erts_build_mfa_item(stkp, hp, am_true, &mfa);
-	res = CONS(hp, mfa, res);
+        res = erts_cons(hp, mfa, res);
 	hp += 2;
     }
     hp = erts_build_mfa_item(&fi, hp, args, &mfa);
-    res = CONS(hp, mfa, res);
+    res = erts_cons(hp, mfa, res);
 
     erts_free(ERTS_ALC_T_TMP, (void *) stk);
     return res;
@@ -6144,7 +6144,7 @@ call_error_handler(Process* p, BeamInstr* fi, Eterm* reg, Eterm func)
     HEAP_TOP(p) += sz;
     args = NIL;
     for (i = arity-1; i >= 0; i--) {
-	args = CONS(hp, reg[i], args);
+        args = erts_cons(hp, reg[i], args);
 	hp += 2;
     }
 
@@ -6190,7 +6190,7 @@ apply_setup_error_handler(Process* p, Eterm module, Eterm function, Uint arity, 
 	hp = HEAP_TOP(p);
 	HEAP_TOP(p) += sz;
 	for (i = arity-1; i >= 0; i--) {
-	    args = CONS(hp, reg[i], args);
+            args = erts_cons(hp, reg[i], args);
 	    hp += 2;
 	}
 	reg[0] = module;
@@ -6253,8 +6253,8 @@ apply(Process* p, Eterm module, Eterm function, Eterm args, Eterm* reg)
     arity = 0;
     while (is_list(tmp)) {
 	if (arity < (MAX_REG - 1)) {
-	    reg[arity++] = CAR(list_val(tmp));
-	    tmp = CDR(list_val(tmp));
+            reg[arity++] = erts_car(list_val(tmp));
+            tmp = erts_cdr(list_val(tmp));
 	} else {
 	    p->freason = SYSTEM_LIMIT;
 	    goto error2;
@@ -6373,7 +6373,7 @@ erts_hibernate(Process* c_p, Eterm module, Eterm function, Eterm args, Eterm* re
     tmp = args;
     while (is_list(tmp)) {
 	if (arity < MAX_REG) {
-	    tmp = CDR(list_val(tmp));
+            tmp = erts_cdr(list_val(tmp));
 	    arity++;
 	} else {
 	    c_p->freason = SYSTEM_LIMIT;
@@ -6515,7 +6515,7 @@ call_fun(Process* p,		/* Current process. */
 		hp = HEAP_TOP(p);
 		HEAP_TOP(p) += sz;
 		for (i = arity-1; i >= 0; i--) {
-		    args = CONS(hp, reg[i], args);
+                    args = erts_cons(hp, reg[i], args);
 		    hp += 2;
 		}
 	    }
@@ -6589,7 +6589,7 @@ call_fun(Process* p,		/* Current process. */
 		args = NIL;
 		hp = HAlloc(p, arity*2);
 		for (i = arity-1; i >= 0; i--) {
-		    args = CONS(hp, reg[i], args);
+                    args = erts_cons(hp, reg[i], args);
 		    hp += 2;
 		}
 	    }
@@ -6623,8 +6623,8 @@ apply_fun(Process* p, Eterm fun, Eterm args, Eterm* reg)
     arity = 0;
     while (is_list(tmp)) {
 	if (arity < MAX_REG-1) {
-	    reg[arity++] = CAR(list_val(tmp));
-	    tmp = CDR(list_val(tmp));
+            reg[arity++] = erts_car(list_val(tmp));
+            tmp = erts_cdr(list_val(tmp));
 	} else {
 	    p->freason = SYSTEM_LIMIT;
 	    return NULL;

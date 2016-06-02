@@ -184,7 +184,7 @@ exception_list(Process* p, Eterm tag, struct m* mp, Sint exceptions)
 
     while (exceptions > 0) {
 	if (mp->exception) {
-	    res = CONS(hp, mp->module, res);
+            res = erts_cons(hp, mp->module, res);
 	    hp += 2;
 	    exceptions--;
 	}
@@ -236,7 +236,7 @@ finish_loading_1(BIF_ALIST_1)
 
     for (i = 0; i < n; i++) {
 	Eterm* cons = list_val(BIF_ARG_1);
-	Eterm term = CAR(cons);
+        Eterm term = erts_car(cons);
 	ProcBin* pb;
 
 	if (!ERTS_TERM_IS_MAGIC_BINARY(term)) {
@@ -248,7 +248,7 @@ finish_loading_1(BIF_ALIST_1)
 	if (p[i].module == NIL) {
 	    goto badarg;
 	}
-	BIF_ARG_1 = CDR(cons);
+        BIF_ARG_1 = erts_cdr(cons);
     }
 
     /*
@@ -613,7 +613,7 @@ BIF_RETTYPE loaded_0(BIF_ALIST_0)
 	    if ((modp=module_code(i,code_ix)) != NULL &&
 		((modp->curr.code_length != 0) ||
 		 (modp->old.code_length != 0))) {
-		previous = CONS(hp, make_atom(modp->module), previous);
+                previous = erts_cons(hp, make_atom(modp->module), previous);
 		hp += 2;
 	    }
 	}
@@ -817,7 +817,7 @@ check_process_code(Process* rp, Module* modp, Uint flags, int *redsp, int fcalls
     if (rp->ftrace != NIL) {
 	struct StackTrace *s;
 	ASSERT(is_list(rp->ftrace));
-	s = (struct StackTrace *) big_val(CDR(list_val(rp->ftrace)));
+        s = (struct StackTrace *) big_val(erts_cdr(list_val(rp->ftrace)));
 	if ((s->pc && ErtsInArea(s->pc, mod_start, mod_size)) ||
 	    (s->current && ErtsInArea(s->current, mod_start, mod_size))) {
 	    rp->freason = EXC_NULL;

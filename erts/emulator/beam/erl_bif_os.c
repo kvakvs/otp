@@ -79,7 +79,7 @@ BIF_RETTYPE os_getenv_0(BIF_ALIST_0)
     while ((cp = getenv_string(&state)) != NULL) {
 	str = erts_convert_native_to_filename(BIF_P,(byte *)cp);
 	hp = HAlloc(BIF_P, 2);
-	ret = CONS(hp, str, ret);
+	ret = erts_cons(hp, str, ret);
     }
 
     fini_getenv_state(&state);

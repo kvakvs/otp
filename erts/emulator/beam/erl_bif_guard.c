@@ -175,7 +175,7 @@ BIF_RETTYPE length_1(BIF_ALIST_1)
     i = 0;
     while (is_list(list)) {
 	i++;
-	list = CDR(list_val(list));
+	list = erts_cdr(list_val(list));
     }
     if (is_not_nil(list))  {
 	BIF_ERROR(BIF_P, BADARG);
@@ -362,7 +362,7 @@ Eterm erts_gc_length_1(Process* p, Eterm* reg, Uint live)
     i = 0;
     while (is_list(list)) {
 	i++;
-	list = CDR(list_val(list));
+	list = erts_cdr(list_val(list));
     }
     if (is_not_nil(list))  {
 	BIF_ERROR(p, BADARG);

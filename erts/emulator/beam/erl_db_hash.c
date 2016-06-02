@@ -1058,7 +1058,7 @@ static int db_get_element_hash(Process *p, DbTable *tbl,
 			Eterm *hp;
 			Eterm copy = db_copy_element_from_ets(&tb->common, p,
 							      &b->dbterm, ndex, &hp, 2);
-			elem_list = CONS(hp, copy, elem_list);
+			elem_list = erts_cons(hp, copy, elem_list);
 		    }
 		    b = b->next;
 		}
@@ -1348,7 +1348,7 @@ static int db_select_continue_hash(Process *p,
 					 &current->dbterm, &hp, 2),
 	     is_value(match_res))) {
 
-	    match_list = CONS(hp, match_res, match_list);
+	    match_list = erts_cons(hp, match_res, match_list);
 	    ++got;
 	}
 
@@ -1386,9 +1386,9 @@ done:
 	    rest = NIL;
 	    hp = HAlloc(p, (got - chunk_size) * 2); 
 	    while (got-- > chunk_size) {
-		rest = CONS(hp, CAR(list_val(match_list)), rest);
+		rest = erts_cons(hp, erts_car(list_val(match_list)), rest);
 		hp += 2;
-		match_list = CDR(list_val(match_list));
+		match_list = erts_cdr(list_val(match_list));
 		++rest_size;
 	    }
 	}
@@ -1512,7 +1512,7 @@ static int db_select_chunk_hash(Process *p, DbTable *tbl,
 		match_res = db_match_dbterm(&tb->common, p, mpi.mp, 0,
 					    &current->dbterm, &hp, 2);
 		if (is_value(match_res)) {
-		    match_list = CONS(hp, match_res, match_list);
+		    match_list = erts_cons(hp, match_res, match_list);
 		    ++got;
 		}
 	    }
@@ -1566,13 +1566,13 @@ done:
 	    Eterm tmp = match_list;
 	    rest = match_list;
 	    while (got-- > chunk_size + 1) { 
-		tmp = CDR(list_val(tmp));
+		tmp = erts_cdr(list_val(tmp));
 		++rest_size;
 	    }
 	    ++rest_size;
-	    match_list = CDR(list_val(tmp));
-	    CDR(list_val(tmp)) = NIL; /* Destructive, the list has never 
-					 been in 'user space' */ 
+	    match_list = erts_cdr(list_val(tmp));
+            erts_set_cdr(list_val(tmp), NIL); /* Destructive, the list has
+                                         never been in 'user space' */
 	}
 	if (rest != NIL || slot_ix >= 0) { /* Need more calls */
 	    hp = HAlloc(p,3+7+PROC_BIN_SIZE);
@@ -2304,7 +2304,7 @@ static int analyze_pattern(DbTableHash *tb, Eterm pattern,
     mpi->all_objects = 1;
     mpi->mp = NULL;
 
-    for (lst = pattern; is_list(lst); lst = CDR(list_val(lst)))
+    for (lst = pattern; is_list(lst); lst = erts_cdr(list_val(lst)))
 	++num_heads;
 
     if (lst != NIL) {/* proper list... */
@@ -2322,9 +2322,9 @@ static int analyze_pattern(DbTableHash *tb, Eterm pattern,
     bodies = buff + (num_heads * 2);
 
     i = 0;
-    for(lst = pattern; is_list(lst); lst = CDR(list_val(lst))) {
+    for(lst = pattern; is_list(lst); lst = erts_cdr(list_val(lst))) {
 	Eterm body;
-	ttpl = CAR(list_val(lst));
+	ttpl = erts_car(list_val(lst));
 	if (!is_tuple(ttpl)) {
 	    if (buff != sbuff) { 
 		erts_free(ERTS_ALC_T_DB_TMP, buff);
@@ -2341,8 +2341,8 @@ static int analyze_pattern(DbTableHash *tb, Eterm pattern,
 	matches[i] = tpl = ptpl[1];
 	guards[i] = ptpl[2];
 	bodies[i] = body = ptpl[3];
-	if (!is_list(body) || CDR(list_val(body)) != NIL ||
-	    CAR(list_val(body)) != am_DollarUnderscore) {
+	if (!is_list(body) || erts_cdr(list_val(body)) != NIL ||
+	    erts_car(list_val(body)) != am_DollarUnderscore) {
 	    mpi->all_objects = 0;
 	}
 	++i;
@@ -2592,7 +2592,7 @@ static Eterm build_term_list(Process* p, HashDbTerm* ptr1, HashDbTerm* ptr2,
     while(ptr != ptr2) {
 	if (ptr->hvalue != INVALID_HASH) {
 	    copy = db_copy_object_from_ets(&tb->common, &ptr->dbterm, &hp, &MSO(p));
-	    list = CONS(hp, copy, list);
+	    list = erts_cons(hp, copy, list);
 	    hp  += 2;
 	}
 	ptr = ptr->next;

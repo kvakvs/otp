@@ -1214,7 +1214,7 @@ static void build_free_seg_tuple(RBTNode* node, void* arg)
     Eterm tpl = TUPLE2(a->hp, start, end);
 
     a->hp += 3;
-    a->acc = CONS(a->hp, tpl, a->acc);
+    a->acc = erts_cons(a->hp, tpl, a->acc);
     a->hp += 2;
 }
 
@@ -2552,8 +2552,8 @@ Eterm erts_mmap_debug_info(Process* p)
 
         sa_list = TUPLE2(hp, am_atom_put("sa_free_segs",12), sa_list); hp+=3;
         sua_list = TUPLE2(hp, am_atom_put("sua_free_segs",13), sua_list); hp+=3;
-        list = CONS(hp, sua_list, list); hp+=2;
-        list = CONS(hp, sa_list, list); hp+=2;
+        list = erts_cons(hp, sua_list, list); hp+=2;
+        list = erts_cons(hp, sa_list, list); hp+=2;
 
         ASSERT(hp <= hp_end);
         HRelease(p, hp_end, hp);

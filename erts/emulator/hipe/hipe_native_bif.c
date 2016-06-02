@@ -202,7 +202,7 @@ static void hipe_save_stacktrace(Process* c_p, Eterm args)
 	  + sizeof(Eterm) - 1) / sizeof(Eterm);
     hp = HAlloc(c_p, 2 + 1 + sz);
     s = (struct StackTrace *) (hp + 2);
-    c_p->ftrace = CONS(hp, args, make_big((Eterm *) s));
+    c_p->ftrace = erts_cons(hp, args, make_big((Eterm *) s));
     s->header = make_pos_bignum_header(sz);
     s->current = NULL;
     s->pc = NULL;
@@ -273,7 +273,7 @@ static struct StackTrace *get_trace_from_exc(Eterm exc)
     if (exc == NIL)
 	return NULL;
     else
-	return (struct StackTrace *) big_val(CDR(list_val(exc)));
+	return (struct StackTrace *) big_val(erts_cdr(list_val(exc)));
 }
 
 /*

@@ -156,7 +156,7 @@ BIF_RETTYPE maps_to_list_1(BIF_ALIST_1) {
 
 	while(n--) {
 	    tup = TUPLE2(hp, ks[n], vs[n]); hp += 3;
-	    res = CONS(hp, tup, res); hp += 2;
+	    res = erts_cons(hp, tup, res); hp += 2;
 	}
 
 	BIF_RET(res);
@@ -265,7 +265,7 @@ BIF_RETTYPE maps_from_list_1(BIF_ALIST_1) {
 	/* Calculate size and check validity */
 
 	while(is_list(item)) {
-	    res = CAR(list_val(item));
+	    res = erts_car(list_val(item));
 	    if (is_not_tuple(res))
 		goto error;
 
@@ -274,7 +274,7 @@ BIF_RETTYPE maps_from_list_1(BIF_ALIST_1) {
 		goto error;
 
 	    size++;
-	    item = CDR(list_val(item));
+	    item = erts_cdr(list_val(item));
 	}
 
 	if (is_not_nil(item))
@@ -320,16 +320,16 @@ static Eterm flatmap_from_validated_list(Process *p, Eterm list, Uint size) {
 	return res;
 
     /* first entry */
-    kv    = tuple_val(CAR(list_val(item)));
+    kv    = tuple_val(erts_car(list_val(item)));
     ks[0] = kv[1];
     vs[0] = kv[2];
     size  = 1;
-    item  = CDR(list_val(item));
+    item  = erts_cdr(list_val(item));
 
     /* insert sort key/value pairs */
     while(is_list(item)) {
 
-	kv = tuple_val(CAR(list_val(item)));
+	kv = tuple_val(erts_car(list_val(item)));
 
 	/* compare ks backwards
 	 * idx represent word index to be written (hole position).
@@ -365,7 +365,7 @@ static Eterm flatmap_from_validated_list(Process *p, Eterm list, Uint size) {
 	    vs[idx] = kv[2];
 	    size++;
 	}
-	item = CDR(list_val(item));
+	item = erts_cdr(list_val(item));
     }
 
     if (unused_size) {
@@ -412,16 +412,16 @@ static Eterm hashmap_from_validated_list(Process *p, Eterm list, Uint size) {
 
     UseTmpHeap(2,p);
     while(is_list(item)) {
-	res = CAR(list_val(item));
+	res = erts_car(list_val(item));
 	kv  = tuple_val(res);
 	hx  = hashmap_restore_hash(tmp,0,kv[1]);
 	swizzle32(sw,hx);
 	hxns[ix].hx   = sw;
-	hxns[ix].val  = CONS(hp, kv[1], kv[2]); hp += 2;
+	hxns[ix].val  = erts_cons(hp, kv[1], kv[2]); hp += 2;
 	hxns[ix].skip = 1; /* will be reassigned in from_array */
 	hxns[ix].i    = ix;
 	ix++;
-	item = CDR(list_val(item));
+	item = erts_cdr(list_val(item));
     }
     UnUseTmpHeap(2,p);
 
@@ -456,8 +456,8 @@ static Eterm hashmap_from_validated_list(Process *p, Eterm list, Uint size) {
 	hashmap_iterator_init(&wstack, res, 0);
 
 	while ((kv=hashmap_iterator_next(&wstack)) != NULL) {
-	    *ks++ = CAR(kv);
-	    *vs++ = CDR(kv);
+	    *ks++ = erts_car(kv);
+	    *vs++ = erts_cdr(kv);
 	}
 
 	/* it cannot have multiple keys */
@@ -517,7 +517,7 @@ Eterm erts_hashmap_from_ks_and_vs_extra(Process *p, Eterm *ks, Eterm *vs, Uint n
 	hx = hashmap_make_hash(ks[i]);
 	swizzle32(sw,hx);
 	hxns[i].hx   = sw;
-	hxns[i].val  = CONS(hp, ks[i], vs[i]); hp += 2;
+	hxns[i].val  = erts_cons(hp, ks[i], vs[i]); hp += 2;
 	hxns[i].skip = 1; /* will be reassigned in from_array */
 	hxns[i].i    = i;
     }
@@ -526,7 +526,7 @@ Eterm erts_hashmap_from_ks_and_vs_extra(Process *p, Eterm *ks, Eterm *vs, Uint n
 	hx = hashmap_make_hash(key);
 	swizzle32(sw,hx);
 	hxns[i].hx   = sw;
-	hxns[i].val  = CONS(hp, key, value); hp += 2;
+	hxns[i].val  = erts_cons(hp, key, value); hp += 2;
 	hxns[i].skip = 1;
 	hxns[i].i    = i;
     }
@@ -576,8 +576,8 @@ static Eterm hashmap_from_unsorted_array(ErtsHeapFactory* factory,
 
 	    while(ix < jx) {
 		lx = ix;
-		while(++ix < jx && EQ(CAR(list_val(hxns[ix].val)),
-				      CAR(list_val(hxns[lx].val)))) {
+		while(++ix < jx && EQ(erts_car(list_val(hxns[ix].val)),
+				      erts_car(list_val(hxns[lx].val)))) {
                     if (reject_dupkeys)
                         return THE_NON_VALUE;
 
@@ -648,7 +648,7 @@ static Eterm hashmap_from_sorted_unique_array(ErtsHeapFactory* factory,
 
 	    for(i = 0; i < jx - ix; i++) {
 		val = hxns[i + ix].val;
-		hx  = hashmap_restore_hash(th, lvl + 8, CAR(list_val(val)));
+		hx  = hashmap_restore_hash(th, lvl + 8, erts_car(list_val(val)));
 		swizzle32(sw,hx);
 		tmp[i].hx   = sw;
 		tmp[i].val  = val;
@@ -896,7 +896,7 @@ static Eterm hashmap_from_chunked_array(ErtsHeapFactory *factory, hxnode_t *hxns
 #undef HALLOC_EXTRA
 
 static int hxnodecmpkey(hxnode_t *a, hxnode_t *b) {
-    Sint c = CMP_TERM(CAR(list_val(a->val)), CAR(list_val(b->val)));
+    Sint c = CMP_TERM(erts_car(list_val(a->val)), erts_car(list_val(b->val)));
 #if ERTS_SIZEOF_ETERM <= SIZEOF_INT
     return c;
 #else
@@ -941,7 +941,7 @@ BIF_RETTYPE maps_keys_1(BIF_ALIST_1) {
 	ks  = flatmap_get_keys(mp);
 
 	while(n--) {
-	    res = CONS(hp, ks[n], res); hp += 2;
+	    res = erts_cons(hp, ks[n], res); hp += 2;
 	}
 
 	BIF_RET(res);
@@ -1078,7 +1078,7 @@ static Eterm flatmap_merge(Process *p, Eterm nodeA, Eterm nodeB) {
 	    hx = hashmap_make_hash(ks[i]);
 	    swizzle32(sw,hx);
 	    hxns[i].hx   = sw;
-	    hxns[i].val  = CONS(hp, ks[i], vs[i]); hp += 2;
+	    hxns[i].val  = erts_cons(hp, ks[i], vs[i]); hp += 2;
 	    hxns[i].skip = 1;
 	    hxns[i].i    = i;
 	}
@@ -1123,7 +1123,7 @@ static Eterm map_merge_mixed(Process *p, Eterm flat, Eterm tree, int swap_args) 
 	hx = hashmap_make_hash(ks[i]);
 	swizzle32(sw,hx);
 	hxns[i].hx   = sw;
-	hxns[i].val  = CONS(hp, ks[i], vs[i]); hp += 2;
+	hxns[i].val  = erts_cons(hp, ks[i], vs[i]); hp += 2;
 	hxns[i].skip = 1;
 	hxns[i].i    = i;
     }
@@ -1236,10 +1236,10 @@ recurse:
     }
     else {
         if (is_list(sp->nodeA)) { /* A is LEAF */
-            Eterm keyA = CAR(list_val(sp->nodeA));
+            Eterm keyA = erts_car(list_val(sp->nodeA));
 
             if (is_list(sp->nodeB)) { /* LEAF + LEAF */
-                Eterm keyB = CAR(list_val(sp->nodeB));
+                Eterm keyB = erts_car(list_val(sp->nodeB));
 
                 if (EQ(keyA, keyB)) {
                     --ctx->size;
@@ -1276,7 +1276,7 @@ recurse:
         }
 
         if (is_list(sp->nodeB)) { /* B is LEAF */
-            Eterm keyB = CAR(list_val(sp->nodeB));
+            Eterm keyB = erts_car(list_val(sp->nodeB));
 
             hx = hashmap_restore_hash(th, ctx->lvl, keyB);
             sp->bbm = 1 << hashmap_index(hx);
@@ -1477,10 +1477,10 @@ int hashmap_key_hash_cmp(Eterm* ap, Eterm* bp)
     UseTmpHeapNoproc(2);
 
     if (ap && bp) {
-	ASSERT(CMP_TERM(CAR(ap), CAR(bp)) != 0);
+	ASSERT(CMP_TERM(erts_car(ap), erts_car(bp)) != 0);
 	for (;;) {
-	    Uint32 ha = hashmap_restore_hash(th, lvl, CAR(ap));
-	    Uint32 hb = hashmap_restore_hash(th, lvl, CAR(bp));
+	    Uint32 ha = hashmap_restore_hash(th, lvl, erts_car(ap));
+	    Uint32 hb = hashmap_restore_hash(th, lvl, erts_car(bp));
 	    int cmp = hash_cmp(ha, hb);
 	    if (cmp) {
                 UnUseTmpHeapNoproc(2);
@@ -1873,7 +1873,7 @@ BIF_RETTYPE maps_values_1(BIF_ALIST_1) {
 	vs  = flatmap_get_values(mp);
 
 	while(n--) {
-	    res = CONS(hp, vs[n], res); hp += 2;
+	    res = erts_cons(hp, vs[n], res); hp += 2;
 	}
 
 	BIF_RET(res);
@@ -1892,9 +1892,9 @@ static Eterm hashmap_to_list(Process *p, Eterm node) {
     hp  = HAlloc(p, hashmap_size(node) * (2 + 3));
     hashmap_iterator_init(&stack, node, 0);
     while ((kv=hashmap_iterator_next(&stack)) != NULL) {
-	Eterm tup = TUPLE2(hp, CAR(kv), CDR(kv));
+	Eterm tup = TUPLE2(hp, erts_car(kv), erts_cdr(kv));
 	hp += 3;
-	res = CONS(hp, tup, res);
+	res = erts_cons(hp, tup, res);
 	hp += 2;
     }
     DESTROY_WSTACK(stack);
@@ -2057,7 +2057,7 @@ erts_hashmap_get(Uint32 hx, Eterm key, Eterm node)
 
         if (is_list(node)) { /* LEAF NODE [K|V] */
             ptr = list_val(node);
-            res = EQ(CAR(ptr), key) ? &(CDR(ptr)) : NULL;
+            res = EQ(erts_car(ptr), key) ? erts_cdr_ptr(ptr) : NULL;
             break;
         }
 
@@ -2108,7 +2108,7 @@ int erts_hashmap_insert_down(Uint32 hx, Eterm key, Eterm node, Uint *sz,
 	switch(primary_tag(node)) {
 	    case TAG_PRIMARY_LIST: /* LEAF NODE [K|V] */
 		ptr  = list_val(node);
-		ckey = CAR(ptr);
+		ckey = erts_car(ptr);
 		if (EQ(ckey, key)) {
 		    *update_size = 0;
 		    goto unroll;
@@ -2228,7 +2228,7 @@ Eterm erts_hashmap_insert_up(Eterm *hp, Eterm key, Eterm value,
     DeclareTmpHeapNoproc(fake,1);
     UseTmpHeapNoproc(1);
 
-    res = CONS(hp, key, value); hp += 2;
+    res = erts_cons(hp, key, value); hp += 2;
 
     do {
 	node = ESTACK_POP(*sp);
@@ -2330,7 +2330,7 @@ static Eterm hashmap_keys(Process* p, Eterm node) {
     hp  = HAlloc(p, root->size * 2);
     hashmap_iterator_init(&stack, node, 0);
     while ((kv=hashmap_iterator_next(&stack)) != NULL) {
-	res = CONS(hp, CAR(kv), res);
+	res = erts_cons(hp, erts_car(kv), res);
 	hp += 2;
     }
     DESTROY_WSTACK(stack);
@@ -2347,7 +2347,7 @@ static Eterm hashmap_values(Process* p, Eterm node) {
     hp  = HAlloc(p, root->size * 2);
     hashmap_iterator_init(&stack, node, 0);
     while ((kv=hashmap_iterator_next(&stack)) != NULL) {
-	res = CONS(hp, CDR(kv), res);
+	res = erts_cons(hp, erts_cdr(kv), res);
 	hp += 2;
     }
     DESTROY_WSTACK(stack);
@@ -2369,9 +2369,9 @@ static Eterm hashmap_delete(Process *p, Uint32 hx, Eterm key,
     for (;;) {
 	switch(primary_tag(node)) {
 	    case TAG_PRIMARY_LIST:
-		if (EQ(CAR(list_val(node)), key)) {
+		if (EQ(erts_car(list_val(node)), key)) {
                     if (value) {
-                        *value = CDR(list_val(node));
+                        *value = erts_cdr(list_val(node));
                     }
 		    goto unroll;
 		}
@@ -2475,10 +2475,10 @@ unroll:
 	hashmap_iterator_init(&wstack, map, 0);
 
 	while ((kv=hashmap_iterator_next(&wstack)) != NULL) {
-	    if (EQ(CAR(kv),key))
+	    if (EQ(erts_car(kv),key))
 		continue;
-	    *ks++ = CAR(kv);
-	    *vs++ = CDR(kv);
+	    *ks++ = erts_car(kv);
+	    *vs++ = erts_cdr(kv);
 	}
 
 	/* it cannot have multiple keys */
@@ -2855,7 +2855,7 @@ BIF_RETTYPE erts_internal_map_hashmap_children_1(BIF_ALIST_1) {
         }
         ASSERT(sz < 17);
         hp = HAlloc(BIF_P, 2*sz);
-        while(sz--) { res = CONS(hp, *ptr++, res); hp += 2; }
+        while(sz--) { res = erts_cons(hp, *ptr++, res); hp += 2; }
         BIF_RET(res);
     }
     BIF_P->fvalue = BIF_ARG_1;
@@ -2945,17 +2945,17 @@ static Eterm hashmap_info(Process *p, Eterm node) {
 
     info = hashmap_bld_tuple_uint(&hp,NULL,16,leaf_usage);
     tup  = TUPLE3(hp, AM_leafs, make_small(nleaf),info); hp += 4;
-    res  = CONS(hp, tup, res); hp += 2;
+    res  = erts_cons(hp, tup, res); hp += 2;
 
     info = hashmap_bld_tuple_uint(&hp,NULL,16,bitmap_usage);
     tup  = TUPLE3(hp, AM_bitmaps, make_small(nbitmap), info); hp += 4;
-    res  = CONS(hp, tup, res); hp += 2;
+    res  = erts_cons(hp, tup, res); hp += 2;
 
     tup  = TUPLE3(hp, AM_arrays, make_small(narray),NIL); hp += 4;
-    res  = CONS(hp, tup, res); hp += 2;
+    res  = erts_cons(hp, tup, res); hp += 2;
 
     tup  = TUPLE2(hp, AM_depth, make_small(lvl)); hp += 3;
-    res  = CONS(hp, tup, res); hp += 2;
+    res  = erts_cons(hp, tup, res); hp += 2;
 
     DESTROY_ESTACK(stack);
     ERTS_HOLE_CHECK(p);

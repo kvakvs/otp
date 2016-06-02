@@ -816,7 +816,7 @@ Eterm erts_instr_get_memory_map(Process *proc)
 	tuple = TUPLE4(hp, type, ptr, size, pid);
 	hp += 5;
 
-	md_list = CONS(hp, tuple, md_list);
+        md_list = erts_cons(hp, tuple, md_list);
 	hp += 2;
     }
 

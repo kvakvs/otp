@@ -221,7 +221,7 @@ ERTS_DECLARE_DUMMY(erts_tracer_nil) = NIL;
 #define IS_TRACER_VALID(tracer)                                         \
     (ERTS_TRACER_COMPARE(tracer,erts_tracer_true)                       \
      || ERTS_TRACER_IS_NIL(tracer)                                      \
-     || (is_list(tracer) && is_atom(CAR(list_val(tracer)))))
+     || (is_list(tracer) && is_atom(erts_car(list_val(tracer)))))
 
 #define ERTS_TRACER_FROM_ETERM(termp) \
     ((ErtsTracer*)(termp))

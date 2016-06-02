@@ -1045,7 +1045,7 @@ Binary *db_match_set_compile(Process *p, Eterm matchexpr,
     if (!is_list(matchexpr))
 	return NULL;
     num_heads = 0;
-    for (l = matchexpr; is_list(l); l = CDR(list_val(l)))
+    for (l = matchexpr; is_list(l); l = erts_cdr(list_val(l)))
 	++num_heads;
 
     if (l != NIL) /* proper list... */
@@ -1063,8 +1063,8 @@ Binary *db_match_set_compile(Process *p, Eterm matchexpr,
     bodies = buff + (num_heads * 2);
 
     i = 0;
-    for (l = matchexpr; is_list(l); l = CDR(list_val(l))) {
-	t = CAR(list_val(l));
+    for (l = matchexpr; is_list(l); l = erts_cdr(list_val(l))) {
+	t = erts_car(list_val(l));
 	if (!is_tuple(t) || arityval((tp = tuple_val(t))[0]) != 3) {
 	    goto error;
 	}
@@ -1077,7 +1077,7 @@ Binary *db_match_set_compile(Process *p, Eterm matchexpr,
 	       against an array (strange, but gives the semantics
 	       of matching against a parameter list) */
 	    n = 0;
-	    for (l2 = tp[1]; is_list(l2); l2 = CDR(list_val(l2))) {
+	    for (l2 = tp[1]; is_list(l2); l2 = erts_cdr(list_val(l2))) {
 		++n;
 	    }
 	    if (l2 != NIL) {
@@ -1088,8 +1088,8 @@ Binary *db_match_set_compile(Process *p, Eterm matchexpr,
 	    *hp++ = make_arityval((Uint) n);
 	    l2 = tp[1];
 	    while (n--) {
-		*hp++ = CAR(list_val(l2));
-		l2 = CDR(list_val(l2));
+		*hp++ = erts_car(list_val(l2));
+		l2 = erts_cdr(list_val(l2));
 	    }
 	}
 	matches[i] = t;
@@ -1147,7 +1147,7 @@ Eterm db_match_set_lint(Process *p, Eterm matchexpr, Uint flags)
 	goto done;
     }
     num_heads = 0;
-    for (l = matchexpr; is_list(l); l = CDR(list_val(l)))
+    for (l = matchexpr; is_list(l); l = erts_cdr(list_val(l)))
 	++num_heads;
 
     if (l != NIL)  { /* proper list... */
@@ -1166,8 +1166,8 @@ Eterm db_match_set_lint(Process *p, Eterm matchexpr, Uint flags)
     bodies = buff + (num_heads * 2);
 
     i = 0;
-    for (l = matchexpr; is_list(l); l = CDR(list_val(l))) {
-	t = CAR(list_val(l));
+    for (l = matchexpr; is_list(l); l = erts_cdr(list_val(l))) {
+	t = erts_car(list_val(l));
 	if (!is_tuple(t) || arityval((tp = tuple_val(t))[0]) != 3) {
 	    add_dmc_err(err_info, 
 			"Match program part is not a tuple of "
@@ -1180,7 +1180,7 @@ Eterm db_match_set_lint(Process *p, Eterm matchexpr, Uint flags)
 	    t = tp[1];
 	} else {
 	    n = 0;
-	    for (l2 = tp[1]; is_list(l2); l2 = CDR(list_val(l2))) {
+	    for (l2 = tp[1]; is_list(l2); l2 = erts_cdr(list_val(l2))) {
 		++n;
 	    }
 	    if (l2 != NIL) {
@@ -1196,8 +1196,8 @@ Eterm db_match_set_lint(Process *p, Eterm matchexpr, Uint flags)
 	    *hp++ = make_arityval((Uint) n);
 	    l2 = tp[1];
 	    while (n--) {
-		*hp++ = CAR(list_val(l2));
-		l2 = CDR(list_val(l2));
+		*hp++ = erts_car(list_val(l2));
+		l2 = erts_cdr(list_val(l2));
 	    }
 	}
 	matches[i] = t;
@@ -1433,8 +1433,8 @@ restart:
                     hashmap_iterator_init(&wstack, t, 0);
 
                     while ((kv=hashmap_iterator_next(&wstack)) != NULL) {
-                        Eterm key = CAR(kv);
-                        Eterm value = CDR(kv);
+                        Eterm key = erts_car(kv);
+                        Eterm value = erts_cdr(kv);
                         if (db_is_variable(key) >= 0) {
                             if (context.err_info) {
                                 add_dmc_err(context.err_info,
@@ -1509,13 +1509,13 @@ restart:
 		structure_checked = 0; /* Whatever it is, we did 
 					  not pop it */
 		if ((res = dmc_one_term(&context, &heap, &stack, 
-					&text, CAR(list_val(t))))
+					&text, erts_car(list_val(t))))
 		    != retOk) {
 		    if (res == retRestart) {
 			goto restart;
 		    } else goto error;
 		}	    
-		t = CDR(list_val(t));
+		t = erts_cdr(list_val(t));
 		continue;
 	    default: /* Nil and non proper tail end's or 
 			single terms as match 
@@ -1743,7 +1743,7 @@ static Eterm dpm_array_to_list(Process *psp, Eterm *arr, int arity)
     Eterm *hp = HAllocX(psp, arity * 2, HEAP_XTRA);
     Eterm ret = NIL;
     while (--arity >= 0) {
-	ret = CONS(hp, arr[arity], ret);
+	ret = erts_cons(hp, arr[arity], ret);
 	hp += 2;
     }
     return ret;
@@ -2034,14 +2034,14 @@ restart:
 	    break;
 	case matchConsA:
 	    ehp = HAllocX(build_proc, 2, HEAP_XTRA);
-	    CDR(ehp) = *--esp;
-	    CAR(ehp) = esp[-1];
+            erts_set_cdr(ehp, *--esp);
+            erts_set_car(ehp, esp[-1]);
 	    esp[-1] = make_list(ehp);
 	    break;
 	case matchConsB:
 	    ehp = HAllocX(build_proc, 2, HEAP_XTRA);
-	    CAR(ehp) = *--esp;
-	    CDR(ehp) = esp[-1];
+            erts_set_car(ehp, *--esp);
+            erts_set_cdr(ehp, esp[-1]);
 	    esp[-1] = make_list(ehp);
 	    break;
 	case matchMkTuple:
@@ -2594,7 +2594,7 @@ Eterm db_format_dmc_err_info(Process *p, DMCErrInfo *ei)
 	tlist = buf_to_intlist(&shp, buff, sl, NIL);
 	tpl = TUPLE2(shp, sev, tlist);
 	shp += 3;
-	ret = CONS(shp, tpl, ret);
+	ret = erts_cons(shp, tpl, ret);
 	shp += 2;
     }
     return ret;
@@ -3196,8 +3196,8 @@ int db_has_map(Eterm node) {
 	node = ESTACK_POP(s);
         if (is_list(node)) {
 	    while (is_list(node)) {
-		ESTACK_PUSH(s,CAR(list_val(node)));
-		node = CDR(list_val(node));
+		ESTACK_PUSH(s,erts_car(list_val(node)));
+		node = erts_cdr(list_val(node));
 	    }
 	    ESTACK_PUSH(s,node);    /* Non wellformed list or [] */
         } else if (is_tuple(node)) {
@@ -3228,8 +3228,8 @@ int db_has_variable(Eterm node) {
 	switch(node & _TAG_PRIMARY_MASK) {
 	case TAG_PRIMARY_LIST:
 	    while (is_list(node)) {
-		ESTACK_PUSH(s,CAR(list_val(node)));
-		node = CDR(list_val(node));
+		ESTACK_PUSH(s,erts_car(list_val(node)));
+		node = erts_cdr(list_val(node));
 	    }
 	    ESTACK_PUSH(s,node);    /* Non wellformed list or [] */
 	    break;
@@ -3547,10 +3547,10 @@ static DMCRet dmc_list(DMCContext *context,
     int c2;
     int ret;
 
-    if ((ret = dmc_expr(context, heap, text, CAR(list_val(t)), &c1)) != retOk)
+    if ((ret = dmc_expr(context, heap, text, erts_car(list_val(t)), &c1)) != retOk)
 	return ret;
 
-    if ((ret = dmc_expr(context, heap, text, CDR(list_val(t)), &c2)) != retOk)
+    if ((ret = dmc_expr(context, heap, text, erts_cdr(list_val(t)), &c2)) != retOk)
 	return ret;
 
     if (c1 && c2) {
@@ -3559,13 +3559,13 @@ static DMCRet dmc_list(DMCContext *context,
     } 
     *constant = 0;
     if (!c1) {
-	/* The CAR is not a constant, so if the CDR is, we just push it,
+	/* The erts_car is not a constant, so if the erts_cdr is, we just push it,
 	   otherwise it is already pushed. */
 	if (c2)
-	    do_emit_constant(context, text, CDR(list_val(t)));
+	    do_emit_constant(context, text, erts_cdr(list_val(t)));
 	DMC_PUSH(*text, matchConsA);
     } else { /* !c2 && c1 */
-	do_emit_constant(context, text, CAR(list_val(t)));
+	do_emit_constant(context, text, erts_car(list_val(t)));
 	DMC_PUSH(*text, matchConsB);
     }
     --context->stack_used; /* Two objects on stack becomes one */
@@ -3695,7 +3695,7 @@ dmc_map(DMCContext *context, DMCHeap *heap, DMC_STACK_TYPE(UWord) *text,
         nelems = hashmap_size(t);
 
         while ((kv=hashmap_iterator_prev(&wstack)) != NULL) {
-            if ((ret = dmc_expr(context, heap, text, CDR(kv), &c)) != retOk) {
+            if ((ret = dmc_expr(context, heap, text, erts_cdr(kv), &c)) != retOk) {
                 DESTROY_WSTACK(wstack);
                 return ret;
             }
@@ -3715,20 +3715,20 @@ dmc_map(DMCContext *context, DMCHeap *heap, DMC_STACK_TYPE(UWord) *text,
 
         while ((kv=hashmap_iterator_prev(&wstack)) != NULL) {
             /* push key */
-            if ((ret = dmc_expr(context, heap, text, CAR(kv), &c)) != retOk) {
+            if ((ret = dmc_expr(context, heap, text, erts_car(kv), &c)) != retOk) {
                 DESTROY_WSTACK(wstack);
                 return ret;
             }
             if (c) {
-                do_emit_constant(context, text, CAR(kv));
+                do_emit_constant(context, text, erts_car(kv));
             }
             /* push value */
-            if ((ret = dmc_expr(context, heap, text, CDR(kv), &c)) != retOk) {
+            if ((ret = dmc_expr(context, heap, text, erts_cdr(kv), &c)) != retOk) {
                 DESTROY_WSTACK(wstack);
                 return ret;
             }
             if (c) {
-                do_emit_constant(context, text, CDR(kv));
+                do_emit_constant(context, text, erts_cdr(kv));
             }
         }
         DMC_PUSH(*text, matchMkHashMap);
@@ -4748,14 +4748,14 @@ static DMCRet compile_guard_expr(DMCContext *context,
 	}
 	while (is_list(l)) {
 	    constant = 0;
-	    t = CAR(list_val(l));
+	    t = erts_car(list_val(l));
 	    if ((ret = dmc_expr(context, heap, text, t, &constant)) !=
 		retOk)
 		return ret;
 	    if (constant) {
 		do_emit_constant(context, text, t);
 	    }
-	    l = CDR(list_val(l));
+	    l = erts_cdr(list_val(l));
 	    if (context->is_guard) {
 		DMC_PUSH(*text,matchTrue);
 	    } else {
@@ -4912,8 +4912,8 @@ static Uint my_size_object(Eterm t)
     Eterm *p;
     switch (t & _TAG_PRIMARY_MASK) {
     case TAG_PRIMARY_LIST:
-	sum += 2 + my_size_object(CAR(list_val(t))) + 
-	    my_size_object(CDR(list_val(t)));
+	sum += 2 + my_size_object(erts_car(list_val(t))) + 
+	    my_size_object(erts_cdr(list_val(t)));
 	break;
     case TAG_PRIMARY_BOXED:
 	if ((((*boxed_val(t)) & 
@@ -4953,9 +4953,9 @@ static Eterm my_copy_struct(Eterm t, Eterm **hp, ErlOffHeap* off_heap)
     Uint sz;
     switch (t & _TAG_PRIMARY_MASK) {
     case TAG_PRIMARY_LIST:
-	a = my_copy_struct(CAR(list_val(t)), hp, off_heap);
-	b = my_copy_struct(CDR(list_val(t)), hp, off_heap);
-	ret = CONS(*hp, a, b);
+	a = my_copy_struct(erts_car(list_val(t)), hp, off_heap);
+	b = my_copy_struct(erts_cdr(list_val(t)), hp, off_heap);
+	ret = erts_cons(*hp, a, b);
 	*hp += 2;
 	break;
     case TAG_PRIMARY_BOXED:
@@ -5077,7 +5077,7 @@ static Eterm match_spec_test(Process *p, Eterm against, Eterm spec, int trace)
 	n = 0;
 	while (is_list(l)) {
 	    ++n;
-	    l = CDR(list_val(l));
+	    l = erts_cdr(list_val(l));
 	}
 	if (trace) {
 	    if (n)
@@ -5087,9 +5087,9 @@ static Eterm match_spec_test(Process *p, Eterm against, Eterm spec, int trace)
 	    l = against;
 	    n = 0;
 	    while (is_list(l)) {
-		arr[n] = CAR(list_val(l));
+		arr[n] = erts_car(list_val(l));
 		++n;
-		l = CDR(list_val(l));
+		l = erts_cdr(list_val(l));
 	    }
 	    save_cp = p->cp;
 	    p->cp = NULL;
@@ -5115,11 +5115,11 @@ static Eterm match_spec_test(Process *p, Eterm against, Eterm spec, int trace)
 	hp = HAlloc(p, 5 + sz);
 	flg = NIL;
 	if (ret_flags & MATCH_SET_EXCEPTION_TRACE) {
-	    flg = CONS(hp, am_exception_trace, flg);
+	    flg = erts_cons(hp, am_exception_trace, flg);
 	    hp += 2;
 	}
 	if (ret_flags & MATCH_SET_RETURN_TRACE) {
-	    flg = CONS(hp, am_return_trace, flg);
+	    flg = erts_cons(hp, am_return_trace, flg);
 	    hp += 2;
 	}
 	if (trace && arr != NULL) {

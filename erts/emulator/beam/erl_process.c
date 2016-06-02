@@ -8076,7 +8076,7 @@ erts_multi_scheduling_blockers(Process *p, int normal)
 		 plp2->pid != plp1->pid;
 		 plp2 = erts_proclist_peek_next(msbp->blckrs, plp2));
 	    if (plp2 == plp1) {
-		res = CONS(hp, plp1->pid, res);
+		res = erts_cons(hp, plp1->pid, res);
 		hp += 2;
 	    }
 	    /* else: already in result list */
@@ -8792,7 +8792,7 @@ suspend_process_2(BIF_ALIST_2)
 
 	while (is_list(arg)) {
 	    Eterm *lp = list_val(arg);
-	    arg = CAR(lp);
+	    arg = erts_car(lp);
 	    switch (arg) {
 	    case am_unless_suspending:
 		unless_suspending = 1;
@@ -8803,7 +8803,7 @@ suspend_process_2(BIF_ALIST_2)
 	    default:
 		goto badarg;
 	    }
-	    arg = CDR(lp);
+	    arg = erts_cdr(lp);
 	}
 	if (is_not_nil(arg))
 	    goto badarg;

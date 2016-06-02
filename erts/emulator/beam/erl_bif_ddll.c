@@ -203,8 +203,8 @@ BIF_RETTYPE erl_ddll_try_load_3(BIF_ALIST_3)
     int build_this_load_error = 0;
     int encoding;
 
-    for(l = options; is_list(l); l =  CDR(list_val(l))) {
-	Eterm opt = CAR(list_val(l));
+    for(l = options; is_list(l); l =  erts_cdr(list_val(l))) {
+	Eterm opt = erts_car(list_val(l));
 	Eterm *tp;
 	if (is_not_tuple(opt)) {
 	    goto error;
@@ -217,8 +217,8 @@ BIF_RETTYPE erl_ddll_try_load_3(BIF_ALIST_3)
 	case am_driver_options:
 	    {
 		Eterm ll;
-		for(ll = tp[2]; is_list(ll); ll = CDR(list_val(ll))) {
-		    Eterm dopt = CAR(list_val(ll));
+		for(ll = tp[2]; is_list(ll); ll = erts_cdr(list_val(ll))) {
+		    Eterm dopt = erts_car(list_val(ll));
 		    if (dopt == am_kill_ports) {
 			flags |= ERL_DE_FL_KILL_PORTS;
 		    } else {
@@ -520,8 +520,8 @@ Eterm erl_ddll_try_unload_2(BIF_ALIST_2)
 
     erts_smp_proc_unlock(BIF_P, ERTS_PROC_LOCK_MAIN);
 
-    for(l = options; is_list(l); l =  CDR(list_val(l))) {
-	Eterm opt = CAR(list_val(l));
+    for(l = options; is_list(l); l =  erts_cdr(list_val(l))) {
+	Eterm opt = erts_car(list_val(l));
 	Eterm *tp;
 	if (is_not_tuple(opt)) {
 	    if (opt == am_kill_ports) {
@@ -707,7 +707,7 @@ BIF_RETTYPE erl_ddll_loaded_drivers_0(BIF_ALIST_0)
     for (drv = driver_list; drv; drv = drv->next) {
 	Eterm l;
 	l = buf_to_intlist(&hp, drv->name, sys_strlen(drv->name), NIL);
-	res = CONS(hp,l,res);
+	res = erts_cons(hp,l,res);
 	hp += 2;
     }
     res = TUPLE2(hp,am_ok,res);
@@ -769,7 +769,7 @@ BIF_RETTYPE erl_ddll_info_2(BIF_ALIST_2)
 	    if (start_flags & ERL_DE_FL_KILL_PORTS) {
 		Eterm *myhp;
 		myhp = HAlloc(p,2);
-		res = CONS(myhp,am_kill_ports,NIL);
+		res = erts_cons(myhp,am_kill_ports,NIL);
 	    } else {
 		res = NIL;
 	    }
@@ -823,7 +823,7 @@ BIF_RETTYPE erl_ddll_info_2(BIF_ALIST_2)
     for (i = 0; i < num_pei; ++ i) {
 	Eterm tpl = TUPLE2(hp,pei[i].pid,make_small(pei[i].count));
 	hp += 3;
-	res = CONS(hp,tpl,res);
+	res = erts_cons(hp,tpl,res);
 	hp += 2;
     }    
  done:    

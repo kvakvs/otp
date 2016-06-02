@@ -162,14 +162,14 @@ BIF_RETTYPE erts_internal_port_command_3(BIF_ALIST_3)
 	Eterm l = BIF_ARG_3;
 	while (is_list(l)) {
 	    Eterm* cons = list_val(l);
-	    Eterm car = CAR(cons);
+	    Eterm car = erts_car(cons);
 	    if (car == am_force)
 		flags |= ERTS_PORT_SIG_FLG_FORCE;
 	    else if (car == am_nosuspend)
 		flags |= ERTS_PORT_SIG_FLG_NOSUSPEND;
 	    else
 		BIF_RET(am_badarg);
-	    l = CDR(cons);
+	    l = erts_cdr(cons);
 	}
 	if (!is_nil(l))
 	    BIF_RET(am_badarg);
@@ -996,7 +996,7 @@ static char **convert_args(Eterm l)
     pp = erts_alloc(ERTS_ALC_T_TMP, (n + 2) * sizeof(char **));
     pp[i++] = erts_default_arg0;
     while (is_list(l)) {
-	str = CAR(list_val(l));
+	str = erts_car(list_val(l));
 	if ((b = erts_convert_filename_to_native(str,NULL,0,ERTS_ALC_T_TMP,1,1,NULL)) == NULL) {
 	    int j;
 	    for (j = 1; j < i; ++j)
@@ -1005,7 +1005,7 @@ static char **convert_args(Eterm l)
 	    return NULL;
 	}	    
 	pp[i++] = b;
-	l = CDR(list_val(l));
+	l = erts_cdr(list_val(l));
     }
     pp[i] = NULL;
     return pp;
@@ -1048,31 +1048,31 @@ static byte* convert_environment(Process* p, Eterm env)
      * gets deallocated. Do NOT return directly from this function.
      */
 
-    all = CONS(hp, make_small(0), NIL);
+    all = erts_cons(hp, make_small(0), NIL);
     hp += 2;
 
     while(is_list(env)) {
 	Eterm tmp;
 	Eterm* tp;
 
-	tmp = CAR(list_val(env));
+	tmp = erts_car(list_val(env));
 	if (is_not_tuple_arity(tmp, 2)) {
 	    goto done;
 	}
 	tp = tuple_val(tmp);
-	tmp = CONS(hp, make_small(0), NIL);
+	tmp = erts_cons(hp, make_small(0), NIL);
 	hp += 2;
 	if (tp[2] != am_false) {
-	    tmp = CONS(hp, tp[2], tmp);
+	    tmp = erts_cons(hp, tp[2], tmp);
 	    hp += 2;
 	}
-	tmp = CONS(hp, make_small('='), tmp);
+	tmp = erts_cons(hp, make_small('='), tmp);
 	hp += 2;
-	tmp = CONS(hp, tp[1], tmp);
+	tmp = erts_cons(hp, tp[1], tmp);
 	hp += 2;
-	all = CONS(hp, tmp, all);
+	all = erts_cons(hp, tmp, all);
 	hp += 2;
-	env = CDR(list_val(env));
+	env = erts_cdr(list_val(env));
     }
     if (is_not_nil(env)) {
 	goto done;
@@ -1398,8 +1398,8 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
     options = BIF_ARG_3;
     while (!is_nil(options)) {
         Eterm* cons = list_val(options);
-        if (is_tuple(CAR(cons))) {
-            Eterm* tpl = tuple_val(CAR(cons));
+        if (is_tuple(erts_car(cons))) {
+            Eterm* tpl = tuple_val(erts_car(cons));
             Uint val;
             if (tpl[0] == make_arityval(2) &&
 		term_to_Uint(tpl[2],&val) && val <= UINT_MAX) {
@@ -1421,7 +1421,7 @@ BIF_RETTYPE decode_packet_3(BIF_ALIST_3)
         BIF_ERROR(BIF_P, BADARG);
 
     next_option:       
-        options = CDR(cons);
+        options = erts_cdr(cons);
     }
 
 

@@ -1321,7 +1321,7 @@ erts_call_trace(Process* p, BeamInstr mfa[3], Binary *match_spec,
         hp = HAlloc(p, 4 + arity * 2);
         mfa_tuple = NIL;
         for (i = arity-1; i >= 0; i--) {
-            mfa_tuple = CONS(hp, args[i], mfa_tuple);
+            mfa_tuple = erts_cons(hp, args[i], mfa_tuple);
             hp += 2;
         }
     }
@@ -1436,7 +1436,7 @@ trace_gc(Process *p, Eterm what, Uint size, Eterm msg)
 
             msg = erts_process_gc_info(p, NULL, &hp, 0, 0);
             tup = TUPLE2(hp, am_wordsize, make_small(size)); hp += 3;
-            msg = CONS(hp, tup, msg); hp += 2;
+            msg = erts_cons(hp, tup, msg); hp += 2;
         }
 
         send_to_tracer_nif(p, &p->common, p->common.id, tnif, TRACE_FUN_T_GC,
@@ -1489,11 +1489,11 @@ monitor_long_schedule_proc(Process *p, BeamInstr *in_fp, BeamInstr *out_fp, Uint
     hp += 3;
     out_tpl = TUPLE2(hp,am_out,out_mfa);
     hp += 3;
-    list = CONS(hp,out_tpl,NIL); 
+    list = erts_cons(hp,out_tpl,NIL); 
     hp += 2;
-    list = CONS(hp,in_tpl,list);
+    list = erts_cons(hp,in_tpl,list);
     hp += 2;
-    list = CONS(hp,tmo_tpl,list);
+    list = erts_cons(hp,tmo_tpl,list);
     hp += 2;
     msg = TUPLE4(hp, am_monitor, p->common.id, am_long_schedule, list);
     hp += 5;
@@ -1556,9 +1556,9 @@ monitor_long_schedule_port(Port *pp, ErtsPortTaskType type, Uint time)
     tmo_tpl = TUPLE2(hp,am_timeout, tmo);
     hp += 3;
 
-    list = CONS(hp,op_tpl,NIL);
+    list = erts_cons(hp,op_tpl,NIL);
     hp += 2;
-    list = CONS(hp,tmo_tpl,list);
+    list = erts_cons(hp,tmo_tpl,list);
     hp += 2;
     msg = TUPLE4(hp, am_monitor, pp->common.id, am_long_schedule, list);
     hp += 5;
@@ -1961,7 +1961,7 @@ trace_port_receive(Port *t_p, Eterm caller, Eterm what, ...)
                         sb->is_writable = 0;
                         hp += ERL_SUB_BIN_SIZE;
 
-                        arg = CONS(hp, make_binary(sb), arg);
+                        arg = erts_cons(hp, make_binary(sb), arg);
                         hp += 2;
                     }
                 }
@@ -2334,7 +2334,7 @@ sys_msg_disp_failure(ErtsSysMsgQ *smqp, Eterm receiver)
 	if (is_not_list(tp[3]))
 	    goto unexpected_elmsg;
 	erts_fprintf(stderr, "%s %T: %T\n",
-		     no_elgger, tag, CAR(list_val(tp[3])));
+		     no_elgger, tag, erts_car(list_val(tp[3])));
 	break;
     }
     case SYS_MSG_TYPE_PROC_MSG:
@@ -2799,7 +2799,7 @@ erts_term_to_tracer(Eterm prefix, Eterm t)
             state = t;
         if (state == THE_NON_VALUE)
             return THE_NON_VALUE;
-        erts_tracer_update(&tracer, CONS(hp, module, state));
+        erts_tracer_update(&tracer, erts_cons(hp, module, state));
     }
     if (!lookup_tracer_nif(tracer)) {
         ASSERT(ERTS_TRACER_MODULE(tracer) != am_erl_tracer);
@@ -3127,7 +3127,7 @@ erts_tracer_update(ErtsTracer *tracer, const ErtsTracer new_tracer)
            per tracer. */
         Eterm *hp = erts_alloc(ERTS_ALC_T_HEAP_FRAG,
                                2*sizeof(Eterm) + sizeof(ErtsThrPrgrLaterOp));
-        *tracer = CONS(hp, ERTS_TRACER_MODULE(new_tracer),
+        *tracer = erts_cons(hp, ERTS_TRACER_MODULE(new_tracer),
                        ERTS_TRACER_STATE(new_tracer));
     } else {
         Eterm *hp, tracer_state = ERTS_TRACER_STATE(new_tracer),
@@ -3137,7 +3137,7 @@ erts_tracer_update(ErtsTracer *tracer, const ErtsTracer new_tracer)
         hp = hf->mem + 2;
         hf->used_size -= (sizeof(ErtsThrPrgrLaterOp)+sizeof(Eterm)-1)/sizeof(Eterm);
         *tracer = copy_struct(tracer_state, sz, &hp, &hf->off_heap);
-        *tracer = CONS(hf->mem, tracer_module, *tracer);
+        *tracer = erts_cons(hf->mem, tracer_module, *tracer);
         ASSERT((void*)(((char*)(ptr_val(*tracer)) - offsetof(ErlHeapFragment, mem))) == hf);
     }
 }

@@ -1119,7 +1119,7 @@ BIF_RETTYPE term_to_binary_2(BIF_ALIST_2)
     Eterm res;
 
     while (is_list(Flags)) {
-	Eterm arg = CAR(list_val(Flags));
+	Eterm arg = erts_car(list_val(Flags));
 	Eterm* tp;
 	if (arg == am_compressed) {
 	    level = Z_DEFAULT_COMPRESSION;
@@ -1147,7 +1147,7 @@ BIF_RETTYPE term_to_binary_2(BIF_ALIST_2)
 	error:
 	    BIF_ERROR(p, BADARG);
 	}
-	Flags = CDR(list_val(Flags));
+	Flags = erts_cdr(list_val(Flags));
     }
     if (is_not_nil(Flags)) {
 	goto error;
@@ -1627,14 +1627,14 @@ BIF_RETTYPE binary_to_term_2(BIF_ALIST_2)
 
     opts = BIF_ARG_2;
     while (is_list(opts)) {
-        opt = CAR(list_val(opts));
+        opt = erts_car(list_val(opts));
         if (opt == am_safe) {
             flags |= ERTS_DIST_EXT_BTT_SAFE;
         }
 	else {
             goto error;
         }
-        opts = CDR(list_val(opts));
+        opts = erts_cdr(list_val(opts));
     }
 
     if (is_not_nil(opts))
@@ -1669,7 +1669,7 @@ external_size_2(BIF_ALIST_2)
     Uint flags = TERM_TO_BINARY_DFLAGS;
 
     while (is_list(BIF_ARG_2)) {
-        Eterm arg = CAR(list_val(BIF_ARG_2));
+        Eterm arg = erts_car(list_val(BIF_ARG_2));
         Eterm* tp;
 
         if (is_tuple(arg) && *(tp = tuple_val(arg)) == make_arityval(2)) {
@@ -1690,7 +1690,7 @@ external_size_2(BIF_ALIST_2)
         error:
             BIF_ERROR(BIF_P, BADARG);
         }
-        BIF_ARG_2 = CDR(list_val(BIF_ARG_2));
+        BIF_ARG_2 = erts_cdr(list_val(BIF_ARG_2));
     }
     if (is_not_nil(BIF_ARG_2)) {
         goto error;
@@ -2400,8 +2400,8 @@ enc_term_int(TTBEncodeContext* ctx, ErtsAtomCacheMap *acmp, Eterm obj, byte* ep,
 		Eterm* cons = list_val(obj);
 		Eterm tl;
 
-		obj = CAR(cons);
-		tl = CDR(cons);
+		obj = erts_car(cons);
+		tl = erts_cdr(cons);
 		WSTACK_PUSH2(s, (is_list(tl) ? ENC_ONE_CONS : ENC_TERM),
 			     tl);
 	    }
@@ -2448,8 +2448,8 @@ enc_term_int(TTBEncodeContext* ctx, ErtsAtomCacheMap *acmp, Eterm obj, byte* ep,
 	case ENC_HASHMAP_NODE:
 	    if (is_list(obj)) { /* leaf node [K|V] */
 		ptr = list_val(obj);
-		WSTACK_PUSH2(s, ENC_TERM, CDR(ptr));
-		obj = CAR(ptr);
+		WSTACK_PUSH2(s, ENC_TERM, erts_cdr(ptr));
+		obj = erts_car(ptr);
 	    }
 	    break;
 	case ENC_LAST_ARRAY_ELEMENT:
@@ -2614,8 +2614,8 @@ enc_term_int(TTBEncodeContext* ctx, ErtsAtomCacheMap *acmp, Eterm obj, byte* ep,
 		    ep += 2;
 		    while (is_list(obj)) {
 			Eterm* cons = list_val(obj);
-			*ep++ = unsigned_val(CAR(cons));
-			obj = CDR(cons);
+			*ep++ = unsigned_val(erts_car(cons));
+			obj = erts_cdr(cons);
 		    }
 		} else {
 		    *ep++ = LIST_EXT;
@@ -2919,13 +2919,13 @@ is_external_string(Eterm list, int* p_is_string)
      */
     while (is_list(list)) {
 	Eterm* consp = list_val(list);
-	Eterm hd = CAR(consp);
+	Eterm hd = erts_car(consp);
 
 	if (!is_byte(hd)) {
 	    break;
 	}
 	len++;
-	list = CDR(consp);
+	list = erts_cdr(consp);
     }
 
     /*
@@ -2941,7 +2941,7 @@ is_external_string(Eterm list, int* p_is_string)
     while (is_list(list)) {
 	Eterm* consp = list_val(list);
 	len++;
-	list = CDR(consp);
+	list = erts_cdr(consp);
     }
     return len;
 }
@@ -3666,9 +3666,9 @@ dec_term_atom_common:
                     hamt->leaf_array = hp;
 
                     for (n = size; n; n--) {
-                        CDR(hp) = (Eterm) next;
-                        CAR(hp) = (Eterm) &CDR(hp);
-                        next = &CAR(hp);
+                        erts_set_cdr(hp, (Eterm) next);
+                        erts_set_car(hp, (Eterm) erts_cdr_ptr(hp));
+                        next = erts_car_ptr(hp);
                         hp += 2;
                     }
                 }
@@ -4111,8 +4111,8 @@ encode_size_struct_int(TTBSizeContext* ctx, ErtsAtomCacheMap *acmp, Eterm obj,
 		result += m + 2 + 1;
 	    } else {
 		result += 5;
-		WSTACK_PUSH2(s, (UWord)CDR(list_val(obj)), (UWord)LIST_TAIL_OP);
-		obj = CAR(list_val(obj));
+		WSTACK_PUSH2(s, (UWord)erts_cdr(list_val(obj)), (UWord)LIST_TAIL_OP);
+		obj = erts_car(list_val(obj));
 		continue; /* big loop */
 	    }
 	    break;
@@ -4177,8 +4177,8 @@ encode_size_struct_int(TTBSizeContext* ctx, ErtsAtomCacheMap *acmp, Eterm obj,
 		WSTACK_RESERVE(s, node_sz*2);
 		while(node_sz--) {
                     if (is_list(*ptr)) {
-			WSTACK_FAST_PUSH(s, CAR(list_val(*ptr)));
-			WSTACK_FAST_PUSH(s, CDR(list_val(*ptr)));
+			WSTACK_FAST_PUSH(s, erts_car(list_val(*ptr)));
+			WSTACK_FAST_PUSH(s, erts_cdr(list_val(*ptr)));
                     } else {
 			WSTACK_FAST_PUSH(s, *ptr);
 		    }
@@ -4274,8 +4274,8 @@ encode_size_struct_int(TTBSizeContext* ctx, ErtsAtomCacheMap *acmp, Eterm obj,
 		if (is_list(obj)) {
 		    Eterm* cons = list_val(obj);
 
-		    WSTACK_PUSH2(s, (UWord)CDR(cons), (UWord)LIST_TAIL_OP);
-		    obj = CAR(cons);
+		    WSTACK_PUSH2(s, (UWord)erts_cdr(cons), (UWord)LIST_TAIL_OP);
+		    obj = erts_car(cons);
 		}
 		break;
 

@@ -1263,9 +1263,9 @@ BIF_RETTYPE hipe_bifs_invalidate_funinfo_native_addresses_1(BIF_ALIST_1)
     hipe_mfa_info_table_rwlock();
     lst = BIF_ARG_1;
     while (is_list(lst)) {
-	if (!term_to_mfa(CAR(list_val(lst)), &mfa))
+	if (!term_to_mfa(erts_car(list_val(lst)), &mfa))
 	    break;
-	lst = CDR(list_val(lst));
+	lst = erts_cdr(list_val(lst));
 	p = hipe_mfa_info_table_get_locked(mfa.mod, mfa.fun, mfa.ari);
 	if (p) {
 	    p->remote_address = NULL;

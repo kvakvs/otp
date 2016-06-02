@@ -988,7 +988,7 @@ io_list_to_vec(Eterm obj,	/* io-list */
 	if (is_list(obj)) {
 	L_iter_list:
 	    objp = list_val(obj);
-	    obj = CAR(objp);
+	    obj = erts_car(objp);
 	    if (is_byte(obj)) {
 		if (len == 0)
 		    goto L_overflow;
@@ -996,15 +996,15 @@ io_list_to_vec(Eterm obj,	/* io-list */
 		csize++;
 		len--;
 	    } else if (is_binary(obj)) {
-		ESTACK_PUSH(s, CDR(objp));
+		ESTACK_PUSH(s, erts_cdr(objp));
 		goto handle_binary;
 	    } else if (is_list(obj)) {
-		ESTACK_PUSH(s, CDR(objp));
+		ESTACK_PUSH(s, erts_cdr(objp));
 		goto L_iter_list;    /* on head */
 	    } else if (!is_nil(obj)) {
 		goto L_type_error;
 	    }	    
-	    obj = CDR(objp);
+	    obj = erts_cdr(objp);
 	    if (is_list(obj))
 		goto L_iter_list; /* on tail */
 	    else if (is_binary(obj)) {
@@ -1170,7 +1170,7 @@ io_list_vec_len(Eterm obj, int* vsize, Uint* csize,
 	if (is_list(obj)) {
 	L_iter_list:
 	    objp = list_val(obj);
-	    obj = CAR(objp);
+	    obj = erts_car(objp);
 
 	    if (is_byte(obj)) {
 		c_size++;
@@ -1191,14 +1191,14 @@ io_list_vec_len(Eterm obj, int* vsize, Uint* csize,
 		IO_LIST_VEC_COUNT(obj);
 	    }
 	    else if (is_list(obj)) {
-		ESTACK_PUSH(s, CDR(objp));
+		ESTACK_PUSH(s, erts_cdr(objp));
 		goto L_iter_list;   /* on head */
 	    }
 	    else if (!is_nil(obj)) {
 		goto L_type_error;
 	    }
 
-	    obj = CDR(objp);
+	    obj = erts_cdr(objp);
 	    if (is_list(obj))
 		goto L_iter_list;   /* on tail */
 	    else if (is_binary(obj)) {  /* binary tail is OK */
@@ -3736,7 +3736,7 @@ deliver_vec_message(Port* prt,			/* Port */
 	    if (listp == NIL) {  /* compatible with deliver_bin_message */
 		listp = make_binary(pb);
 	    } else {
-		listp = CONS(hp, make_binary(pb), listp);
+		listp = erts_cons(hp, make_binary(pb), listp);
 		hp += 2;
 	    }
 	}
@@ -6142,7 +6142,7 @@ driver_deliver_term(Port *prt, Eterm to, ErlDrvTermData* data, int len)
 	    while(i > 0) {
 		Eterm hd = ESTACK_POP(stack);
 
-		mess = CONS(factory.hp, hd, mess);
+		mess = erts_cons(factory.hp, hd, mess);
 		factory.hp += 2;
 		i--;
 	    }

@@ -60,9 +60,9 @@ typedef struct flatmap_s {
 #define hashmap_make_hash(Key)        make_internal_hash(Key)
 
 #define hashmap_restore_hash(Heap,Lvl,Key) \
-    (((Lvl) < 8) ? hashmap_make_hash(Key) >> (4*(Lvl)) : hashmap_make_hash(CONS(Heap, make_small((Lvl)>>3), (Key))) >> (4*((Lvl) & 7)))
+    (((Lvl) < 8) ? hashmap_make_hash(Key) >> (4*(Lvl)) : hashmap_make_hash(erts_cons(Heap, make_small((Lvl)>>3), (Key))) >> (4*((Lvl) & 7)))
 #define hashmap_shift_hash(Heap,Hx,Lvl,Key) \
-    (((++(Lvl)) & 7) ? (Hx) >> 4 : hashmap_make_hash(CONS(Heap, make_small((Lvl)>>3), Key)))
+    (((++(Lvl)) & 7) ? (Hx) >> 4 : hashmap_make_hash(erts_cons(Heap, make_small((Lvl)>>3), Key)))
 
 
 /* erl_term.h stuff */

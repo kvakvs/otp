@@ -60,15 +60,15 @@ static BIF_RETTYPE append(Process* p, Eterm A, Eterm B)
     }
 
     hp   = HEAP_TOP(p);
-    copy = last = CONS(hp, CAR(list_val(list)), make_list(hp+2));
-    list = CDR(list_val(list));
+    copy = last = erts_cons(hp, erts_car(list_val(list)), make_list(hp+2));
+    list = erts_cdr(list_val(list));
     hp  += 2;
     i   -= 2; /* don't use the last 2 words (extra i--;) */
 
     while(i-- && is_list(list)) {
         Eterm* listp = list_val(list);
-        last = CONS(hp, CAR(listp), make_list(hp+2));
-        list = CDR(listp);
+        last = erts_cons(hp, erts_car(listp), make_list(hp+2));
+        list = erts_cdr(listp);
         hp += 2;
     }
 
@@ -80,7 +80,7 @@ static BIF_RETTYPE append(Process* p, Eterm A, Eterm B)
 
     if (is_nil(list)) {
         HEAP_TOP(p) = hp;
-        CDR(list_val(last)) = B;
+        erts_set_cdr(list_val(last), B);
         BIF_RET(copy);
     }
 
@@ -104,30 +104,30 @@ list_tail:
         ASSERT(i != 0);
         HEAP_TOP(p) = hp + 2;
         if (i == 1) {
-            hp[0] = CAR(list_val(list));
+            hp[0] = erts_car(list_val(list));
             hp[1] = B;
             BIF_RET(copy);
         }
         hp   = HAlloc(p, 2*(i - 1));
-        last = CONS(hp_save, CAR(list_val(list)), make_list(hp));
+        last = erts_cons(hp_save, erts_car(list_val(list)), make_list(hp));
     } else {
         hp   = HAlloc(p, 2*i);
-        copy = last = CONS(hp, CAR(list_val(list)), make_list(hp+2));
+        copy = last = erts_cons(hp, erts_car(list_val(list)), make_list(hp+2));
         hp  += 2;
     }
 
-    list = CDR(list_val(list));
+    list = erts_cdr(list_val(list));
     i--;
 
     ASSERT(i > -1);
     while(i--) {
         Eterm* listp = list_val(list);
-        last = CONS(hp, CAR(listp), make_list(hp+2));
-        list = CDR(listp);
+        last = erts_cons(hp, erts_car(listp), make_list(hp+2));
+        list = erts_cdr(listp);
         hp  += 2;
     }
 
-    CDR(list_val(last)) = B;
+    erts_set_cdr(list_val(last), B);
     BIF_RET(copy);
 }
 
@@ -188,8 +188,8 @@ static Eterm subtract(Process* p, Eterm A, Eterm B)
     i = n;
     while(i--) {
 	Eterm* listp = list_val(list);
-	*vp++ = CAR(listp);
-	list = CDR(listp);
+	*vp++ = erts_car(listp);
+	list = erts_cdr(listp);
     }
     
     /* UNMARK ALL DELETED CELLS */
@@ -197,7 +197,7 @@ static Eterm subtract(Process* p, Eterm A, Eterm B)
     m = 0;  /* number of deleted elements */
     while(is_list(list)) {
 	Eterm* listp = list_val(list);
-	Eterm  elem = CAR(listp);
+	Eterm  elem = erts_car(listp);
 	i = n;
 	vp = vec_p;
 	while(i--) {
@@ -208,7 +208,7 @@ static Eterm subtract(Process* p, Eterm A, Eterm B)
 	    }
 	    vp++;
 	}
-	list = CDR(listp);
+	list = erts_cdr(listp);
     }
     
     if (m == n)      /* All deleted ? */
@@ -222,7 +222,7 @@ static Eterm subtract(Process* p, Eterm A, Eterm B)
 	vp = vec_p + n - 1;
 	while(vp >= vec_p) {
 	    if (is_value(*vp)) {
-		res = CONS(hp, *vp, res);
+		res = erts_cons(hp, *vp, res);
 		hp += 2;
 	    }
 	    vp--;
@@ -265,11 +265,11 @@ BIF_RETTYPE lists_member_2(BIF_ALIST_2)
 	    BUMP_ALL_REDS(BIF_P);
 	    BIF_TRAP2(bif_export[BIF_lists_member_2], BIF_P, term, list);
 	}
-	item = CAR(list_val(list));
+	item = erts_car(list_val(list));
 	if ((item == term) || (non_immed_key && eq(item, term))) {
 	    BIF_RET2(am_true, CONTEXT_REDS - max_iter/10);
 	}
-	list = CDR(list_val(list));
+	list = erts_cdr(list_val(list));
     }
     if (is_not_nil(list))  {
 	BIF_ERROR(BIF_P, BADARG);
@@ -305,8 +305,8 @@ BIF_RETTYPE lists_reverse_2(BIF_ALIST_2)
     n = HeapWordsLeft(BIF_P) / 2;
     while (n != 0 && is_list(list)) {
 	Eterm* pair = list_val(list);
-	result = CONS(hp, CAR(pair), result);
-	list = CDR(pair);
+	result = erts_cons(hp, erts_car(pair), result);
+	list = erts_cdr(pair);
 	hp += 2;
 	n--;
     }
@@ -322,7 +322,7 @@ BIF_RETTYPE lists_reverse_2(BIF_ALIST_2)
     n = 0;
     tmp_list = list;
     while (max_iter-- > 0 && is_list(tmp_list)) {
-	tmp_list = CDR(list_val(tmp_list));
+	tmp_list = erts_cdr(list_val(tmp_list));
 	n++;
     }
     if (is_not_nil(tmp_list) && is_not_list(tmp_list)) {
@@ -335,8 +335,8 @@ BIF_RETTYPE lists_reverse_2(BIF_ALIST_2)
     hp = HAlloc(BIF_P, 2*n);
     while (n != 0 && is_list(list)) {
 	Eterm* pair = list_val(list);
-	result = CONS(hp, CAR(pair), result);
-	list = CDR(pair);
+	result = erts_cons(hp, erts_car(pair), result);
+	list = erts_cdr(pair);
 	hp += 2;
 	n--;
     }
@@ -403,8 +403,8 @@ keyfind(int Bif, Process* p, Eterm Key, Eterm Pos, Eterm List)
 		BUMP_ALL_REDS(p);
 		BIF_TRAP3(bif_export[Bif], p, Key, Pos, List);
 	    }
-	    term = CAR(list_val(List));
-	    List = CDR(list_val(List));
+	    term = erts_car(list_val(List));
+	    List = erts_cdr(list_val(List));
 	    if (is_tuple(term)) {
 		Eterm *tuple_ptr = tuple_val(term);
 		if (pos <= arityval(*tuple_ptr)) {
@@ -428,8 +428,8 @@ keyfind(int Bif, Process* p, Eterm Key, Eterm Pos, Eterm List)
 		BUMP_ALL_REDS(p);
 		BIF_TRAP3(bif_export[Bif], p, Key, Pos, List);
 	    }
-	    term = CAR(list_val(List));
-	    List = CDR(list_val(List));
+	    term = erts_car(list_val(List));
+	    List = erts_cdr(list_val(List));
 	    if (is_tuple(term)) {
 		Eterm *tuple_ptr = tuple_val(term);
 		if (pos <= arityval(*tuple_ptr)) {
@@ -446,8 +446,8 @@ keyfind(int Bif, Process* p, Eterm Key, Eterm Pos, Eterm List)
 		BUMP_ALL_REDS(p);
 		BIF_TRAP3(bif_export[Bif], p, Key, Pos, List);
 	    }
-	    term = CAR(list_val(List));
-	    List = CDR(list_val(List));
+	    term = erts_car(list_val(List));
+	    List = erts_cdr(list_val(List));
 	    if (is_tuple(term)) {
 		Eterm *tuple_ptr = tuple_val(term);
 		if (pos <= arityval(*tuple_ptr)) {

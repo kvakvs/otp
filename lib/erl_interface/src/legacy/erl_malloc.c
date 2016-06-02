@@ -154,7 +154,7 @@ restart:
 		}
 		if (TAIL(ep)) {
 		    ERL_COUNT(TAIL(ep))--;
-		    /* Clean up and walk on to CDR in list */
+                    /* Clean up and walk on to CDR in list */
 		    RESTART(TAIL(ep), INTERNAL, compound);
 		}
 		break;

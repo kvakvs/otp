@@ -802,7 +802,7 @@ BIF_RETTYPE ets_update_element_3(BIF_ALIST_3)
 	goto bail_out;
     }
     if (is_tuple(BIF_ARG_3)) {
-	list = CONS(cell, BIF_ARG_3, NIL);
+	list = erts_cons(cell, BIF_ARG_3, NIL);
     }
     else {
 	list = BIF_ARG_3;
@@ -815,7 +815,7 @@ BIF_RETTYPE ets_update_element_3(BIF_ALIST_3)
 
     /* First verify that list is ok to avoid nasty rollback scenarios
     */
-    for (iter=list ; is_not_nil(iter); iter = CDR(list_val(iter))) {
+    for (iter=list ; is_not_nil(iter); iter = erts_cdr(list_val(iter))) {
 	Eterm pv;
 	Eterm* pvp;
 	Sint position;
@@ -823,7 +823,7 @@ BIF_RETTYPE ets_update_element_3(BIF_ALIST_3)
 	if (is_not_list(iter)) {
 	    goto finalize;
 	}
-	pv = CAR(list_val(iter));    /* {Pos,Value} */
+	pv = erts_car(list_val(iter));    /* {Pos,Value} */
 	if (is_not_tuple(pv)) {
 	    goto finalize;
 	}
@@ -841,8 +841,8 @@ BIF_RETTYPE ets_update_element_3(BIF_ALIST_3)
     */
     cret = DB_ERROR_NONE;
 
-    for (iter=list ; is_not_nil(iter); iter = CDR(list_val(iter))) {
-	Eterm* pvp = tuple_val(CAR(list_val(iter)));    /* {Pos,Value} */
+    for (iter=list ; is_not_nil(iter); iter = erts_cdr(list_val(iter))) {
+	Eterm* pvp = tuple_val(erts_car(list_val(iter)));    /* {Pos,Value} */
 	db_do_update_element(&handle, signed_val(pvp[1]), pvp[2]);
     }
 
@@ -895,12 +895,12 @@ do_update_counter(Process *p, Eterm arg1, Eterm arg2, Eterm arg3, Eterm arg4)
 	goto bail_out;
     }
     if (is_integer(arg3)) { /* Incr */
-        upop_list = CONS(cell,
+        upop_list = erts_cons(cell,
                          TUPLE2(tuple, make_small(tb->common.keypos+1), arg3),
                          NIL);
     }
     else if (is_tuple(arg3)) { /* {Upop} */
-        upop_list = CONS(cell, arg3, NIL);
+        upop_list = erts_cons(cell, arg3, NIL);
     }
     else { /* [{Upop}] (probably) */
         upop_list = arg3;
@@ -914,7 +914,7 @@ do_update_counter(Process *p, Eterm arg1, Eterm arg2, Eterm arg3, Eterm arg4)
     /* First verify that list is ok to avoid nasty rollback scenarios
     */
     list_size = 0;
-    for (iter=upop_list ; is_not_nil(iter); iter = CDR(list_val(iter)),
+    for (iter=upop_list ; is_not_nil(iter); iter = erts_cdr(list_val(iter)),
 	                                    list_size += 2) {
 	Eterm upop;
 	Eterm* tpl;
@@ -925,7 +925,7 @@ do_update_counter(Process *p, Eterm arg1, Eterm arg2, Eterm arg3, Eterm arg4)
 	if (is_not_list(iter)) {
 	    goto finalize;
 	}
-	upop = CAR(list_val(iter));
+	upop = erts_car(list_val(iter));
 	if (is_not_tuple(upop)) {
 	    goto finalize;
 	}
@@ -990,9 +990,9 @@ do_update_counter(Process *p, Eterm arg1, Eterm arg2, Eterm arg3, Eterm arg4)
     }
     hend = hstart + halloc_size;
 
-    for (iter=upop_list ; is_not_nil(iter); iter = CDR(list_val(iter))) {
+    for (iter=upop_list ; is_not_nil(iter); iter = erts_cdr(list_val(iter))) {
 
-	Eterm* tpl = tuple_val(CAR(list_val(iter)));
+	Eterm* tpl = tuple_val(erts_car(list_val(iter)));
 	Sint position = signed_val(tpl[1]);
 	Eterm incr = tpl[2];
 	Wterm oldcnt = db_do_read_element(&handle,position);
@@ -1019,8 +1019,8 @@ do_update_counter(Process *p, Eterm arg1, Eterm arg2, Eterm arg3, Eterm arg4)
 	db_do_update_element(&handle,position,newcnt);
 
 	if (ret_list_prevp) {
-	    *ret_list_prevp = CONS(ret_list_currp,newcnt,NIL);
-	    ret_list_prevp = &CDR(ret_list_currp);
+	    *ret_list_prevp = erts_cons(ret_list_currp,newcnt,NIL);
+            ret_list_prevp = erts_cdr_ptr(ret_list_currp);
 	    ret_list_currp += 2;
 	}
 	else {
@@ -1095,7 +1095,7 @@ BIF_RETTYPE ets_insert_2(BIF_ALIST_2)
     CHECK_TABLES();
 
     /* Write lock table if more than one object to keep atomicy */
-    kind = ((is_list(BIF_ARG_2) && CDR(list_val(BIF_ARG_2)) != NIL)
+    kind = ((is_list(BIF_ARG_2) && erts_cdr(list_val(BIF_ARG_2)) != NIL)
 	    ? LCK_WRITE : LCK_WRITE_REC);
 
     if ((tb = db_get_table(BIF_P, BIF_ARG_1, DB_WRITE, kind)) == NULL) {
@@ -1107,17 +1107,17 @@ BIF_RETTYPE ets_insert_2(BIF_ALIST_2)
     }
     meth = tb->common.meth;
     if (is_list(BIF_ARG_2)) {
-	for (lst = BIF_ARG_2; is_list(lst); lst = CDR(list_val(lst))) {
-	    if (is_not_tuple(CAR(list_val(lst))) || 
-		(arityval(*tuple_val(CAR(list_val(lst)))) < tb->common.keypos)) {
+	for (lst = BIF_ARG_2; is_list(lst); lst = erts_cdr(list_val(lst))) {
+	    if (is_not_tuple(erts_car(list_val(lst))) || 
+		(arityval(*tuple_val(erts_car(list_val(lst)))) < tb->common.keypos)) {
 		goto badarg;
 	    }
 	}
 	if (lst != NIL) {
 	    goto badarg;
 	}
-	for (lst = BIF_ARG_2; is_list(lst); lst = CDR(list_val(lst))) {
-	    cret = meth->db_put(tb, CAR(list_val(lst)), 0);
+	for (lst = BIF_ARG_2; is_list(lst); lst = erts_cdr(list_val(lst))) {
+	    cret = meth->db_put(tb, erts_car(list_val(lst)), 0);
 	    if (cret != DB_ERROR_NONE)
 		break;
 	}
@@ -1159,7 +1159,7 @@ BIF_RETTYPE ets_insert_new_2(BIF_ALIST_2)
     CHECK_TABLES();
 
     if (is_list(BIF_ARG_2)) {
-	if (CDR(list_val(BIF_ARG_2)) != NIL) {
+	if (erts_cdr(list_val(BIF_ARG_2)) != NIL) {
 	    Eterm lst;
 	    Eterm lookup_ret;
 	    DbTableMethod* meth;
@@ -1171,9 +1171,9 @@ BIF_RETTYPE ets_insert_new_2(BIF_ALIST_2)
 		BIF_ERROR(BIF_P, BADARG);
 	    }
 	    meth = tb->common.meth;
-	    for (lst = BIF_ARG_2; is_list(lst); lst = CDR(list_val(lst))) {
-		if (is_not_tuple(CAR(list_val(lst)))
-		    || (arityval(*tuple_val(CAR(list_val(lst))))
+	    for (lst = BIF_ARG_2; is_list(lst); lst = erts_cdr(list_val(lst))) {
+		if (is_not_tuple(erts_car(list_val(lst)))
+		    || (arityval(*tuple_val(erts_car(list_val(lst))))
 			< tb->common.keypos)) {
 		    goto badarg;
 		}
@@ -1181,8 +1181,8 @@ BIF_RETTYPE ets_insert_new_2(BIF_ALIST_2)
 	    if (lst != NIL) {
 		goto badarg;
 	    }    
-	    for (lst = BIF_ARG_2; is_list(lst); lst = CDR(list_val(lst))) {
-		cret = meth->db_member(tb, TERM_GETKEY(tb,CAR(list_val(lst))),
+	    for (lst = BIF_ARG_2; is_list(lst); lst = erts_cdr(list_val(lst))) {
+		cret = meth->db_member(tb, TERM_GETKEY(tb,erts_car(list_val(lst))),
 				       &lookup_ret);
 		if ((cret != DB_ERROR_NONE) || (lookup_ret != am_false)) {
 		    ret = am_false;
@@ -1190,14 +1190,14 @@ BIF_RETTYPE ets_insert_new_2(BIF_ALIST_2)
 		}
 	    }
     
-	    for (lst = BIF_ARG_2; is_list(lst); lst = CDR(list_val(lst))) {
-		cret = meth->db_put(tb,CAR(list_val(lst)), 0);
+	    for (lst = BIF_ARG_2; is_list(lst); lst = erts_cdr(list_val(lst))) {
+		cret = meth->db_put(tb,erts_car(list_val(lst)), 0);
 		if (cret != DB_ERROR_NONE)
 		    break;
 	    }
 	    goto done;
 	}
-	obj = CAR(list_val(BIF_ARG_2));
+	obj = erts_car(list_val(BIF_ARG_2));
     }
     else {
 	obj = BIF_ARG_2;
@@ -1363,7 +1363,7 @@ BIF_RETTYPE ets_new_2(BIF_ALIST_2)
 
     list = BIF_ARG_2;
     while(is_list(list)) {
-	val = CAR(list_val(list));
+	val = erts_car(list_val(list));
 	if (val == am_bag) {
 	    status |= DB_BAG;
 	    status &= ~(DB_SET | DB_DUPLICATE_BAG | DB_ORDERED_SET);
@@ -1441,7 +1441,7 @@ BIF_RETTYPE ets_new_2(BIF_ALIST_2)
 	    ;
 	else break;
 
-	list = CDR(list_val(list));
+	list = erts_cdr(list_val(list));
     }
     if (is_not_nil(list)) { /* bad opt or not a well formed list */
 	BIF_ERROR(BIF_P, BADARG);
@@ -1854,11 +1854,11 @@ BIF_RETTYPE ets_setopts_2(BIF_ALIST_2)
     Eterm tail;
 
     UseTmpHeap(2,BIF_P);
-    for (tail = is_tuple(BIF_ARG_2) ? CONS(fakelist, BIF_ARG_2, NIL) : BIF_ARG_2;	
+    for (tail = is_tuple(BIF_ARG_2) ? erts_cons(fakelist, BIF_ARG_2, NIL) : BIF_ARG_2;	
 	  is_list(tail);
-	  tail = CDR(list_val(tail))) {
+	  tail = erts_cdr(list_val(tail))) {
 
-	opt = CAR(list_val(tail));
+	opt = erts_car(list_val(tail));
 	if (!is_tuple(opt) || (tp = tuple_val(opt), arityval(tp[0]) < 2)) { 
 	    goto badarg;
 	}
@@ -2134,7 +2134,7 @@ BIF_RETTYPE ets_all_0(BIF_ALIST_0)
 		hendp = hp + 2*t_tabs_cnt;
 	    }
 	    tb = meta_main_tab[i].u.tb;
-	    previous = CONS(hp, tb->common.id, previous);
+	    previous = erts_cons(hp, tb->common.id, previous);
 	    hp += 2;
 	}
 	erts_smp_rwmtx_runlock(mmtl);
@@ -2188,11 +2188,11 @@ BIF_RETTYPE ets_match_2(BIF_ALIST_2)
     Eterm res;
 
     UseTmpHeap(8,BIF_P);
-    ms = CONS(hp, am_DollarDollar, NIL);
+    ms = erts_cons(hp, am_DollarDollar, NIL);
     hp += 2;
     ms = TUPLE3(hp, BIF_ARG_2, NIL, ms); 
     hp += 4;
-    ms = CONS(hp, ms, NIL);
+    ms = erts_cons(hp, ms, NIL);
     res = ets_select2(BIF_P, BIF_ARG_1, ms);
     UnUseTmpHeap(8,BIF_P);
     return res;
@@ -2206,11 +2206,11 @@ BIF_RETTYPE ets_match_3(BIF_ALIST_3)
     Eterm res;
 
     UseTmpHeap(8,BIF_P);
-    ms = CONS(hp, am_DollarDollar, NIL);
+    ms = erts_cons(hp, am_DollarDollar, NIL);
     hp += 2;
     ms = TUPLE3(hp, BIF_ARG_2, NIL, ms); 
     hp += 4;
-    ms = CONS(hp, ms, NIL);
+    ms = erts_cons(hp, ms, NIL);
     res = ets_select3(BIF_P, BIF_ARG_1, ms, BIF_ARG_3);
     UnUseTmpHeap(8,BIF_P);
     return res;
@@ -2652,11 +2652,11 @@ BIF_RETTYPE ets_match_object_2(BIF_ALIST_2)
     Eterm res;
 
     UseTmpHeap(8,BIF_P);
-    ms = CONS(hp, am_DollarUnderscore, NIL);
+    ms = erts_cons(hp, am_DollarUnderscore, NIL);
     hp += 2;
     ms = TUPLE3(hp, BIF_ARG_2, NIL, ms); 
     hp += 4;
-    ms = CONS(hp, ms, NIL);
+    ms = erts_cons(hp, ms, NIL);
     res = ets_select2(BIF_P, BIF_ARG_1, ms);
     UnUseTmpHeap(8,BIF_P);
     return res;
@@ -2670,11 +2670,11 @@ BIF_RETTYPE ets_match_object_3(BIF_ALIST_3)
     Eterm res;
 
     UseTmpHeap(8,BIF_P);
-    ms = CONS(hp, am_DollarUnderscore, NIL);
+    ms = erts_cons(hp, am_DollarUnderscore, NIL);
     hp += 2;
     ms = TUPLE3(hp, BIF_ARG_2, NIL, ms); 
     hp += 4;
-    ms = CONS(hp, ms, NIL);
+    ms = erts_cons(hp, ms, NIL);
     res = ets_select3(BIF_P, BIF_ARG_1, ms, BIF_ARG_3);
     UnUseTmpHeap(8,BIF_P);
     return res;
@@ -2747,7 +2747,7 @@ BIF_RETTYPE ets_info_1(BIF_ALIST_1)
 	Eterm tuple;
 	tuple = TUPLE2(hp, fields[i], results[i]);
 	hp += 3;
-	res = CONS(hp, tuple, res);
+	res = erts_cons(hp, tuple, res);
 	hp += 2;
     }
     BIF_RET(res);
@@ -2827,18 +2827,18 @@ BIF_RETTYPE ets_match_spec_run_r_3(BIF_ALIST_3)
     if (BIF_ARG_1 == NIL) {
 	BIF_RET(BIF_ARG_3);
     }
-    for (lst = BIF_ARG_1; is_list(lst); lst = CDR(list_val(lst))) {
+    for (lst = BIF_ARG_1; is_list(lst); lst = erts_cdr(list_val(lst))) {
 	if (++i > CONTEXT_REDS) {
 	    BUMP_ALL_REDS(BIF_P);
 	    BIF_TRAP3(bif_export[BIF_ets_match_spec_run_r_3],
 		      BIF_P,lst,BIF_ARG_2,ret);
 	}
 	res = db_prog_match(BIF_P, BIF_P,
-                            mp, CAR(list_val(lst)), NULL, 0,
+                            mp, erts_car(list_val(lst)), NULL, 0,
 			    ERTS_PAM_COPY_RESULT, &dummy);
 	if (is_value(res)) {
 	    hp = HAlloc(BIF_P, 2);
-	    ret = CONS(hp,res,ret);
+	    ret = erts_cons(hp,res,ret);
 	    /*hp += 2;*/
 	} 
     }
@@ -3050,11 +3050,11 @@ void init_db(ErtsDbSpinCount db_spin_count)
 			  &ets_delete_trap);
 
     hp = ms_delete_all_buff;
-    ms_delete_all = CONS(hp, am_true, NIL);
+    ms_delete_all = erts_cons(hp, am_true, NIL);
     hp += 2;
     ms_delete_all = TUPLE3(hp,am_Underscore,NIL,ms_delete_all);
     hp +=4;
-    ms_delete_all = CONS(hp, ms_delete_all,NIL);
+    ms_delete_all = erts_cons(hp, ms_delete_all,NIL);
 }
 
 #define ARRAY_CHUNK 100
@@ -3813,7 +3813,7 @@ static Eterm table_info(Process* p, DbTable* tb, Eterm What)
 	    for (fix = tb->common.fixations; fix != NULL; fix = fix->next) {
 		tpl = TUPLE2(hp,fix->pid,make_small(fix->counter));
 		hp += 3;
-		lst = CONS(hp,tpl,lst);
+		lst = erts_cons(hp,tpl,lst);
 		hp += 2;
 	    }
 	    if (use_monotonic)
@@ -3969,7 +3969,7 @@ erts_ets_colliding_names(Process* p, Eterm name, Uint cnt)
                 erts_snprintf(tmp, sizeof(tmp), "am%x", atom_table_size());
                 erts_atom_put((byte *) tmp, strlen(tmp), ERTS_ATOM_ENC_LATIN1, 1);
             }
-            list = CONS(hp, make_atom(index), list);
+            list = erts_cons(hp, make_atom(index), list);
             hp += 2;
             --cnt;
         }

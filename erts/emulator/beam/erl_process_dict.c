@@ -73,8 +73,10 @@
      erts_realloc(ERTS_ALC_T_PROC_DICT, (P), (NSz))
 
 
-#define TCAR(Term) CAR(list_val(Term))
-#define TCDR(Term) CDR(list_val(Term))
+#define TCAR(Term) erts_car(list_val(Term))
+#define TCDR(Term) erts_cdr(list_val(Term))
+#define TCAR_PTR(Term) erts_car_ptr(list_val(Term))
+#define TCDR_PTR(Term) erts_cdr_ptr(list_val(Term))
 
 /* Array access macro */ 
 #define ARRAY_GET(PDict, Index) (ASSERT((Index) < (PDict)->arraySize), \
@@ -257,12 +259,12 @@ Eterm erts_dictionary_copy(Process *p, ProcDict *pd)
 	tmp = ARRAY_GET(pd, i);
 	if (is_boxed(tmp)) {
 	    ASSERT(is_tuple(tmp));
-	    res = CONS(hp, tmp, res);
+	    res = erts_cons(hp, tmp, res);
 	    hp += 2;
 	} else if (is_list(tmp)) {
 	    while (tmp != NIL) {
 		tmp2 = TCAR(tmp);
-		res = CONS(hp, tmp2, res);
+		res = erts_cons(hp, tmp2, res);
 		hp += 2;
 		tmp = TCDR(tmp);
 	    }
@@ -371,7 +373,7 @@ static void pd_hash_erase(Process *p, Eterm id, Eterm *ret)
 	/* Find cons cell for identical value */
 	Eterm* prev = &p->dictionary->data[hval];
 
-	for (tmp = *prev; tmp != NIL; prev = &TCDR(tmp), tmp = *prev) {
+        for (tmp = *prev; tmp != NIL; prev = TCDR_PTR(tmp), tmp = *prev) {
 	    if (EQ(tuple_val(TCAR(tmp))[1], id)) {
 		*prev = TCDR(tmp);
 		*ret = tuple_val(TCAR(tmp))[2];
@@ -483,13 +485,13 @@ static Eterm pd_hash_get_all_keys(Process *p, ProcDict *pd) {
 	tmp = ARRAY_GET(pd, i);
 	if (is_boxed(tmp)) {
 	    PD_GET_TKEY(tmp,tmp);
-	    res = CONS(hp, tmp, res);
+	    res = erts_cons(hp, tmp, res);
 	    hp += 2;
 	} else if (is_list(tmp)) {
 	    while (tmp != NIL) {
 		tmp2 = TCAR(tmp);
 		PD_GET_TKEY(tmp2,tmp2);
-		res = CONS(hp, tmp2, res);
+		res = erts_cons(hp, tmp2, res);
 		hp += 2;
 		tmp = TCDR(tmp);
 	    }
@@ -518,14 +520,14 @@ static Eterm pd_hash_get_keys(Process *p, Eterm value)
 	    ASSERT(is_tuple(tmp));
 	    if (EQ(tuple_val(tmp)[2], value)) {
 		hp = HAlloc(p, 2);
-		res = CONS(hp, tuple_val(tmp)[1], res);
+		res = erts_cons(hp, tuple_val(tmp)[1], res);
 	    }
 	} else if (is_list(tmp)) {
 	    while (tmp != NIL) {
 		tmp2 = TCAR(tmp);
 		if (EQ(tuple_val(tmp2)[2], value)) {
 		    hp = HAlloc(p, 2);
-		    res = CONS(hp, tuple_val(tmp2)[1], res);
+		    res = erts_cons(hp, tuple_val(tmp2)[1], res);
 		}
 		tmp = TCDR(tmp);
 	    }
@@ -554,12 +556,12 @@ pd_hash_get_all(Process *p, ProcDict *pd)
 	tmp = ARRAY_GET(pd, i);
 	if (is_boxed(tmp)) {
 	    ASSERT(is_tuple(tmp));
-	    res = CONS(hp, tmp, res);
+	    res = erts_cons(hp, tmp, res);
 	    hp += 2;
 	} else if (is_list(tmp)) {
 	    while (tmp != NIL) {
 		tmp2 = TCAR(tmp);
-		res = CONS(hp, tmp2, res);
+		res = erts_cons(hp, tmp2, res);
 		hp += 2;
 		tmp = TCDR(tmp);
 	    }
@@ -648,10 +650,10 @@ static Eterm pd_hash_put(Process *p, Eterm id, Eterm value)
 	    return tuple_val(old)[2];
 	} else {
 	    hp = HeapOnlyAlloc(p, 4);
-	    tmp = CONS(hp, old, NIL);
+	    tmp = erts_cons(hp, old, NIL);
 	    hp += 2;
 	    ++(p->dictionary->numElements);
-	    ARRAY_PUT(p->dictionary, hval, CONS(hp, tpl, tmp));
+	    ARRAY_PUT(p->dictionary, hval, erts_cons(hp, tpl, tmp));
 	    hp += 2;
 	    ASSERT(hp <= hp_limit);
 	}
@@ -661,7 +663,7 @@ static Eterm pd_hash_put(Process *p, Eterm id, Eterm value)
 	     * New key. Simply prepend the tuple to the beginning of the list.
 	     */
 	    hp = HeapOnlyAlloc(p, 2);
-	    ARRAY_PUT(p->dictionary, hval, CONS(hp, tpl, old));
+	    ARRAY_PUT(p->dictionary, hval, erts_cons(hp, tpl, old));
 	    hp += 2;
 	    ASSERT(hp <= hp_limit);
 	    ++(p->dictionary->numElements);
@@ -687,13 +689,13 @@ static Eterm pd_hash_put(Process *p, Eterm id, Eterm value)
 
 	    /* Rebuild list before the updated element. */
 	    for (tmp = old; i-- > 0; tmp = TCDR(tmp)) {
-		nlist = CONS(hp, TCAR(tmp), nlist);
+		nlist = erts_cons(hp, TCAR(tmp), nlist);
 		hp += 2;
 	    }
 	    ASSERT(EQ(tuple_val(TCAR(tmp))[1], id));
 
 	    /* Put the updated element first in the new list. */
-	    nlist = CONS(hp, tpl, nlist);
+	    nlist = erts_cons(hp, tpl, nlist);
 	    hp += 2;
 	    ASSERT(hp <= hp_limit);
 	    ARRAY_PUT(p->dictionary, hval, nlist);
@@ -764,16 +766,16 @@ static void shrink(Process *p, Eterm* ret)
 		if (is_tuple(lo)) {
 		    if (is_tuple(hi)) {
 			hp = HeapOnlyAlloc(p, 4);
-			tmp = CONS(hp, hi, NIL);
+			tmp = erts_cons(hp, hi, NIL);
 			hp += 2;
 			ARRAY_PUT(pd, pd->splitPosition,
-				  CONS(hp,lo,tmp));
+				  erts_cons(hp,lo,tmp));
 			hp += 2;
 			ASSERT(hp <= hp_limit);
 		    } else { /* hi is a list */
 			hp = HeapOnlyAlloc(p, 2);
 			ARRAY_PUT(pd, pd->splitPosition,
-				  CONS(hp, lo, hi));
+				  erts_cons(hp, lo, hi));
 			hp += 2;
 			ASSERT(hp <= hp_limit);
 		    }
@@ -781,14 +783,14 @@ static void shrink(Process *p, Eterm* ret)
 		    if (is_tuple(hi)) {
 			hp = HeapOnlyAlloc(p, 2);
 			ARRAY_PUT(pd, pd->splitPosition,
-				  CONS(hp, hi, lo));
+				  erts_cons(hp, hi, lo));
 			hp += 2;
 			ASSERT(hp <= hp_limit);
 
 		    } else { /* Two lists */
 			hp = HeapOnlyAlloc(p, needed);
 			for (tmp = hi; tmp != NIL; tmp = TCDR(tmp)) {
-			    lo = CONS(hp, TCAR(tmp), lo);
+			    lo = erts_cons(hp, TCAR(tmp), lo);
 			    hp += 2;
 			}
 			ASSERT(hp <= hp_limit);
@@ -888,9 +890,9 @@ static void grow(Process *p)
 	
 	    while (l != NIL) {
 		if (pd_hash_value(pd, tuple_val(TCAR(l))[1]) == pos) 
-		    l1 = CONS(hp, TCAR(l), l1);
+		    l1 = erts_cons(hp, TCAR(l), l1);
 		else
-		    l2 = CONS(hp, TCAR(l), l2);
+		    l2 = erts_cons(hp, TCAR(l), l2);
 		hp += 2;
 		l = TCDR(l);
 	    }

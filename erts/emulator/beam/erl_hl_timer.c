@@ -2266,7 +2266,7 @@ parse_bif_timer_options(Eterm option_list, int *async, int *info,
 	Eterm *consp, *tp, opt;
 
 	consp = list_val(list);
-	opt = CAR(consp);
+	opt = erts_car(consp);
 	if (is_not_tuple(opt))
 	    return 0;
 
@@ -2298,7 +2298,7 @@ parse_bif_timer_options(Eterm option_list, int *async, int *info,
 	    return 0;
 	}
 
-	list = CDR(consp);	
+	list = erts_cdr(consp);	
     }
 
     if (is_not_nil(list))

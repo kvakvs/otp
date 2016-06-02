@@ -427,13 +427,13 @@ erl_first_process_otp(char* modname, void* code, unsigned size, int argc, char**
     args = NIL;
     for (i = argc-1; i >= 0; i--) {
 	int len = sys_strlen(argv[i]);
-	args = CONS(hp, new_binary(&parent, (byte*)argv[i], len), args);
+        args = erts_cons(hp, new_binary(&parent, (byte*)argv[i], len), args);
 	hp += 2;
     }
     env = new_binary(&parent, code, size);
-    args = CONS(hp, args, NIL);
+    args = erts_cons(hp, args, NIL);
     hp += 2;
-    args = CONS(hp, env, args);
+    args = erts_cons(hp, env, args);
 
     so.flags = erts_default_spo_flags|SPO_SYSTEM_PROC;
     res = erl_create_process(&parent, start_mod, am_start, args, &so);
@@ -486,7 +486,7 @@ erts_preloaded(Process* p)
     j = 0;
     while ((name = preload[j].name) != NULL)  {
 	mod = am_atom_put(name, sys_strlen(name));
-	previous = CONS(hp, mod, previous);
+        previous = erts_cons(hp, mod, previous);
 	hp += 2;
 	j++;
     }

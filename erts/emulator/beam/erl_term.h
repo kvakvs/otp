@@ -231,11 +231,39 @@ _ET_DECLARE_CHECKED(int,is_not_list,Eterm)
 _ET_DECLARE_CHECKED(Eterm*,list_val,Wterm)
 #define list_val(x)		_ET_APPLY(list_val,(x))
 
-#define CONS(hp, car, cdr) \
-        (CAR(hp)=(car), CDR(hp)=(cdr), make_list(hp))
+ERTS_GLB_INLINE Eterm erts_cons(Eterm *hp, Eterm car, Eterm cdr);
+ERTS_GLB_INLINE Eterm erts_car(Eterm *x);
+ERTS_GLB_INLINE Eterm *erts_car_ptr(Eterm *x); /* same as erts_car but & */
+ERTS_GLB_INLINE Eterm erts_cdr(Eterm *x);
+ERTS_GLB_INLINE Eterm *erts_cdr_ptr(Eterm *x); /* same as erts_cdr but & */
+ERTS_GLB_INLINE Eterm erts_set_car(Eterm *x, Eterm val);
+ERTS_GLB_INLINE Eterm erts_set_cdr(Eterm *x, Eterm val);
 
-#define CAR(x)  ((x)[0])
-#define CDR(x)  ((x)[1])
+#if ERTS_GLB_INLINE_INCL_FUNC_DEF
+ERTS_GLB_INLINE Eterm erts_cons(Eterm *hp, Eterm car, Eterm cdr) {
+    erts_set_car(hp, car);
+    erts_set_cdr(hp, cdr);
+    return make_list(hp);
+}
+ERTS_GLB_INLINE Eterm erts_car(Eterm *x) {
+    return x[0];
+}
+ERTS_GLB_INLINE Eterm *erts_car_ptr(Eterm *x) {
+    return &x[0];
+}
+ERTS_GLB_INLINE Eterm erts_cdr(Eterm *x) {
+    return x[1];
+}
+ERTS_GLB_INLINE Eterm *erts_cdr_ptr(Eterm *x) {
+    return &x[1];
+}
+ERTS_GLB_INLINE Eterm erts_set_car(Eterm *x, Eterm val) {
+    return x[0] = val;
+}
+ERTS_GLB_INLINE Eterm erts_set_cdr(Eterm *x, Eterm val) {
+    return x[1] = val;
+}
+#endif // ERTS_GLB_INLINE_INCL_FUNC_DEF
 
 /* generic tagged pointer (boxed or list) access methods */
 #define _unchecked_ptr_val(x)	((Eterm*) ((x) & ~((Uint) TAG_PTR_MASK__)))

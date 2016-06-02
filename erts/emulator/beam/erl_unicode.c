@@ -391,7 +391,7 @@ static Sint utf8_need(Eterm ioterm, int latin1, Uint *costp)
 	if(is_list(ioterm)) {
 L_Again:   /* Restart with sublist, old listend was pushed on stack */
 	    objp = list_val(ioterm);
-	    obj = CAR(objp);
+	    obj = erts_car(objp);
 	    for(;;) { /* loop over one flat list of bytes and binaries
 		         until sublist or list end is encountered */
 		if (is_small(obj)) { /* Always small */
@@ -408,26 +408,26 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 			/* everything else will give badarg later 
 			   in the process, so we dont check */
 			++cost;
-			ioterm = CDR(objp);
+			ioterm = erts_cdr(objp);
 			if (!is_list(ioterm)) {
 			    break;
 			}
 			objp = list_val(ioterm);
-			obj = CAR(objp);
+			obj = erts_car(objp);
 			if (!is_small(obj))
 			    break;
 		    }
 		} else if (is_nil(obj)) {
-		    ioterm = CDR(objp);
+		    ioterm = erts_cdr(objp);
 		    if (!is_list(ioterm)) {
 			break;
 		    }
 		    objp = list_val(ioterm);
-		    obj = CAR(objp);
+		    obj = erts_car(objp);
 		} else if (is_list(obj)) {
 		    /* push rest of list for later processing, start 
 		       again with sublist */
-		    ESTACK_PUSH(stack,CDR(objp));
+		    ESTACK_PUSH(stack,erts_cdr(objp));
 		    ioterm = obj;
 		    goto L_Again;
 		} else if (is_binary(obj)) {
@@ -451,12 +451,12 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 			++cost;
 		    }
 		    need += x;
-		    ioterm = CDR(objp);
+		    ioterm = erts_cdr(objp);
 		    if (is_list(ioterm)) {
 			/* objp and obj need to be updated if 
 			   loop is to continue */
 			objp = list_val(ioterm);
-			obj = CAR(objp);
+			obj = erts_car(objp);
 		    }
 		} else {
 		    DESTROY_ESTACK(stack);
@@ -646,7 +646,7 @@ static Eterm do_build_utf8(Process *p, Eterm ioterm, Sint *left, int latin1,
 	if(is_list(ioterm)) {
 L_Again:   /* Restart with sublist, old listend was pushed on stack */
 	    objp = list_val(ioterm);
-	    obj = CAR(objp);
+	    obj = erts_car(objp);
 	    for(;;) { /* loop over one flat list of bytes and binaries
 		         until sublist or list end is encountered */
 		if (is_small(obj)) { /* Always small in unicode*/
@@ -696,26 +696,26 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 			}
 			++(*characters);
 			--(*left);
-			ioterm = CDR(objp);
+			ioterm = erts_cdr(objp);
 			if (!is_list(ioterm) || !(*left)) {
 			    break;
 			}
 			objp = list_val(ioterm);
-			obj = CAR(objp);
+			obj = erts_car(objp);
 			if (!is_small(obj))
 			    break;
 		    }
 		} else if (is_nil(obj)) {
-		    ioterm = CDR(objp);
+		    ioterm = erts_cdr(objp);
 		    if (!is_list(ioterm)) {
 			break;
 		    }
 		    objp = list_val(ioterm);
-		    obj = CAR(objp);
+		    obj = erts_car(objp);
 		} else if (is_list(obj)) {
 		    /* push rest of list for later processing, start 
 		       again with sublist */
-		    ESTACK_PUSH(stack,CDR(objp));
+		    ESTACK_PUSH(stack,erts_cdr(objp));
 		    ioterm = obj;
 		    goto L_Again;
 		} else if (is_binary(obj)) {
@@ -725,25 +725,25 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 		    if ((*err) != 0) {
 			Eterm *hp;
 			hp = HAlloc(p, 2);
-			obj = CDR(objp);
-			ioterm = CONS(hp, rest_term, obj);
+			obj = erts_cdr(objp);
+			ioterm = erts_cons(hp, rest_term, obj);
 			/* (*left) = 0; */
 			goto done;
 		    }
 		    if (rest_term != NIL) {
 			Eterm *hp;
 			hp = HAlloc(p, 2);
-			obj = CDR(objp);
-			ioterm = CONS(hp, rest_term, obj);
+			obj = erts_cdr(objp);
+			ioterm = erts_cons(hp, rest_term, obj);
 			(*left) = 0;
 			break;
 		    }
-		    ioterm = CDR(objp);
+		    ioterm = erts_cdr(objp);
 		    if (is_list(ioterm)) {
 			/* objp and obj need to be updated if 
 			   loop is to continue */
 			objp = list_val(ioterm);
-			obj = CAR(objp);
+			obj = erts_car(objp);
 		    }
 		} else {
 		    *err = 1;
@@ -774,7 +774,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 	Eterm *hp = HAlloc(p,2*c);
 	while(!ESTACK_ISEMPTY(stack)) {
 	    Eterm st = ESTACK_POP(stack);
-	    ioterm = CONS(hp, ioterm, st);
+	    ioterm = erts_cons(hp, ioterm, st);
 	    hp += 2;
 	}
     }
@@ -818,9 +818,9 @@ static BIF_RETTYPE build_utf8_return(Process *p,Eterm bin,Uint pos,
 	if (num_leftovers > 0) {
 	    Eterm leftover_bin = new_binary(p, leftover, num_leftovers);
 	    hp = HAlloc(p,8);
-	    rest_term = CONS(hp,rest_term,NIL);
+	    rest_term = erts_cons(hp,rest_term,NIL);
 	    hp += 2;
-	    rest_term = CONS(hp,leftover_bin,rest_term);
+	    rest_term = erts_cons(hp,leftover_bin,rest_term);
 	    hp += 2;
 	} else {
 	   hp = HAlloc(p,4);
@@ -840,7 +840,7 @@ static BIF_RETTYPE build_utf8_return(Process *p,Eterm bin,Uint pos,
 	    if (num_leftovers > 0) {
 		Eterm rest_bin = new_binary(p, leftover, num_leftovers);
 		hp = HAlloc(p,2);
-		rest_term = CONS(hp,rest_bin,rest_term);
+		rest_term = erts_cons(hp,rest_bin,rest_term);
 	    }
 	    BUMP_ALL_REDS(p);
 	    BIF_TRAP3(&characters_to_utf8_trap_exp, p, bin, rest_term, latin1);
@@ -953,9 +953,9 @@ BIF_RETTYPE unicode_characters_to_binary_2(BIF_ALIST_2)
     } else {
 	BIF_TRAP2(c_to_b_int_trap_exportp, BIF_P, BIF_ARG_1, BIF_ARG_2);
     }	
-    if (is_list(BIF_ARG_1) && is_binary(CAR(list_val(BIF_ARG_1))) && 
-	is_nil(CDR(list_val(BIF_ARG_1)))) {
-	subject = CAR(list_val(BIF_ARG_1));
+    if (is_list(BIF_ARG_1) && is_binary(erts_car(list_val(BIF_ARG_1))) && 
+	is_nil(erts_cdr(list_val(BIF_ARG_1)))) {
+	subject = erts_car(list_val(BIF_ARG_1));
     } else {
 	subject = BIF_ARG_1;
     }
@@ -992,8 +992,8 @@ BIF_RETTYPE unicode_characters_to_binary_2(BIF_ALIST_2)
 	Eterm bin;
 	if (is_binary(subject)) {
 	    bin = subject;
-	} else if(is_list(subject) && is_binary(CAR(list_val(subject)))) {
-	    bin = CAR(list_val(subject));
+	} else if(is_list(subject) && is_binary(erts_car(list_val(subject)))) {
+	    bin = erts_car(list_val(subject));
 	} else {
 	    bin = NIL;
 	}
@@ -1032,9 +1032,9 @@ static BIF_RETTYPE build_list_return(Process *p, byte *bytes, Uint pos, Uint cha
 	if (num_leftovers > 0) {
 	    Eterm leftover_bin = new_binary(p, leftover, num_leftovers);
 	    hp = HAlloc(p,4);
-	    rest_term = CONS(hp,rest_term,NIL);
+	    rest_term = erts_cons(hp,rest_term,NIL);
 	    hp += 2;
-	    rest_term = CONS(hp,leftover_bin,rest_term);
+	    rest_term = erts_cons(hp,leftover_bin,rest_term);
 	}
 	BIF_RET(finalize_list_to_list(p, bytes, rest_term, 0U, pos, characters, ERTS_UTF8_ERROR, left, NIL));
     } else if (rest_term == NIL && num_leftovers != 0) {
@@ -1052,7 +1052,7 @@ static BIF_RETTYPE build_list_return(Process *p, byte *bytes, Uint pos, Uint cha
 	    if (num_leftovers > 0) {
 		Eterm rest_bin = new_binary(p, leftover, num_leftovers);
 		hp = HAlloc(p,2);
-		rest_term = CONS(hp,rest_bin,rest_term);
+		rest_term = erts_cons(hp,rest_bin,rest_term);
 	    }
 	    BUMP_ALL_REDS(p);
 	    rc.bytes = bytes;
@@ -1303,7 +1303,7 @@ static Eterm do_utf8_to_list(Process *p, Uint num, byte *bytes, Uint sz,
 	    /* ignore 2#10XXXXXX */
 	    continue;
 	}
-	ret = CONS(hp,make_small(unipoint),ret);
+	ret = erts_cons(hp,make_small(unipoint),ret);
 	hp += 2;
 	if (--num <= 0) {
 	    break;
@@ -1383,17 +1383,17 @@ static void cleanup_norm(Eterm **hpp, Uint16 *savepoints, int numpoints, Eterm *
     Uint16 newpoint;
     Eterm ret = *retp;
     
-    ret = CONS(hp,make_small((Uint) savepoints[0]),ret);
+    ret = erts_cons(hp,make_small((Uint) savepoints[0]),ret);
     hp += 2;
     
     for (i = 1;i < numpoints;) {
 	if(!is_candidate(savepoints[i]) || 
 	   ((res = translate(savepoints+i,numpoints - i, &newpoint)) <= 0)) {
-	    ret = CONS(hp,make_small((Uint) savepoints[i]),ret);
+	    ret = erts_cons(hp,make_small((Uint) savepoints[i]),ret);
 	    hp += 2;
 	    ++i;
 	} else {
-	    ret = CONS(hp,make_small((Uint) newpoint),ret);
+	    ret = erts_cons(hp,make_small((Uint) newpoint),ret);
 	    hp += 2;
 	    i += res;
 	}
@@ -1414,16 +1414,16 @@ static void handle_potential_norm(Eterm **hpp, Uint16 *savepoints, int *numpoint
 	savepoints[numpoints++] = (Uint16) unipoint;
 	res = translate(savepoints,numpoints,&newpoint);
 	if (res == TRANSLATE_NO) {
-	    ret = CONS(hp,make_small((Uint) savepoints[0]),ret);
+	    ret = erts_cons(hp,make_small((Uint) savepoints[0]),ret);
 	    hp += 2;
 	    for (i = 1;i < numpoints;) {
 		if(!is_candidate(savepoints[i]) ||
 		   ((res = translate(savepoints+i,numpoints - i, &newpoint)) == 0)) {
-		    ret = CONS(hp,make_small((Uint) savepoints[i]),ret);
+		    ret = erts_cons(hp,make_small((Uint) savepoints[i]),ret);
 		    hp += 2;
 		    ++i;
 		} else if (res > 0) {
-		    ret = CONS(hp,make_small((Uint) newpoint),ret);
+		    ret = erts_cons(hp,make_small((Uint) newpoint),ret);
 		    hp += 2;
 		    i += res;
 		} else { /* res < 0 */
@@ -1441,27 +1441,27 @@ static void handle_potential_norm(Eterm **hpp, Uint16 *savepoints, int *numpoint
 	    ;
 	} else if (res > 0) {
 	    numpoints = 0;
-	    ret = CONS(hp,make_small((Uint) newpoint),ret);
+	    ret = erts_cons(hp,make_small((Uint) newpoint),ret);
 	    hp += 2;
 	} /* < 0 means go on */
     } else {
 	/* Unconditional rollup, this character is larger than 16 bit */
-	ret = CONS(hp,make_small((Uint) savepoints[0]),ret);
+	ret = erts_cons(hp,make_small((Uint) savepoints[0]),ret);
 	hp += 2;
 	
 	for (i = 1;i < numpoints;) {
 	    if(!is_candidate(savepoints[i]) || 
 	       ((res = translate(savepoints+i,numpoints - i, &newpoint)) <= 0)) {
-		ret = CONS(hp,make_small((Uint) savepoints[i]),ret);
+		ret = erts_cons(hp,make_small((Uint) savepoints[i]),ret);
 		hp += 2;
 		++i;
 	    } else {
-		ret = CONS(hp,make_small((Uint) newpoint),ret);
+		ret = erts_cons(hp,make_small((Uint) newpoint),ret);
 		hp += 2;
 		i += res;
 	    }
 	}
-	ret = CONS(hp,make_small(unipoint),ret);
+	ret = erts_cons(hp,make_small(unipoint),ret);
 	hp += 2;
 	numpoints = 0;
     }	
@@ -1519,7 +1519,7 @@ static Eterm do_utf8_to_list_normalize(Process *p, Uint num, byte *bytes, Uint s
 	    handle_first_norm(savepoints,&numpoints,unipoint);
 	    continue;
 	} 
-	ret = CONS(hp,make_small(unipoint),ret);
+	ret = erts_cons(hp,make_small(unipoint),ret);
 	hp += 2;
     }
     /* so, we'we looped to the beginning, do we have anything saved? */
@@ -2147,7 +2147,7 @@ Eterm erts_convert_native_to_filename(Process *p, byte *bytes)
 	if ((size % 2) != 0) { /* Panic fixup to avoid crashing the emulator */
 	    size--;
 	    hp = HAlloc(p, size+2);
-	    ret = CONS(hp,make_small((Uint) bytes[size]),NIL);
+	    ret = erts_cons(hp,make_small((Uint) bytes[size]),NIL);
 	    hp += 2;
 	} else {
 	    hp = HAlloc(p, size);
@@ -2158,7 +2158,7 @@ Eterm erts_convert_native_to_filename(Process *p, byte *bytes)
 	    Uint x = ((Uint) *bytes--) << 8;
 	    x |= ((Uint) *bytes--);
 	    size -= 2;
-	    ret = CONS(hp,make_small(x),ret);
+	    ret = erts_cons(hp,make_small(x),ret);
 	    hp += 2;
 	}	    
 	return ret;
@@ -2238,7 +2238,7 @@ Sint erts_native_filename_need(Eterm ioterm, int encoding)
 	if(is_list(ioterm)) {
 L_Again:   /* Restart with sublist, old listend was pushed on stack */
 	    objp = list_val(ioterm);
-	    obj = CAR(objp);
+	    obj = erts_car(objp);
 	    for(;;) { /* loop over one flat list of bytes and binaries
 		         until sublist or list end is encountered */
 		if (is_small(obj)) { /* Always small */
@@ -2284,26 +2284,26 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 			    
 			/* everything else will give badarg later 
 			   in the process, so we dont check */
-			ioterm = CDR(objp);
+			ioterm = erts_cdr(objp);
 			if (!is_list(ioterm)) {
 			    break;
 			}
 			objp = list_val(ioterm);
-			obj = CAR(objp);
+			obj = erts_car(objp);
 			if (!is_small(obj))
 			    break;
 		    }
 		} else if (is_nil(obj)) {
-		    ioterm = CDR(objp);
+		    ioterm = erts_cdr(objp);
 		    if (!is_list(ioterm)) {
 			break;
 		    }
 		    objp = list_val(ioterm);
-		    obj = CAR(objp);
+		    obj = erts_car(objp);
 		} else if (is_list(obj)) {
 		    /* push rest of list for later processing, start 
 		       again with sublist */
-		    ESTACK_PUSH(stack,CDR(objp));
+		    ESTACK_PUSH(stack,erts_cdr(objp));
 		    ioterm = obj;
 		    goto L_Again;
 		} else {
@@ -2394,7 +2394,7 @@ void erts_native_filename_put(Eterm ioterm, int encoding, byte *p)
 	if(is_list(ioterm)) {
 L_Again:   /* Restart with sublist, old listend was pushed on stack */
 	    objp = list_val(ioterm);
-	    obj = CAR(objp);
+	    obj = erts_car(objp);
 	    for(;;) { /* loop over one flat list of bytes and binaries
 		         until sublist or list end is encountered */
 		if (is_small(obj)) { /* Always small */
@@ -2446,26 +2446,26 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 			    
 			/* everything else will give badarg later 
 			   in the process, so we dont check */
-			ioterm = CDR(objp);
+			ioterm = erts_cdr(objp);
 			if (!is_list(ioterm)) {
 			    break;
 			}
 			objp = list_val(ioterm);
-			obj = CAR(objp);
+			obj = erts_car(objp);
 			if (!is_small(obj))
 			    break;
 		    }
 		} else if (is_nil(obj)) {
-		    ioterm = CDR(objp);
+		    ioterm = erts_cdr(objp);
 		    if (!is_list(ioterm)) {
 			break;
 		    }
 		    objp = list_val(ioterm);
-		    obj = CAR(objp);
+		    obj = erts_car(objp);
 		} else if (is_list(obj)) {
 		    /* push rest of list for later processing, start 
 		       again with sublist */
-		    ESTACK_PUSH(stack,CDR(objp));
+		    ESTACK_PUSH(stack,erts_cdr(objp));
 		    ioterm = obj;
 		    goto L_Again;
 		} else {
@@ -2667,7 +2667,7 @@ BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
 	if ((size % 2) != 0) { /* Panic fixup to avoid crashing the emulator */
 	    size--;
 	    hp = HAlloc(BIF_P, size+2);
-	    ret = CONS(hp,make_small((Uint) bytes[size]),NIL);
+	    ret = erts_cons(hp,make_small((Uint) bytes[size]),NIL);
 	    hp += 2;
 	} else {
 	    hp = HAlloc(BIF_P, size);
@@ -2678,7 +2678,7 @@ BIF_RETTYPE prim_file_internal_native2name_1(BIF_ALIST_1)
 	    Uint x = ((Uint) *bytes--) << 8;
 	    x |= ((Uint) *bytes--);
 	    size -= 2;
-	    ret = CONS(hp,make_small(x),ret);
+	    ret = erts_cons(hp,make_small(x),ret);
 	    hp += 2;
 	}	    
 	erts_free_aligned_binary_bytes(temp_alloc);

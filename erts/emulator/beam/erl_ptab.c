@@ -1219,7 +1219,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 
 		for (ix = ptlbdp->pid_ix - 1; ix >= min_ix; ix--) {
 		    ERTS_PTAB_LIST_ASSERT(erts_ptab_is_valid_id(ptlbdp->pid[ix]));
-		    res = CONS(hp, ptlbdp->pid[ix], res);
+		    res = erts_cons(hp, ptlbdp->pid[ix], res);
 		    hp += 2;
 		}
 
@@ -1482,7 +1482,7 @@ erts_debug_ptab_list(Process *c_p, ErtsPTab *ptab)
     for (i = ptab->r.o.max-1; i >= 0; i--) {
 	ErtsPTabElementCommon *el = ptab_pix2el(ptab, i);
 	if (el) {
-	    res = CONS(hp, el->id, res);
+	    res = erts_cons(hp, el->id, res);
 	    hp += 2;
 	}
     }
@@ -1541,9 +1541,9 @@ debug_ptab_list_check_res_list(Eterm list)
 {
     while (is_list(list)) {
 	Eterm* consp = list_val(list);
-	Eterm hd = CAR(consp);
+	Eterm hd = erts_car(consp);
 	ERTS_PTAB_LIST_ASSERT(erts_ptab_is_valid_id(hd));
-	list = CDR(consp);
+	list = erts_cdr(consp);
     }
 
     ERTS_PTAB_LIST_ASSERT(is_nil(list));

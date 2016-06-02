@@ -106,8 +106,8 @@ static void encode_decode(ETERM* original, const char* text)
     /* If a list, check the elements one by one first */
     head = erl_hd(original);
     if (head != NULL) {
-	encode_decode(head, "CAR");
-	encode_decode(erl_tl(original), "CDR");
+        encode_decode(head, "CAR");
+        encode_decode(erl_tl(original), "CDR");
     }
 
     bytes = erl_encode(original, encoded);

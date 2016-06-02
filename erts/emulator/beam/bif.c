@@ -537,7 +537,7 @@ BIF_RETTYPE demonitor_2(BIF_ALIST_2)
 
     while (is_list(list)) {
 	Eterm* consp = list_val(list);
-	switch (CAR(consp)) {
+	switch (erts_car(consp)) {
 	case am_flush:
 	    flush = 1;
 	    break;
@@ -547,7 +547,7 @@ BIF_RETTYPE demonitor_2(BIF_ALIST_2)
 	default:
 	    goto badarg;
 	}
-	list = CDR(consp);	
+	list = erts_cdr(consp);	
     }
 
     if (is_not_nil(list))
@@ -892,7 +892,7 @@ BIF_RETTYPE spawn_opt_1(BIF_ALIST_1)
      */
     ap = tp[4];
     while (is_list(ap)) {
-	arg = CAR(list_val(ap));
+	arg = erts_car(list_val(ap));
 	if (arg == am_link) {
 	    so.flags |= SPO_LINK;
 	} else if (arg == am_monitor) {
@@ -967,7 +967,7 @@ BIF_RETTYPE spawn_opt_1(BIF_ALIST_1)
 	} else {
 	    goto error;
 	}
-	ap = CDR(list_val(ap));
+	ap = erts_cdr(list_val(ap));
     }
     if (is_not_nil(ap)) {
 	goto error;
@@ -1311,8 +1311,8 @@ BIF_RETTYPE raise_3(BIF_ALIST_3)
      */
     for (l = stacktrace, depth = 0;  
 	 is_list(l);  
-	 l = CDR(list_val(l)), depth++) {
-	Eterm t = CAR(list_val(l));
+	 l = erts_cdr(list_val(l)), depth++) {
+	Eterm t = erts_car(list_val(l));
 	Eterm location = NIL;
 
 	if (is_not_tuple(t)) goto error;
@@ -1387,13 +1387,13 @@ BIF_RETTYPE raise_3(BIF_ALIST_3)
 	/* Copy list up to depth */
 	for (cnt = 0, l = stacktrace;
 	     cnt < depth;
-	     cnt++, l = CDR(list_val(l))) {
+	     cnt++, l = erts_cdr(list_val(l))) {
 	    Eterm t;
 	    Eterm *tpp;
 	    int arity;
 
 	    ASSERT(*tp == NIL);
-	    t = CAR(list_val(l));
+	    t = erts_car(list_val(l));
 	    tpp = tuple_val(t);
 	    arity = arityval(tpp[0]);
 	    if (arity == 2) {
@@ -1403,12 +1403,12 @@ BIF_RETTYPE raise_3(BIF_ALIST_3)
 		t = TUPLE4(hp, tpp[1], tpp[2], tpp[3], NIL);
 		hp += 5;
 	    }
-	    *tp = CONS(hp, t, *tp);
-	    tp = &CDR(list_val(*tp));
+	    *tp = erts_cons(hp, t, *tp);
+            tp = erts_cdr_ptr(list_val(*tp));
 	    hp += 2;
 	}
     }
-    c_p->ftrace = CONS(hp, c_p->ftrace, make_big((Eterm *) s));
+    c_p->ftrace = erts_cons(hp, c_p->ftrace, make_big((Eterm *) s));
     hp += 2;
     ASSERT(hp <= hp_end);
     HRelease(c_p, hp_end, hp);
@@ -2219,15 +2219,15 @@ BIF_RETTYPE send_3(BIF_ALIST_3)
     ctx->dss.phase = ERTS_DSIG_SEND_PHASE_INIT;
 
     while (is_list(l)) {
-	if (CAR(list_val(l)) == am_noconnect) {
+	if (erts_car(list_val(l)) == am_noconnect) {
 	    connect = 0;
-	} else if (CAR(list_val(l)) == am_nosuspend) {
+	} else if (erts_car(list_val(l)) == am_nosuspend) {
 	    ctx->suspend = 0;
 	} else {
 	    ERTS_BIF_PREP_ERROR(retval, p, BADARG);
 	    goto done;
 	}
-	l = CDR(list_val(l));
+	l = erts_cdr(list_val(l));
     }
     if(!is_nil(l)) {
 	ERTS_BIF_PREP_ERROR(retval, p, BADARG);
@@ -2461,7 +2461,7 @@ BIF_RETTYPE hd_1(BIF_ALIST_1)
      if (is_not_list(BIF_ARG_1)) {
 	 BIF_ERROR(BIF_P, BADARG);
      }
-     BIF_RET(CAR(list_val(BIF_ARG_1)));
+     BIF_RET(erts_car(list_val(BIF_ARG_1)));
 }
 
 /**********************************************************************/
@@ -2473,7 +2473,7 @@ BIF_RETTYPE tl_1(BIF_ALIST_1)
     if (is_not_list(BIF_ARG_1)) {
 	BIF_ERROR(BIF_P, BADARG);
     }
-    BIF_RET(CDR(list_val(BIF_ARG_1)));
+    BIF_RET(erts_cdr(list_val(BIF_ARG_1)));
 }
 
 
@@ -2562,8 +2562,8 @@ BIF_RETTYPE iolist_size_1(BIF_ALIST_1)
 	if (is_list(obj)) {
 	L_iter_list:
 	    objp = list_val(obj);
-	    hd = CAR(objp);
-	    obj = CDR(objp);
+	    hd = erts_car(objp);
+	    obj = erts_cdr(objp);
 	    /* Head */
 	    if (is_byte(hd)) {
 		size++;
@@ -2733,8 +2733,8 @@ BIF_RETTYPE make_tuple_3(BIF_ALIST_3)
 	Uint index_val;
 
 	cons = list_val(list);
-	hd = CAR(cons);
-	list = CDR(cons);
+	hd = erts_car(cons);
+	list = erts_cdr(cons);
 	if (is_not_tuple_arity(hd, 2)) {
 	    goto error;
 	}
@@ -3062,8 +3062,8 @@ static int do_float_to_charbuf(Process *p, Eterm efloat, Eterm list,
     if (is_not_float(efloat))
         goto badarg;
 
-    for(; is_list(list); list = CDR(list_val(list))) {
-        arg = CAR(list_val(list));
+    for(; is_list(list); list = erts_cdr(list_val(list))) {
+        arg = erts_car(list_val(list));
         if (arg == am_compact) {
             compact = 1;
             continue;
@@ -3211,9 +3211,9 @@ BIF_RETTYPE string_to_float_1(BIF_ALIST_1)
        restore the position (end of the float) with LOAD_E.
     */
     while(1) {
-	if (is_not_small(CAR(list_val(list)))) 
+	if (is_not_small(erts_car(list_val(list)))) 
 	    goto back_to_e;
-	if (CAR(list_val(list)) == make_small('-')) {
+	if (erts_car(list_val(list)) == make_small('-')) {
 	    switch (part) {
 	    case SIGN:		/* expect integer part next */
 		part = INT;		
@@ -3226,7 +3226,7 @@ BIF_RETTYPE string_to_float_1(BIF_ALIST_1)
 	    default:		/* unexpected - done */
 		part = END;
 	    }
-	} else if (CAR(list_val(list)) == make_small('+')) {
+	} else if (erts_car(list_val(list)) == make_small('+')) {
 	    switch (part) {
 	    case SIGN:		/* expect integer part next */
 		part = INT;
@@ -3239,7 +3239,7 @@ BIF_RETTYPE string_to_float_1(BIF_ALIST_1)
 	    default:		/* unexpected - done */
 		part = END;
 	    }
-	} else if (IS_DOT(CAR(list_val(list)))) { /* . or , */
+	} else if (IS_DOT(erts_car(list_val(list)))) { /* . or , */
 	    switch (part) {
 	    case INT:		/* expect fractional part next */
 		part = FRAC;
@@ -3251,7 +3251,7 @@ BIF_RETTYPE string_to_float_1(BIF_ALIST_1)
 	    default:		/* unexpected - done */
 		part = END;
 	    }
-	} else if (IS_E(CAR(list_val(list)))) {	/* e or E */
+	} else if (IS_E(erts_car(list_val(list)))) {	/* e or E */
 	    switch (part) {
 	    case FRAC:		/* expect a + or - (or a digit) next */
 		/* 
@@ -3269,7 +3269,7 @@ BIF_RETTYPE string_to_float_1(BIF_ALIST_1)
 	    default:		/* unexpected - done */
 		part = END;
 	    }
-	} else if (IS_DIGIT(CAR(list_val(list)))) { /* digit */
+	} else if (IS_DIGIT(erts_car(list_val(list)))) { /* digit */
 	    switch (part) {
 	    case SIGN:		/* got initial digit in integer part */
 		part = INT;	/* expect more digits to follow */
@@ -3290,14 +3290,14 @@ BIF_RETTYPE string_to_float_1(BIF_ALIST_1)
 	    break;
 	}
 
-	buf[i++] = unsigned_val(CAR(list_val(list)));
+	buf[i++] = unsigned_val(erts_car(list_val(list)));
 
 	if (i == bufsz - 1)
 	    buf = (byte *) erts_realloc(ERTS_ALC_T_TMP,
 					(void *) buf,
 					bufsz += STRING_TO_FLOAT_BUF_INC_SZ);
     skip:
-	list = CDR(list_val(list)); /* next element */
+	list = erts_cdr(list_val(list)); /* next element */
 
 	if (is_nil(list))
 	    goto back_to_e;
@@ -3447,7 +3447,7 @@ BIF_RETTYPE tuple_to_list_1(BIF_ALIST_1)
     tupleptr++;
 
     while(n--) {
-	list = CONS(hp, tupleptr[n], list);
+	list = erts_cons(hp, tupleptr[n], list);
 	hp += 2;
     }
     BIF_RET(list);
@@ -3474,8 +3474,8 @@ BIF_RETTYPE list_to_tuple_1(BIF_ALIST_1)
     *hp++ = make_arityval(len);
     while(is_list(list)) {
 	cons = list_val(list);
-	*hp++ = CAR(cons);
-	list = CDR(cons);
+	*hp++ = erts_car(cons);
+	list = erts_cdr(cons);
     }
     BIF_RET(res);
 }
@@ -3846,8 +3846,8 @@ BIF_RETTYPE halt_2(BIF_ALIST_2)
 
     for (optlist = BIF_ARG_2;
 	 is_list(optlist);
-	 optlist = CDR(list_val(optlist))) {
-	Eterm *tp, opt = CAR(list_val(optlist));
+	 optlist = erts_cdr(list_val(optlist))) {
+	Eterm *tp, opt = erts_car(list_val(optlist));
 	if (is_not_tuple(opt))
 	    goto error;
 	tp = tuple_val(opt);
@@ -4800,7 +4800,7 @@ erts_bif_prep_await_proc_exit_apply_trap(Process *c_p,
 	hp = HAlloc(c_p, 4+2*nargs);
 	term = NIL;
 	for (i = nargs-1; i >= 0; i--) {
-	    term = CONS(hp, args[i], term);
+	    term = erts_cons(hp, args[i], term);
 	    hp += 2;
 	}
 	term = TUPLE3(hp, module, function, term);
@@ -5012,7 +5012,7 @@ BIF_RETTYPE dt_prepend_vm_tag_data_1(BIF_ALIST_1)
 	b = new_binary(BIF_P,(byte *)"\0",1);
     }
     hp = HAlloc(BIF_P,2);
-    BIF_RET(CONS(hp,b,BIF_ARG_1));
+    BIF_RET(erts_cons(hp,b,BIF_ARG_1));
 #else
     BIF_RET(BIF_ARG_1);
 #endif
@@ -5039,7 +5039,7 @@ BIF_RETTYPE dt_append_vm_tag_data_1(BIF_ALIST_1)
 	b = new_binary(BIF_P,(byte *)"\0",1);
     }
     hp = HAlloc(BIF_P,2);
-    BIF_RET(CONS(hp,BIF_ARG_1,b));
+    BIF_RET(erts_cons(hp,BIF_ARG_1,b));
 #else
     BIF_RET(BIF_ARG_1);
 #endif

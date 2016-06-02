@@ -534,7 +534,7 @@ BIF_RETTYPE unique_integer_1(BIF_ALIST_1)
 
     while (is_list(modlist)) {
 	Eterm *consp = list_val(modlist);
-	switch (CAR(consp)) {
+	switch (erts_car(consp)) {
 	case am_monotonic:
 	    monotonic = 1;
 	    break;
@@ -544,7 +544,7 @@ BIF_RETTYPE unique_integer_1(BIF_ALIST_1)
 	default:
 	    BIF_ERROR(BIF_P, BADARG);
 	}
-	modlist = CDR(consp);
+	modlist = erts_cdr(consp);
     }
 
     if (is_not_nil(modlist))

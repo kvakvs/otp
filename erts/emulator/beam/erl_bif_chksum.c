@@ -136,7 +136,7 @@ static Eterm do_chksum(ChksumFun sumfun, Process *p, Eterm ioterm, int left,
 	if(is_list(ioterm)) {
 L_Again:   /* Restart with sublist, old listend was pushed on stack */
 	    objp = list_val(ioterm);
-	    obj = CAR(objp);
+	    obj = erts_car(objp);
 	    for(;;) { /* loop over one flat list of bytes and binaries
 		         until sublist or list end is encountered */
 		if (is_byte(obj)) {
@@ -158,12 +158,12 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 			}  
 			bytes[bsize++] = (unsigned char) unsigned_val(obj);
 			--left;
-			ioterm = CDR(objp);
+			ioterm = erts_cdr(objp);
 			if (!is_list(ioterm)) {
 			    break;
 			}
 			objp = list_val(ioterm);
-			obj = CAR(objp);
+			obj = erts_car(objp);
 			if (!is_byte(obj))
 			    break;
 			if (!left) {
@@ -173,16 +173,16 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 		    (*sumfun)(sum, bytes, bsize);
 		    *res += bsize;
 		} else if (is_nil(obj)) {
-		    ioterm = CDR(objp);
+		    ioterm = erts_cdr(objp);
 		    if (!is_list(ioterm)) {
 			break;
 		    }
 		    objp = list_val(ioterm);
-		    obj = CAR(objp);
+		    obj = erts_car(objp);
 		} else if (is_list(obj)) {
 		    /* push rest of list for later processing, start 
 		       again with sublist */
-		    ESTACK_PUSH(stack,CDR(objp));
+		    ESTACK_PUSH(stack,erts_cdr(objp));
 		    ioterm = obj;
 		    goto L_Again;
 		} else if (is_binary(obj)) {
@@ -202,17 +202,17 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 		    if (rest_term != NIL) {
 			Eterm *hp;
 			hp = HAlloc(p, 2);
-			obj = CDR(objp);
-			ioterm = CONS(hp, rest_term, obj);
+			obj = erts_cdr(objp);
+			ioterm = erts_cons(hp, rest_term, obj);
 			left = 0;
 			break;
 		    }
-		    ioterm = CDR(objp);
+		    ioterm = erts_cdr(objp);
 		    if (is_list(ioterm)) {
 			/* objp and obj need to be updated if 
 			   loop is to continue */
 			objp = list_val(ioterm);
-			obj = CAR(objp);
+			obj = erts_car(objp);
 		    }
 		} else {
 		    *err = 1;
@@ -233,7 +233,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 		/* inproper list with byte tail*/
 		Eterm *hp;
 		hp = HAlloc(p, 2);
-		ioterm = CONS(hp, ioterm, NIL);
+		ioterm = erts_cons(hp, ioterm, NIL);
 	    }
 #else
 	    ;
@@ -276,7 +276,7 @@ L_Again:   /* Restart with sublist, old listend was pushed on stack */
 	Eterm *hp = HAlloc(p,2*c);
 	while(!ESTACK_ISEMPTY(stack)) {
 	    Eterm st = ESTACK_POP(stack);
-	    ioterm = CONS(hp, ioterm, st);
+	    ioterm = erts_cons(hp, ioterm, st);
 	    hp += 2;
 	}
     }

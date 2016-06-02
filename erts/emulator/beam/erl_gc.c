@@ -341,7 +341,7 @@ erts_heap_sizes(Process* p)
 	    num = uint_to_big(sz, bigp);
 	    bigp += BIG_UINT_HEAP_SIZE;
 	}
-        res = CONS(hp, num, res);
+        res = erts_cons(hp, num, res);
         hp += 2;
     }
     return res;
@@ -3167,15 +3167,15 @@ reached_max_heap_size(Process *p, Uint total_heap_size,
 
             /* Build the args in reverse order */
             o_hp = hp = erts_alloc(ERTS_ALC_T_TMP, 2*(alive ? 7 : 6) * sizeof(Eterm));
-            args = CONS(hp, msg, args); hp += 2;
-            args = CONS(hp, am_true, args); hp += 2;
-            args = CONS(hp, (max_heap_flags & MAX_HEAP_SIZE_KILL ? am_true : am_false), args); hp += 2;
-            args = CONS(hp, make_small(total_heap_size), args); hp += 2;
-            args = CONS(hp, make_small(MAX_HEAP_SIZE_GET(p)), args); hp += 2;
+            args = erts_cons(hp, msg, args); hp += 2;
+            args = erts_cons(hp, am_true, args); hp += 2;
+            args = erts_cons(hp, (max_heap_flags & MAX_HEAP_SIZE_KILL ? am_true : am_false), args); hp += 2;
+            args = erts_cons(hp, make_small(total_heap_size), args); hp += 2;
+            args = erts_cons(hp, make_small(MAX_HEAP_SIZE_GET(p)), args); hp += 2;
             if (alive) {
-                args = CONS(hp, erts_this_node->sysname, args); hp += 2;
+                args = erts_cons(hp, erts_this_node->sysname, args); hp += 2;
             }
-            args = CONS(hp, p->common.id, args); hp += 2;
+            args = erts_cons(hp, p->common.id, args); hp += 2;
 
             erts_send_error_term_to_logger(p->group_leader, dsbufp, args);
             erts_free(ERTS_ALC_T_TMP, o_hp);

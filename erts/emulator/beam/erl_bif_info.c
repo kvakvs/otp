@@ -176,7 +176,7 @@ bld_bin_list(Uint **hpp, Uint *szp, ErlOffHeap* oh)
 	    if (hpp) {
 		Uint refc = (Uint) erts_smp_atomic_read_nob(&pb->val->refc);
 		tuple = TUPLE3(*hpp, val, orig_size, make_small(refc));
-		res = CONS(*hpp + 4, tuple, res);
+		res = erts_cons(*hpp + 4, tuple, res);
 		*hpp += 4+2;
 	    }
 	}
@@ -223,7 +223,7 @@ static void do_make_one_mon_element(ErtsMonitor *mon, void * vpmlc)
 	       : STORE_NC(&(pmlc->hp), &MSO(pmlc->p), mon->pid));
     tup = TUPLE5(pmlc->hp, pmlc->tag, make_small(mon->type), r, p, mon->name);
     pmlc->hp += 6;
-    pmlc->res = CONS(pmlc->hp, tup, pmlc->res);
+    pmlc->res = erts_cons(pmlc->hp, tup, pmlc->res);
     pmlc->hp += 2;
 }
 
@@ -293,7 +293,7 @@ static void do_make_one_lnk_element(ErtsLink *lnk, void * vpllc)
     }
     tup = TUPLE4(pllc->hp, pllc->tag, make_small(lnk->type), p, targets);
     pllc->hp += 5;
-    pllc->res = CONS(pllc->hp, tup, pllc->res);
+    pllc->res = erts_cons(pllc->hp, tup, pllc->res);
     pllc->hp += 2;
 }
 
@@ -689,7 +689,7 @@ process_info_init(void)
     pi_1_keys_list = NIL;
 
     for (i = ERTS_PI_1_NO_OF_KEYS-1; i >= 0; i--) {
-	pi_1_keys_list = CONS(hp, pi_1_keys[i], pi_1_keys_list);
+	pi_1_keys_list = erts_cons(hp, pi_1_keys[i], pi_1_keys_list);
 	hp += 2;
     }
 
@@ -769,7 +769,7 @@ process_info_list(Process *c_p, Eterm pid, Eterm list, int always_wrap,
     while (is_list(list)) {
 	Eterm* consp = list_val(list);
 
-	arg = CAR(consp);
+	arg = erts_car(consp);
 	ix = pi_arg2ix(arg);
 	if (ix < 0) {
 	    res = THE_NON_VALUE;
@@ -798,7 +798,7 @@ process_info_list(Process *c_p, Eterm pid, Eterm list, int always_wrap,
 	    }
 	}
 	res_elem_ix[res_elem_ix_ix] = ix;
-	list = CDR(consp);
+	list = erts_cdr(consp);
     }
     if (is_not_nil(list)) {
 	res = THE_NON_VALUE;
@@ -893,7 +893,7 @@ process_info_list(Process *c_p, Eterm pid, Eterm list, int always_wrap,
 	    ASSERT(pi_ix2arg(ix) == am_registered_name);
 	}
 	else {
-	    res = CONS(hp, part_res[ix], res);
+	    res = erts_cons(hp, part_res[ix], res);
 	    hp += 2;
 	}
     }
@@ -1152,7 +1152,7 @@ process_info_aux(Process *BIF_P,
 		if (sz != 0)
 		    msg = copy_struct(msg, sz, &hp, &BIF_P->off_heap);
 
-		res = CONS(hp, msg, res);
+		res = erts_cons(hp, msg, res);
 		hp += 2;
 	    }
 
@@ -1181,7 +1181,7 @@ process_info_aux(Process *BIF_P,
 	res = NIL;
 	for (i = 0; i < mic.mi_i; i++) {
 	    item = STORE_NC(&hp, &MSO(BIF_P), mic.mi[i].entity); 
-	    res = CONS(hp, item, res);
+	    res = erts_cons(hp, item, res);
 	    hp += 2;
 	}
 	DESTROY_MONITOR_INFOS(mic);
@@ -1207,7 +1207,7 @@ process_info_aux(Process *BIF_P,
 		hp += 3;
 		t2 = TUPLE2(hp, am_process, t1);
 		hp += 3;
-		res = CONS(hp, t2, res);
+		res = erts_cons(hp, t2, res);
 		hp += 2;
 	    }
 	    else {
@@ -1216,7 +1216,7 @@ process_info_aux(Process *BIF_P,
 		Eterm pid = STORE_NC(&hp, &MSO(BIF_P), mic.mi[i].entity);
 		t = TUPLE2(hp, am_process, pid);
 		hp += 3;
-		res = CONS(hp, t, res);
+		res = erts_cons(hp, t, res);
 		hp += 2;
 	    }
 	}
@@ -1236,7 +1236,7 @@ process_info_aux(Process *BIF_P,
 	res = NIL;
 	for (i = 0; i < mic.mi_i; ++i) {
 	    item = STORE_NC(&hp, &MSO(BIF_P), mic.mi[i].entity); 
-	    res = CONS(hp, item, res);
+	    res = erts_cons(hp, item, res);
 	    hp += 2;
 	}
 	DESTROY_MONITOR_INFOS(mic);
@@ -1285,7 +1285,7 @@ process_info_aux(Process *BIF_P,
 	    }
 	    item = TUPLE3(hp, smic.smi[i]->pid, active, pending);
 	    hp += 4;
-	    res = CONS(hp, item, res);
+	    res = erts_cons(hp, item, res);
 	    hp += 2;
 	}
 
@@ -1414,19 +1414,19 @@ process_info_aux(Process *BIF_P,
         /* last "3" is for outside tuple */
 
 	t = TUPLE2(hp, AM_minor_gcs, make_small(GEN_GCS(rp))); hp += 3;
-	res = CONS(hp, t, NIL); hp += 2;
+	res = erts_cons(hp, t, NIL); hp += 2;
 	t = TUPLE2(hp, am_fullsweep_after, make_small(MAX_GEN_GCS(rp))); hp += 3;
-	res = CONS(hp, t, res); hp += 2;
+	res = erts_cons(hp, t, res); hp += 2;
 
 	t = TUPLE2(hp, am_min_heap_size, make_small(MIN_HEAP_SIZE(rp))); hp += 3;
-	res = CONS(hp, t, res); hp += 2;
+	res = erts_cons(hp, t, res); hp += 2;
 	t = TUPLE2(hp, am_min_bin_vheap_size, make_small(MIN_VHEAP_SIZE(rp))); hp += 3;
-	res = CONS(hp, t, res); hp += 2;
+	res = erts_cons(hp, t, res); hp += 2;
 
         t = erts_max_heap_size_map(MAX_HEAP_SIZE_GET(rp), MAX_HEAP_SIZE_FLAGS_GET(rp), &hp, NULL);
 
 	t = TUPLE2(hp, am_max_heap_size, t); hp += 3;
-	res = CONS(hp, t, res); hp += 2;
+	res = erts_cons(hp, t, res); hp += 2;
 	break;
     }
 
@@ -1545,7 +1545,7 @@ process_info_aux(Process *BIF_P,
 				  make_small(scb->ct[j]->code[2]));
 		    hp += 4;
 		}
-		list = CONS(hp, term, list);
+		list = erts_cons(hp, term, list);
 		hp += 2;
 	    }
 	    res = list;
@@ -1679,7 +1679,7 @@ current_stacktrace(Process* p, Process* rp, Eterm** hpp)
     while (stkp > stk) {
 	stkp--;
 	hp = erts_build_mfa_item(stkp, hp, am_true, &mfa);
-	res = CONS(hp, mfa, res);
+	res = erts_cons(hp, mfa, res);
 	hp += 2;
     }
 
@@ -2193,16 +2193,16 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 	hp = HAlloc(BIF_P, 3+2 + 3+2 + 3+2 + 3+2);
 
 	tup = TUPLE2(hp, am_fullsweep_after, make_small(val)); hp += 3;
-	res = CONS(hp, tup, NIL); hp += 2;
+	res = erts_cons(hp, tup, NIL); hp += 2;
 
 	tup = TUPLE2(hp, am_min_heap_size, make_small(H_MIN_SIZE)); hp += 3;
-	res = CONS(hp, tup, res); hp += 2;
+	res = erts_cons(hp, tup, res); hp += 2;
 
 	tup = TUPLE2(hp, am_min_bin_vheap_size, make_small(BIN_VH_MIN_SIZE)); hp += 3;
-	res = CONS(hp, tup, res); hp += 2;
+	res = erts_cons(hp, tup, res); hp += 2;
 
 	tup = TUPLE2(hp, am_max_heap_size, make_small(H_MAX_SIZE)); hp += 3;
-	res = CONS(hp, tup, res); hp += 2;
+	res = erts_cons(hp, tup, res); hp += 2;
 
 	BIF_RET(res);
     } else if (BIF_ARG_1 == am_fullsweep_after){
@@ -2275,7 +2275,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 	    ASSERT(is_immed(dep->cid));
 	    tpl = TUPLE2(hp, dep->sysname, dep->cid);
 	    hp +=3;
-	    res = CONS(hp, tpl, res);
+	    res = erts_cons(hp, tpl, res);
 	    hp += 2;
 	}
 	for (dep = erts_visible_dist_entries; dep; dep = dep->next) {
@@ -2283,7 +2283,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 	    ASSERT(is_immed(dep->cid));
 	    tpl = TUPLE2(hp, dep->sysname, dep->cid);
 	    hp +=3;
-	    res = CONS(hp, tpl, res);
+	    res = erts_cons(hp, tpl, res);
 	    hp += 2;
 	}
 	erts_smp_thr_progress_unblock();
@@ -2585,7 +2585,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
     } else if (ERTS_IS_ATOM_STR("all_schedulers_state", BIF_ARG_1)) {
 #ifndef ERTS_SMP
 	Eterm *hp = HAlloc(BIF_P, 2+5);
-	res = CONS(hp+5,
+	res = erts_cons(hp+5,
 		   TUPLE4(hp,
 			  am_normal,
 			  make_small(1),
@@ -2618,7 +2618,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 			 make_small(dirty_io_total),
 			 make_small(dirty_io_active));
 	    hp += 5;
-	    res = CONS(hp, tpl, res);
+	    res = erts_cons(hp, tpl, res);
 	    hp += 2;
 	}
 	if (dirty_cpu_total) {
@@ -2628,7 +2628,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 			 make_small(dirty_cpu_online),
 			 make_small(dirty_cpu_active));
 	    hp += 5;
-	    res = CONS(hp, tpl, res);
+	    res = erts_cons(hp, tpl, res);
 	    hp += 2;
 	}
 	tpl = TUPLE4(hp,
@@ -2637,7 +2637,7 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 		     make_small(online),
 		     make_small(active));
 	hp += 5;
-	res = CONS(hp, tpl, res);
+	res = erts_cons(hp, tpl, res);
 	BIF_RET(res);
 #endif
     } else if (ERTS_IS_ATOM_STR("schedulers_online", BIF_ARG_1)) {
@@ -2822,17 +2822,17 @@ BIF_RETTYPE system_info_1(BIF_ALIST_1)
 	sz   = strlen(erts_build_flags_CONFIG_H);
 	text = buf_to_intlist(&hp, erts_build_flags_CONFIG_H, sz, NIL);
 	tup  = TUPLE2(hp, am_config_h, text); hp += 3;
-	res  = CONS(hp, tup, res); hp += 2;
+	res  = erts_cons(hp, tup, res); hp += 2;
 
 	sz   = strlen(erts_build_flags_CFLAGS);
 	text = buf_to_intlist(&hp, erts_build_flags_CFLAGS, sz, NIL);
 	tup  = TUPLE2(hp, am_cflags, text); hp += 3;
-	res  = CONS(hp, tup, res); hp += 2;
+	res  = erts_cons(hp, tup, res); hp += 2;
 
 	sz   = strlen(erts_build_flags_LDFLAGS);
 	text = buf_to_intlist(&hp, erts_build_flags_LDFLAGS, sz, NIL);
 	tup  = TUPLE2(hp, am_ldflags, text); hp += 3;
-	res  = CONS(hp, tup, res); hp += 2;
+	res  = erts_cons(hp, tup, res); hp += 2;
 
 	BIF_RET(res);
     }
@@ -2910,7 +2910,7 @@ erts_bld_port_info(Eterm **hpp, ErlOffHeap *ohp, Uint *szp, Port *prt, Eterm ite
 	    res = NIL;
 	    for (i = 0; i < mic.mi_i; i++) {
 		item = STORE_NC(hpp, ohp, mic.mi[i].entity);
-		res = CONS(*hpp, item, res);
+		res = erts_cons(*hpp, item, res);
 		*hpp += 2;
 	    }
 	}
@@ -2941,7 +2941,7 @@ erts_bld_port_info(Eterm **hpp, ErlOffHeap *ohp, Uint *szp, Port *prt, Eterm ite
 		item = STORE_NC(hpp, ohp, mic.mi[i].entity);
 		t = TUPLE2(*hpp, am_process, item);
 		*hpp += 3;
-		res = CONS(*hpp, t, res);
+		res = erts_cons(*hpp, t, res);
 		*hpp += 2;
 	    }
 	}
@@ -3145,7 +3145,7 @@ fun_info_2(BIF_ALIST_2)
 		hp = HAlloc(p, 3 + 2*num_free);
 		val = NIL;
 		for (i = num_free-1; i >= 0; i--) {
-		    val = CONS(hp, funp->env[i], val);
+		    val = erts_cons(hp, funp->env[i], val);
 		    hp += 2;
 		}
 	    }
@@ -3535,7 +3535,7 @@ BIF_RETTYPE erts_debug_get_internal_state_1(BIF_ALIST_1)
 	    Eterm res = NIL;
 	    Uint *hp = HAlloc(BIF_P, 2*ERTS_PI_ARGS);
 	    for (i = ERTS_PI_ARGS-1; i >= 0; i--) {
-		res = CONS(hp, pi_args[i], res);
+		res = erts_cons(hp, pi_args[i], res);
 		hp += 2;
 	    }
 	    BIF_RET(res);
