@@ -75,7 +75,7 @@ int within(Eterm *ptr, Process *p);
 
 #define ErtsInYoungGen(TPtr, Ptr, OldHeap, OldHeapSz)			\
     (!erts_is_literal((TPtr), (Ptr))					\
-     & !ErtsInArea((Ptr), (OldHeap), (OldHeapSz)))
+     && !ErtsInArea((Ptr), (OldHeap), (OldHeapSz)))
 
 ERTS_GLB_INLINE Eterm follow_moved(Eterm term, Eterm xptr_tag);
 
