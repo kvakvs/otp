@@ -1431,82 +1431,6 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
     remove_message_buffers(p);
 }
 
-static Eterm *
-sweep_mature_heap(Eterm *n_hp, Eterm *n_htop,
-                  char* mature, Uint mature_size,
-                  Eterm **o_htop,
-                  char* old_heap, Uint old_heap_size)
-{
-    Eterm* n_hp = n_heap;
-    Eterm* ptr;
-    Eterm val;
-    Eterm gval;
-
-    while (n_hp != n_htop) {
-        ASSERT(n_hp < n_htop);
-        gval = *n_hp;
-        switch (primary_tag(gval)) {
-        case TAG_PRIMARY_BOXED: {
-            ptr = boxed_val(gval);
-            val = *ptr;
-            if (IS_MOVED_BOXED(val)) {
-                ASSERT(is_boxed(val));
-                *n_hp++ = val;
-            } else if (ErtsInArea(ptr, mature, mature_size)) {
-                MOVE_BOXED(ptr,val,old_htop,n_hp++);
-            } else if (ErtsInYoungGen(gval, ptr, oh, oh_size)) {
-                MOVE_BOXED(ptr,val,n_htop,n_hp++);
-            } else {
-                n_hp++;
-            }
-            break;
-        }
-        case TAG_PRIMARY_LIST: {
-            ptr = list_val(gval);
-            val = *ptr;
-            if (IS_MOVED_CONS(val)) {
-                *n_hp++ = ptr[1];
-            } else if (ErtsInArea(ptr, mature, mature_size)) {
-                MOVE_CONS(ptr,val,old_htop,n_hp++);
-            } else if (ErtsInYoungGen(gval, ptr, oh, oh_size)) {
-                MOVE_CONS(ptr,val,n_htop,n_hp++);
-            } else {
-                n_hp++;
-            }
-            break;
-        }
-        case TAG_PRIMARY_HEADER: {
-            if (!header_is_thing(gval))
-                n_hp++;
-            else {
-                if (header_is_bin_matchstate(gval)) {
-                    ErlBinMatchState *ms = (ErlBinMatchState*) n_hp;
-                    ErlBinMatchBuffer *mb = &(ms->mb);
-                    Eterm* origptr = &(mb->orig);
-                    ptr = boxed_val(*origptr);
-                    val = *ptr;
-                    if (IS_MOVED_BOXED(val)) {
-                        *origptr = val;
-                        mb->base = binary_bytes(val);
-                    } else if (ErtsInArea(ptr, mature, mature_size)) {
-                        MOVE_BOXED(ptr,val,old_htop,origptr);
-                        mb->base = binary_bytes(mb->orig);
-                    } else if (ErtsInYoungGen(*origptr, ptr, oh, oh_size)) {
-                        MOVE_BOXED(ptr,val,n_htop,origptr);
-                        mb->base = binary_bytes(mb->orig);
-                    }
-                }
-                n_hp += (thing_arityval(gval)+1);
-            }
-            break;
-        }
-        default:
-            n_hp++;
-            break;
-        }
-    }
-}
-
 /*
  * Major collection. DISCARD the old heap.
  */
@@ -1945,6 +1869,37 @@ typedef enum {
     ErtsSweepLiteralArea
 } ErtsSweepType;
 
+static ERTS_FORCE_INLINE int
+is_in_primary_area(Eterm gval, Eterm *ptr,
+                   ErtsSweepType type,
+                   char *oh, Uint ohsz,
+                   char *src, Uint src_size)
+{
+    if (type == ErtsSweepHeaps)
+        return !erts_is_literal(gval,ptr);
+    if (type == ErtsSweepNewHeap || type == ErtsSweepMatureHeap)
+        return ErtsInYoungGen(gval, ptr, oh, ohsz);
+    return ErtsInArea(ptr, src, src_size);
+}
+
+static ERTS_FORCE_INLINE int
+is_in_secondary_area(Eterm gval, Eterm *ptr,
+                     ErtsSweepType type,
+                     char *oh, Uint ohsz,
+                     char *src, Uint src_size,
+                     Eterm *o_htop)
+{
+    if (type == ErtsSweepHeaps) {
+        if (o_htop)
+            return ErtsInArea(ptr, src, src_size)
+                || !ErtsInYoungGen(gval, ptr, oh, ohsz);
+        return 0;
+    }
+    if (type == ErtsSweepMatureHeap)
+        return ErtsInArea(ptr, src, src_size);
+    return 0;
+}
+
 static ERTS_FORCE_INLINE void
 sweep(Eterm *n_hp, Eterm **n_htopp, Eterm **o_htopp,
       ErtsSweepType type,
@@ -1960,21 +1915,11 @@ sweep(Eterm *n_hp, Eterm **n_htopp, Eterm **o_htopp,
 #undef ERTS_IS_IN_PRIMARY_AREA
 #undef ERTS_IS_IN_SECONDARY_AREA
 
-#define ERTS_IS_IN_PRIMARY_AREA(TPtr, Ptr)                          \
-    (type == ErtsSweepHeaps                                         \
-     ? !erts_is_literal((TPtr), (Ptr))                              \
-     : (type == ErtsSweepNewHeap || type == ErtsSweepMatureHeap     \
-        ? ErtsInYoungGen((TPtr), (Ptr), oh, ohsz)                   \
-	: ErtsInArea((Ptr), src, src_size)))
+#define ERTS_IS_IN_PRIMARY_AREA(TPtr, Ptr) \
+    is_in_primary_area(TPtr, Ptr, type, oh, ohsz, src, src_size)
 
-#define ERTS_IS_IN_SECONDARY_AREA(TPtr, Ptr)                    \
-    (type == ErtsSweepHeaps                                     \
-     ? (o_htop &&                                               \
-        (ErtsInArea(ptr, src, src_size)                         \
-         || !ErtsInYoungGen(TPtr, (Ptr), oh, ohsz)))            \
-     : (type == ErtsSweepMatureHeap                             \
-        ? ErtsInArea(ptr, src, src_size)                        \
-        : 0))
+#define ERTS_IS_IN_SECONDARY_AREA(TPtr, Ptr) \
+    is_in_secondary_area(TPtr, Ptr, type, oh, ohsz, src, src_size, o_htop)
 
     while (n_hp != n_htop) {
 	ASSERT(n_hp < n_htop);
