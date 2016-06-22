@@ -1386,7 +1386,7 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
     OLD_HTOP(p) = old_htop;
     HIGH_WATER(p) = n_htop;
 
-    sweep_off_heap(p, 0);
+    sweep_off_heap(p, NULL, 0);
 
 #ifdef HARDDEBUG
     /*
@@ -1444,7 +1444,7 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
     char *oh = (char *) OLD_HEAP(p);
     Uint oh_size = (char *) OLD_HTOP(p) - oh;
     Uint new_sz, old_sz, stk_sz;
-    Uint mature_sz = (p->high_water - mature) * sizeof(Eterm);
+    Uint mature_bytes = (p->high_water - mature) * sizeof(Eterm);
     int adjusted;
 
     VERBOSE(DEBUG_SHCOPY, ("[pid=%T] MAJOR GC: %p %p %p %p\n", p->common.id,
@@ -1492,7 +1492,7 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
     FLAGS(p) &= ~(F_HEAP_GROW|F_NEED_FULLSWEEP);
     n_htop = n_heap = (Eterm *) ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP,
 						sizeof(Eterm)*new_sz);
-    if (mature_sz || oh) {
+    if (mature_bytes || oh) {
         o_htop = o_heap = (Eterm *) ERTS_HEAP_ALLOC(ERTS_ALC_T_OLD_HEAP,
                                                     sizeof(Eterm)*old_sz);
     }
@@ -1507,7 +1507,7 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 
     n_htop = full_sweep_heaps(
                 p, 0, n_heap, n_htop, o_heap, &o_htop,
-                (char*)mature, mature_sz,
+                (char*)mature, mature_bytes,
                 oh, oh_size, objv, nobj);
 
     /* Move the stack to the end of the heap */
@@ -1670,7 +1670,7 @@ full_sweep_heaps(Process *p,
     n_htop = sweep_heaps(n_heap, n_htop, mature, mature_size,
                          o_heap, o_htop, oh, oh_size);
 
-    sweep_off_heap(p, 1);
+    sweep_off_heap(p, oh, oh_size);
 
     return n_htop;
 }
@@ -1943,11 +1943,10 @@ sweep(Eterm *n_hp, Eterm **n_htopp,
     Eterm *o_htop = o_htopp ? *o_htopp : NULL;
 
 #undef ERTS_IS_IN_PRIMARY_AREA
-#undef ERTS_IS_IN_SECONDARY_AREA
-
 #define ERTS_IS_IN_PRIMARY_AREA(TPtr, Ptr) \
     is_in_primary_area(TPtr, Ptr, type, oh, ohsz, src, src_size)
 
+#undef ERTS_IS_IN_SECONDARY_AREA
 #define ERTS_IS_IN_SECONDARY_AREA(TPtr, Ptr) \
     is_in_secondary_area(TPtr, Ptr, type, oh, ohsz, src, src_size, o_htop)
 
@@ -2043,7 +2042,7 @@ sweep_mature_heap(Eterm *n_hp, Eterm *n_htop, char* mature, Uint mature_size,
                   char* old_heap, Uint old_heap_size)
 {
     sweep(n_hp, &n_htop, o_hp, o_htop,
-          ErtsSweepNewHeap,
+          ErtsSweepMatureHeap,
           old_heap, old_heap_size,
           mature, mature_size);
     return n_htop;
@@ -2737,7 +2736,7 @@ sweep_off_heap(Process *p, char *oheap, Uint oheap_sz)
     prev = &MSO(p).first;
     ptr = MSO(p).first;
 
-    /* Firts part of the list will reside on the (old) new-heap.
+    /* First part of the list will reside on the (old) new-heap.
      * Keep if moved, otherwise deref.
      */
     while (ptr) {
