@@ -112,6 +112,20 @@ static void debug_sweep_check(Eterm *hp, Eterm *hend, int old_heap);
 static void debug_mso_check(Process *p,
                             Eterm *range1_begin, Eterm *range1_end,
                             Eterm *range2_begin, Eterm *range2_end);
+
+#ifdef DEBUG
+typedef struct {
+    FILE *f;
+} Heaps;
+static void debug_heapdump_ctor(Heaps *h, Process *p, const char *tag);
+static void debug_heapdump_process(Heaps *h, Process *p);
+static void debug_heapdump_roots(Heaps *h, Rootset *rs);\
+static void debug_heapdump_heap(Heaps *h, const Eterm *hp, const Eterm *htop,
+                                const Eterm *hend, const char *zonetag,
+                                const char *heaptag);
+static void debug_heapdump_dtor(Heaps *h);
+#endif
+
 static Uint setup_rootset(Process*, Eterm*, int, Rootset*);
 static void free_rootset_struct(Rootset *rootset);
 static void remove_message_buffers(Process* p);
@@ -1299,20 +1313,17 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 {
     Rootset rootset;            /* Rootset for GC (stack, dictionary, etc). */
     Roots* roots;
-    Eterm* n_htop;
+    Eterm* new_htop;
     Uint n;
-    Eterm* ptr;
-    Eterm val;
-    Eterm gval;
     Eterm* old_htop = OLD_HTOP(p);
-    Eterm* n_heap;
-    char* oh = (char *) OLD_HEAP(p);
-    Uint oh_size = (char *) OLD_HTOP(p) - oh;
+    Eterm* new_hp;
+    char* old_old_hp = (char *) OLD_HEAP(p);
+    Uint old_old_size = (char *) OLD_HTOP(p) - old_old_hp;
 
     VERBOSE(DEBUG_SHCOPY, ("[pid=%T] MINOR GC: %p %p %p %p\n", p->common.id,
                            HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p)));
 
-    n_htop = n_heap = (Eterm*) ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP,
+    new_htop = new_hp = (Eterm*) ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP,
 					       sizeof(Eterm)*new_sz);
 
     if (live_hf_end != ERTS_INVALID_HFRAG_PTR) {
@@ -1320,33 +1331,33 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 	 * Move heap frags that we know are completely live
 	 * directly into the new young heap generation.
 	 */
-        n_htop = collect_live_heap_frags(p, live_hf_end, n_htop);
+        new_htop = collect_live_heap_frags(p, live_hf_end, new_htop);
     }
 
     n = setup_rootset(p, objv, nobj, &rootset);
     roots = rootset.roots;
 
-    GENSWEEP_NSTACK(p, old_htop, n_htop);
+    GENSWEEP_NSTACK(p, old_htop, new_htop);
     while (n--) {
         Eterm* g_ptr = roots->v;
         Uint g_sz = roots->sz;
 
 	roots++;
         while (g_sz--) {
-            gval = *g_ptr;
+            Eterm gval = *g_ptr;
 
             switch (primary_tag(gval)) {
 
 	    case TAG_PRIMARY_BOXED: {
-		ptr = boxed_val(gval);
-                val = *ptr;
+                Eterm* ptr = boxed_val(gval);
+                Eterm val = *ptr;
                 if (IS_MOVED_BOXED(val)) {
 		    ASSERT(is_boxed(val));
                     *g_ptr++ = val;
                 } else if (ErtsInArea(ptr, mature, mature_size)) {
                     MOVE_BOXED(ptr,val,old_htop,g_ptr++);
-                } else if (ErtsInYoungGen(gval, ptr, oh, oh_size)) {
-                    MOVE_BOXED(ptr,val,n_htop,g_ptr++);
+                } else if (ErtsInYoungGen(gval, ptr, old_old_hp, old_old_size)) {
+                    MOVE_BOXED(ptr,val,new_htop,g_ptr++);
                 } else {
 		    g_ptr++;
 		}
@@ -1354,14 +1365,14 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 	    }
 
 	    case TAG_PRIMARY_LIST: {
-                ptr = list_val(gval);
-                val = *ptr;
+                Eterm* ptr = list_val(gval);
+                Eterm val = *ptr;
                 if (IS_MOVED_CONS(val)) { /* Moved */
                     *g_ptr++ = ptr[1];
                 } else if (ErtsInArea(ptr, mature, mature_size)) {
                     MOVE_CONS(ptr,val,old_htop,g_ptr++);
-                } else if (ErtsInYoungGen(gval, ptr, oh, oh_size)) {
-                    MOVE_CONS(ptr,val,n_htop,g_ptr++);
+                } else if (ErtsInYoungGen(gval, ptr, old_old_hp, old_old_size)) {
+                    MOVE_CONS(ptr,val,new_htop,g_ptr++);
                 } else {
 		    g_ptr++;
 		}
@@ -1375,6 +1386,17 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
         }
     }
 
+    if(1)
+    {   /* Save a dump file with heap contents */
+        Heaps h;
+        debug_heapdump_ctor(&h, p, "minor1");
+        debug_heapdump_roots(&h, &rootset);
+        debug_heapdump_process(&h, p);
+        debug_heapdump_heap(&h, new_hp, new_htop, new_hp + new_sz,
+                            "NEW", "new_hp");
+        debug_heapdump_dtor(&h);
+    }
+
     free_rootset_struct(&rootset);
 
     /*
@@ -1385,10 +1407,10 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
      */
 
     if (mature_size == 0) {
-	n_htop = sweep_new_heap(n_heap, n_htop, oh, oh_size);
+        new_htop = sweep_new_heap(new_hp, new_htop, old_old_hp, old_old_size);
     } else {
-        n_htop = sweep_mature_heap(n_heap, n_htop, mature, mature_size,
-                                   OLD_HEAP(p), &old_htop, oh, oh_size);
+        new_htop = sweep_mature_heap(new_hp, new_htop, mature, mature_size,
+                                   OLD_HEAP(p), &old_htop, old_old_hp, old_old_size);
     }
 
     /*
@@ -1397,18 +1419,18 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
      */
 
     if (OLD_HTOP(p) < old_htop) {
-	old_htop = sweep_new_heap(OLD_HTOP(p), old_htop, oh, oh_size);
+        old_htop = sweep_new_heap(OLD_HTOP(p), old_htop, old_old_hp, old_old_size);
 #ifdef DEBUG
-        debug_sweep_check(n_heap, n_htop, 0);
+        debug_sweep_check(new_hp, new_htop, 0);
         debug_sweep_check(OLD_HEAP(p), old_htop, 1);
 #endif
     }
     OLD_HTOP(p) = old_htop;
-    HIGH_WATER(p) = n_htop;
+    HIGH_WATER(p) = new_htop;
 
     sweep_off_heap(p, NULL, 0);
 #ifdef DEBUG
-    debug_sweep_check(n_heap, n_htop, 0);
+    debug_sweep_check(new_hp, new_htop, 0);
     debug_sweep_check(OLD_HEAP(p), old_htop, 1);
 #endif
 
@@ -1423,8 +1445,8 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 
     /* Copy stack to end of new heap */
     n = p->hend - p->stop;
-    sys_memcpy(n_heap + new_sz - n, p->stop, n * sizeof(Eterm));
-    p->stop = n_heap + new_sz - n;
+    sys_memcpy(new_hp + new_sz - n, p->stop, n * sizeof(Eterm));
+    p->stop = new_hp + new_sz - n;
 
 #ifdef USE_VM_PROBES
     if (HEAP_SIZE(p) != new_sz && DTRACE_ENABLED(process_heap_grow)) {
@@ -1442,13 +1464,13 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 		   HEAP_SIZE(p) * sizeof(Eterm));
     p->abandoned_heap = NULL;
     p->flags &= ~F_ABANDONED_HEAP_USE;
-    HEAP_START(p) = n_heap;
-    HEAP_TOP(p) = n_htop;
+    HEAP_START(p) = new_hp;
+    HEAP_TOP(p) = new_htop;
     HEAP_SIZE(p) = new_sz;
-    HEAP_END(p) = n_heap + new_sz;
+    HEAP_END(p) = new_hp + new_sz;
 
 #ifdef DEBUG
-    debug_sweep_check(n_heap, n_htop, 0);
+    debug_sweep_check(new_hp, new_htop, 0);
     debug_sweep_check(OLD_HEAP(p), old_htop, 1);
 #endif
 
@@ -1456,6 +1478,16 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
     disallow_heap_frag_ref_in_heap(p);
 #endif
     remove_message_buffers(p);
+
+    if(1)
+    {   /* Save a dump file with heap contents */
+        Heaps h;
+        debug_heapdump_ctor(&h, p, "minor2");
+        debug_heapdump_process(&h, p);
+        debug_heapdump_heap(&h, new_hp, new_htop, new_hp + new_sz,
+                            "NEW", "new_hp");
+        debug_heapdump_dtor(&h);
+    }
 }
 
 /*
@@ -1596,6 +1628,18 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 
     ErtsGcQuickSanityCheck(p);
 
+    if(1)
+    {   /* Save a dump file with heap contents */
+        Heaps h;
+        debug_heapdump_ctor(&h, p, "major2");
+        debug_heapdump_process(&h, p);
+        debug_heapdump_heap(&h, new_hp, new_htop, new_hp + new_sz,
+                            "NEWHP", "new_hp");
+        debug_heapdump_heap(&h, new_old_hp, new_old_htop, new_old_hp + old_sz,
+                            "NEWOLD", "new_old_hp");
+        debug_heapdump_dtor(&h);
+    }
+
     return gc_cost(size_after, adjusted ? size_after : 0);
 }
 
@@ -1625,6 +1669,18 @@ full_sweep_heaps(Process *p,
     else
         new_htop = fullsweep_nstack(p, new_htop);
 #endif
+
+    if(1)
+    {   /* Save a dump file with heap contents */
+        Heaps h;
+        debug_heapdump_ctor(&h, p, "major11");
+        debug_heapdump_process(&h, p);
+//        debug_heapdump_heap(&h, new_hp, new_htop, new_htop,
+//                            "NEWHP", "new_hp");
+//        debug_heapdump_heap(&h, new_old_hp, *new_old_htop, *new_old_htop,
+//                            "NEWOLD", "new_old_hp");
+        debug_heapdump_dtor(&h);
+    }
 
     roots = rootset.roots;
     while (n--) {
@@ -1686,6 +1742,18 @@ full_sweep_heaps(Process *p,
 	    }
 	    }
 	}
+    }
+
+    if(1)
+    {   /* Save a dump file with heap contents */
+        Heaps h;
+        debug_heapdump_ctor(&h, p, "major12");
+        debug_heapdump_process(&h, p);
+        debug_heapdump_heap(&h, new_hp, new_htop, new_htop,
+                            "NEWHP", "new_hp");
+        debug_heapdump_heap(&h, new_old_hp, *new_old_htop, *new_old_htop,
+                            "NEWOLD", "new_old_hp");
+        debug_heapdump_dtor(&h);
     }
 
     free_rootset_struct(&rootset);
@@ -3534,3 +3602,323 @@ erts_check_off_heap(Process *p)
 }
 
 #endif
+
+//#ifdef DEBUG
+
+/*
+ * Saves a pointer with a name
+ */
+static void debug_tag_pointer(FILE *f, const void *ptr, const char *tag)
+{
+    fprintf(f, "NAMED %p %s\n", ptr, tag);
+}
+
+/*
+ * Output zone limits with a name (may be nested within other zones)
+ */
+static void debug_tag_zone(FILE *f, const void *from, const void *to,
+                           const char *tag, const char *parent_tag)
+{
+    fprintf(f, "ZONEDEF %s RANGE %p %p PARENT %s\n",
+            tag, from, to, parent_tag);
+    fflush(f);
+}
+/*
+ * Same as zonedef but will display any terms if they belong to it
+ */
+static void debug_tag_heap(FILE *f, const void *from, const void *to,
+                           const char *tag, const char *parent_tag)
+{
+    if (to == from || ! from) {
+        return; /* zero size or NULL */
+    }
+    fprintf(f, "HEAPDEF %s RANGE %p %p PARENT %s\n",
+            tag, from, to, parent_tag);
+    fflush(f);
+}
+
+/*
+ * Output zone limits with a name (may be nested within other zones)
+ */
+typedef enum {
+    DTF_MOVED = 0x01,   /* value is marked as moved */
+    DTF_BOXED = 0x02,   /* value is some box */
+    DTF_CONS  = 0x04,   /* value is a cons pointer */
+    DTF_ROOTSET = 0x08, /* value belongs to rootset */
+    DTF_HEADER = 0x10,  /* some header, like bin match state */
+    DTF_IMMED = 0x20,   /* immediate term value */
+    DTF_CP    = 0x40    /* CP value */
+} DebugTermFlags;
+
+/*
+ * We found something which is moved, how to know its size?
+ */
+/*
+static ERTS_FORCE_INLINE Uint
+debug_heapdump_get_thing_size(const Eterm *t) {
+    if (IS_MOVED_CONS(t[0])) {
+        //const Eterm *newbox = list_val(t[1]);
+        return 2;
+    }
+    if (IS_MOVED_BOXED(t[0])) {
+        //Eterm *newbox = boxed_val(t[0]);
+        ASSERT(!"boxed thing");
+    }
+    return thing_arityval(*t);
+}
+*/
+
+/*
+ * Given a pointer to header returns its size
+ */
+static Uint debug_header_size(const Eterm *box)
+{
+    Eterm val = box[0];
+    switch (val & _HEADER_SUBTAG_MASK) {
+    case EXTERNAL_PID_SUBTAG:
+        printf(" subtag_pid");
+        break;
+    case EXTERNAL_PORT_SUBTAG:
+        printf(" subtag_port");
+        break;
+    case EXTERNAL_REF_SUBTAG:
+    case REF_SUBTAG:
+        printf(" subtag_ref");
+        break;
+    case ARITYVAL_SUBTAG:       /* tuple */
+        printf(" subtag_tuple");
+        break;
+    case FLOAT_SUBTAG:
+        printf(" subtag_float");
+        return sizeof(double);
+    case SUB_BINARY_SUBTAG:
+        printf(" subtag_subbin");
+        break;
+    case HEAP_BINARY_SUBTAG:
+        printf(" subtag_heapbin");
+        break;
+    case REFC_BINARY_SUBTAG:
+        printf(" subtag_refcbin");
+        break;
+    case BIN_MATCHSTATE_SUBTAG:
+        printf(" subtag_binmatch");
+        break;
+    case FUN_SUBTAG:
+        printf(" subtag_fun");
+        break;
+    case MAP_SUBTAG:
+        printf(" subtag_map");
+        break;
+    case POS_BIG_SUBTAG:
+    case NEG_BIG_SUBTAG:
+        printf(" subtag_bignum");
+        return bignum_header_arity(val);
+    default:
+        printf("NYI subtag %zu\r\n", val & _HEADER_SUBTAG_MASK);
+        ASSERT(!"NYI header type");
+    }
+    return header_arity(val);
+}
+
+/*
+ * Prints address p and flags for the given term to file
+ */
+static void debug_write_tagged_term(FILE *f, const Eterm *p, int flags)
+{
+    fprintf(f, "TERM %p ", p);
+    if (flags & DTF_ROOTSET) { fprintf(f, "R"); }
+    if (flags & DTF_BOXED) { fprintf(f, "B"); }
+    if (flags & DTF_MOVED) { fprintf(f, "M"); }
+    if (flags & DTF_CONS) { fprintf(f, "C"); }
+    if (flags & DTF_IMMED) { fprintf(f, "I"); }
+    if (flags & DTF_CP) { fprintf(f, "*"); }
+    fprintf(f, "\n");
+}
+
+static void debug_tag_heap_term(FILE *f, const Eterm **heap_ptr, int flags)
+{
+    const Eterm *heap_ptr0 = *heap_ptr; /* value at start, to be logged later */
+    Eterm heap_val = *(*heap_ptr);
+
+    printf("heap term %p", heap_ptr0);
+
+    switch (primary_tag(heap_val)) {
+    case TAG_PRIMARY_BOXED: {
+        printf(" p_box");
+        {
+            Eterm *box_ptr = boxed_val(heap_val);
+            Eterm val = *box_ptr;
+            flags |= DTF_BOXED;
+            if (IS_MOVED_BOXED(val)) {
+                flags |= DTF_MOVED;
+            }
+            (*heap_ptr)++;
+        }
+        break;
+    }
+    case TAG_PRIMARY_LIST: {
+        Eterm *box_ptr = list_val(heap_val);
+        Eterm val = *box_ptr;
+        flags |= DTF_CONS;
+        if (IS_MOVED_CONS(val)) { /* Moved */
+            flags |= DTF_MOVED;
+        }
+        printf(" p_list");
+        (*heap_ptr)++;
+        break;
+    }
+    case TAG_PRIMARY_HEADER: {
+        Uint arity = debug_header_size(*heap_ptr);
+        (*heap_ptr) += arity + 1;
+        flags |= DTF_HEADER;
+        printf(" p_hdr[arity=%zu]", arity);
+        } break;
+    case TAG_PRIMARY_IMMED1:
+        (*heap_ptr)++;
+        flags |= DTF_IMMED;
+        break;
+    default:
+        ASSERT(0);
+    }
+    printf("\r\n");
+    debug_write_tagged_term(f, heap_ptr0, flags);
+}
+
+static void debug_tag_root_term(FILE *f, const Eterm **heap_ptr, int flags)
+{
+    const Eterm *heap_ptr0 = *heap_ptr; /* value at start, to be logged later */
+    Eterm heap_val = *(*heap_ptr);
+
+    switch (primary_tag(heap_val)) {
+    case TAG_PRIMARY_BOXED: {
+        Eterm *box_ptr = boxed_val(heap_val);
+        Eterm val = *box_ptr;
+        flags |= DTF_BOXED;
+        if (IS_MOVED_BOXED(val)) {
+            flags |= DTF_MOVED;
+        }
+        (*heap_ptr)++;
+        break;
+    }
+    case TAG_PRIMARY_LIST: {
+        Eterm *box_ptr = list_val(heap_val);
+        Eterm val = *box_ptr;
+        flags |= DTF_CONS;
+        if (IS_MOVED_CONS(val)) { /* Moved */
+            flags |= DTF_MOVED;
+        }
+        (*heap_ptr)++;
+        break;
+    }
+    case TAG_PRIMARY_IMMED1:
+        (*heap_ptr)++;
+        flags |= DTF_IMMED;
+        break;
+    case TAG_PRIMARY_HEADER:
+        (*heap_ptr)++;
+        flags |= DTF_CP; /* only the stack can have CP */
+        break;
+    default:
+        ASSERT(!"strange root term tag found");
+    }
+    debug_write_tagged_term(f, heap_ptr0, flags);
+}
+
+static void debug_tag_roots(FILE *f, const Rootset *rs)
+{
+    for (int n = 0; n < rs->num_roots; ++n) {
+        const Eterm *g_ptr = rs->roots[n].v;
+        for (int m = 0; m < rs->roots[n].sz; ++m) {
+            debug_tag_root_term(f, &g_ptr, DTF_ROOTSET);
+        }
+    }
+    fflush(f);
+}
+
+/*
+ * Dumps every term between hbegin and hend
+ */
+static void debug_dump_heap_terms(FILE *f,
+                                  const Eterm *hbegin, const Eterm *htop)
+{
+    printf("Dumping heap terms...\r\n");
+    const Eterm *p = hbegin;
+    while (p != htop) {
+        const Eterm *loopdetect = p;
+        debug_tag_heap_term(f, &p, 0);
+        ASSERT(p > loopdetect);
+    }
+    fflush(f);
+}
+
+static size_t g_heap_dump_id = 0;
+
+/*
+ * Constructs a Heaps struct from process to display existing situation in
+ * the process
+ */
+static void debug_heapdump_ctor(Heaps *h, Process *p, const char *tag)
+{
+    sys_memset(h, 0, sizeof(Heaps));
+
+    char filename[256], pid_s[32];
+    ASSERT(is_pid(p->common.id));
+    erts_sprintf(pid_s, "%T", p->common.id);
+    sprintf(filename, "heapdump-%s-%03zu-%s.txt",
+                 pid_s, g_heap_dump_id++, tag);
+
+    h->f = fopen(filename, "wt");
+    ASSERT(h->f);
+}
+
+static void debug_heapdump_process(Heaps *h, Process *p)
+{
+    debug_tag_zone(h->f, p->heap, p->hend, "PROC", "-");
+    /* Current stack */
+    if (p->stop) {
+        debug_tag_heap(h->f, p->stop, p->hend, "stack", "PROC");
+        debug_tag_heap(h->f, p->heap, p->htop, "heap", "PROC");
+
+        //debug_dump_heap_terms(h->f, p->stop, p->hend);
+        debug_dump_heap_terms(h->f, p->heap, p->htop);
+    }
+
+    /* Define some zones, possibly nested */
+    if (p->old_heap) {
+        debug_tag_zone(h->f, p->old_heap, p->old_hend, "PROC_OLD", "-");
+        debug_tag_heap(h->f, p->old_heap, p->old_htop, "old_heap", "PROC_OLD");
+
+        /* Old heap */
+        debug_dump_heap_terms(h->f, p->old_heap, p->old_htop);
+    }
+}
+
+static void debug_heapdump_heap(Heaps *h, const Eterm *hp, const Eterm *htop,
+                                const Eterm *hend, const char *zonetag,
+                                const char *heaptag)
+{
+    if (hp) {
+        debug_tag_zone(h->f, hp, hend, zonetag, "-");
+        debug_tag_heap(h->f, hp, htop, heaptag, zonetag);
+        debug_dump_heap_terms(h->f, hp, htop);
+    }
+}
+
+static void debug_heapdump_roots(Heaps *h, Rootset *rs)
+{
+    /* Rootset */
+    if (rs) {
+        printf("Dumping roots...\r\n");
+        debug_tag_roots(h->f, rs);
+    }
+}
+
+static void debug_heapdump_dtor(Heaps *h)
+{
+    fprintf(h->f, "END\n");
+    fclose(h->f);
+
+    sys_memset(h, 0, sizeof(Heaps));
+}
+
+//#endif
