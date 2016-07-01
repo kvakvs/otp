@@ -31,8 +31,9 @@
 #  define HARDDEBUG 1
 #endif
 
-#define IS_MOVED_BOXED(x)	(!is_header((x)))
-#define IS_MOVED_CONS(x)	(is_non_value((x)))
+/* TODO: Rename to erts_is_* - affects copy.c, hipe_gc.c and erl_gc*.* */
+int ERTS_FORCE_INLINE IS_MOVED_BOXED(Eterm x) { return !is_header(x); }
+int ERTS_FORCE_INLINE IS_MOVED_CONS(Eterm x) { return is_non_value(x); }
 
 #define MOVE_CONS(PTR,CAR,HTOP,ORIG)					\
 do {									\

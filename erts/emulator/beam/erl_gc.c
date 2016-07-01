@@ -43,8 +43,6 @@
 #include "erl_bif_unique.h"
 #include "dist.h"
 
-#include "erl_gc_heapdump.h"
-
 #define ERTS_INACT_WR_PB_LEAVE_MUCH_LIMIT 1
 #define ERTS_INACT_WR_PB_LEAVE_MUCH_PERCENTAGE 20
 #define ERTS_INACT_WR_PB_LEAVE_LIMIT 10
@@ -109,6 +107,8 @@ typedef struct {
     Uint size;			/* Storage size. */
     int num_roots;		/* Number of root arrays. */
 } Rootset;
+
+#include "erl_gc_heapdump.h"
 
 static void debug_sweep_check(Eterm *hp, Eterm *hend, int old_heap);
 static void debug_mso_check(Process *p,
@@ -1326,6 +1326,17 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
     n = setup_rootset(p, objv, nobj, &rootset);
     roots = rootset.roots;
 
+    if(1)
+    {   /* Save a dump file with heap contents */
+        HeapdumpState h;
+        debug_heapdump_ctor(&h, p, "minor1");
+        debug_heapdump_roots(&h, &rootset);
+        debug_heapdump_process(&h, p);
+        debug_heapdump_heap(&h, new_hp, new_htop, new_hp + new_sz,
+                            "NEW", "new_hp");
+        debug_heapdump_dtor(&h);
+    }
+
     GENSWEEP_NSTACK(p, old_htop, new_htop);
     while (n--) {
         Eterm* g_ptr = roots->v;
@@ -1373,17 +1384,6 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 		break;
             }
         }
-    }
-
-    if(1)
-    {   /* Save a dump file with heap contents */
-        Heaps h;
-        debug_heapdump_ctor(&h, p, "minor1");
-        debug_heapdump_roots(&h, &rootset);
-        debug_heapdump_process(&h, p);
-        debug_heapdump_heap(&h, new_hp, new_htop, new_hp + new_sz,
-                            "NEW", "new_hp");
-        debug_heapdump_dtor(&h);
     }
 
     free_rootset_struct(&rootset);
@@ -1470,7 +1470,7 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 
     if(1)
     {   /* Save a dump file with heap contents */
-        Heaps h;
+        HeapdumpState h;
         debug_heapdump_ctor(&h, p, "minor2");
         debug_heapdump_process(&h, p);
         debug_heapdump_heap(&h, new_hp, new_htop, new_hp + new_sz,
@@ -1619,7 +1619,7 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 
     if(1)
     {   /* Save a dump file with heap contents */
-        Heaps h;
+        HeapdumpState h;
         debug_heapdump_ctor(&h, p, "major2");
         debug_heapdump_process(&h, p);
         debug_heapdump_heap(&h, new_hp, new_htop, new_hp + new_sz,
@@ -1661,7 +1661,7 @@ full_sweep_heaps(Process *p,
 
     if(1)
     {   /* Save a dump file with heap contents */
-        Heaps h;
+        HeapdumpState h;
         debug_heapdump_ctor(&h, p, "major11");
         debug_heapdump_process(&h, p);
 //        debug_heapdump_heap(&h, new_hp, new_htop, new_htop,
@@ -1733,18 +1733,6 @@ full_sweep_heaps(Process *p,
 	}
     }
 
-    if(1)
-    {   /* Save a dump file with heap contents */
-        Heaps h;
-        debug_heapdump_ctor(&h, p, "major12");
-        debug_heapdump_process(&h, p);
-        debug_heapdump_heap(&h, new_hp, new_htop, new_htop,
-                            "NEWHP", "new_hp");
-        debug_heapdump_heap(&h, new_old_hp, *new_old_htop, *new_old_htop,
-                            "NEWOLD", "new_old_hp");
-        debug_heapdump_dtor(&h);
-    }
-
     free_rootset_struct(&rootset);
 
     /*
@@ -1759,9 +1747,21 @@ full_sweep_heaps(Process *p,
 
     sweep_off_heap(p, old_old_hp, old_old_size);
 #ifdef DEBUG
-    /* See if any MSO remain that are not moved to new or new-old heaps */
+    /* See if every MSO is moved to new or new-old heaps */
     debug_mso_check(p, new_hp, new_htop, new_old_hp, *new_old_htop);
 #endif
+
+    if(1)
+    {   /* Save a dump file with heap contents */
+        HeapdumpState h;
+        debug_heapdump_ctor(&h, p, "major12");
+        //debug_heapdump_process(&h, p);
+        debug_heapdump_heap(&h, new_hp, new_htop, new_htop,
+                            "NEWHP", "new_hp");
+        debug_heapdump_heap(&h, new_old_hp, *new_old_htop, *new_old_htop,
+                            "NEWOLD", "new_old_hp");
+        debug_heapdump_dtor(&h);
+    }
 
     return new_htop;
 }
@@ -1776,6 +1776,8 @@ debug_mso_check(Process *p,
     }
     while (ptr) {
         Eterm *ptr1 = (Eterm *)ptr;
+        /* All the stuff on MSO must be either moved to range1 or to range2
+         * or be a literal */
         ASSERT((ptr1 >= range1_begin && ptr1 <= range1_end)
             || (ptr1 >= range2_begin && ptr1 <= range2_end)
             || erts_is_literal(ptr->thing_word, boxed_val(ptr->thing_word)));

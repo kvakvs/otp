@@ -2,11 +2,11 @@
 #define ERTS_GC_HEAPDUMP_UTIL
 
 /* Adding:
- *   In your erl_gc.c somewhere have:
+ *   In your erl_gc.c somewhere (AFTER struct Rootset is defined) have:
  *   #include "erl_gc_heapdump.h"
  * Then functions below become available. Usage:
     {
-        Heaps h;
+        HeapdumpState h;
         debug_heapdump_ctor(&h, p, "minor1");
         debug_heapdump_roots(&h, &rootset);
         debug_heapdump_process(&h, p);
@@ -29,7 +29,7 @@
 #ifdef DEBUG
 typedef struct {
     FILE *f;
-} Heaps;
+} HeapdumpState;
 
 /*
  * Saves a pointer with a name
@@ -82,6 +82,8 @@ typedef enum {
 static Uint debug_header_size(const Eterm *box)
 {
     Eterm val = box[0];
+    Uint size = header_arity(val);
+
     switch (val & _HEADER_SUBTAG_MASK) {
     case EXPORT_SUBTAG:
     case EXTERNAL_PID_SUBTAG:
@@ -89,23 +91,33 @@ static Uint debug_header_size(const Eterm *box)
     case EXTERNAL_REF_SUBTAG:
     case REF_SUBTAG:
     case ARITYVAL_SUBTAG:       /* tuple or something non transparent */
-    case SUB_BINARY_SUBTAG:
     case HEAP_BINARY_SUBTAG:
     case REFC_BINARY_SUBTAG:
     case BIN_MATCHSTATE_SUBTAG:
-    case FUN_SUBTAG:
+        return size;
+
     case MAP_SUBTAG:
-        break;
+        if (is_flatmap_header(val)) {
+            return size + flatmap_get_size(box) + 1;
+        }
+        return size + hashmap_bitcount(MAP_HEADER_VAL(val));
+    case FUN_SUBTAG:
+        return size + ((ErlFunThing*)box)->num_free+1;
+
     case POS_BIG_SUBTAG:
     case NEG_BIG_SUBTAG:
         return bignum_header_arity(val);
+
+    case SUB_BINARY_SUBTAG:
+        return size + 1;
     case FLOAT_SUBTAG:
         return sizeof(double);
+
     default:
-        printf("NYI subtag %zu\r\n", val & _HEADER_SUBTAG_MASK);
+        printf("NYI subtag %llu\r\n", val & _HEADER_SUBTAG_MASK);
         ASSERT(!"NYI header type");
     }
-    return header_arity(val);
+    ASSERT(!"ouch");
 }
 
 /*
@@ -132,11 +144,22 @@ static void debug_tag_heap_term(FILE *f, const Eterm **heap_ptr, int flags)
     case TAG_PRIMARY_BOXED: {
         Eterm *box_ptr = boxed_val(heap_val);
         Eterm val = *box_ptr;
-        flags |= DTF_BOXED;
-        if (IS_MOVED_BOXED(val)) {
-            flags |= DTF_MOVED;
+        /* Boxed term will point at a header, if it's normal unmoved term */
+        if (is_header(val)) {
+            /* A normal unmoved box */
+            flags |= DTF_BOXED;
+            if (IS_MOVED_BOXED(val)) {
+                flags |= DTF_MOVED;
+            }
+            (*heap_ptr)++;
+        } else { /* Boxed term will point at another boxed if its moved. */
+            Uint arity;
+            ASSERT(is_boxed(val));
+            /* Step over moved header remains by learning destination size */
+            arity = debug_header_size(boxed_val(val));
+            printf("step over moved box %llu\r\n", arity+1);
+            (*heap_ptr) += arity + 1;
         }
-        (*heap_ptr)++;
         break;
     }
     case TAG_PRIMARY_LIST: {
@@ -234,12 +257,12 @@ static void debug_dump_heap_terms(FILE *f,
 static size_t g_heap_dump_id = 0;
 
 /*
- * Constructs a Heaps struct from process to display existing situation in
+ * Constructs a HeapdumpState struct from process to display existing situation in
  * the process
  */
-static void debug_heapdump_ctor(Heaps *h, Process *p, const char *tag)
+static void debug_heapdump_ctor(HeapdumpState *h, Process *p, const char *tag)
 {
-    sys_memset(h, 0, sizeof(Heaps));
+    sys_memset(h, 0, sizeof(HeapdumpState));
 
     char filename[256], pid_s[32];
     ASSERT(is_pid(p->common.id));
@@ -251,7 +274,7 @@ static void debug_heapdump_ctor(Heaps *h, Process *p, const char *tag)
     ASSERT(h->f);
 }
 
-static void debug_heapdump_process(Heaps *h, Process *p)
+static void debug_heapdump_process(HeapdumpState *h, Process *p)
 {
     debug_tag_zone(h->f, p->heap, p->hend, "PROC", "-");
     /* Current stack */
@@ -273,7 +296,7 @@ static void debug_heapdump_process(Heaps *h, Process *p)
     }
 }
 
-static void debug_heapdump_heap(Heaps *h, const Eterm *hp, const Eterm *htop,
+static void debug_heapdump_heap(HeapdumpState *h, const Eterm *hp, const Eterm *htop,
                                 const Eterm *hend, const char *zonetag,
                                 const char *heaptag)
 {
@@ -284,7 +307,7 @@ static void debug_heapdump_heap(Heaps *h, const Eterm *hp, const Eterm *htop,
     }
 }
 
-static void debug_heapdump_roots(Heaps *h, Rootset *rs)
+static void debug_heapdump_roots(HeapdumpState *h, Rootset *rs)
 {
     /* Rootset */
     if (rs) {
@@ -293,12 +316,12 @@ static void debug_heapdump_roots(Heaps *h, Rootset *rs)
     }
 }
 
-static void debug_heapdump_dtor(Heaps *h)
+static void debug_heapdump_dtor(HeapdumpState *h)
 {
     fprintf(h->f, "END\n");
     fclose(h->f);
 
-    sys_memset(h, 0, sizeof(Heaps));
+    sys_memset(h, 0, sizeof(HeapdumpState));
 }
 
 #endif // DEBUG
