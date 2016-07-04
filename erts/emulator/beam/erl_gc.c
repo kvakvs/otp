@@ -1326,8 +1326,7 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
     n = setup_rootset(p, objv, nobj, &rootset);
     roots = rootset.roots;
 
-    if(1)
-    {   /* Save a dump file with heap contents */
+/*    if(1) {
         HeapdumpState h;
         debug_heapdump_ctor(&h, p, "minor1");
         debug_heapdump_roots(&h, &rootset);
@@ -1335,7 +1334,7 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
         debug_heapdump_heap(&h, new_hp, new_htop, new_hp + new_sz,
                             "NEW", "new_hp");
         debug_heapdump_dtor(&h);
-    }
+    }*/
 
     GENSWEEP_NSTACK(p, old_htop, new_htop);
     while (n--) {
@@ -1468,15 +1467,14 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 #endif
     remove_message_buffers(p);
 
-    if(1)
-    {   /* Save a dump file with heap contents */
+    /*if(1) {
         HeapdumpState h;
         debug_heapdump_ctor(&h, p, "minor2");
         debug_heapdump_process(&h, p);
         debug_heapdump_heap(&h, new_hp, new_htop, new_hp + new_sz,
                             "NEW", "new_hp");
         debug_heapdump_dtor(&h);
-    }
+    }*/
 }
 
 /*
@@ -1617,8 +1615,7 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 
     ErtsGcQuickSanityCheck(p);
 
-    if(1)
-    {   /* Save a dump file with heap contents */
+    /* if(1) {
         HeapdumpState h;
         debug_heapdump_ctor(&h, p, "major2");
         debug_heapdump_process(&h, p);
@@ -1627,7 +1624,7 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
         debug_heapdump_heap(&h, new_old_hp, new_old_htop, new_old_hp + old_sz,
                             "NEWOLD", "new_old_hp");
         debug_heapdump_dtor(&h);
-    }
+    }*/
 
     return gc_cost(size_after, adjusted ? size_after : 0);
 }
@@ -1659,17 +1656,12 @@ full_sweep_heaps(Process *p,
         new_htop = fullsweep_nstack(p, new_htop);
 #endif
 
-    if(1)
-    {   /* Save a dump file with heap contents */
+    /* if(1) {
         HeapdumpState h;
         debug_heapdump_ctor(&h, p, "major11");
         debug_heapdump_process(&h, p);
-//        debug_heapdump_heap(&h, new_hp, new_htop, new_htop,
-//                            "NEWHP", "new_hp");
-//        debug_heapdump_heap(&h, new_old_hp, *new_old_htop, *new_old_htop,
-//                            "NEWOLD", "new_old_hp");
         debug_heapdump_dtor(&h);
-    }
+    }*/
 
     roots = rootset.roots;
     while (n--) {
@@ -1751,8 +1743,7 @@ full_sweep_heaps(Process *p,
     debug_mso_check(p, new_hp, new_htop, new_old_hp, *new_old_htop);
 #endif
 
-    if(1)
-    {   /* Save a dump file with heap contents */
+    /*if(1) {
         HeapdumpState h;
         debug_heapdump_ctor(&h, p, "major12");
         //debug_heapdump_process(&h, p);
@@ -1761,7 +1752,7 @@ full_sweep_heaps(Process *p,
         debug_heapdump_heap(&h, new_old_hp, *new_old_htop, *new_old_htop,
                             "NEWOLD", "new_old_hp");
         debug_heapdump_dtor(&h);
-    }
+    }*/
 
     return new_htop;
 }
