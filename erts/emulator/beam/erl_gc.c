@@ -108,14 +108,23 @@ typedef struct {
     int num_roots;		/* Number of root arrays. */
 } Rootset;
 
+typedef struct {
+    Eterm *hp;
+    Eterm *top;
+} EtermHeap;
+typedef struct {
+    void *begin;
+    Uint size;
+} ByteBlock;
+
 static Uint setup_rootset(Process*, Eterm*, int, Rootset*);
 static void cleanup_rootset(Rootset *rootset);
 static void remove_message_buffers(Process* p);
-static Eterm *full_sweep_heaps(Process *p,
-			       int hibernate,
-			       Eterm *n_heap, Eterm* n_htop,
-			       char *oh, Uint oh_size,
-			       Eterm *objv, int nobj);
+static void full_sweep_heaps(Process *p,
+                             int hibernate,
+                             EtermHeap *newh, /* in out */
+                             char *oh, Uint oh_size,
+                             Eterm *objv, int nobj);
 static int garbage_collect(Process* p, ErlHeapFragment *live_hf_end,
 			   int need, Eterm* objv, int nobj, int fcalls);
 static int major_collection(Process* p, ErlHeapFragment *live_hf_end,
@@ -769,8 +778,7 @@ void
 erts_garbage_collect_hibernate(Process* p)
 {
     Uint heap_size;
-    Eterm* heap;
-    Eterm* htop;
+    EtermHeap h;
     Uint actual_size;
     char* area;
     Uint area_size;
@@ -794,18 +802,14 @@ erts_garbage_collect_hibernate(Process* p)
 
     heap_size = p->heap_sz + (p->old_htop - p->old_heap) + p->mbuf_sz;
 
-    heap = (Eterm*) ERTS_HEAP_ALLOC(ERTS_ALC_T_TMP_HEAP,
-				    sizeof(Eterm)*heap_size);
-    htop = heap;
+    h.hp = h.top = (Eterm*) ERTS_HEAP_ALLOC(ERTS_ALC_T_TMP_HEAP,
+                                               sizeof(Eterm)*heap_size);
 
-    htop = full_sweep_heaps(p,
-			    1,
-			    heap,
-			    htop,
-			    (char *) p->old_heap,
-			    (char *) p->old_htop - (char *) p->old_heap,
-			    p->arg_reg,
-			    p->arity);
+    full_sweep_heaps(p, 1, &h,
+                     (char *) p->old_heap,
+                     (char *) p->old_htop - (char *) p->old_heap,
+                     p->arg_reg,
+                     p->arity);
 
     ERTS_HEAP_FREE(ERTS_ALC_T_HEAP,
 		   (p->abandoned_heap
@@ -813,9 +817,9 @@ erts_garbage_collect_hibernate(Process* p)
 		    : p->heap),
 		   p->heap_sz * sizeof(Eterm));
 
-    p->heap = heap;
-    p->high_water = htop;
-    p->htop = htop;
+    p->heap = h.hp;
+    p->high_water = h.top;
+    p->htop = h.top;
     p->hend = p->heap + heap_size;
     p->stop = p->hend;
     p->heap_sz = heap_size;
@@ -842,22 +846,22 @@ erts_garbage_collect_hibernate(Process* p)
     ASSERT(p->hend - p->stop == 0); /* Empty stack */
     ASSERT(actual_size < p->heap_sz);
 
-    heap = ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP, sizeof(Eterm)*heap_size);
-    sys_memcpy((void *) heap, (void *) p->heap, actual_size*sizeof(Eterm));
+    h.hp = ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP, sizeof(Eterm)*heap_size);
+    sys_memcpy((void *) h.hp, (void *) p->heap, actual_size*sizeof(Eterm));
     ERTS_HEAP_FREE(ERTS_ALC_T_TMP_HEAP, p->heap, p->heap_sz*sizeof(Eterm));
 
     remove_message_buffers(p);
 
-    p->stop = p->hend = heap + heap_size;
+    p->stop = p->hend = h.hp + heap_size;
 
-    offs = heap - p->heap;
+    offs = h.hp - p->heap;
     area = (char *) p->heap;
     area_size = ((char *) p->htop) - area;
-    offset_heap(heap, actual_size, offs, area, area_size);
-    p->high_water = heap + (p->high_water - p->heap);
+    offset_heap(h.hp, actual_size, offs, area, area_size);
+    p->high_water = h.hp + (p->high_water - p->heap);
     offset_rootset(p, offs, area, area_size, p->arg_reg, p->arity);
-    p->htop = heap + actual_size;
-    p->heap = heap;
+    p->htop = h.hp + actual_size;
+    p->heap = h.hp;
     p->heap_sz = heap_size;
 
 
@@ -1491,8 +1495,7 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 		 int need, Eterm* objv, int nobj, Uint *recl)
 {
     Uint size_before, size_after, stack_size;
-    Eterm* n_heap;
-    Eterm* n_htop;
+    EtermHeap newh;
     char* oh = (char *) OLD_HEAP(p);
     Uint oh_size = (char *) OLD_HTOP(p) - oh;
     Uint new_sz, stk_sz;
@@ -1540,24 +1543,24 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
     }
 
     FLAGS(p) &= ~(F_HEAP_GROW|F_NEED_FULLSWEEP);
-    n_htop = n_heap = (Eterm *) ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP,
-						sizeof(Eterm)*new_sz);
+    newh.hp = newh.top = (Eterm *) ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP,
+                                                   sizeof(Eterm)*new_sz);
 
     if (live_hf_end != ERTS_INVALID_HFRAG_PTR) {
 	/*
 	 * Move heap frags that we know are completely live
 	 * directly into the heap.
 	 */
-	n_htop = collect_live_heap_frags(p, live_hf_end, n_heap, n_htop,
-					 objv, nobj);
+        newh.top = collect_live_heap_frags(p, live_hf_end, newh.hp, newh.top,
+                                           objv, nobj);
     }
 
-    n_htop = full_sweep_heaps(p, 0, n_heap, n_htop, oh, oh_size, objv, nobj);
+    full_sweep_heaps(p, 0, &newh, oh, oh_size, objv, nobj);
 
     /* Move the stack to the end of the heap */
     stk_sz = HEAP_END(p) - p->stop;
-    sys_memcpy(n_heap + new_sz - stk_sz, p->stop, stk_sz * sizeof(Eterm));
-    p->stop = n_heap + new_sz - stk_sz;
+    sys_memcpy(newh.hp + new_sz - stk_sz, p->stop, stk_sz * sizeof(Eterm));
+    p->stop = newh.hp + new_sz - stk_sz;
 
 #ifdef USE_VM_PROBES
     if (HEAP_SIZE(p) != new_sz && DTRACE_ENABLED(process_heap_grow)) {
@@ -1575,10 +1578,10 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 		   p->heap_sz * sizeof(Eterm));
     p->abandoned_heap = NULL;
     p->flags &= ~F_ABANDONED_HEAP_USE;
-    HEAP_START(p) = n_heap;
-    HEAP_TOP(p) = n_htop;
+    HEAP_START(p) = newh.hp;
+    HEAP_TOP(p) = newh.top;
     HEAP_SIZE(p) = new_sz;
-    HEAP_END(p) = n_heap + new_sz;
+    HEAP_END(p) = newh.hp + new_sz;
     GEN_GCS(p) = 0;
 
     HIGH_WATER(p) = HEAP_TOP(p);
@@ -1603,10 +1606,10 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
     return gc_cost(size_after, adjusted ? size_after : 0);
 }
 
-static Eterm *
+static void
 full_sweep_heaps(Process *p,
 		 int hibernate,
-		 Eterm *n_heap, Eterm* n_htop,
+                 EtermHeap *newh, /* in out */
 		 char *oh, Uint oh_size,
 		 Eterm *objv, int nobj)
 {
@@ -1625,7 +1628,7 @@ full_sweep_heaps(Process *p,
     if (hibernate)
 	hipe_empty_nstack(p);
     else
-	n_htop = fullsweep_nstack(p, n_htop);
+	newh->hp = fullsweep_nstack(p, newh->hp);
 #endif
 
     roots = rootset.roots;
@@ -1648,7 +1651,7 @@ full_sweep_heaps(Process *p,
 		    ASSERT(is_boxed(val));
 		    *g_ptr++ = val;
 		} else if (!erts_is_literal(gval, ptr)) {
-		    MOVE_BOXED(ptr,val,n_htop,g_ptr++);
+		    MOVE_BOXED(ptr,val,newh->top,g_ptr++);
 		} else {
 		    g_ptr++;
 		}
@@ -1661,7 +1664,7 @@ full_sweep_heaps(Process *p,
 		if (IS_MOVED_CONS(val)) {
 		    *g_ptr++ = ptr[1];
 		} else if (!erts_is_literal(gval, ptr)) {
-		    MOVE_CONS(ptr,val,n_htop,g_ptr++);
+		    MOVE_CONS(ptr,val,newh->top,g_ptr++);
 		} else {
 		    g_ptr++;
 		}
@@ -1685,7 +1688,7 @@ full_sweep_heaps(Process *p,
      * until all is copied.
      */
 
-    n_htop = sweep_heaps(n_heap, n_htop, oh, oh_size);
+    newh->top = sweep_heaps(newh->hp, newh->top, oh, oh_size);
 
     if (MSO(p).first) {
 	sweep_off_heap(p, 1);
@@ -1697,8 +1700,6 @@ full_sweep_heaps(Process *p,
 		       (OLD_HEND(p) - OLD_HEAP(p)) * sizeof(Eterm));
 	OLD_HEAP(p) = OLD_HTOP(p) = OLD_HEND(p) = NULL;
     }
-
-    return n_htop;
 }
 
 static int
