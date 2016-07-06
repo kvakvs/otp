@@ -189,7 +189,7 @@ static EtermRange collect_live_heap_frags(Process *p,
 static int adjust_after_fullsweep(Process *p, int need, EtermArray obj);
 static void shrink_new_heap(Process *p, Uint new_sz, EtermArray obj);
 static void grow_new_heap(Process *p, Uint new_sz, EtermArray obj);
-static void sweep_off_heap(Process *p, int fullsweep);
+static void sweep_off_heap(Process *p, VoidPBlock old_old);
 static void offset_heap(Eterm* hp, Uint sz, Sint offs, char* area, Uint area_size);
 static void offset_heap_ptr(Eterm* hp, Uint sz, Sint offs, char* area, Uint area_size);
 static void offset_rootset(Process *p, Sint offs, char* area, Uint area_size,
@@ -1460,7 +1460,8 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end, EtermArray mature0,
     HIGH_WATER(p) = dst.young.top;
 
     if (MSO(p).first) {
-        sweep_off_heap(p, 0);
+        VoidPBlock zero = {NULL, 0};
+        sweep_off_heap(p, zero);
 #ifdef DEBUG
         debug_sweep_check(dst.young.begin, dst.young.top, SweepCheckYoung);
         debug_sweep_check(dst.old.begin, dst.old.top, SweepCheckOld);
@@ -1744,7 +1745,7 @@ full_sweep_heaps(Process *p,
     dst = sweep_heaps(dst, old_old, mature);
 
     if (MSO(p).first) {
-	sweep_off_heap(p, 1);
+	sweep_off_heap(p, old_old);
     }
 
     return dst;
@@ -2819,21 +2820,23 @@ link_live_proc_bin(struct shrink_cand_data *shrink,
 
 
 static void
-sweep_off_heap(Process *p, int fullsweep)
+sweep_off_heap(Process *p, VoidPBlock old_old)
 {
     struct shrink_cand_data shrink = {0};
     struct erl_off_heap_header* ptr;
     struct erl_off_heap_header** prev;
-    char* oheap = NULL;
-    Uint oheap_sz = 0;
     Uint64 bin_vheap = 0;
+    Uint64 bin_ovheap = 0;
+    int fullsweep = 1;
 #ifdef DEBUG
     int seen_mature = 0;
 #endif
 
-    if (fullsweep == 0) {
-	oheap = (char *) OLD_HEAP(p);
-	oheap_sz = (char *) OLD_HEND(p) - oheap;
+    if (old_old.begin == 0) {
+        old_old.begin = OLD_HEAP(p);
+        old_old.bytes = (void *) OLD_HEND(p) - old_old.begin;
+        bin_ovheap = BIN_OLD_VHEAP(p);
+        fullsweep = 0;
     }
 
     BIN_OLD_VHEAP(p) = 0;
@@ -2841,134 +2844,138 @@ sweep_off_heap(Process *p, int fullsweep)
     prev = &MSO(p).first;
     ptr = MSO(p).first;
 
-    /* Firts part of the list will reside on the (old) new-heap.
+    /* First part of the list will reside on the new old-heap.
      * Keep if moved, otherwise deref.
      */
     while (ptr) {
-	if (IS_MOVED_BOXED(ptr->thing_word)) {
-	    ASSERT(!ErtsInArea(ptr, oheap, oheap_sz));
-	    *prev = ptr = (struct erl_off_heap_header*) boxed_val(ptr->thing_word);
-	    ASSERT(!IS_MOVED_BOXED(ptr->thing_word));
-	    if (ptr->thing_word == HEADER_PROC_BIN) {
-		int to_new_heap = !ErtsInArea(ptr, oheap, oheap_sz);
-		ASSERT(to_new_heap == !seen_mature || (!to_new_heap && (seen_mature=1)));
-		if (to_new_heap) {
-		    bin_vheap += ptr->size / sizeof(Eterm);
-		} else {
-		    BIN_OLD_VHEAP(p) += ptr->size / sizeof(Eterm); /* for binary gc (words)*/
-		}		
-		link_live_proc_bin(&shrink, &prev, &ptr, to_new_heap);
-	    }
-	    else {
-		prev = &ptr->next;
-		ptr = ptr->next;
-	    }
-	}
-	else if (!ErtsInArea(ptr, oheap, oheap_sz)) {
-	    /* garbage */
-	    switch (thing_subtag(ptr->thing_word)) {
-	    case REFC_BINARY_SUBTAG:
-		{
-		    Binary* bptr = ((ProcBin*)ptr)->val;	
-		    if (erts_refc_dectest(&bptr->refc, 0) == 0) {
-			erts_bin_free(bptr);
-		    }
-		    break;
-		}
-	    case FUN_SUBTAG:
-		{
-		    ErlFunEntry* fe = ((ErlFunThing*)ptr)->fe;
-		    if (erts_refc_dectest(&fe->refc, 0) == 0) {
-			erts_erase_fun_entry(fe);
-		    }
-		    break;
-		}
-	    default:
-		ASSERT(is_external_header(ptr->thing_word));
-		erts_deref_node_entry(((ExternalThing*)ptr)->node);
-	    }
-	    *prev = ptr = ptr->next;
-	}
-	else break; /* and let old-heap loop continue */
+        const int ptr_in_old_old = ErtsInArea(ptr, old_old.begin, old_old.bytes);
+
+        if (IS_MOVED_BOXED(ptr->thing_word)) {
+            ASSERT(fullsweep || !ptr_in_old_old);
+            *prev = ptr = (struct erl_off_heap_header*) boxed_val(ptr->thing_word);
+            if (ptr->thing_word == HEADER_PROC_BIN) {
+                ASSERT(ptr_in_old_old == seen_mature
+                       || (ptr_in_old_old && (seen_mature = /*intentional*/ 1)));
+                if (ptr_in_old_old) {
+                    /* for binary gc (words) */
+                    bin_ovheap += ptr->size / sizeof(Eterm);
+                } else {
+                    bin_vheap += ptr->size / sizeof(Eterm);
+                }
+                link_live_proc_bin(&shrink, &prev, &ptr, !ptr_in_old_old);
+            } else {
+                prev = &ptr->next;
+                ptr = ptr->next;
+            }
+        }
+        else if (!ptr_in_old_old) {
+            /* garbage */
+            switch (thing_subtag(ptr->thing_word)) {
+                case REFC_BINARY_SUBTAG: {
+                    Binary *bptr = ((ProcBin *) ptr)->val;
+                    if (erts_refc_dectest(&bptr->refc, 0) == 0) {
+                        erts_bin_free(bptr);
+                    }
+                    break;
+                }
+                case FUN_SUBTAG: {
+                    ErlFunEntry *fe = ((ErlFunThing *) ptr)->fe;
+                    if (erts_refc_dectest(&fe->refc, 0) == 0) {
+                        erts_erase_fun_entry(fe);
+                    }
+                    break;
+                }
+                default:
+                    ASSERT(is_external_header(ptr->thing_word));
+                    erts_deref_node_entry(((ExternalThing*)ptr)->node);
+            }
+            *prev = ptr = ptr->next;
+        }
+        else break; /* and let old-heap loop continue */
     }
 
-    /* The rest of the list resides on old-heap, and we just did a
-     * generational collection - keep objects in list.
+    /* If we are doing a minor gc, we have to go through
+     * the off_heap list of the old heap to look for any
+     * proc bin that should be shrunk. proc bins are shrunk
+     * when they have not been actively written to in-between
+     * two minor GC and they have a lot of unused memory.
      */
     while (ptr) {
-	ASSERT(ErtsInArea(ptr, oheap, oheap_sz));
-	ASSERT(!IS_MOVED_BOXED(ptr->thing_word));       
-	if (ptr->thing_word == HEADER_PROC_BIN) {
-	    BIN_OLD_VHEAP(p) += ptr->size / sizeof(Eterm); /* for binary gc (words)*/
-	    link_live_proc_bin(&shrink, &prev, &ptr, 0);
-	}
-	else {
-	    ASSERT(is_fun_header(ptr->thing_word) ||
-		   is_external_header(ptr->thing_word));
-	    prev = &ptr->next;
-	    ptr = ptr->next;
-	}
+        ASSERT(ErtsInArea(ptr, old_old.begin, old_old.bytes));
+        ASSERT(!IS_MOVED_BOXED(ptr->thing_word));
+        if (ptr->thing_word == HEADER_PROC_BIN) {
+            link_live_proc_bin(&shrink, &prev, &ptr, 0);
+        } else {
+            ASSERT(is_fun_header(ptr->thing_word) ||
+                   is_external_header(ptr->thing_word));
+            prev = &ptr->next;
+            ptr = ptr->next;
+        }
     }
 
     if (fullsweep) {
-	BIN_OLD_VHEAP_SZ(p) = next_vheap_size(p, BIN_OLD_VHEAP(p) + MSO(p).overhead, BIN_OLD_VHEAP_SZ(p));
+        BIN_OLD_VHEAP_SZ(p) = next_vheap_size(p,
+                                              BIN_OLD_VHEAP(p) + MSO(p).overhead,
+                                              BIN_OLD_VHEAP_SZ(p));
     }
-    BIN_VHEAP_SZ(p)     = next_vheap_size(p, bin_vheap, BIN_VHEAP_SZ(p));
-    MSO(p).overhead     = bin_vheap;
+    BIN_VHEAP_SZ(p)  = next_vheap_size(p, bin_vheap, BIN_VHEAP_SZ(p));
+    MSO(p).overhead  = bin_vheap;
+    BIN_OLD_VHEAP(p) = bin_ovheap;
 
     /*
      * If we got any shrink candidates, check them out.
      */
 
     if (shrink.no_of_candidates) {
-	ProcBin *candlist[] = { (ProcBin*)shrink.new_candidates,
-	                        (ProcBin*)shrink.old_candidates };
-	Uint leave_unused = 0;
-	int i;
+        ProcBin *candlist[] = { (ProcBin*)shrink.new_candidates,
+                                (ProcBin*)shrink.old_candidates };
+        Uint leave_unused = 0;
+        int i;
 
-	if (shrink.no_of_active == 0) {
-	    if (shrink.no_of_candidates <= ERTS_INACT_WR_PB_LEAVE_MUCH_LIMIT)
-		leave_unused = ERTS_INACT_WR_PB_LEAVE_MUCH_PERCENTAGE;
-	    else if (shrink.no_of_candidates <= ERTS_INACT_WR_PB_LEAVE_LIMIT)
-		leave_unused = ERTS_INACT_WR_PB_LEAVE_PERCENTAGE;
-	}
+        if (shrink.no_of_active == 0) {
+            if (shrink.no_of_candidates <= ERTS_INACT_WR_PB_LEAVE_MUCH_LIMIT)
+                leave_unused = ERTS_INACT_WR_PB_LEAVE_MUCH_PERCENTAGE;
+            else if (shrink.no_of_candidates <= ERTS_INACT_WR_PB_LEAVE_LIMIT)
+                leave_unused = ERTS_INACT_WR_PB_LEAVE_PERCENTAGE;
+        }
 
-	for (i = 0; i < sizeof(candlist)/sizeof(candlist[0]); i++) {
-	    ProcBin* pb;
-	    for (pb = candlist[i]; pb; pb = (ProcBin*)pb->next) {
-		Uint new_size = pb->size;
+        for (i = 0; i < sizeof(candlist)/sizeof(candlist[0]); i++) {
+            ProcBin* pb;
+            for (pb = candlist[i]; pb; pb = (ProcBin*)pb->next) {
+                Uint new_size = pb->size;
 
-		if (leave_unused) {
-		    new_size += (new_size * 100) / leave_unused;
-		    /* Our allocators are 8 byte aligned, i.e., shrinking with
-		       less than 8 bytes will have no real effect */
-		    if (new_size + 8 >= pb->val->orig_size)
-			continue;
-		}
+                if (leave_unused) {
+                    new_size += (new_size * 100) / leave_unused;
+                    /* Our allocators are 8 byte aligned, i.e., shrinking with
+                       less than 8 bytes will have no real effect */
+                    if (new_size + 8 >= pb->val->orig_size)
+                        continue;
+                }
 
-		pb->val = erts_bin_realloc(pb->val, new_size);
-		pb->bytes = (byte *) pb->val->orig_bytes;
-	    }
-	}
+                pb->val = erts_bin_realloc(pb->val, new_size);
+                pb->bytes = (byte *) pb->val->orig_bytes;
+            }
+        }
 
 
-	/*
-	 * We now potentially have the mso list divided into three lists:
-	 * - shrink candidates on new heap (inactive writable with unused data)
-	 * - shrink candidates on old heap (inactive writable with unused data)
-	 * - other binaries (read only + active writable ...) + funs and externals
-	 *
-	 * Put them back together: new candidates -> other -> old candidates
-	 * This order will ensure that the list only refers from new
-	 * generation to old and never from old to new *which is important*.
-	 */
-	if (shrink.new_candidates) {
-	    if (prev == &MSO(p).first) /* empty other binaries list */
-		prev = &shrink.new_candidates_end->next;
-	    else
-		shrink.new_candidates_end->next = MSO(p).first;
-	    MSO(p).first = shrink.new_candidates;
-	}
+        /*
+         * We now potentially have the mso list divided into three lists:
+         * - shrink candidates on new heap (inactive writable with unused data)
+         * - shrink candidates on old heap (inactive writable with unused data)
+         * - other binaries (read only + active writable ...) + funs and externals
+         *
+         * Put them back together: new candidates -> other -> old candidates
+         * This order will ensure that the list only refers from new
+         * generation to old and never from old to new *which is important*.
+         */
+        if (shrink.new_candidates) {
+            if (prev == &MSO(p).first) { /* empty other binaries list */
+                prev = &shrink.new_candidates_end->next;
+            } else {
+                shrink.new_candidates_end->next = MSO(p).first;
+            }
+            MSO(p).first = shrink.new_candidates;
+        }
     }
     *prev = shrink.old_candidates;
 }
