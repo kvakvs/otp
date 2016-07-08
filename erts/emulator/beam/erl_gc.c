@@ -1152,7 +1152,8 @@ minor_collection(Process* p, ErlHeapFragment *live_hf_end,
     EtermArray mature;
     Uint size_before = young_gen_usage(p);
 
-    printf("minor collection\r\n");
+    printf("minor collection hp=%p hend=%p oh=%p ohend=%p\r\n",
+           HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p));
 
     mature.begin = p->abandoned_heap ? p->abandoned_heap : p->heap;
     mature.terms = p->high_water - mature.begin;
@@ -1554,7 +1555,8 @@ major_collection(Process* p,
     Uint dst_young_size, dst_old_size;
     int adjusted;
 
-    printf("major collection\r\n");
+    printf("major collection hp=%p hend=%p oh=%p ohend=%p\r\n",
+           HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p));
     VERBOSE(DEBUG_SHCOPY, ("[pid=%T] MAJOR GC: %p %p %p %p\n", p->common.id,
                            HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p)));
 
@@ -1602,6 +1604,9 @@ major_collection(Process* p,
             ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP, sizeof(Eterm) * dst_young_size);
     dst.old.begin = dst.old.top = (Eterm *)
             ERTS_HEAP_ALLOC(ERTS_ALC_T_OLD_HEAP, sizeof(Eterm) * dst_old_size);
+
+    printf("... major dst.y.hp=%p dst.o.hp=%p\r\n",
+           dst.young.begin, dst.old.begin);
 
     if (live_hf_end != ERTS_INVALID_HFRAG_PTR) {
 	/*
@@ -1765,10 +1770,11 @@ full_sweep_heaps(Process *p,
     rootset_construct(p, obj, &rootset);
 
 #ifdef HIPE
-    if (hibernate)
-	hipe_empty_nstack(p);
-    else
-	dst.young.top = fullsweep_nstack(p, dst.young.top);
+    if (hibernate) {
+        hipe_empty_nstack(p);
+    } else {
+        dst.young.top = fullsweep_nstack(p, dst.young.top);
+    }
 #endif
 
     dst = sweep_rootset_major(&rootset, dst, oh, mature);
@@ -2061,68 +2067,75 @@ generic_sweep(EtermRange sweepheap,
     is_in_secondary_area(TPtr, Ptr, type, oh, src)
 
     while (hp != sweepheap.top) {
-	ASSERT(hp < sweepheap.top);
-	gval = *hp;
-	switch (primary_tag(gval)) {
-	case TAG_PRIMARY_BOXED: {
-	    ptr = boxed_val(gval);
-	    val = *ptr;
-	    if (IS_MOVED_BOXED(val)) {
-		ASSERT(is_boxed(val));
-		*hp++ = val;
-	    } else if (ERTS_IS_IN_SECONDARY_AREA(gval, ptr)) {
+        ASSERT(hp < sweepheap.top);
+        gval = *hp;
+        switch (primary_tag(gval)) {
+        case TAG_PRIMARY_BOXED: {
+            ptr = boxed_val(gval);
+            val = *ptr;
+            if (IS_MOVED_BOXED(val)) {
+                printf("box: moved %p\r\n", hp);
+                ASSERT(is_boxed(val));
+                *hp++ = val;
+            } else if (ERTS_IS_IN_SECONDARY_AREA(gval, ptr)) {
+                printf("box: moving %p to old (%p)\r\n", hp, dst.old.top);
                 MOVE_BOXED(ptr, val, dst.old.top, hp++);
             } else if (ERTS_IS_IN_PRIMARY_AREA(gval, ptr)) {
+                printf("box: moving %p to young (%p)\r\n", hp, dst.young.top);
                 MOVE_BOXED(ptr, val, dst.young.top, hp++);
-	    } else {
-		hp++;
-	    }
-	    break;
-	}
-	case TAG_PRIMARY_LIST: {
-	    ptr = list_val(gval);
-	    val = *ptr;
-	    if (IS_MOVED_CONS(val)) {
-		*hp++ = ptr[1];
-	    } else if (ERTS_IS_IN_SECONDARY_AREA(gval, ptr)) {
+            } else {
+                printf("box %p\r\n", hp);
+                hp++;
+            }
+            break;
+        }
+        case TAG_PRIMARY_LIST: {
+            ptr = list_val(gval);
+            val = *ptr;
+            if (IS_MOVED_CONS(val)) {
+                printf("cons: moved %p\r\n", hp);
+                *hp++ = ptr[1];
+            } else if (ERTS_IS_IN_SECONDARY_AREA(gval, ptr)) {
+                printf("cons: moving %p to old (%p)\r\n", hp, dst.old.top);
                 MOVE_CONS(ptr, val, dst.old.top, hp++);
             } else if (ERTS_IS_IN_PRIMARY_AREA(gval, ptr)) {
+                printf("cons: moving %p to young (%p)\r\n", hp, dst.young.top);
                 MOVE_CONS(ptr, val, dst.young.top, hp++);
-	    } else {
-		hp++;
-	    }
-	    break;
-	}
-	case TAG_PRIMARY_HEADER: {
-	    if (!header_is_thing(gval)) {
-		hp++;
-	    } else {
-		if (header_is_bin_matchstate(gval)) {
-		    ErlBinMatchState *ms = (ErlBinMatchState*) hp;
-		    ErlBinMatchBuffer *mb = &(ms->mb);
-		    Eterm* origptr;
-		    origptr = &(mb->orig);
-		    ptr = boxed_val(*origptr);
-		    val = *ptr;
-		    if (IS_MOVED_BOXED(val)) {
-			*origptr = val;
-			mb->base = binary_bytes(*origptr);
+            } else {
+                printf("cons %p\r\n", hp);
+                hp++;
+            }
+            break;
+        }
+        case TAG_PRIMARY_HEADER: {
+            if (!header_is_thing(gval)) {
+                hp++;
+            } else {
+                if (header_is_bin_matchstate(gval)) {
+                    ErlBinMatchState *ms = (ErlBinMatchState*) hp;
+                    ErlBinMatchBuffer *mb = &(ms->mb);
+                    Eterm *origptr = &(mb->orig);
+                    ptr = boxed_val(*origptr);
+                    val = *ptr;
+                    if (IS_MOVED_BOXED(val)) {
+                        *origptr = val;
+                        mb->base = binary_bytes(*origptr);
                     } else if (ERTS_IS_IN_SECONDARY_AREA(*origptr, ptr)) {
                         MOVE_BOXED(ptr, val, dst.old.top, origptr);
                         mb->base = binary_bytes(*origptr);
                     } else if (ERTS_IS_IN_PRIMARY_AREA(*origptr, ptr)) {
                         MOVE_BOXED(ptr, val, dst.young.top, origptr);
                         mb->base = binary_bytes(*origptr);
-		    }
-		}
-		hp += (thing_arityval(gval)+1);
-	    }
-	    break;
-	}
-	default:
-	    hp++;
-	    break;
-	}
+                    }
+                }
+                hp += (thing_arityval(gval)+1);
+            }
+            break;
+        }
+        default:
+            hp++;
+            break;
+        }
 #ifdef DEBUG
         debug_sweep_check(dst.young.begin, dst.young.top, SweepCheckYoung);
         debug_sweep_check(dst.old.begin, dst.old.top, SweepCheckOld);
