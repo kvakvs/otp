@@ -2238,7 +2238,7 @@ typedef struct {
 
 /*
  * If a process has saved arguments, they need to be part of the GC
- * rootset. The function below is called from setup_rootset() in
+ * rootset. The function below is called from rootset_construct() in
  * erl_gc.c. This function is declared in erl_process.h. Any exception term
  * saved in the NifExport is also made part of the GC rootset here; it
  * always resides in rootset[0].
