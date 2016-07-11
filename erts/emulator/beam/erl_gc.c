@@ -871,7 +871,7 @@ erts_garbage_collect_hibernate(Process* p)
 
     {
         VoidPBlock oh = {(char *) p->old_heap,
-                             (char *) p->old_htop - (char *) p->old_heap};
+                         (char *) p->old_htop - (char *) p->old_heap};
         dst = full_sweep_heaps(p, 1, dst, oh, mature, regs);
     }
 
@@ -1782,9 +1782,9 @@ full_sweep_heaps(Process *p,
 
     /*
      * Now all references on the stack point to the new heap. However,
-     * most references on the new heap point to the old heap so the next stage
-     * is to scan through the new heap evacuating data from the old heap
-     * until all is copied.
+     * most references on the new heap point to the old young and old-old
+     * heaps so the next stage is to scan through the new heap evacuating
+     * data from the old heap until all is copied.
      */
     dst = sweep_heaps(dst, oh, mature);
 
@@ -1989,10 +1989,10 @@ disallow_heap_frag_ref_in_old_heap(Process* p)
  *
  */
 typedef enum {
-    /* ErtsSweepNewHeap:
+    /* ErtsSweepOnlyOneHeap:
      * Sweeps new heap only, ignores old destination and mature is zero
      * Primary Check: ErtsInYoungGen */
-    ErtsSweepNewHeap,
+    ErtsSweepOnlyOneHeap,
     /* ErtsSweepHeaps:
      * Primary Check: !erts_is_literal
      * Secondary Check: ErtsInArea(src, src_sz) || !ErtsInYoungGen -- mature || old
@@ -2012,7 +2012,7 @@ is_in_primary_area(Eterm gval, Eterm *ptr,
     switch (type) {
         case ErtsSweepHeaps:
             return !erts_is_literal(gval, ptr);
-        case ErtsSweepNewHeap:
+        case ErtsSweepOnlyOneHeap:
         case ErtsSweepMatureHeap:
             return ErtsInYoungGen(gval, ptr, oh.begin, oh.bytes);
         default:
@@ -2030,7 +2030,7 @@ is_in_secondary_area(Eterm gval, Eterm *ptr,
         case ErtsSweepHeaps:
             return ErtsInArea(ptr, src.begin, src.bytes)
                    || !ErtsInYoungGen(gval, ptr, oh.begin, oh.bytes);
-        case ErtsSweepNewHeap:
+        case ErtsSweepOnlyOneHeap:
             return 0;  /* old heap is NULL and should be ignored anyway */
         case ErtsSweepMatureHeap:
             return ErtsInArea(ptr, src.begin, src.bytes);
@@ -2044,18 +2044,21 @@ is_in_secondary_area(Eterm gval, Eterm *ptr,
  * Sweeps through 'sweepheap' and collects surviving terms, appending them
  * to young or old 'dst' heap based on decision in is_in_primary_area and
  * is_in_secondary_area and the ErtsSweepType argument.
+ *
+ * NOTE, when sweeping a heap which is also a destination, the function will
+ * not automatically refer to new heap top as end position, you should call
+ * generic_sweep repeatedly (see sweep_heaps for example)
  */
-static ERTS_FORCE_INLINE DestinationHeaps
-generic_sweep(EtermRange sweepheap,
-              DestinationHeaps dst,
+static ERTS_FORCE_INLINE void
+generic_sweep(Eterm *hp, Eterm **htopp,
+              Eterm **oldhtopp,
               ErtsSweepType type,
               VoidPBlock oh,
               VoidPBlock src)
 {
-    Eterm* ptr;
-    Eterm val;
     Eterm gval;
-    Eterm *hp = sweepheap.begin;
+    Eterm *htop = *htopp;
+    Eterm *oldhtop = oldhtopp ? *oldhtopp : NULL;
 
 #undef ERTS_IS_IN_PRIMARY_AREA
 #undef ERTS_IS_IN_SECONDARY_AREA
@@ -2066,43 +2069,38 @@ generic_sweep(EtermRange sweepheap,
 #define ERTS_IS_IN_SECONDARY_AREA(TPtr, Ptr) \
     is_in_secondary_area(TPtr, Ptr, type, oh, src)
 
-    while (hp != sweepheap.top) {
-        ASSERT(hp < sweepheap.top);
+    while (hp != htop) {
+        ASSERT(hp < htop);
         gval = *hp;
+
         switch (primary_tag(gval)) {
         case TAG_PRIMARY_BOXED: {
-            ptr = boxed_val(gval);
-            val = *ptr;
+            Eterm *ptr = boxed_val(gval);
+            Eterm val = *ptr;
+
             if (IS_MOVED_BOXED(val)) {
-                printf("box: moved %p\r\n", hp);
                 ASSERT(is_boxed(val));
                 *hp++ = val;
             } else if (ERTS_IS_IN_SECONDARY_AREA(gval, ptr)) {
-                printf("box: moving %p to old (%p)\r\n", hp, dst.old.top);
-                MOVE_BOXED(ptr, val, dst.old.top, hp++);
+                MOVE_BOXED(ptr, val, oldhtop, hp++);
             } else if (ERTS_IS_IN_PRIMARY_AREA(gval, ptr)) {
-                printf("box: moving %p to young (%p)\r\n", hp, dst.young.top);
-                MOVE_BOXED(ptr, val, dst.young.top, hp++);
+                MOVE_BOXED(ptr, val, htop, hp++);
             } else {
-                printf("box %p\r\n", hp);
                 hp++;
             }
             break;
         }
         case TAG_PRIMARY_LIST: {
-            ptr = list_val(gval);
-            val = *ptr;
+            Eterm *ptr = list_val(gval);
+            Eterm val = *ptr;
+
             if (IS_MOVED_CONS(val)) {
-                printf("cons: moved %p\r\n", hp);
                 *hp++ = ptr[1];
             } else if (ERTS_IS_IN_SECONDARY_AREA(gval, ptr)) {
-                printf("cons: moving %p to old (%p)\r\n", hp, dst.old.top);
-                MOVE_CONS(ptr, val, dst.old.top, hp++);
+                MOVE_CONS(ptr, val, oldhtop, hp++);
             } else if (ERTS_IS_IN_PRIMARY_AREA(gval, ptr)) {
-                printf("cons: moving %p to young (%p)\r\n", hp, dst.young.top);
-                MOVE_CONS(ptr, val, dst.young.top, hp++);
+                MOVE_CONS(ptr, val, htop, hp++);
             } else {
-                printf("cons %p\r\n", hp);
                 hp++;
             }
             break;
@@ -2115,19 +2113,20 @@ generic_sweep(EtermRange sweepheap,
                     ErlBinMatchState *ms = (ErlBinMatchState*) hp;
                     ErlBinMatchBuffer *mb = &(ms->mb);
                     Eterm *origptr = &(mb->orig);
-                    ptr = boxed_val(*origptr);
-                    val = *ptr;
+                    Eterm *ptr = boxed_val(*origptr);
+                    Eterm val = *ptr;
                     if (IS_MOVED_BOXED(val)) {
                         *origptr = val;
                         mb->base = binary_bytes(*origptr);
                     } else if (ERTS_IS_IN_SECONDARY_AREA(*origptr, ptr)) {
-                        MOVE_BOXED(ptr, val, dst.old.top, origptr);
+                        MOVE_BOXED(ptr, val, oldhtop, origptr);
                         mb->base = binary_bytes(*origptr);
                     } else if (ERTS_IS_IN_PRIMARY_AREA(*origptr, ptr)) {
-                        MOVE_BOXED(ptr, val, dst.young.top, origptr);
+                        MOVE_BOXED(ptr, val, htop, origptr);
                         mb->base = binary_bytes(*origptr);
                     }
                 }
+                ASSERT(thing_arityval(gval) < 0x7fffff); /* some sanity */
                 hp += (thing_arityval(gval)+1);
             }
             break;
@@ -2136,12 +2135,9 @@ generic_sweep(EtermRange sweepheap,
             hp++;
             break;
         }
-#ifdef DEBUG
-        debug_sweep_check(dst.young.begin, dst.young.top, SweepCheckYoung);
-        debug_sweep_check(dst.old.begin, dst.old.top, SweepCheckOld);
-#endif
     }
-    return dst;
+    *htopp = htop;
+    if (oldhtopp) { *oldhtopp = oldhtop; }
 #undef ERTS_IS_IN_PRIMARY_AREA
 #undef ERTS_IS_IN_SECONDARY_AREA
 }
@@ -2174,6 +2170,7 @@ debug_sweep_check(Eterm *hbegin, Eterm *hend, DebugSweepCheckType check_type)
                 if (!header_is_thing(gval)) {
                     hp++;
                 } else {
+                    ASSERT(thing_arityval(gval) < 0x7fffff); /* some sanity */
                     hp += (thing_arityval(gval) + 1);
                 }
                 break;
@@ -2195,13 +2192,12 @@ static EtermRange
 sweep_new_heap(EtermRange sweep, VoidPBlock old_heap)
 {
     const VoidPBlock zero = {NULL, 0};
-    DestinationHeaps dst = {sweep, {NULL, NULL}};
-    dst = generic_sweep(sweep,
-                        dst,
-                        ErtsSweepNewHeap,
-                        old_heap,
-                        zero);
-    return dst.young;
+
+    generic_sweep(sweep.begin, &sweep.top, NULL /* old htop */,
+                  ErtsSweepOnlyOneHeap,
+                  old_heap,
+                  zero);
+    return sweep;
 }
 
 /*
@@ -2218,28 +2214,38 @@ sweep_mature_heap(DestinationHeaps dst,
                   VoidPBlock old_heap,
                   VoidPBlock mature)
 {
-    return generic_sweep(dst.young,
-                         dst,
-                         ErtsSweepMatureHeap,
-                         old_heap,
-                         mature);
+    generic_sweep(dst.young.begin, &dst.young.top,
+                  &dst.old.top,
+                  ErtsSweepMatureHeap,
+                  old_heap,
+                  mature);
+    return dst;
 }
 
 /*
  * Called from full_sweep_heaps which is called from erts_g_c_hibernate or
- * from major_collection.
- * Original calling code:
- * n_htop = sweep_heaps(n_heap, n_htop, oh, oh_size);
+ * from major_collection. Should sweep through both new and old heaps.
  */
 static DestinationHeaps
 sweep_heaps(DestinationHeaps dst, VoidPBlock old_heap,
             VoidPBlock mature)
 {
-    return generic_sweep(dst.young,
-                         dst,
-                         ErtsSweepHeaps,
-                         old_heap,
-                         mature);
+    generic_sweep(dst.young.begin, &dst.young.top,
+                  &dst.old.top,
+                  ErtsSweepHeaps,
+                  old_heap,
+                  mature);
+    generic_sweep(dst.old.begin, &dst.old.top,
+                  NULL,
+                  ErtsSweepOnlyOneHeap,
+                  old_heap,
+                  mature);
+
+#ifdef DEBUG
+    debug_sweep_check(dst.young.begin, dst.young.top, SweepCheckYoung);
+    debug_sweep_check(dst.old.begin, dst.old.top, SweepCheckOld);
+#endif
+    return dst;
 }
 
 /* Returns updated toheap */
