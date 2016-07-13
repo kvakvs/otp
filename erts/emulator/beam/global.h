@@ -1449,11 +1449,11 @@ int erts_print_system_version(int to, void *arg, Process *c_p);
 
 int erts_hibernate(Process* c_p, Eterm module, Eterm function, Eterm args, Eterm* reg);
 
-ERTS_GLB_FORCE_INLINE int erts_is_literal(Eterm tptr, Eterm *ptr);
+ERTS_GLB_FORCE_INLINE int erts_is_literal(Eterm tptr, const Eterm *ptr);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 
-ERTS_GLB_FORCE_INLINE int erts_is_literal(Eterm tptr, Eterm *ptr)
+ERTS_GLB_FORCE_INLINE int erts_is_literal(Eterm tptr, const Eterm *ptr)
 {
     ASSERT(is_boxed(tptr) || is_list(tptr));
     ASSERT(ptr == ptr_val(tptr));

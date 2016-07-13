@@ -31,13 +31,13 @@
 #  define HARDDEBUG 1
 #endif
 
-#define IS_MOVED_BOXED(x)	(!is_header((x)))
-#define IS_MOVED_CONS(x)	(is_non_value((x)))
+int ERTS_FORCE_INLINE IS_MOVED_BOXED(Eterm x) { return !is_header(x); }
+int ERTS_FORCE_INLINE IS_MOVED_CONS(Eterm x) { return is_non_value(x); }
 
 #define MOVE_CONS(PTR,CAR,HTOP,ORIG)					\
 do {									\
     Eterm gval;								\
-									\
+    ASSERT(!erts_is_literal(make_list(PTR), PTR));   \
     HTOP[0] = CAR;		/* copy car */				\
     HTOP[1] = PTR[1];		/* copy cdr */				\
     gval = make_list(HTOP);	/* new location */			\
@@ -51,7 +51,7 @@ do {									\
 do {                                                                    \
     Eterm gval;                                                         \
     Sint nelts;                                                         \
-                                                                        \
+    ASSERT(!erts_is_literal(make_boxed(PTR), PTR));   \
     ASSERT(is_header(HDR));                                             \
     nelts = header_arity(HDR);                                          \
     switch ((HDR) & _HEADER_SUBTAG_MASK) {                              \
@@ -75,7 +75,7 @@ int within(Eterm *ptr, Process *p);
 
 #define ErtsInYoungGen(TPtr, Ptr, OldHeap, OldHeapSz)			\
     (!erts_is_literal((TPtr), (Ptr))					\
-     & !ErtsInArea((Ptr), (OldHeap), (OldHeapSz)))
+     && !ErtsInArea((Ptr), (OldHeap), (OldHeapSz)))
 
 ERTS_GLB_INLINE Eterm follow_moved(Eterm term, Eterm xptr_tag);
 

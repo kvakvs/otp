@@ -12523,7 +12523,6 @@ erts_do_exit_process(Process* p, Eterm reason)
 {
     p->arity = 0;		/* No live registers */
     p->fvalue = reason;
-    
 
 #ifdef USE_VM_PROBES
     if (DTRACE_ENABLED(process_exit)) {

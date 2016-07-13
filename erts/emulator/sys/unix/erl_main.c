@@ -27,6 +27,9 @@
 int
 main(int argc, char **argv)
 {
+    for (int i = 0; i < argc; ++i) { printf("%s ", argv[i]); }
+    printf("\r\n");
+
     erl_start(argc, argv);
     return 0;
 }

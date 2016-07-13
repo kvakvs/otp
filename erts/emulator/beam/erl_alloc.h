@@ -214,7 +214,7 @@ void *erts_alloc_fnf(ErtsAlcType_t type, Uint size);
 void *erts_realloc_fnf(ErtsAlcType_t type, void *ptr, Uint size);
 int erts_is_allctr_wrapper_prelocked(void);
 #ifdef ERTS_HAVE_IS_IN_LITERAL_RANGE
-int erts_is_in_literal_range(void* ptr);
+int erts_is_in_literal_range(const void* ptr);
 #endif
 
 #endif /* #if !ERTS_ALC_DO_INLINE */
@@ -310,7 +310,7 @@ int erts_is_allctr_wrapper_prelocked(void)
 #ifdef ERTS_HAVE_IS_IN_LITERAL_RANGE
 
 ERTS_ALC_FORCE_INLINE
-int erts_is_in_literal_range(void* ptr)
+int erts_is_in_literal_range(const void* ptr)
 {
 #if defined(ARCH_32)
     Uint ix = (UWord)ptr >> ERTS_MMAP_SUPERALIGNED_BITS;
