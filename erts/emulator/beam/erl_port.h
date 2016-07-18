@@ -284,7 +284,7 @@ erts_prtsd_set(Port *prt, int ix, void *data)
     if (!data)
 	return NULL;
 
-    new_psd = erts_alloc(ERTS_ALC_T_PRTSD, sizeof(ErtsPrtSD));
+    new_psd = (ErtsPrtSD*)erts_alloc(ERTS_ALC_T_PRTSD, sizeof(ErtsPrtSD));
     for (i = 0; i < ERTS_PRTSD_SIZE; i++)
 	new_psd->data[i] = NULL;
     psd = (ErtsPrtSD *) erts_smp_atomic_cmpxchg_mb(&prt->psd,

@@ -675,8 +675,13 @@ $(OBJDIR)/beam_emu.o: beam/beam_emu.c
 	$(V_EMU_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
 endif
 
+MY_CXXFLAGS = -std=c++14
+
 $(OBJDIR)/%.o: beam/%.c
 	$(V_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
+
+$(OBJDIR)/%.o: beam/%.cpp
+	$(V_CXX) $(MY_CXXFLAGS) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
 
 $(OBJDIR)/%.o: $(TARGET)/%.c
 	$(V_CC) $(CFLAGS) $(INCLUDES) -Idrivers/common -c $< -o $@
@@ -686,6 +691,9 @@ $(OBJDIR)/%.o: $(TTF_DIR)/%.c
 
 $(OBJDIR)/%.o: sys/$(ERLANG_OSTYPE)/%.c
 	$(V_CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+$(OBJDIR)/%.o: sys/$(ERLANG_OSTYPE)/%.cpp
+	$(V_CXX) $(MY_CXXFLAGS) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 $(OBJDIR)/%.o: sys/common/%.c
 	$(V_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@

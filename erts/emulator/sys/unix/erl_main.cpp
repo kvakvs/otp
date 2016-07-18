@@ -17,12 +17,20 @@
  * 
  * %CopyrightEnd%
  */
+#define ERLCPP_C_MODE
+#include "erl_cplusplus.h"
+extern "C" {
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
 #include "sys.h"
 #include "erl_vm.h"
 #include "global.h"
+
+} // extern C
+#define ERLCPP_CPP_MODE
+#include "erl_cplusplus.h"
 
 int
 main(int argc, char **argv)

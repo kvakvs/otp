@@ -116,6 +116,10 @@ int ethr_assert_failed(const char *file, int line, const char *func, char *a);
 #define _DARWIN_C_SOURCE
 #endif
 
+/* Release C++ macros because pthread is C++-aware */
+#define ERLCPP_CPP_MODE
+#include "erl_cplusplus.h"
+
 #if defined(ETHR_NEED_NPTL_PTHREAD_H)
 #include <nptl/pthread.h>
 #elif defined(ETHR_HAVE_MIT_PTHREAD_H)
@@ -123,6 +127,10 @@ int ethr_assert_failed(const char *file, int line, const char *func, char *a);
 #elif defined(ETHR_HAVE_PTHREAD_H)
 #include <pthread.h>
 #endif
+
+/* Back to pretending we're C */
+#define ERLCPP_C_MODE
+#include "erl_cplusplus.h"
 
 /* Types */
 
@@ -268,7 +276,7 @@ ETHR_PROTO_NORETURN__ ethr_fatal_error__(const char *file,
 #define __builtin_expect(X, Y) (X)
 #endif
 
-#if ETHR_AT_LEAST_GCC_VSN__(3, 1, 1)
+#if ETHR_AT_LEAST_GCC_VSN__(3, 1, 1) && ! defined(__cplusplus)
 #  define ETHR_CHOOSE_EXPR __builtin_choose_expr
 #else
 #  define ETHR_CHOOSE_EXPR(B, E1, E2) ((B) ? (E1) : (E2))
@@ -646,7 +654,7 @@ extern pthread_key_t ethr_ts_event_key__;
 static ETHR_INLINE ethr_ts_event *
 ETHR_INLINE_FUNC_NAME_(ethr_get_ts_event)(void)
 {
-    ethr_ts_event *tsep = pthread_getspecific(ethr_ts_event_key__);
+    ethr_ts_event *tsep = (ethr_ts_event *)pthread_getspecific(ethr_ts_event_key__);
     if (!tsep) {
 	int res = ethr_make_ts_event__(&tsep);
 	if (res != 0)
