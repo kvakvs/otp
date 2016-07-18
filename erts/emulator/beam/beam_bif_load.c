@@ -227,7 +227,7 @@ finish_loading_1(BIF_ALIST_1)
 	erts_release_code_write_permission();
 	BIF_ERROR(BIF_P, BADARG);
     }
-    p = erts_alloc(ERTS_ALC_T_LOADER_TMP, n*sizeof(struct m));
+    p = (struct m*)erts_alloc(ERTS_ALC_T_LOADER_TMP, n*sizeof(struct m));
 
     /*
      * We now know that the argument is a proper list. Validate

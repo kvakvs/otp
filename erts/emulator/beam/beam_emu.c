@@ -152,7 +152,7 @@ do {                                     \
 
 #define SET_I(ip) \
    ASSERT(VALID_INSTR(* (Eterm *)(ip))); \
-   I = (ip)
+   I = (BeamInstr *)(ip)
 
 /*
  * Register target (X or Y register).
@@ -2105,7 +2105,8 @@ void process_main(void)
 	 if (timeout_value == am_infinity)
 	     c_p->flags |= F_TIMO;
 	 else {
-	     int tres = erts_set_proc_timer_term(c_p, timeout_value);
+	     int tres;
+             tres = erts_set_proc_timer_term(c_p, timeout_value);
 	     if (tres == 0) {
 		 /*
 		  * The timer routiner will set c_p->i to the value in
@@ -2575,7 +2576,7 @@ do {						\
 	Eterm result;
 
 	GetArg1(2, tmp_reg[0]);
-	bf = (BifFunction) Arg(1);
+	bf = (decltype(bf)) Arg(1);
 	ERTS_DBG_CHK_REDS(c_p, FCALLS);
 	c_p->fcalls = FCALLS;
 	PROCESS_MAIN_CHK_LOCKS(c_p);
@@ -2606,7 +2607,7 @@ do {						\
 	Eterm result;
 
 	GetArg1(1, tmp_reg[0]);
-	bf = (BifFunction) Arg(0);
+	bf = (decltype(bf)) Arg(0);
 	ERTS_DBG_CHK_REDS(c_p, FCALLS);
 	c_p->fcalls = FCALLS;
 	PROCESS_MAIN_CHK_LOCKS(c_p);
@@ -2623,7 +2624,7 @@ do {						\
 	}
 	reg[0] = tmp_reg[0];
 	SWAPOUT;
-	I = handle_error(c_p, I, reg, bf);
+	I = handle_error(c_p, I, reg, (BifFunction)bf);
 	goto post_error_handling;
     }
 
@@ -2758,7 +2759,7 @@ do {						\
 	Eterm result;
 
 	GetArg2(2, tmp_reg[0], tmp_reg[1]);
-	bf = (BifFunction) Arg(1);
+	bf = (decltype(bf)) Arg(1);
 	ERTS_DBG_CHK_REDS(c_p, FCALLS);
 	c_p->fcalls = FCALLS;
 	PROCESS_MAIN_CHK_LOCKS(c_p);
@@ -2787,7 +2788,7 @@ do {						\
 	Eterm result;
 
 	GetArg2(1, tmp_reg[0], tmp_reg[1]);
-	bf = (BifFunction) Arg(0);
+	bf = (decltype(bf)) Arg(0);
 	PROCESS_MAIN_CHK_LOCKS(c_p);
 	ASSERT(!ERTS_PROC_IS_EXITING(c_p));
 	result = (*bf)(c_p, tmp_reg);
@@ -2802,7 +2803,7 @@ do {						\
 	reg[0] = tmp_reg[0];
 	reg[1] = tmp_reg[1];
 	SWAPOUT;
-	I = handle_error(c_p, I, reg, bf);
+	I = handle_error(c_p, I, reg, (BifFunction)bf);
 	goto post_error_handling;
     }
 
@@ -2828,7 +2829,7 @@ do {						\
 
         ERTS_MSACC_SET_BIF_STATE_CACHED_X(GET_BIF_MODULE(Arg(0)), GET_BIF_ADDRESS(Arg(0)));
 
-	bf = GET_BIF_ADDRESS(Arg(0));
+	bf = (decltype(bf))GET_BIF_ADDRESS(Arg(0));
 
 	PRE_BIF_SWAPOUT(c_p);
 	ERTS_DBG_CHK_REDS(c_p, FCALLS);
@@ -2875,7 +2876,7 @@ do {						\
 	 * Error handling.  SWAPOUT is not needed because it was done above.
 	 */
 	ASSERT(c_p->stop == E);
-	I = handle_error(c_p, I, reg, bf);
+	I = handle_error(c_p, I, reg, (BifFunction)bf);
 	goto post_error_handling;
     }
 
@@ -3179,7 +3180,7 @@ do {						\
 	 SET_I(next);
 	 Dispatch();
      }
-     I = handle_error(c_p, I, reg, apply_3);
+     I = handle_error(c_p, I, reg, (BifFunction)apply_3);
      goto post_error_handling;
  }
 
@@ -3194,7 +3195,7 @@ do {						\
 	 SET_I(next);
 	 Dispatch();
      }
-     I = handle_error(c_p, I, reg, apply_3);
+     I = handle_error(c_p, I, reg, (BifFunction)apply_3);
      goto post_error_handling;
  }
 
@@ -3207,7 +3208,7 @@ do {						\
 	 SET_I(next);
 	 Dispatch();
      }
-     I = handle_error(c_p, I, reg, apply_3);
+     I = handle_error(c_p, I, reg, (BifFunction)apply_3);
      goto post_error_handling;
  }
 
@@ -3222,7 +3223,7 @@ do {						\
 	 SET_I(next);
 	 Dispatch();
      }
-     I = handle_error(c_p, I, reg, apply_3);
+     I = handle_error(c_p, I, reg, (BifFunction)apply_3);
      goto post_error_handling;
  }
 
@@ -3238,7 +3239,7 @@ do {						\
 	 SET_I(next);
 	 Dispatch();
      }
-     I = handle_error(c_p, I, reg, apply_3);
+     I = handle_error(c_p, I, reg, (BifFunction)apply_3);
      goto post_error_handling;
  }
 
@@ -3547,8 +3548,9 @@ do {						\
 	    ASSERT(!ERTS_PROC_IS_EXITING(c_p));
 	    {
 		typedef Eterm NifF(struct enif_environment_t*, int argc, Eterm argv[]);
-		NifF* fp = vbf = (NifF*) I[1];
-		struct enif_environment_t env;
+		NifF* fp = (NifF*) I[1];
+                vbf = (BifFunction)fp;
+                struct enif_environment_t env;
 #ifdef ERTS_SMP
 		ASSERT(c_p->scheduler_data);
 #endif
@@ -3606,7 +3608,7 @@ do {						\
 	    ERTS_SMP_UNREQ_PROC_MAIN_LOCK(c_p);
 	    ERTS_VERIFY_UNUSED_TEMP_ALLOC(c_p);
 	    {
-		Eterm (*bf)(Process*, Eterm*, BeamInstr*) = vbf;
+		Eterm (*bf)(Process*, Eterm*, BeamInstr*) = (decltype(bf))vbf;
 		ASSERT(!ERTS_PROC_IS_EXITING(c_p));
 		live_hf_end = c_p->mbuf;
 		nif_bif_result = (*bf)(c_p, reg, I);
@@ -3982,8 +3984,10 @@ do {						\
 
      GetArg2(1, Op1, Op2);
      if (is_both_small(Op1, Op2)) {
-	 Sint Arg1 = signed_val(Op1);
-	 Sint Arg2 = signed_val(Op2);
+	 Sint Arg1;
+         Arg1 = signed_val(Op1);
+	 Sint Arg2;
+         Arg2 = signed_val(Op2);
 
 	 if (Arg1 >= 0 && Arg2 >= 0) {
 	     BsSafeMul(Arg2, Unit, goto system_limit, Op1);
@@ -4932,7 +4936,7 @@ do {						\
 	 c_p->cp = 0;
 	 Goto(*I);
        case HIPE_MODE_SWITCH_RES_CALL_EXPORTED:
-	 c_p->i = c_p->hipe.u.callee_exp->addressv[erts_active_code_ix()];
+	 c_p->i = (BeamInstr *)c_p->hipe.u.callee_exp->addressv[erts_active_code_ix()];
 	 /*fall through*/
        case HIPE_MODE_SWITCH_RES_CALL_BEAM:
 	 SET_I(c_p->i);
@@ -5000,7 +5004,7 @@ do {						\
 	 goto do_schedule;
      } else {
 	 HEAVY_SWAPIN;
-	 I = handle_error(c_p, I, reg, hibernate_3);
+	 I = handle_error(c_p, I, reg, (BifFunction)hibernate_3);
 	 goto post_error_handling;
      }
  }
@@ -5091,9 +5095,9 @@ do {						\
 #endif /* ERTS_OPCODE_COUNTER_SUPPORT */
 #endif /* NO_JUMP_TABLE */
      
-     em_call_error_handler = OpCode(call_error_handler);
-     em_apply_bif = OpCode(apply_bif);
-     em_call_nif = OpCode(call_nif);
+     em_call_error_handler = (BeamInstr *)OpCode(call_error_handler);
+     em_apply_bif = (BeamInstr *)OpCode(apply_bif);
+     em_call_nif = (BeamInstr *)OpCode(call_nif);
 
      beam_apply[0]             = (BeamInstr) OpCode(i_apply);
      beam_apply[1]             = (BeamInstr) OpCode(normal_exit);
@@ -6120,7 +6124,7 @@ call_error_handler(Process* p, BeamInstr* fi, Eterm* reg, Eterm func)
     reg[0] = fi[0];
     reg[1] = fi[1];
     reg[2] = args;
-    return ep->addressv[erts_active_code_ix()];
+    return (BeamInstr *)ep->addressv[erts_active_code_ix()];
 }
 
 static Export*
@@ -6246,7 +6250,7 @@ apply(Process* p, Eterm module, Eterm function, Eterm args, Eterm* reg)
 	save_calls(p, ep);
     }
     DTRACE_GLOBAL_CALL_FROM_EXPORT(p, ep);
-    return ep->addressv[erts_active_code_ix()];
+    return (BeamInstr *)ep->addressv[erts_active_code_ix()];
 }
 
 static BeamInstr*
@@ -6295,7 +6299,7 @@ fixed_apply(Process* p, Eterm* reg, Uint arity)
 	save_calls(p, ep);
     }
     DTRACE_GLOBAL_CALL_FROM_EXPORT(p, ep);
-    return ep->addressv[erts_active_code_ix()];
+    return (BeamInstr *)ep->addressv[erts_active_code_ix()];
 }
 
 int
@@ -6533,7 +6537,7 @@ call_fun(Process* p,		/* Current process. */
 		reg[1] = fun;
 		reg[2] = args;
 		reg[3] = NIL;
-		return ep->addressv[erts_active_code_ix()];
+		return (BeamInstr *)ep->addressv[erts_active_code_ix()];
 	    }
 	}
     } else if (is_export_header(hdr)) {
@@ -6545,7 +6549,7 @@ call_fun(Process* p,		/* Current process. */
 
 	if (arity == actual_arity) {
 	    DTRACE_GLOBAL_CALL(p, ep->code[0], ep->code[1], (Uint)ep->code[2]);
-	    return ep->addressv[erts_active_code_ix()];
+	    return (BeamInstr *)ep->addressv[erts_active_code_ix()];
 	} else {
 	    /*
 	     * Wrong arity. First build a list of the arguments.

@@ -1841,9 +1841,9 @@ case $gcc_4_3_0_bug in
 esac
 
 AC_MSG_RESULT([$gcc_4_3_0_bug_result])
-if test $gcc_4_3_0_bug = yes; then
-	AC_MSG_ERROR([This gcc miscompiles the Erlang runtime system; please use a different version])	
-fi
+#if test $gcc_4_3_0_bug = yes; then
+#	AC_MSG_ERROR([This gcc miscompiles the Erlang runtime system; please use a different version])	
+#fi
 
 fi
 

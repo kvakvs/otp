@@ -198,7 +198,7 @@ erts_thr_prgr_read_mb__(ERTS_THR_PRGR_ATOMIC *atmc)
 ERTS_GLB_INLINE int
 erts_thr_progress_is_managed_thread(void)
 {
-    ErtsThrPrgrData *tpd = erts_tsd_get(erts_thr_prgr_data_key__);
+    ErtsThrPrgrData *tpd = (ErtsThrPrgrData *)erts_tsd_get(erts_thr_prgr_data_key__);
     return tpd && tpd->is_managed;
 }
 
@@ -254,7 +254,7 @@ erts_thr_progress_later(ErtsSchedulerData *esdp)
 	ERTS_THR_MEMORY_BARRIER;
     }
     else {
-	tpd = erts_tsd_get(erts_thr_prgr_data_key__);
+	tpd = (ErtsThrPrgrData *)erts_tsd_get(erts_thr_prgr_data_key__);
 	if (tpd && tpd->is_managed)
 	    goto managed_thread;
 	val = erts_thr_prgr_read_mb__(&erts_thr_prgr__.current);

@@ -238,7 +238,7 @@ erts_bin_drv_alloc_fnf(Uint size)
 
     if (bsize < size) /* overflow */
 	return NULL;
-    res = erts_alloc_fnf(ERTS_ALC_T_DRV_BINARY, bsize);
+    res = (Binary *)erts_alloc_fnf(ERTS_ALC_T_DRV_BINARY, bsize);
     ERTS_CHK_BIN_ALIGNMENT(res);
     if (res) {
 	res->orig_size = size;
@@ -257,7 +257,7 @@ erts_bin_drv_alloc(Uint size)
 
     if (bsize < size) /* overflow */
 	erts_alloc_enomem(ERTS_ALC_T_DRV_BINARY, size);
-    res = erts_alloc(ERTS_ALC_T_DRV_BINARY, bsize);
+    res = (Binary *)erts_alloc(ERTS_ALC_T_DRV_BINARY, bsize);
     ERTS_CHK_BIN_ALIGNMENT(res);
     res->orig_size = size;
     res->flags = BIN_FLAG_DRV;
@@ -275,7 +275,7 @@ erts_bin_nrml_alloc(Uint size)
 
     if (bsize < size) /* overflow */
 	erts_alloc_enomem(ERTS_ALC_T_BINARY, size);
-    res = erts_alloc(ERTS_ALC_T_BINARY, bsize);
+    res = (Binary *)erts_alloc(ERTS_ALC_T_BINARY, bsize);
     ERTS_CHK_BIN_ALIGNMENT(res);
     res->orig_size = size;
     res->flags = 0;
@@ -292,7 +292,7 @@ erts_bin_realloc_fnf(Binary *bp, Uint size)
     ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
     if (bsize < size) /* overflow */
 	return NULL;
-    nbp = erts_realloc_fnf(type, (void *) bp, bsize);
+    nbp = (Binary *)erts_realloc_fnf(type, (void *) bp, bsize);
     ERTS_CHK_BIN_ALIGNMENT(nbp);
     if (nbp)
 	nbp->orig_size = size;
@@ -309,7 +309,7 @@ erts_bin_realloc(Binary *bp, Uint size)
     ASSERT((bp->flags & BIN_FLAG_MAGIC) == 0);
     if (bsize < size) /* overflow */
 	erts_realloc_enomem(type, bp, size);
-    nbp = erts_realloc_fnf(type, (void *) bp, bsize);
+    nbp = (Binary *)erts_realloc_fnf(type, (void *) bp, bsize);
     if (!nbp)
 	erts_realloc_enomem(type, bp, bsize);
     ERTS_CHK_BIN_ALIGNMENT(nbp);
@@ -334,7 +334,7 @@ erts_create_magic_binary_x(Uint size, void (*destructor)(Binary *),
 {
     Uint bsize = unaligned ? ERTS_MAGIC_BIN_UNALIGNED_SIZE(size)
                            : ERTS_MAGIC_BIN_SIZE(size);
-    Binary* bptr = erts_alloc_fnf(ERTS_ALC_T_BINARY, bsize);
+    Binary* bptr = (Binary *)erts_alloc_fnf(ERTS_ALC_T_BINARY, bsize);
     ASSERT(bsize > size);
     if (!bptr)
 	erts_alloc_n_enomem(ERTS_ALC_T2N(ERTS_ALC_T_BINARY), bsize);

@@ -121,7 +121,9 @@ int ethr_assert_failed(const char *file, int line, const char *func, char *a);
 #elif defined(ETHR_HAVE_MIT_PTHREAD_H)
 #include <pthread/mit/pthread.h>
 #elif defined(ETHR_HAVE_PTHREAD_H)
+#undef class
 #include <pthread.h>
+#define class class_
 #endif
 
 /* Types */
@@ -646,7 +648,7 @@ extern pthread_key_t ethr_ts_event_key__;
 static ETHR_INLINE ethr_ts_event *
 ETHR_INLINE_FUNC_NAME_(ethr_get_ts_event)(void)
 {
-    ethr_ts_event *tsep = pthread_getspecific(ethr_ts_event_key__);
+    ethr_ts_event *tsep = (ethr_ts_event *) pthread_getspecific(ethr_ts_event_key__);
     if (!tsep) {
 	int res = ethr_make_ts_event__(&tsep);
 	if (res != 0)
