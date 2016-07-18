@@ -38,7 +38,7 @@ typedef struct {
     enum AOFF_Flavor flavor;
 } AOFFAllctrInit_t;
 
-#define ERTS_DEFAULT_AOFF_ALLCTR_INIT {0/*dummy*/}
+#define ERTS_DEFAULT_AOFF_ALLCTR_INIT {AOFF_AOFF /*dummy*/}
 
 void erts_aoffalc_init(void);
 Allctr_t *erts_aoffalc_start(AOFFAllctr_t *, AOFFAllctrInit_t*, AllctrInit_t *);

@@ -471,7 +471,7 @@ typedef struct LoaderState {
   do { \
    ASSERT((Genop)->a == (Genop)->def_args); \
    (Genop)->arity = (Arity); \
-   (Genop)->a = erts_alloc(ERTS_ALC_T_LOADER_TMP, \
+   (Genop)->a = (GenOpArg *)erts_alloc(ERTS_ALC_T_LOADER_TMP, \
 			   (Genop)->arity * sizeof(GenOpArg)); \
   } while (0)
 
@@ -611,7 +611,7 @@ erts_prepare_loading(Binary* magic, Process *c_p, Eterm group_leader,
     Eterm retval = am_badfile;
     LoaderState* stp;
 
-    stp = ERTS_MAGIC_BIN_DATA(magic);
+    stp = (LoaderState *)ERTS_MAGIC_BIN_DATA(magic);
     stp->module = *modp;
     stp->group_leader = group_leader;
 
@@ -768,7 +768,7 @@ erts_finish_loading(Binary* magic, Process* c_p,
 		    ErtsProcLocks c_p_locks, Eterm* modp)
 {
     Eterm retval = NIL;
-    LoaderState* stp = ERTS_MAGIC_BIN_DATA(magic);
+    LoaderState* stp = (LoaderState *)ERTS_MAGIC_BIN_DATA(magic);
     Module* mod_tab_p;
     struct erl_module_instance* inst_p;
     Uint size;
@@ -890,7 +890,7 @@ erts_alloc_loader_state(void)
     magic = erts_create_magic_binary(sizeof(LoaderState),
 				     loader_state_dtor);
     erts_refc_inc(&magic->refc, 1);
-    stp = ERTS_MAGIC_BIN_DATA(magic);
+    stp = (LoaderState *)ERTS_MAGIC_BIN_DATA(magic);
     stp->bin = NULL;
     stp->function = THE_NON_VALUE; /* Function not known yet */
     stp->arity = 0;
@@ -936,7 +936,7 @@ erts_module_for_prepared_code(Binary* magic)
     if (ERTS_MAGIC_BIN_DESTRUCTOR(magic) != loader_state_dtor) {
 	return NIL;
     }
-    stp = ERTS_MAGIC_BIN_DATA(magic);
+    stp = (LoaderState *)ERTS_MAGIC_BIN_DATA(magic);
     if (stp->hdr != 0) {
 	return stp->module;
     } else {
@@ -957,7 +957,7 @@ erts_has_code_on_load(Binary* magic)
     if (ERTS_MAGIC_BIN_DESTRUCTOR(magic) != loader_state_dtor) {
 	return NIL;
     }
-    stp = ERTS_MAGIC_BIN_DATA(magic);
+    stp = (LoaderState *)ERTS_MAGIC_BIN_DATA(magic);
     return stp->on_load ? am_true : am_false;
 }
 
@@ -998,7 +998,7 @@ static void free_literal_fragment(ErlHeapFragment* bp)
 static void
 loader_state_dtor(Binary* magic)
 {
-    LoaderState* stp = ERTS_MAGIC_BIN_DATA(magic);
+    LoaderState* stp = (LoaderState *)ERTS_MAGIC_BIN_DATA(magic);
 
     if (stp->bin != 0) {
 	driver_free_binary(stp->bin);
@@ -1334,7 +1334,7 @@ load_atom_table(LoaderState* stp)
 
     GetInt(stp, 4, stp->num_atoms);
     stp->num_atoms++;
-    stp->atom = erts_alloc(ERTS_ALC_T_PREPARED_CODE,
+    stp->atom = (Eterm *)erts_alloc(ERTS_ALC_T_PREPARED_CODE,
 			   stp->num_atoms*sizeof(Eterm));
 
     /*
@@ -1378,7 +1378,7 @@ load_import_table(LoaderState* stp)
     int i;
 
     GetInt(stp, 4, stp->num_imports);
-    stp->import = erts_alloc(ERTS_ALC_T_PREPARED_CODE,
+    stp->import = (ImportEntry *)erts_alloc(ERTS_ALC_T_PREPARED_CODE,
 			     stp->num_imports * sizeof(ImportEntry));
     for (i = 0; i < stp->num_imports; i++) {
 	int n;
@@ -1571,7 +1571,7 @@ read_literal_table(LoaderState* stp)
     byte* uncompressed = 0;
 
     GetInt(stp, 4, uncompressed_sz);
-    uncompressed = erts_alloc(ERTS_ALC_T_TMP, uncompressed_sz);
+    uncompressed = (byte *)erts_alloc(ERTS_ALC_T_TMP, uncompressed_sz);
     if (erl_zlib_uncompress(uncompressed, &uncompressed_sz,
 		   stp->file_p, stp->file_left) != Z_OK) {
 	LoadError0(stp, "failed to uncompress literal table (constant pool)");
@@ -2010,7 +2010,7 @@ load_code(LoaderState* stp)
 			GetTagAndValue(stp, tag, last_op->a[arg].val);
 			VerifyTag(stp, tag, TAG_u);
 			last_op->a[arg].type = TAG_u;
-			last_op->a =
+			last_op->a = (GenOpArg *)
 			    erts_alloc(ERTS_ALC_T_LOADER_TMP,
 				       (arity+last_op->a[arg].val)
 				       *sizeof(GenOpArg));
@@ -2941,7 +2941,8 @@ gen_get_integer2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms, GenOpArg Live,
 	    }
 	}
     } else if (Size.type == TAG_q) {
-	Eterm big = stp->literals[Size.val].term;
+	Eterm big;
+        big = stp->literals[Size.val].term;
 	Uint bigval;
 
 	if (!term_to_Uint(big, &bigval)) {
@@ -3014,7 +3015,8 @@ gen_get_binary2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms, GenOpArg Live,
 	op->a[4] = Flags;
 	op->a[5] = Dst;
     } else if (Size.type == TAG_q) {
-	Eterm big = stp->literals[Size.val].term;
+	Eterm big;
+        big = stp->literals[Size.val].term;
 	Uint bigval;
 
 	if (!term_to_Uint(big, &bigval)) {
@@ -3253,7 +3255,8 @@ gen_skip_bits2(LoaderState* stp, GenOpArg Fail, GenOpArg Ms,
 	    goto error;
 	}
     } else if (Size.type == TAG_q) {
-	Eterm big = stp->literals[Size.val].term;
+	Eterm big;
+        big = stp->literals[Size.val].term;
 	Uint bigval;
 
 	if (!term_to_Uint(big, &bigval)) {
@@ -5292,7 +5295,7 @@ get_tag_and_value(LoaderState* stp, Uint len_code,
      */
 
     if (count+8 > sizeof(default_buf)) {
-	bigbuf = erts_alloc(ERTS_ALC_T_LOADER_TMP, count+8);
+	bigbuf = (byte *)erts_alloc(ERTS_ALC_T_LOADER_TMP, count+8);
     }
 
     /*
@@ -5402,7 +5405,7 @@ new_label(LoaderState* stp)
 static void
 new_literal_patch(LoaderState* stp, int pos)
 {
-    LiteralPatch* p = erts_alloc(ERTS_ALC_T_PREPARED_CODE,
+    LiteralPatch* p = (LiteralPatch*)erts_alloc(ERTS_ALC_T_PREPARED_CODE,
 				 sizeof(LiteralPatch));
     p->pos = pos;
     p->next = stp->literal_patches;
@@ -5412,7 +5415,7 @@ new_literal_patch(LoaderState* stp, int pos)
 static void
 new_string_patch(LoaderState* stp, int pos)
 {
-    StringPatch* p = erts_alloc(ERTS_ALC_T_PREPARED_CODE, sizeof(StringPatch));
+    StringPatch* p = (StringPatch*)erts_alloc(ERTS_ALC_T_PREPARED_CODE, sizeof(StringPatch));
     p->pos = pos;
     p->next = stp->string_patches;
     stp->string_patches = p;
@@ -5850,7 +5853,7 @@ code_get_chunk_2(BIF_ALIST_2)
     byte* temp_alloc = NULL;
 
     magic = erts_alloc_loader_state();
-    stp = ERTS_MAGIC_BIN_DATA(magic);
+    stp = (LoaderState *)ERTS_MAGIC_BIN_DATA(magic);
     if ((start = erts_get_aligned_binary_bytes(Bin, &temp_alloc)) == NULL) {
     error:
 	erts_free_aligned_binary_bytes(temp_alloc);
@@ -5920,7 +5923,7 @@ code_module_md5_1(BIF_ALIST_1)
     Eterm res;
 
     magic = erts_alloc_loader_state();
-    stp = ERTS_MAGIC_BIN_DATA(magic);
+    stp = (LoaderState *)ERTS_MAGIC_BIN_DATA(magic);
     if ((bytes = erts_get_aligned_binary_bytes(Bin, &temp_alloc)) == NULL) {
 	free_loader_state(magic);
 	BIF_ERROR(p, BADARG);
@@ -6244,7 +6247,7 @@ erts_make_stub_module(Process* p, Eterm Mod, Eterm Beam, Eterm Info)
      * at label 'error' uses it.
      */
     magic = erts_alloc_loader_state();
-    stp = ERTS_MAGIC_BIN_DATA(magic);
+    stp = (LoaderState *)ERTS_MAGIC_BIN_DATA(magic);
 
     if (is_not_atom(Mod)) {
 	goto error;
@@ -6314,7 +6317,7 @@ erts_make_stub_module(Process* p, Eterm Mod, Eterm Beam, Eterm Info)
                  + stp->chunks[ATTR_CHUNK].size
                  + stp->chunks[COMPILE_CHUNK].size
                  + MD5_SIZE);
-    code_hdr = erts_alloc_fnf(ERTS_ALC_T_CODE, code_size);
+    code_hdr = (BeamCodeHeader *)erts_alloc_fnf(ERTS_ALC_T_CODE, code_size);
     if (!code_hdr) {
 	goto error;
     }

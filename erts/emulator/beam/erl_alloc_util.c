@@ -1795,7 +1795,7 @@ static ERTS_INLINE int
 ddq_managed_thread_enqueue(ErtsAllctrDDQueue_t *ddq, void *ptr, int cinit)
 {
     erts_aint_t itmp;
-    ErtsAllctrDDBlock_t *enq, *this = ptr;
+    ErtsAllctrDDBlock_t *enq, *this = (ErtsAllctrDDBlock_t *)ptr;
 
     erts_atomic_init_nob(&this->atmc_next, ERTS_AINT_NULL);
     /* Enqueue at end of list... */
@@ -2427,7 +2427,7 @@ mbc_alloc(Allctr_t *allctr, Uint size)
 {
     Block_t *blk;
     Uint blk_sz;
-    blk = mbc_alloc_block(allctr, size, &blk_sz);
+    blk = (Block_t *)mbc_alloc_block(allctr, size, &blk_sz);
     if (!blk)
 	return NULL;
     if (IS_MBC_BLK(blk))
@@ -6197,7 +6197,7 @@ erts_alcu_start(Allctr_t *allctr, AllctrInit_t *init)
 
     if (init->fix) {
 	int i;
-	allctr->fix = init->fix;
+        allctr->fix = (decltype(allctr->fix))init->fix;
 	allctr->fix_shrink_scheduled = 0;
 	for (i = 0; i < ERTS_ALC_NO_FIXED_SIZES; i++) {
 	    allctr->fix[i].type_size = init->fix_type_size[i];

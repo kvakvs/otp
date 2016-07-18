@@ -119,7 +119,7 @@ BIF_RETTYPE os_getenv_1(BIF_ALIST_1)
 	str = am_false;
     } else {
 	if (res > 0) {
-	    val = erts_alloc(ERTS_ALC_T_TMP, val_size);
+	    val = (decltype(val))erts_alloc(ERTS_ALC_T_TMP, val_size);
 	    while (1) {
 		res = erts_sys_getenv(key_str, val, &val_size);
 		if (res == 0)
@@ -127,7 +127,7 @@ BIF_RETTYPE os_getenv_1(BIF_ALIST_1)
 		else if (res < 0)
 		    goto no_var;
 		else
-		    val = erts_realloc(ERTS_ALC_T_TMP, val, val_size);
+		    val = (decltype(val))erts_realloc(ERTS_ALC_T_TMP, val, val_size);
 	    }
 	}
 	str = erts_convert_native_to_filename(p,(byte *)val);

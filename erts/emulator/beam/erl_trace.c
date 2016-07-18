@@ -1593,7 +1593,7 @@ monitor_long_gc(Process *p, Uint time) {
     };
     UWord values[] = {
 	time,
-	OLD_HEAP(p) ? OLD_HEND(p) - OLD_HEAP(p) : 0,
+	OLD_HEAP(p) ? OLD_HEND(p) - OLD_HEAP(p) : nullptr,
 	HEAP_SIZE(p),
 	MBUF_SIZE(p),
 	STACK_START(p) - p->stop,

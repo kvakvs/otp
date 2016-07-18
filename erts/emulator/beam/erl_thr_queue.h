@@ -74,20 +74,21 @@ typedef struct {
     int auto_finalize_dequeue;
 } ErtsThrQInit_t;
 
-typedef struct ErtsThrQElement_t_ ErtsThrQElement_t;
-typedef struct ErtsThrQElement_t ErtsThrQPrepEnQ_t;
+//typedef struct ErtsThrQElement_t_ ErtsThrQElement_t;
+//typedef struct ErtsThrQElement_t ErtsThrQPrepEnQ_t;
 
-struct ErtsThrQElement_t_ {
+typedef struct ErtsThrQElement_t_ {
 #ifdef USE_THREADS
     erts_atomic_t next;
 #else
-    ErtsThrQElement_t *next;
+    ErtsThrQElement_t_ *next;
 #endif
     union {
 	erts_atomic_t atmc;
 	void *ptr;
     } data;
-};
+} ErtsThrQElement_t;
+using ErtsThrQPrepEnQ_t = ErtsThrQElement_t;
 
 typedef struct {
     ErtsThrQElement_t *start;

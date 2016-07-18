@@ -1453,10 +1453,10 @@ sub tr_gen {
 		$op = "TOP_$op";
 		$match_engine_ops{$op} = 1;
 		if ($comment ne '') {
-		    printf "%-24s /* %s */\n", (join(", ", ($op, @args)) . ","),
+		    printf "%-24s /* %s */\n", (join(", (Uint)", ($op, @args)) . ","),
 		    $comment;
 		} else {
-		    print join(", ", ($op, @args)), ",\n";
+		    print join(", (Uint)", ($op, @args)), ",\n";
 		}
 		$offset += $size;
 	    }

@@ -617,7 +617,7 @@ void erts_mtrace_init(char *receiver, char *nodename)
 	    hostname[0] = '\0';
 	hostname[MAXHOSTNAMELEN-1] = '\0';
 	sys_get_pid(pid, sizeof(pid));
-	write_trace_header(nodename ? nodename : "", pid, hostname);
+	write_trace_header((char *)(nodename ? nodename : ""), pid, hostname);
 	erts_mtrace_update_heap_size();
     }
 }

@@ -428,7 +428,7 @@ erl_first_process_otp(char* modname, void* code, unsigned size, int argc, char**
 	args = CONS(hp, new_binary(&parent, (byte*)argv[i], len), args);
 	hp += 2;
     }
-    env = new_binary(&parent, code, size);
+    env = new_binary(&parent, (byte *)code, size);
     args = CONS(hp, args, NIL);
     hp += 2;
     args = CONS(hp, env, args);
@@ -2176,7 +2176,7 @@ erl_start(int argc, char **argv)
     }
 
     if (!erts_check_time_adj_support(time_correction, time_warp_mode)) {
-	char *time_correction_str = time_correction ? "Enabled" : "Disabled";
+	const char *time_correction_str = time_correction ? "Enabled" : "Disabled";
 	char *time_warp_str = "undefined";
 	switch (time_warp_mode) {
 	case ERTS_NO_TIME_WARP_MODE:

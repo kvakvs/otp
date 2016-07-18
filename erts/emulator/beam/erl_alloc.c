@@ -591,7 +591,7 @@ static void adjust_fix_alloc_sizes(UWord extra_block_size)
 	else
 #endif
 	{
-	    Allctr_t* allctr = erts_allctrs_info[ERTS_ALC_A_FIXED_SIZE].extra;
+	    Allctr_t* allctr = (Allctr_t *)erts_allctrs_info[ERTS_ALC_A_FIXED_SIZE].extra;
 	    for (j=0; j < ERTS_ALC_NO_FIXED_SIZES; ++j) {
 		allctr->fix[j].type_size += extra_block_size;
 	    }	
@@ -714,7 +714,7 @@ erts_alloc_init(int *argc, char **argv, ErtsAllocInitOpts *eaiop)
 	errno = 0;
 	if (mlockall(MCL_CURRENT|MCL_FUTURE) != 0) {
 	    int err = errno;
-	    char *errstr = err ? strerror(err) : "unknown";
+	    const char *errstr = err ? strerror(err) : "unknown";
 	    erts_exit(1, "Failed to lock physical memory: %s (%d)\n",
 		     errstr, err);
 	}
@@ -1078,7 +1078,7 @@ start_au_allocator(ErtsAlcType_t alctr_n,
 	return;
 
     if (init->thr_spec) {
-	char *states = erts_sys_alloc(0,
+	char *states = (char *)erts_sys_alloc(0,
 				      NULL,
 				      ((sizeof(Allctr_t *)
 					* (tspec->size + 1))
@@ -1109,7 +1109,7 @@ start_au_allocator(ErtsAlcType_t alctr_n,
 	tot_fix_list_size = fix_list_size;
 	if (init->thr_spec)
 	    tot_fix_list_size *= tspec->size;
-	fix_lists = erts_sys_alloc(0,
+	fix_lists = (decltype(fix_lists))erts_sys_alloc(0,
 				   NULL,
 				   (tot_fix_list_size
 				    + ERTS_CACHE_LINE_SIZE - 1));
@@ -1944,7 +1944,7 @@ erts_alloc_fix_alloc_shrink(int ix, erts_aint32_t flgs)
     if (erts_allctrs_info[ERTS_ALC_A_FIXED_SIZE].thr_spec && tspec->enabled)
 	return erts_alcu_fix_alloc_shrink(tspec->allctr[ix], flgs);
     if (ix == 0 && erts_allctrs_info[ERTS_ALC_A_FIXED_SIZE].extra)
-	return erts_alcu_fix_alloc_shrink(
+	return erts_alcu_fix_alloc_shrink( (Allctr_t *)
 	    erts_allctrs_info[ERTS_ALC_A_FIXED_SIZE].extra, flgs);
 #else
     if (ix == 1 && erts_allctrs_info[ERTS_ALC_A_FIXED_SIZE].extra)
@@ -2023,7 +2023,7 @@ erts_alc_fatal_error(int error, int func, ErtsAlcType_t n, ...)
     case ERTS_ALC_E_NOMEM: {
 	Uint size;
 	va_list argp;
-	char *op = func == ERTS_ALC_O_REALLOC ? "reallocate" : "allocate";
+	const char *op = (func == ERTS_ALC_O_REALLOC) ? "reallocate" : "allocate";
 	
 
 	va_start(argp, n);
@@ -2078,7 +2078,7 @@ alcu_size(ErtsAlcType_t ai, ErtsAlcUFixInfo_t *fi, int fisz)
     ASSERT(erts_allctrs_info[ai].alloc_util);
 
     if (!erts_allctrs_info[ai].thr_spec) {
-	Allctr_t *allctr = erts_allctrs_info[ai].extra;
+	Allctr_t *allctr = (Allctr_t *)erts_allctrs_info[ai].extra;
 	AllctrSize_t asize;
 	erts_alcu_current_size(allctr, &asize, fi, fisz);
 	res += asize.blocks;
@@ -2330,7 +2330,7 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 	ERTS_SMP_LC_ASSERT(ERTS_PROC_LOCK_MAIN
 			   == erts_proc_lc_my_proc_locks(proc));
 	/* We'll need locks early in the lock order */
-	erts_smp_proc_unlock(proc, ERTS_PROC_LOCK_MAIN);
+	erts_smp_proc_unlock((Process *)proc, ERTS_PROC_LOCK_MAIN);
     }
 
     /* Calculate values needed... */
@@ -2490,7 +2490,7 @@ erts_memory(int *print_to_p, void *print_to_arg, void *proc, Eterm earg)
 	Uint *hp;
 	Uint hsz;
 
-	erts_smp_proc_lock(proc, ERTS_PROC_LOCK_MAIN);
+	erts_smp_proc_lock((Process *)proc, ERTS_PROC_LOCK_MAIN);
 
 	if (only_one_value) {
 	    ASSERT(length == 1);
@@ -2543,7 +2543,7 @@ erts_allocated_areas(int *print_to_p, void *print_to_arg, void *proc)
 			   == erts_proc_lc_my_proc_locks(proc));
 
 	/* We'll need locks early in the lock order */
-	erts_smp_proc_unlock(proc, ERTS_PROC_LOCK_MAIN);
+	erts_smp_proc_unlock((Process *)proc, ERTS_PROC_LOCK_MAIN);
     }
 
     i = 0;
@@ -2695,7 +2695,7 @@ erts_allocated_areas(int *print_to_p, void *print_to_arg, void *proc)
 	Uint hsz;
 	Uint *hszp;
 
-	erts_smp_proc_lock(proc, ERTS_PROC_LOCK_MAIN);
+	erts_smp_proc_lock((Process *)proc, ERTS_PROC_LOCK_MAIN);
 
 	hpp = NULL;
 	hsz = 0;
@@ -2809,7 +2809,7 @@ erts_allocator_info(int to, void *arg)
 			as = erts_allctr_thr_spec[a].allctr[ai];
 		    }
 		    /* Binary alloc has its own thread safety... */
-		    erts_alcu_info(as, 0, 0, &to, arg, NULL, NULL);
+		    erts_alcu_info((Allctr_t *)as, 0, 0, &to, arg, NULL, NULL);
 		}
 		else {
 		    switch (a) {
@@ -2912,7 +2912,7 @@ erts_allocator_options(void *proc)
 		if (erts_allctr_thr_spec[a].enabled)
 		    allctr = erts_allctr_thr_spec[a].allctr[0];
 		else
-		    allctr = erts_allctrs_info[a].extra;
+		    allctr = (Allctr_t *)erts_allctrs_info[a].extra;
 		tmp = erts_alcu_info_options(allctr, NULL, NULL, hpp, szp);
 	    }
 	    else {
@@ -3279,7 +3279,7 @@ reply_alloc_info(void *vair)
 			if (erts_allctrs_info[ai].thr_spec)
 			    allctr = erts_allctr_thr_spec[ai].allctr[0];
 			else
-			    allctr = erts_allctrs_info[ai].extra;
+			    allctr = (Allctr_t *)erts_allctrs_info[ai].extra;
 			ainfo = info_func(allctr, air->internal, hpp != NULL,
 					  NULL, NULL, hpp, szp);
 			ainfo = erts_bld_tuple(hpp, szp, 3, alloc_atom,
@@ -3464,7 +3464,7 @@ erts_request_alloc_info(struct process *c_p,
  * To avoid breaking locking order these query functions first "pre-locks" all
  * allocator wrappers.
  */
-ErtsAllocatorWrapper_t *erts_allctr_wrappers;
+//ErtsAllocatorWrapper_t *erts_allctr_wrappers;
 int erts_allctr_wrapper_prelocked = 0;
 erts_tsd_key_t erts_allctr_prelock_tsd_key;
 
@@ -3651,7 +3651,7 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
 	case 0xf07: return (UWord) ((Allctr_t *) a1)->thread_safe;
 #endif
 	case 0xf08: {
-	    ethr_mutex *mtx = erts_alloc(ERTS_ALC_T_UNDEF, sizeof(ethr_mutex));
+	    ethr_mutex *mtx = (decltype(mtx))erts_alloc(ERTS_ALC_T_UNDEF, sizeof(ethr_mutex));
 	    if (ethr_mutex_init(mtx) != 0)
 		ERTS_ALC_TEST_ABORT;
 	    return (UWord) mtx;
@@ -3670,7 +3670,7 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
 	    ethr_mutex_unlock((ethr_mutex *) a1);
 	    break;
 	case 0xf0c: {
-	    ethr_cond *cnd = erts_alloc(ERTS_ALC_T_UNDEF, sizeof(ethr_cond));
+	    ethr_cond *cnd = (decltype(cnd))erts_alloc(ERTS_ALC_T_UNDEF, sizeof(ethr_cond));
 	    if (ethr_cond_init(cnd) != 0)
 		ERTS_ALC_TEST_ABORT;
 	    return (UWord) cnd;
@@ -3693,7 +3693,7 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
 	    break;
 	}
 	case 0xf10: {
-	    ethr_tid *tid = erts_alloc(ERTS_ALC_T_UNDEF, sizeof(ethr_tid));
+	    ethr_tid *tid = (decltype(tid))erts_alloc(ERTS_ALC_T_UNDEF, sizeof(ethr_tid));
 	    if (ethr_thr_create(tid,
 				(void * (*)(void *)) a1,
 				(void *) a2,
@@ -3726,8 +3726,8 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
             Uint extra_hdr_sz = UNIT_CEILING((Uint)a1);
 	    ErtsAllocatorThrSpec_t* ts = &erts_allctr_thr_spec[ERTS_ALC_A_TEST];
 	    Uint offset = ts->allctr[0]->mbc_header_size;
-	    void* orig_creating_mbc = ts->allctr[0]->creating_mbc;
-	    void* orig_destroying_mbc = ts->allctr[0]->destroying_mbc;
+	    void* orig_creating_mbc = (void *)ts->allctr[0]->creating_mbc;
+	    void* orig_destroying_mbc = (void *)ts->allctr[0]->destroying_mbc;
 	    void* new_creating_mbc = *(void**)a2; /* inout arg */
 	    void* new_destroying_mbc = *(void**)a3; /* inout arg */
 	    int i;
@@ -3742,8 +3742,8 @@ UWord erts_alc_test(UWord op, UWord a1, UWord a2, UWord a3)
 	    }
 	    for (i=0; i < ts->size; i++) {
 		ts->allctr[i]->mbc_header_size += extra_hdr_sz;
-		ts->allctr[i]->creating_mbc = new_creating_mbc;
-		ts->allctr[i]->destroying_mbc = new_destroying_mbc;
+		ts->allctr[i]->creating_mbc = (decltype(ts->allctr[i]->creating_mbc))new_creating_mbc;
+		ts->allctr[i]->destroying_mbc = (decltype(ts->allctr[i]->destroying_mbc))new_destroying_mbc;
 	    }
 	    *(void**)a2 = orig_creating_mbc;
 	    *(void**)a3 = orig_destroying_mbc;

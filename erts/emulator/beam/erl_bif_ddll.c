@@ -1454,7 +1454,7 @@ static void add_proc_loaded(DE_Handle *dh, Process *proc)
 {
     DE_ProcEntry *p;
     assert_drv_list_rwlocked();
-    p = erts_alloc(ERTS_ALC_T_DDLL_PROCESS, sizeof(DE_ProcEntry));
+    p = (decltype(p))erts_alloc(ERTS_ALC_T_DDLL_PROCESS, sizeof(DE_ProcEntry));
     p->proc = proc;
     p->flags = 0;
     p->awaiting_status = ERL_DE_PROC_LOADED;
@@ -1466,7 +1466,7 @@ static void add_proc_loaded_deref(DE_Handle *dh, Process *proc)
 {
     DE_ProcEntry *p;
     assert_drv_list_rwlocked();
-    p = erts_alloc(ERTS_ALC_T_DDLL_PROCESS, sizeof(DE_ProcEntry));
+    p = (decltype(p))erts_alloc(ERTS_ALC_T_DDLL_PROCESS, sizeof(DE_ProcEntry));
     p->proc = proc;
     p->awaiting_status = ERL_DE_PROC_LOADED;
     p->flags = ERL_DE_FL_DEREFERENCED;
@@ -1486,7 +1486,7 @@ static void add_proc_waiting(DE_Handle *dh, Process *proc,
 {
     DE_ProcEntry *p;
     assert_drv_list_rwlocked();
-    p = erts_alloc(ERTS_ALC_T_DDLL_PROCESS, sizeof(DE_ProcEntry));
+    p = (decltype(p))erts_alloc(ERTS_ALC_T_DDLL_PROCESS, sizeof(DE_ProcEntry));
     p->proc = proc;
     p->flags = 0;
     p->awaiting_status = status;
@@ -1511,16 +1511,16 @@ static void set_driver_reloading(DE_Handle *dh, Process *proc, char *path, char 
     DE_ProcEntry *p;
 
     assert_drv_list_rwlocked();
-    p = erts_alloc(ERTS_ALC_T_DDLL_PROCESS, sizeof(DE_ProcEntry));
+    p = (decltype(p))erts_alloc(ERTS_ALC_T_DDLL_PROCESS, sizeof(DE_ProcEntry));
     p->proc = proc;
     p->awaiting_status = ERL_DE_OK;
     p->next = dh->procs;
     p->flags = ERL_DE_FL_DEREFERENCED;
     dh->procs = p;
     dh->status = ERL_DE_RELOAD;
-    dh->reload_full_path = erts_alloc(ERTS_ALC_T_DDLL_HANDLE, sys_strlen(path) + 1);
+    dh->reload_full_path = (decltype(dh->reload_full_path))erts_alloc(ERTS_ALC_T_DDLL_HANDLE, sys_strlen(path) + 1);
     strcpy(dh->reload_full_path,path);
-    dh->reload_driver_name = erts_alloc(ERTS_ALC_T_DDLL_HANDLE, sys_strlen(name) + 1);
+    dh->reload_driver_name = (decltype(dh->reload_driver_name))erts_alloc(ERTS_ALC_T_DDLL_HANDLE, sys_strlen(name) + 1);
     strcpy(dh->reload_driver_name,name);
     dh->reload_flags = flags;
 }
@@ -1543,14 +1543,14 @@ static int do_load_driver_entry(DE_Handle *dh, char *path, char *name)
 	goto error;
     }
     
-    dp = erts_sys_ddll_call_init(init_handle);
+    dp = (decltype(dp))erts_sys_ddll_call_init(init_handle);
     if (dp == NULL) {
 	res = ERL_DE_LOAD_ERROR_FAILED_INIT;
 	goto error;
     }
 
     switch (dp->extended_marker) {
-    case ERL_DRV_EXTENDED_MARKER:
+    case (int)ERL_DRV_EXTENDED_MARKER:
 	if (dp->major_version < ERL_DRV_MIN_REQUIRED_MAJOR_VERSION_ON_LOAD
 	    || (ERL_DRV_EXTENDED_MAJOR_VERSION < dp->major_version
 		|| (ERL_DRV_EXTENDED_MAJOR_VERSION == dp->major_version
@@ -1572,7 +1572,7 @@ static int do_load_driver_entry(DE_Handle *dh, char *path, char *name)
     }
     erts_smp_atomic_init_nob(&(dh->refc), (erts_aint_t) 0);
     erts_smp_atomic32_init_nob(&dh->port_count, 0);
-    dh->full_path = erts_alloc(ERTS_ALC_T_DDLL_HANDLE, sys_strlen(path) + 1);
+    dh->full_path = (decltype(dh->full_path))erts_alloc(ERTS_ALC_T_DDLL_HANDLE, sys_strlen(path) + 1);
     sys_strcpy(dh->full_path, path);
     dh->flags = 0;
     dh->status = ERL_DE_OK;
@@ -1636,7 +1636,7 @@ static int do_unload_driver_entry(DE_Handle *dh, Eterm *save_name)
 static int load_driver_entry(DE_Handle **dhp, char *path, char *name)
 {
     int res;
-    DE_Handle *dh = erts_alloc(ERTS_ALC_T_DDLL_HANDLE, sizeof(DE_Handle));
+    DE_Handle *dh = (decltype(dh))erts_alloc(ERTS_ALC_T_DDLL_HANDLE, sizeof(DE_Handle));
 
     assert_drv_list_rwlocked();
 
@@ -1863,14 +1863,14 @@ static char *pick_list_or_atom(Eterm name_term)
 	       then the empty atom shouldn't */
 	    goto error;
 	}
-	name = erts_alloc(ERTS_ALC_T_DDLL_TMP_BUF, ap->len + 1);
+	name = (char *)erts_alloc(ERTS_ALC_T_DDLL_TMP_BUF, ap->len + 1);
 	memcpy(name,ap->name,ap->len);
 	name[ap->len] = '\0';
     } else {
 	if (erts_iolist_size(name_term, &name_len)) {
 	    goto error;
 	}
-	name = erts_alloc(ERTS_ALC_T_DDLL_TMP_BUF, name_len + 1);
+	name = (char *)erts_alloc(ERTS_ALC_T_DDLL_TMP_BUF, name_len + 1);
 	if (erts_iolist_to_buf(name_term, name, name_len) != 0) {
 	    goto error;
 	}
@@ -1913,9 +1913,9 @@ static int build_proc_info(DE_Handle *dh, ProcEntryInfo **out_pei, Uint filter)
 	} else {
 	    if (num_pei >= num_pei_allocated) {
 		pei = (pei == NULL) 
-		    ? erts_alloc(ERTS_ALC_T_DDLL_TMP_BUF, 
+		    ? (decltype(pei))erts_alloc(ERTS_ALC_T_DDLL_TMP_BUF,
 				 sizeof(ProcEntryInfo) * (num_pei_allocated = 10))
-		    : erts_realloc(ERTS_ALC_T_DDLL_TMP_BUF, pei,
+		    : (decltype(pei))erts_realloc(ERTS_ALC_T_DDLL_TMP_BUF, pei,
 				   sizeof(ProcEntryInfo) * (num_pei_allocated += 10));
 	    }
 	    pei[num_pei].pid = id;

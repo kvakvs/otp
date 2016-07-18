@@ -184,7 +184,7 @@ erts_bfalc_start(BFAllctr_t *bfallctr,
 					   ? sizeof(RBTree_t)
 					   : sizeof(RBTreeList_t));
 
-    allctr->vsn_str			= (bfinit->ao
+    allctr->vsn_str			= (char *)(bfinit->ao
 					   ? ERTS_ALC_AOBF_ALLOC_VSN_STR
 					   : ERTS_ALC_BF_ALLOC_VSN_STR);
 

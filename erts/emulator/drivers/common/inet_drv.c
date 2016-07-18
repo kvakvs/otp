@@ -1674,7 +1674,7 @@ static ErlDrvBinary* alloc_buffer(ErlDrvSizeT minsz)
 {
     InetDrvBufStk *bs = get_bufstk();
 
-    DEBUGF(("alloc_buffer: "LLU"\r\n", (llu_t)minsz));
+    DEBUGF(("alloc_buffer: " LLU "\r\n", (llu_t)minsz));
 
     if (bs && bs->buf.pos > 0) {
 	long size;
@@ -10492,7 +10492,7 @@ static int tcp_sendv(tcp_descriptor* desc, ErlIOVec* ev)
     else {
 	int vsize = (ev->vsize > MAX_VSIZE) ? MAX_VSIZE : ev->vsize;
 	
-	DEBUGF(("tcp_sendv(%ld): s=%d, about to send "LLU","LLU" bytes\r\n",
+	DEBUGF(("tcp_sendv(%ld): s=%d, about to send " LLU "," LLU " bytes\r\n",
 		(long)desc->inet.port, desc->inet.s, (llu_t)h_len, (llu_t)len));
 
 	if (INETP(desc)->is_ignored) {
@@ -10520,7 +10520,7 @@ static int tcp_sendv(tcp_descriptor* desc, ErlIOVec* ev)
 	}
 	else {
 	    DEBUGF(("tcp_sendv(%ld): s=%d, only sent "
-		    LLU"/%d of "LLU"/%d bytes/items\r\n",
+		    LLU "/%d of " LLU "/%d bytes/items\r\n",
 		    (long)desc->inet.port, desc->inet.s,
 		    (llu_t)n, vsize, (llu_t)ev->size, ev->vsize));
 	}
@@ -10592,7 +10592,7 @@ static int tcp_send(tcp_descriptor* desc, char* ptr, ErlDrvSizeT len)
 	iov[1].iov_base = ptr;
 	iov[1].iov_len = len;
 
-	DEBUGF(("tcp_send(%ld): s=%d, about to send "LLU","LLU" bytes\r\n",
+	DEBUGF(("tcp_send(%ld): s=%d, about to send " LLU "," LLU " bytes\r\n",
 		(long)desc->inet.port, desc->inet.s, (llu_t)h_len, (llu_t)len));
 	if (INETP(desc)->is_ignored) {
 	    INETP(desc)->is_ignored |= INET_IGNORE_WRITE;

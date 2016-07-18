@@ -82,7 +82,7 @@ while (<>) {
 	    error("$type only allows two arguments");
 	}
 	my($bif,$alias) = (@args);
-	$bif =~ m@^([a-z_.'0-9]+):(.*)/(\d)$@ or error("invalid BIF");
+	$bif =~ m@^([a-z_.'0-9]+):(.*)/(\d)$@ or error("invalid BIF"); #'
 	my($mod,$name,$arity) = ($1,$2,$3);
 	save_atoms($mod, $name);
 	unless (defined $alias) {
@@ -210,13 +210,14 @@ includes("export.h", "sys.h", "erl_vm.h", "erl_process.h", "bif.h",
 	 "erl_bif_table.h", "erl_atom_table.h");
 
 print "\nExport* bif_export[BIF_SIZE];\n";
+print "#define MK_BIFENTRY(A,B,C,D,E) {A, B, C, (void*)D, (void*)E}\n";
 
 print "BifEntry bif_table[] = {\n";
 for ($i = 0; $i < @bif; $i++) {
     my $func = $bif[$i]->[3];
-    print "  {", join(', ', @{$bif[$i]}), "},\n";
+    print "  MK_BIFENTRY(", join(', ', @{$bif[$i]}), "),\n";
 }
-print "};\n\n";
+print "};\n#undef MK_BIFENTRY\n\n";
 
 #
 # Generate the bif wrappers file.
@@ -250,7 +251,7 @@ for ($i = 0; $i < @bif; $i++) {
     next unless $bif_type[$i] eq 'gcbif';
     my $arity = $bif[$i]->[2];
     my $func = $bif[$i]->[3];
-    print "  {$func, erts_gc_$func},\n";
+    print "  {(BifFunction)$func, (BifFunction)erts_gc_$func},\n";
 }
 print "  {0, 0}\n";
 print "};\n";
