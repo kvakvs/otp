@@ -84,15 +84,17 @@ typedef struct { const char *start; Uint bytes; } OldHeapArea;
 typedef struct { const char *start; Uint bytes; } YoungHeapArea;
 
 #ifdef DEBUG
-static void debug_sweep_check(Eterm *hp, Eterm *hend);
+static void debug_sweep_check(const Eterm *hp, const Eterm *hend);
 /* Scan 2 heaps, check that all terms belong to these 2 heaps or are literals */
-static void debug_scan_heap(const Eterm *n_heap, const Eterm *n_htop,
-                            const Eterm *old_heap, const Eterm *old_htop);
+static void
+debug_scan_heap(const Eterm *n_heap, const Eterm *n_htop,
+                const Eterm *old_heap, const Eterm *old_htop);
 #else
-static void ERTS_FORCE_INLINE debug_sweep_check(Eterm *hp, Eterm *hend) {}
-static void ERTS_FORCE_INLINE debug_scan_heap(
-                            const Eterm *n_heap, const Eterm *n_htop,
-                            const Eterm *old_heap, const Eterm *old_htop) {}
+static void ERTS_FORCE_INLINE
+debug_sweep_check(const Eterm *hp, const Eterm *hend) {}
+static void ERTS_FORCE_INLINE
+debug_scan_heap(const Eterm *n_heap, const Eterm *n_htop,
+                const Eterm *old_heap, const Eterm *old_htop) {}
 #endif
 
 static Uint setup_rootset(Process*, Eterm*, int, Rootset*);
@@ -114,10 +116,6 @@ static int minor_collection(Process* p, ErlHeapFragment *live_hf_end,
 static void do_minor(Process *p, ErlHeapFragment *live_hf_end,
                      MatureArea mature,
                      Uint new_sz, Eterm* objv, int nobj);
-
-//static void sweep_literal_area(Eterm *n_hp, Eterm **n_htopp /* in out */,
-//                               OldHeapArea oh,
-//                               const char *src, Uint src_size);
 
 static Eterm *sweep_literals_to_old_heap(Eterm *heap_ptr, Eterm *heap_end,
                                          Eterm *htop,
@@ -213,7 +211,7 @@ is_in_primary_area(const Eterm *ptr,
         case SweepOp_Mature:
             return ErtsInArea(ptr, mature, mature_size);
         default:
-            ASSERT(0);
+            ASSERT(!"unsupported primary sweep op");
     }
     ASSERT(0); return 0;
 }
@@ -243,7 +241,7 @@ is_in_secondary_area(const Eterm *ptr,
             return 0;
 
         default:
-            ASSERT(0);
+            ASSERT(!"unsupported secondary sweep op");
     }
     ASSERT(0); return 0;
 }
@@ -260,6 +258,11 @@ generic_sweep(Eterm *hp, Eterm **primary_topp,
     Eterm *primary_top = *primary_topp;
     Eterm *secondary_top = secondary_topp ? *secondary_topp : NULL;
     int is_lit;
+#ifdef DEBUG
+    /* Back up heap start to debug_sweep_check later */
+    const Eterm *primary_hp0 = hp;
+    const Eterm *secondary_hp0 = secondary_hp;
+#endif
 
     while (hp != primary_top) {
         ASSERT(hp < primary_top);
@@ -349,9 +352,10 @@ generic_sweep(Eterm *hp, Eterm **primary_topp,
                 break;
         }
     }
-
-    debug_sweep_check(hp, primary_top);
-    debug_sweep_check(secondary_hp, secondary_top);
+#ifdef DEBUG
+    debug_sweep_check(primary_hp0, primary_top);
+    debug_sweep_check(secondary_hp0, secondary_top);
+#endif
 
     *primary_topp = primary_top;
     if (secondary_topp) { *secondary_topp = secondary_top; }

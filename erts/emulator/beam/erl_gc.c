@@ -849,6 +849,7 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
 
     if (p->flags & F_DISABLE_GC)
 	return;
+
     /*
      * Set GC state.
      */
@@ -1191,9 +1192,13 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 
     VERBOSE(DEBUG_SHCOPY, ("[pid=%T] MINOR GC: %p %p %p %p\n", p->common.id,
             HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p)));
+    erts_printf("[pid=%T] MINOR GC: HP %p %p OLD %p %p\r\n", p->common.id,
+            HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p));
 
     n_htop = n_heap = (Eterm*) ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP,
 					       sizeof(Eterm)*new_sz);
+
+    debug_scan_heap(HEAP_START(p), HEAP_TOP(p), OLD_HEAP(p), OLD_HTOP(p));
 
     if (live_hf_end != ERTS_INVALID_HFRAG_PTR) {
 	/*
@@ -1221,6 +1226,7 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
      */
 
     if (mature.bytes == 0) {
+        erts_printf("minor: no mature\r\n");
         generic_sweep(n_heap, &n_htop,           /* primary, in out */
                       NULL, NULL,                /* no secondary */
                       SweepOp_NotLiteral_NotOld, /* primary */
@@ -1228,8 +1234,9 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
                       oh,
                       NULL, 0);
     } else {
-        generic_sweep(n_heap, &n_htop,        /* primary in out */
-                      OLD_HEAP(p), &old_htop, /* secondary in out */
+        erts_printf("minor: have mature\r\n");
+        generic_sweep(n_heap, &n_htop,           /* primary in out */
+                      OLD_HEAP(p), &old_htop,    /* secondary in out */
                       SweepOp_NotLiteral_NotOld, /* primary */
                       SweepOp_NotLiteral_Mature, /* secondary */
                       oh,
@@ -1243,6 +1250,7 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
      */
 
     if (OLD_HTOP(p) < old_htop) {
+        erts_printf("minor: extra sweep\r\n");
         generic_sweep(OLD_HTOP(p), &old_htop,    /* primary in out */
                       NULL, 0,                   /* no secondary */
                       SweepOp_NotLiteral_NotOld, /* primary */
@@ -1254,13 +1262,15 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
     OLD_HTOP(p) = old_htop;
     HIGH_WATER(p) = n_htop;
 
+    debug_scan_heap(n_heap, n_htop, (Eterm *) oh.start, old_htop);
+
     {
         /* oh2 is larger than oh, covers even unused part of the old heap */
         OldHeapArea oh2 = {(const char *)OLD_HEAP(p),
                            (char *)OLD_HEND(p) - (char *)OLD_HEAP(p)};
         YoungHeapArea to_young = {(const char *) n_heap,
                                   (char *) n_htop - (char *) n_heap};
-        sweep_off_heap(p, oh, oh2, to_young, SweepOffheapMinor);
+        sweep_off_heap(p, oh2, oh2, to_young, SweepOffheapMinor);
     }
     debug_scan_heap(n_heap, n_htop, (Eterm *) oh.start, old_htop);
 
@@ -1331,6 +1341,11 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 
     VERBOSE(DEBUG_SHCOPY, ("[pid=%T] MAJOR GC: %p %p %p %p\n", p->common.id,
                            HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p)));
+    erts_printf("[pid=%T] MAJOR GC: HP %p %p OLD %p %p\r\n", p->common.id,
+            HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p));
+
+    debug_scan_heap(HEAP_START(p), HEAP_TOP(p), OLD_HEAP(p), OLD_HTOP(p));
+
     /*
      * Do a fullsweep GC. First figure out the size of the heap
      * to receive all live data.
@@ -1711,34 +1726,35 @@ disallow_heap_frag_ref_in_old_heap(Process* p)
 
 #ifdef DEBUG
 static void
-debug_sweep_check(Eterm *hp, Eterm *hend) {
+debug_sweep_check(const Eterm *hp, const Eterm *hend) {
     while (hp != hend) {
         Eterm gval = *hp;
+        ASSERT(hp < hend);
+
         switch (primary_tag(gval)) {
-            case TAG_PRIMARY_BOXED:
-                ASSERT(is_header(*boxed_val(gval)) ||
-                       is_boxed(*boxed_val(gval)));
+            case TAG_PRIMARY_BOXED: {
+                ASSERT(is_header(*boxed_val(gval))
+                       || is_boxed(*boxed_val(gval)));
                 hp++;
-                break;
+            } break;
             case TAG_PRIMARY_LIST: {
                 ASSERT(!is_header(CAR(list_val(gval)))
                        || (IS_MOVED_CONS(CAR(list_val(gval)))
                            && is_list(CDR(list_val(gval)))));
                 hp++;
-                break;
-            }
-            case TAG_PRIMARY_HEADER:
+            } break;
+            case TAG_PRIMARY_HEADER: {
                 if (!header_is_thing(gval)) {
                     hp++;
                 } else {
                     hp += (thing_arityval(gval) + 1);
                 }
-                break;
-            case TAG_PRIMARY_IMMED1:
+            } break;
+            case TAG_PRIMARY_IMMED1: {
                 hp++;
-                break;
+            } break;
             default:
-                ASSERT(0);
+                ASSERT(!"should not be here");
         }
     }
 }
@@ -2425,9 +2441,9 @@ sweep_off_heap(Process *p,
         const int ptr_in_old = sweepoff_ptr_is_in_old(state.ptr, oheap);
 
 	if (IS_MOVED_BOXED(state.ptr->thing_word)) {
-	    ASSERT(mode == SweepOffheapMajor
-                   || ! ptr_in_old);
-	    *state.prev = state.ptr
+	    ASSERT(mode == SweepOffheapMajor || !ptr_in_old);
+
+            *state.prev = state.ptr
                         = (OffheapHeader*) boxed_val(state.ptr->thing_word);
 	    if (state.ptr->thing_word == HEADER_PROC_BIN) {
 		const int to_new_heap = !sweepoff_ptr_is_in_old(state.ptr, oheap);
@@ -3160,48 +3176,54 @@ erts_check_off_heap(Process *p)
 #endif
 
 #ifdef DEBUG
-static void debug_scan_heap_1(const Eterm *pheap, const Eterm *last,
+static void debug_scan_heap_1(const Eterm *hp, const Eterm *last,
                               const Eterm *n_heap, const Eterm *n_htop,
                               const Eterm *old_heap, const Eterm *old_htop)
 {
-    while (pheap != last) {
+    while (hp != last) {
         Eterm gval;
-        ASSERT(pheap < last);
-        gval = *pheap;
+        ASSERT(hp < last);
+        gval = *hp;
 
         switch (primary_tag(gval)) {
             case TAG_PRIMARY_IMMED1:
-                pheap++;
+                hp++;
                 break;
             case TAG_PRIMARY_BOXED: {
-                Eterm *boxp = boxed_val(gval);
-                if (IS_MOVED_BOXED(*boxp)) {
-                    boxp = boxed_val(boxp[0]);
-                }
-                ASSERT(erts_is_literal(gval, boxp)
-                       || is_between(boxp, n_heap, n_htop)
-                       || is_between(boxp, old_heap, old_htop));
-                pheap++;
+//                Eterm *pbox = boxed_val(gval);
+//                if (IS_MOVED_BOXED(*pbox)) {
+//                    pbox = boxed_val(pbox[0]);
+//                }
+//                ASSERT(erts_is_literal(gval, pbox)
+//                       || is_between(pbox, n_heap, n_htop)
+//                       || is_between(pbox, old_heap, old_htop));
+                ASSERT(is_header(*boxed_val(gval))
+                       || is_boxed(*boxed_val(gval)));
+                hp++;
                 break;
             }
             case TAG_PRIMARY_LIST: {
-                Eterm *consp = list_val(gval);
-                ASSERT(erts_is_literal(gval, consp)
-                       || is_between(consp, n_heap, n_htop)
-                       || is_between(consp, old_heap, old_htop));
-                ASSERT(!IS_MOVED_CONS(*consp));
-                pheap++;
+//                Eterm *pcons = list_val(gval);
+//                ASSERT(!IS_MOVED_CONS(*pcons));
+                ASSERT(!is_header(CAR(list_val(gval)))
+                       || (IS_MOVED_CONS(CAR(list_val(gval)))
+                           && is_list(CDR(list_val(gval)))));
+//                ASSERT(erts_is_literal(gval, pcons)
+//                       || is_between(pcons, n_heap, n_htop)
+//                       || is_between(pcons, old_heap, old_htop));
+                hp++;
                 break;
             }
             case TAG_PRIMARY_HEADER: {
                 if (!header_is_thing(gval)) {
-                    pheap++;
+                    hp++;
                 } else {
-                    pheap += (thing_arityval(gval)+1);
+                    hp += (thing_arityval(gval)+1);
                 }
                 break;
             }
-            default: ASSERT(! "should not be here");
+            default:
+                ASSERT(! "should not be here");
         }
     }
 }
