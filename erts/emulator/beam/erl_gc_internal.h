@@ -105,7 +105,7 @@ static void full_sweep_heaps(Process *p,
                              Eterm *n_heap, Eterm **n_htopp,
                              Eterm *o_heap, Eterm **o_htopp,
                              MatureArea mature,
-                             OldHeapArea oh,
+                             OldHeapArea from_old,
                              Eterm *objv, int nobj);
 static int garbage_collect(Process* p, ErlHeapFragment *live_hf_end,
                            int need, Eterm* objv, int nobj, int fcalls);
@@ -143,7 +143,7 @@ typedef struct {
 } SweepOffheapState;
 
 static void sweep_off_heap(Process *p,
-                           OldHeapArea oheap,
+                           OldHeapArea from_old,
                            OldHeapArea to_old,  /* used for debug */
                            YoungHeapArea young, /* used for debug */
                            SweepOffheapMode mode);
