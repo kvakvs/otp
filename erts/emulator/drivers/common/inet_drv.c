@@ -8302,461 +8302,563 @@ static ErlDrvData inet_start(ErlDrvPort port, int size, int protocol)
 #define MAXHOSTNAMELEN 256
 #endif
 
-/*
-** common TCP/UDP/SCTP control command
-*/
-static ErlDrvSSizeT inet_ctl(inet_descriptor* desc, int cmd, char* buf,
-			     ErlDrvSizeT len, char** rbuf, ErlDrvSizeT rsize)
-{
-    switch (cmd) {
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_getstat(inet_descriptor *desc, char *buf, ErlDrvSizeT len,
+                     char **rbuf, ErlDrvSizeT rsize) {
+    char *dst;
+    ErlDrvSizeT i;
+    int dstlen = 1;  /* Reply code */
 
-    case INET_REQ_GETSTAT: {
-	  char* dst;
-	  ErlDrvSizeT i;
-	  int dstlen = 1;  /* Reply code */
+    for (i = 0; i < len; i++) {
+        switch(buf[i]) {
+            case INET_STAT_SEND_OCT: dstlen += 9; break;
+            case INET_STAT_RECV_OCT: dstlen += 9; break;
+            default: dstlen += 5; break;
+        }
+    }
+    DEBUGF(("inet_ctl(%ld): GETSTAT\r\n", (long) desc->port));
+    if (dstlen > INET_MAX_OPT_BUFFER) { /* sanity check */
+        return 0;
+    }
+    if (dstlen > rsize) {
+        if ((dst = (char *) ALLOC(dstlen)) == NULL) {
+            return 0;
+        }
+        *rbuf = dst;  /* call will free this buffer */
+    }
+    else {
+        dst = *rbuf;
+    }  /* ok we fit in buffer given */
+    return inet_fill_stat(desc, buf, len, dst);
+}
 
-	  for (i = 0; i < len; i++) {
-	      switch(buf[i]) {
-	      case INET_STAT_SEND_OCT: dstlen += 9; break;
-	      case INET_STAT_RECV_OCT: dstlen += 9; break;
-	      default: dstlen += 5; break;
-	      }
-	  }
-	  DEBUGF(("inet_ctl(%ld): GETSTAT\r\n", (long) desc->port)); 
-	  if (dstlen > INET_MAX_OPT_BUFFER) /* sanity check */
-	      return 0;
-	  if (dstlen > rsize) {
-	      if ((dst = (char*) ALLOC(dstlen)) == NULL)
-		  return 0;
-	      *rbuf = dst;  /* call will free this buffer */
-	  }
-	  else
-	      dst = *rbuf;  /* ok we fit in buffer given */
-	  return inet_fill_stat(desc, buf, len, dst);
-      }
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_subscribe(inet_descriptor *desc, char *buf, ErlDrvSizeT len,
+                       char **rbuf, ErlDrvSizeT rsize) {
+    char *dst;
+    int dstlen = 1 /* Reply code */ + len * 5;
+    DEBUGF(("inet_ctl(%ld): INET_REQ_SUBSCRIBE\r\n", (long) desc->port));
+    if (dstlen > INET_MAX_OPT_BUFFER) { /* sanity check */
+        return 0;
+    }
+    if (dstlen > rsize) {
+        if ((dst = (char *) ALLOC(dstlen)) == NULL) {
+            return 0;
+        }
+        *rbuf = dst;  /* call will free this buffer */
+    }
+    else {
+        dst = *rbuf;
+    }  /* ok we fit in buffer given */
+    return inet_subscribe(desc, buf, len, dst);
+}
 
-    case INET_REQ_SUBSCRIBE: {
-	  char* dst;
-	  int dstlen = 1 /* Reply code */ + len*5;
-	  DEBUGF(("inet_ctl(%ld): INET_REQ_SUBSCRIBE\r\n", (long) desc->port)); 
-	  if (dstlen > INET_MAX_OPT_BUFFER) /* sanity check */
-	      return 0;
-	  if (dstlen > rsize) {
-	      if ((dst = (char*) ALLOC(dstlen)) == NULL)
-		  return 0;
-	      *rbuf = dst;  /* call will free this buffer */
-	  }
-	  else
-	      dst = *rbuf;  /* ok we fit in buffer given */
-	  return inet_subscribe(desc, buf, len, dst);
-      }
-
-    case INET_REQ_GETOPTS: {    /* get options */
-	ErlDrvSSizeT replen;
-	DEBUGF(("inet_ctl(%ld): GETOPTS\r\n", (long)desc->port)); 
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_getopts(inet_descriptor *desc, char *buf, ErlDrvSizeT len,
+                     char **rbuf, ErlDrvSizeT rsize) {
+    ErlDrvSSizeT replen;
+    DEBUGF(("inet_ctl(%ld): GETOPTS\r\n", (long)desc->port));
 #ifdef HAVE_SCTP
-        if (IS_SCTP(desc))
+    if (IS_SCTP(desc))
         {
             if ((replen = sctp_fill_opts(desc, buf, len, rbuf, rsize)) < 0)
                 return ctl_error(-replen, rbuf, rsize);
         } else
 #endif
-	if ((replen = inet_fill_opts(desc, buf, len, rbuf, rsize)) < 0) {
-	    return ctl_error(EINVAL, rbuf, rsize);
-	}
-	return replen;
+    if ((replen = inet_fill_opts(desc, buf, len, rbuf, rsize)) < 0) {
+        return ctl_error(EINVAL, rbuf, rsize);
     }
+    return replen;
+}
 
-    case INET_REQ_GETIFLIST: {
-	DEBUGF(("inet_ctl(%ld): GETIFLIST\r\n", (long)desc->port)); 
-	if (!IS_OPEN(desc))
-	    return ctl_xerror(EXBADPORT, rbuf, rsize);
-	return inet_ctl_getiflist(desc, rbuf, rsize);
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_setopts(inet_descriptor *desc, char *buf, ErlDrvSizeT len,
+                     char **rbuf, ErlDrvSizeT rsize) {
+    DEBUGF(("inet_ctl(%ld): SETOPTS\r\n", (long)desc->port));
+    /* XXX fprintf(stderr,"inet_ctl(%ld): SETOPTS (len = %d)\r\n", (long)desc->port,(int) len); */
+    switch(inet_set_opts(desc, buf, len)) {
+        case -1:
+            return ctl_error(EINVAL, rbuf, rsize);
+        case 0:
+            return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+        case 1:
+            /*
+             * Let's hope that the descriptor really is a tcp_descriptor here.
+             */
+            /* fprintf(stderr,"Triggered tcp_deliver by setopt.\r\n"); */
+            tcp_deliver((tcp_descriptor *) desc, 0);
+            return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+        default:
+            /* fprintf(stderr,"Triggered tcp_recv by setopt.\r\n"); */
+            /*
+             * Same as above, but active changed to once w/o header type
+             * change, so try a read instead of just deliver.
+             */
+            tcp_recv((tcp_descriptor *) desc, 0);
+            return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
     }
+}
 
-    case INET_REQ_GETIFADDRS: {
-	DEBUGF(("inet_ctl(%ld): GETIFADDRS\r\n", (long)desc->port));
-	if (!IS_OPEN(desc))
-	    return ctl_xerror(EXBADPORT, rbuf, rsize);
-	return inet_ctl_getifaddrs(desc, rbuf, rsize);
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_gettype(inet_descriptor *desc, char **rbuf, ErlDrvSizeT rsize) {
+    char tbuf[8];
+
+    DEBUGF(("inet_ctl(%ld): GETTYPE\r\n", (long)desc->port));
+    if (desc->sfamily == AF_INET) {
+        put_int32(INET_AF_INET, &tbuf[0]);
     }
-
-    case INET_REQ_IFGET: {
-	DEBUGF(("inet_ctl(%ld): IFGET\r\n", (long)desc->port)); 	
-	if (!IS_OPEN(desc))
-	    return ctl_xerror(EXBADPORT, rbuf, rsize);
-	return inet_ctl_ifget(desc, buf, len, rbuf, rsize);
-    }
-
-    case INET_REQ_IFSET: {
-	DEBUGF(("inet_ctl(%ld): IFSET\r\n", (long)desc->port));
-	if (!IS_OPEN(desc))
-	    return ctl_xerror(EXBADPORT, rbuf, rsize);
-	return inet_ctl_ifset(desc, buf, len, rbuf, rsize);
-    }
-
-    case INET_REQ_SETOPTS:  {   /* set options */
-	DEBUGF(("inet_ctl(%ld): SETOPTS\r\n", (long)desc->port)); 
-	/* XXX fprintf(stderr,"inet_ctl(%ld): SETOPTS (len = %d)\r\n", (long)desc->port,(int) len); */
-	switch(inet_set_opts(desc, buf, len)) {
-	case -1: 
-	    return ctl_error(EINVAL, rbuf, rsize);
-	case 0: 
-	    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
-	case 1:
-	    /*
-	     * Let's hope that the descriptor really is a tcp_descriptor here.
-	     */
-	    /* fprintf(stderr,"Triggered tcp_deliver by setopt.\r\n"); */
-	    tcp_deliver((tcp_descriptor *) desc, 0);
-	    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
-	default:  
-	    /* fprintf(stderr,"Triggered tcp_recv by setopt.\r\n"); */
-	    /*
-	     * Same as above, but active changed to once w/o header type
-	     * change, so try a read instead of just deliver. 
-	     */
-	    tcp_recv((tcp_descriptor *) desc, 0);
-	    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
-	}
-    }
-
-    case INET_REQ_GETSTATUS: {
-	char tbuf[4];
-
-	DEBUGF(("inet_ctl(%ld): GETSTATUS\r\n", (long)desc->port)); 
-	put_int32(desc->state, tbuf);
-	return ctl_reply(INET_REP_OK, tbuf, 4, rbuf, rsize);
-    }
-
-    case INET_REQ_GETTYPE: {
-	char tbuf[8];
-
-	DEBUGF(("inet_ctl(%ld): GETTYPE\r\n", (long)desc->port)); 
-	if (desc->sfamily == AF_INET) {
-	    put_int32(INET_AF_INET, &tbuf[0]);
-	}
 #if defined(HAVE_IN6) && defined(AF_INET6)
         else if (desc->sfamily == AF_INET6) {
 	    put_int32(INET_AF_INET6, &tbuf[0]);
 	}
 #endif
 #ifdef HAVE_SYS_UN_H
-	else if (desc->sfamily == AF_UNIX) {
+        else if (desc->sfamily == AF_UNIX) {
 	    put_int32(INET_AF_LOCAL, &tbuf[0]);
 	}
 #endif
-	else
-	    return ctl_error(EINVAL, rbuf, rsize);
+    else
+        return ctl_error(EINVAL, rbuf, rsize);
 
-	if (desc->stype == SOCK_STREAM) {
-	    put_int32(INET_TYPE_STREAM, &tbuf[4]);
-	}
-	else if (desc->stype == SOCK_DGRAM) {
-	    put_int32(INET_TYPE_DGRAM, &tbuf[4]);
-	}
+    if (desc->stype == SOCK_STREAM) {
+        put_int32(INET_TYPE_STREAM, &tbuf[4]);
+    }
+    else if (desc->stype == SOCK_DGRAM) {
+        put_int32(INET_TYPE_DGRAM, &tbuf[4]);
+    }
 #ifdef HAVE_SCTP
-	else if (desc->stype == SOCK_SEQPACKET) {
+        else if (desc->stype == SOCK_SEQPACKET) {
 	    put_int32(INET_TYPE_SEQPACKET, &tbuf[4]);
 	}
-#endif	   
-	else
-	    return ctl_error(EINVAL, rbuf, rsize);
-	return ctl_reply(INET_REP_OK, tbuf, 8, rbuf, rsize);
-    }
+#endif
+    else
+        return ctl_error(EINVAL, rbuf, rsize);
+    return ctl_reply(INET_REP_OK, tbuf, 8, rbuf, rsize);
+}
 
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_getfd(inet_descriptor *desc, char **rbuf, ErlDrvSizeT rsize) {
+    char tbuf[4];
 
-    case INET_REQ_GETFD: {
-	char tbuf[4];
+    DEBUGF(("inet_ctl(%ld): GETFD\r\n", (long)desc->port));
+    if (!IS_OPEN(desc))
+        return ctl_error(EINVAL, rbuf, rsize);
+    put_int32((long)desc->s, tbuf);
+    return ctl_reply(INET_REP_OK, tbuf, 4, rbuf, rsize);
+}
 
-	DEBUGF(("inet_ctl(%ld): GETFD\r\n", (long)desc->port)); 
-	if (!IS_OPEN(desc))
-	    return ctl_error(EINVAL, rbuf, rsize);
-	put_int32((long)desc->s, tbuf);
-	return ctl_reply(INET_REP_OK, tbuf, 4, rbuf, rsize);
-    }
-	
-    case INET_REQ_GETHOSTNAME: { /* get host name */
-	char tbuf[MAXHOSTNAMELEN];
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_gethostname(inet_descriptor *desc, char *buf, ErlDrvSizeT len,
+                         char **rbuf, ErlDrvSizeT rsize) {
+    char tbuf[MAXHOSTNAMELEN];
 
-	DEBUGF(("inet_ctl(%ld): GETHOSTNAME\r\n", (long)desc->port)); 
-	if (len != 0)
-	    return ctl_error(EINVAL, rbuf, rsize);
+    DEBUGF(("inet_ctl(%ld): GETHOSTNAME\r\n", (long)desc->port));
+    if (len != 0)
+        return ctl_error(EINVAL, rbuf, rsize);
 
-	if (IS_SOCKET_ERROR(sock_hostname(tbuf, MAXHOSTNAMELEN)))
-	    return ctl_error(sock_errno(), rbuf, rsize);
-	return ctl_reply(INET_REP_OK, tbuf, strlen(tbuf), rbuf, rsize);
-    }
+    if (IS_SOCKET_ERROR(sock_hostname(tbuf, MAXHOSTNAMELEN)))
+        return ctl_error(sock_errno(), rbuf, rsize);
+    return ctl_reply(INET_REP_OK, tbuf, strlen(tbuf), rbuf, rsize);
+}
 
-    case INET_REQ_GETPADDRS: {
-	DEBUGF(("inet_ctl(%ld): INET_GETPADDRS\r\n", (long)desc->port));
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_getpaddrs(inet_descriptor *desc, char *buf, ErlDrvSizeT len,
+                       char **rbuf, ErlDrvSizeT rsize) {
+    DEBUGF(("inet_ctl(%ld): INET_GETPADDRS\r\n", (long)desc->port));
 
-	if (len != 4) return ctl_error(EINVAL, rbuf, rsize);
+    if (len != 4) return ctl_error(EINVAL, rbuf, rsize);
 
-	if (! IS_OPEN(desc)) return ctl_xerror(EXBADPORT, rbuf, rsize);
+    if (! IS_OPEN(desc)) return ctl_xerror(EXBADPORT, rbuf, rsize);
 
 #ifdef HAVE_SCTP
-	if (IS_SCTP(desc) && p_sctp_getpaddrs) {
-	    struct sockaddr *sa;
-	    Uint32 assoc_id;
-	    int n;
-	    ErlDrvSizeT rlen;
+    if (IS_SCTP(desc) && p_sctp_getpaddrs) {
+        struct sockaddr *sa;
+        Uint32 assoc_id;
+        int n;
+        ErlDrvSizeT rlen;
 
-	    assoc_id = get_int32(buf);
-	    n = p_sctp_getpaddrs(desc->s, assoc_id, &sa);
-	    rlen = reply_inet_addrs(n, (inet_address *) sa, rbuf, rsize, 0);
-	    if (n > 0) p_sctp_freepaddrs(sa);
-	    return rlen;
-	}
+        assoc_id = get_int32(buf);
+        n = p_sctp_getpaddrs(desc->s, assoc_id, &sa);
+        rlen = reply_inet_addrs(n, (inet_address *) sa, rbuf, rsize, 0);
+        if (n > 0) { p_sctp_freepaddrs(sa); }
+        return rlen;
+    }
 #endif
-	{ /* Fallback to sock_peer */
-	    inet_address addr;
-	    SOCKLEN_T sz;
-	    int i;
+    { /* Fallback to sock_peer */
+        inet_address addr;
+        SOCKLEN_T sz;
+        int i;
 
-	    sz = sizeof(addr);
-	    i = sock_peer(desc->s, (struct sockaddr *) &addr, &sz);
-	    return reply_inet_addrs(i >= 0 ? 1 : i, &addr, rbuf, rsize, sz);
-	}
+        sz = sizeof(addr);
+        i = sock_peer(desc->s, (struct sockaddr *) &addr, &sz);
+        return reply_inet_addrs(i >= 0 ? 1 : i, &addr, rbuf, rsize, sz);
     }
+}
 
-    case INET_REQ_PEER:  {      /* get peername */
-	char tbuf[sizeof(inet_address)];
-	inet_address peer;
-	inet_address* ptr;
-	unsigned int sz;
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_getpeername(inet_descriptor *desc,
+                         char **rbuf, ErlDrvSizeT rsize) {
+    char tbuf[sizeof(inet_address)];
+    inet_address peer;
+    inet_address* ptr;
+    unsigned int sz;
 
-	DEBUGF(("inet_ctl(%ld): PEER\r\n", (long)desc->port)); 
+    DEBUGF(("inet_ctl(%ld): PEER\r\n", (long)desc->port));
 
-	if (!(desc->state & INET_F_ACTIVE))
-	    return ctl_error(ENOTCONN, rbuf, rsize);
-	if ((ptr = desc->peer_ptr) != NULL) {
-	    sz = desc->peer_addr_len;
-	}
-	else {
-	    ptr = &peer;
-            sz = sizeof(peer);
-	    if (IS_SOCKET_ERROR
-		(sock_peer
-		 (desc->s, (struct sockaddr*)ptr, &sz)))
-		return ctl_error(sock_errno(), rbuf, rsize);
-	}
-	if (inet_get_address(tbuf, ptr, &sz) < 0)
-	    return ctl_error(EINVAL, rbuf, rsize);
-	return ctl_reply(INET_REP_OK, tbuf, sz, rbuf, rsize);
+    if (!(desc->state & INET_F_ACTIVE))
+        return ctl_error(ENOTCONN, rbuf, rsize);
+    if ((ptr = desc->peer_ptr) != NULL) {
+        sz = desc->peer_addr_len;
     }
-
-    case INET_REQ_SETPEER: { /* set fake peername Port Address */
-        char *xerror;
-	if (len == 0) {
-	    desc->peer_ptr = NULL;
-	    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
-	}
-	else if (len < 2)
-	    return ctl_error(EINVAL, rbuf, rsize);	    
-	else if ((xerror = inet_set_faddress
-		  (desc->sfamily, &desc->peer_addr, &buf, &len)) != NULL)
-	    return ctl_xerror(xerror, rbuf, rsize);
-	else {
-	    desc->peer_ptr = &desc->peer_addr;
-	    desc->peer_addr_len = (SOCKLEN_T) len;
-	    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);	    
-	}
+    else {
+        ptr = &peer;
+        sz = sizeof(peer);
+        if (IS_SOCKET_ERROR
+        (sock_peer
+                 (desc->s, (struct sockaddr*)ptr, &sz)))
+            return ctl_error(sock_errno(), rbuf, rsize);
     }
+    if (inet_get_address(tbuf, ptr, &sz) < 0)
+        return ctl_error(EINVAL, rbuf, rsize);
+    return ctl_reply(INET_REP_OK, tbuf, sz, rbuf, rsize);
+}
 
-    case INET_REQ_GETLADDRS: {
-	DEBUGF(("inet_ctl(%ld): INET_GETLADDRS\r\n", (long)desc->port));
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_setpeer(inet_descriptor *desc, char *buf, ErlDrvSizeT len,
+                     char **rbuf, ErlDrvSizeT rsize) {
+    /* set fake peer name and port */
+    char *xerror;
+    if (len == 0) {
+        desc->peer_ptr = NULL;
+        return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+    }
+    else if (len < 2)
+        return ctl_error(EINVAL, rbuf, rsize);
+    else if ((xerror = inet_set_faddress
+            (desc->sfamily, &desc->peer_addr, &buf, &len)) != NULL)
+        return ctl_xerror(xerror, rbuf, rsize);
+    else {
+        desc->peer_ptr = &desc->peer_addr;
+        desc->peer_addr_len = (SOCKLEN_T) len;
+        return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+    }
+}
 
-	if (len != 4) return ctl_error(EINVAL, rbuf, rsize);
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_getladdrs(inet_descriptor *desc, char *buf, ErlDrvSizeT len,
+                       char **rbuf, ErlDrvSizeT rsize) {
+    DEBUGF(("inet_ctl(%ld): INET_GETLADDRS\r\n", (long)desc->port));
 
-	if (! IS_OPEN(desc)) return ctl_xerror(EXBADPORT, rbuf, rsize);
+    if (len != 4) return ctl_error(EINVAL, rbuf, rsize);
+
+    if (! IS_OPEN(desc)) return ctl_xerror(EXBADPORT, rbuf, rsize);
 
 #ifdef HAVE_SCTP
-	if (IS_SCTP(desc) && p_sctp_getladdrs) {
-	    struct sockaddr *sa;
-	    Uint32 assoc_id;
-	    int n;
-	    ErlDrvSizeT rlen;
+    if (IS_SCTP(desc) && p_sctp_getladdrs) {
+        struct sockaddr *sa;
+        Uint32 assoc_id;
+        int n;
+        ErlDrvSizeT rlen;
 
-	    assoc_id = get_int32(buf);
-	    n = p_sctp_getladdrs(desc->s, assoc_id, &sa);
-	    rlen = reply_inet_addrs(n, (inet_address *) sa, rbuf, rsize, 0);
-	    if (n > 0) p_sctp_freeladdrs(sa);
-	    return rlen;
-	}
+        assoc_id = get_int32(buf);
+        n = p_sctp_getladdrs(desc->s, assoc_id, &sa);
+        rlen = reply_inet_addrs(n, (inet_address *) sa, rbuf, rsize, 0);
+        if (n > 0) p_sctp_freeladdrs(sa);
+        return rlen;
+    }
 #endif
-	{ /* Fallback to sock_name */
-	    inet_address addr;
-	    SOCKLEN_T sz;
-	    int i;
+    { /* Fallback to sock_name */
+        inet_address addr;
+        SOCKLEN_T sz;
+        int i;
 
-	    sz = sizeof(addr);
-	    sys_memzero((char *) &addr, sz);
-	    i = sock_name(desc->s, (struct sockaddr *) &addr, &sz);
-	    return reply_inet_addrs(i >= 0 ? 1 : i, &addr, rbuf, rsize, sz);
-	}
+        sz = sizeof(addr);
+        sys_memzero((char *) &addr, sz);
+        i = sock_name(desc->s, (struct sockaddr *) &addr, &sz);
+        return reply_inet_addrs(i >= 0 ? 1 : i, &addr, rbuf, rsize, sz);
+    }
+}
+
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_name(inet_descriptor *desc, char **rbuf, ErlDrvSizeT rsize) {
+    /* get sockname */
+    char tbuf[sizeof(inet_address)];
+    inet_address name;
+    inet_address* ptr;
+    unsigned int sz;
+
+    DEBUGF(("inet_ctl(%ld): NAME\r\n", (long)desc->port));
+
+    if ((ptr = desc->name_ptr) != NULL) {
+        sz = desc->name_addr_len;
+    }
+    else {
+        ptr = &name;
+        sz = sizeof(name);
+        sys_memzero((char *) &name, sz);
+        if (IS_SOCKET_ERROR
+        (sock_name(desc->s, (struct sockaddr*)ptr, &sz)))
+            return ctl_error(sock_errno(), rbuf, rsize);
+    }
+    if (inet_get_address(tbuf, ptr, &sz) < 0)
+        return ctl_error(EINVAL, rbuf, rsize);
+    return ctl_reply(INET_REP_OK, tbuf, sz, rbuf, rsize);
+}
+
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_setname(inet_descriptor *desc, char *buf, ErlDrvSizeT len,
+                     char **rbuf, ErlDrvSizeT rsize) {
+    /* set fake sockname Port Address */
+    char *xerror;
+    if (len == 0) {
+        desc->name_ptr = NULL;
+        return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+    }
+    else if (len < 2)
+        return ctl_error(EINVAL, rbuf, rsize);
+    else if ((xerror = inet_set_faddress
+            (desc->sfamily, &desc->name_addr, &buf, &len)) != NULL)
+        return ctl_xerror(xerror, rbuf, rsize);
+    else {
+        desc->name_ptr = &desc->name_addr;
+        desc->name_addr_len = (SOCKLEN_T) len;
+        return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+    }
+}
+
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_bind(inet_descriptor *desc, char *buf, ErlDrvSizeT len,
+                  char **rbuf, ErlDrvSizeT rsize) {
+    /* bind socket */
+    char tbuf[2], *xerror;
+    inet_address local;
+    int port;
+
+    DEBUGF(("inet_ctl(%ld): BIND\r\n", (long)desc->port));
+
+    if (len < 2)
+        return ctl_error(EINVAL, rbuf, rsize);
+    if (desc->state != INET_STATE_OPEN)
+        return ctl_xerror(EXBADPORT, rbuf, rsize);
+
+    if ((xerror = inet_set_faddress
+            (desc->sfamily, &local, &buf, &len)) != NULL)
+        return ctl_xerror(xerror, rbuf, rsize);
+
+    if (IS_SOCKET_ERROR(sock_bind(desc->s,(struct sockaddr*) &local, len)))
+        return ctl_error(sock_errno(), rbuf, rsize);
+
+    desc->state = INET_STATE_OPEN;
+
+    port = inet_address_port(&local);
+    if (port == 0) {
+        SOCKLEN_T adrlen = sizeof(local);
+        sys_memzero((char *) &local, adrlen);
+        sock_name(desc->s, &local.sa, &adrlen);
+        port = inet_address_port(&local);
+    }
+    else if (port == -1) port = 0;
+    put_int16(sock_ntohs((Uint16) port), tbuf);
+    return ctl_reply(INET_REP_OK, tbuf, 2, rbuf, rsize);
+}
+
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_ignorefd(inet_descriptor *desc, char *buf,
+                       char **rbuf, ErlDrvSizeT rsize) {
+    DEBUGF(("inet_ctl(%ld): IGNOREFD, IGNORED = %d\r\n",
+            (long)desc->port,(int)*buf));
+
+    /*
+     * FD can only be ignored for connected TCP connections for now,
+     * possible to add UDP and SCTP support if needed.
+     */
+    if (!IS_CONNECTED(desc)) {
+        return ctl_error(ENOTCONN, rbuf, rsize);
+    }
+    if (desc->stype != SOCK_STREAM) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+    if (*buf == 1 && !desc->is_ignored) {
+        sock_select(desc, (FD_READ|FD_WRITE|FD_CLOSE|ERL_DRV_USE_NO_CALLBACK), 0);
+        if (desc->active) {
+            desc->is_ignored = INET_IGNORE_READ;
+        } else {
+            desc->is_ignored = INET_IGNORE_PASSIVE;
+        }
+    } else if (*buf == 0 && desc->is_ignored) {
+        int flags = FD_CLOSE;
+        if (desc->is_ignored & INET_IGNORE_READ) {
+            flags |= FD_READ;
+        }
+        if (desc->is_ignored & INET_IGNORE_WRITE) {
+            flags |= FD_WRITE;
+        }
+        desc->is_ignored = INET_IGNORE_NONE;
+        if (flags != FD_CLOSE) {
+            sock_select(desc, flags, 1);
+        }
+    } else {
+        return ctl_error(EINVAL, rbuf, rsize);
     }
 
-    case INET_REQ_NAME:  {      /* get sockname */
-	char tbuf[sizeof(inet_address)];
-	inet_address name;
-	inet_address* ptr;
-	unsigned int sz;
+    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+}
 
-	DEBUGF(("inet_ctl(%ld): NAME\r\n", (long)desc->port)); 
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_getservbyname(char *buf, ErlDrvSizeT len,
+                           char **rbuf, ErlDrvSizeT rsize) {
+    /* L1 Name-String L2 Proto-String */
+    char namebuf[256];
+    char protobuf[256];
+    char tbuf[2];
+    struct servent* srv;
+    short port;
+    int n;
 
-	if ((ptr = desc->name_ptr) != NULL) {
-	    sz = desc->name_addr_len;
-	}
-	else {
-	    ptr = &name;
-	    sz = sizeof(name);
-	    sys_memzero((char *) &name, sz);
-	    if (IS_SOCKET_ERROR
-		(sock_name(desc->s, (struct sockaddr*)ptr, &sz)))
-		return ctl_error(sock_errno(), rbuf, rsize);
-	}
-	if (inet_get_address(tbuf, ptr, &sz) < 0)
-	    return ctl_error(EINVAL, rbuf, rsize);
-	return ctl_reply(INET_REP_OK, tbuf, sz, rbuf, rsize);
+    if (len < 2) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+    n = get_int8(buf);
+    buf++;
+    len--;
+    if (n >= len) { /* the = sign makes the test inklude next length byte */
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+    memcpy(namebuf, buf, n);
+    namebuf[n] = '\0';
+    len -= n;
+    buf += n;
+    n = get_int8(buf);
+    buf++;
+    len--;
+    if (n > len) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+    memcpy(protobuf, buf, n);
+    protobuf[n] = '\0';
+    if ((srv = sock_getservbyname(namebuf, protobuf)) == NULL) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+    port = sock_ntohs(srv->s_port);
+    put_int16(port, tbuf);
+    return ctl_reply(INET_REP_OK, tbuf, 2, rbuf, rsize);
+}
+
+static ErlDrvSSizeT ERTS_INLINE
+inet_ctl_req_getservbyport(char *buf, ErlDrvSizeT len,
+                           char **rbuf, ErlDrvSizeT rsize) {
+    /* P1 P0 L1 Proto-String */
+    char protobuf[256];
+    unsigned short port;
+    int n;
+    struct servent* srv;
+
+    if (len < 3) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+    port = get_int16(buf);
+    port = sock_htons(port);
+    buf += 2;
+    n = get_int8(buf);
+    buf++;
+    len -= 3;
+    if (n > len) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+    memcpy(protobuf, buf, n);
+    protobuf[n] = '\0';
+    if ((srv = sock_getservbyport(port, protobuf)) == NULL) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+    len = strlen(srv->s_name);
+    return ctl_reply(INET_REP_OK, srv->s_name, len, rbuf, rsize);
+}
+
+/*
+** common TCP/UDP/SCTP control command
+*/
+static ErlDrvSSizeT inet_ctl(inet_descriptor *desc, int cmd,
+                             char *buf, ErlDrvSizeT len,
+                             char **rbuf, ErlDrvSizeT rsize)
+{
+    switch (cmd) {
+    case INET_REQ_GETSTAT:
+        return inet_ctl_req_getstat(desc, buf, len, rbuf, rsize);
+    case INET_REQ_SUBSCRIBE:
+        return inet_ctl_req_subscribe(desc, buf, len, rbuf, rsize);
+    case INET_REQ_GETOPTS:
+        return inet_ctl_req_getopts(desc, buf, len, rbuf, rsize);
+
+    case INET_REQ_GETIFLIST: {
+        DEBUGF(("inet_ctl(%ld): GETIFLIST\r\n", (long) desc->port));
+        if (!IS_OPEN(desc)) {
+            return ctl_xerror(EXBADPORT, rbuf, rsize);
+        }
+        return inet_ctl_getiflist(desc, rbuf, rsize);
     }
 
-    case INET_REQ_SETNAME: { /* set fake sockname Port Address */
-        char *xerror;
-	if (len == 0) {
-	    desc->name_ptr = NULL;
-	    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
-	}
-	else if (len < 2)
-	    return ctl_error(EINVAL, rbuf, rsize);	    
-	else if ((xerror = inet_set_faddress
-		  (desc->sfamily, &desc->name_addr, &buf, &len)) != NULL)
-	    return ctl_xerror(xerror, rbuf, rsize);
-	else {
-	    desc->name_ptr = &desc->name_addr;
-	    desc->name_addr_len = (SOCKLEN_T) len;
-	    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);	    
-	}
+    case INET_REQ_GETIFADDRS: {
+        DEBUGF(("inet_ctl(%ld): GETIFADDRS\r\n", (long) desc->port));
+        if (!IS_OPEN(desc)) {
+            return ctl_xerror(EXBADPORT, rbuf, rsize);
+        }
+        return inet_ctl_getifaddrs(desc, rbuf, rsize);
     }
 
-    case INET_REQ_BIND:  {      /* bind socket */
-        char tbuf[2], *xerror;
-	inet_address local;
-	int port;
-
-	DEBUGF(("inet_ctl(%ld): BIND\r\n", (long)desc->port)); 
-
-	if (len < 2)
-	    return ctl_error(EINVAL, rbuf, rsize);
-	if (desc->state != INET_STATE_OPEN)
-	    return ctl_xerror(EXBADPORT, rbuf, rsize);
-
-	if ((xerror = inet_set_faddress
-	     (desc->sfamily, &local, &buf, &len)) != NULL)
-	    return ctl_xerror(xerror, rbuf, rsize);
-
-	if (IS_SOCKET_ERROR(sock_bind(desc->s,(struct sockaddr*) &local, len)))
-	    return ctl_error(sock_errno(), rbuf, rsize);
-
-	desc->state = INET_STATE_OPEN;
-
-	port = inet_address_port(&local);
-	if (port == 0) {
-	    SOCKLEN_T adrlen = sizeof(local);
-	    sys_memzero((char *) &local, adrlen);
-	    sock_name(desc->s, &local.sa, &adrlen);
-	    port = inet_address_port(&local);
-	}
-        else if (port == -1) port = 0;
-	put_int16(sock_ntohs((Uint16) port), tbuf);
-	return ctl_reply(INET_REP_OK, tbuf, 2, rbuf, rsize);
+    case INET_REQ_IFGET: {
+        DEBUGF(("inet_ctl(%ld): IFGET\r\n", (long) desc->port));
+        if (!IS_OPEN(desc)) {
+            return ctl_xerror(EXBADPORT, rbuf, rsize);
+        }
+        return inet_ctl_ifget(desc, buf, len, rbuf, rsize);
     }
 
-    case INET_REQ_IGNOREFD: {
-      DEBUGF(("inet_ctl(%ld): IGNOREFD, IGNORED = %d\r\n",
-	      (long)desc->port,(int)*buf));
-
-      /*
-       * FD can only be ignored for connected TCP connections for now,
-       * possible to add UDP and SCTP support if needed.
-       */
-      if (!IS_CONNECTED(desc))
-	  return ctl_error(ENOTCONN, rbuf, rsize);
-
-      if (desc->stype != SOCK_STREAM)
-	  return ctl_error(EINVAL, rbuf, rsize);
-
-      if (*buf == 1 && !desc->is_ignored) {
-	  sock_select(desc, (FD_READ|FD_WRITE|FD_CLOSE|ERL_DRV_USE_NO_CALLBACK), 0);
-	  if (desc->active)
-	    desc->is_ignored = INET_IGNORE_READ;
-	  else
-	    desc->is_ignored = INET_IGNORE_PASSIVE;
-      } else if (*buf == 0 && desc->is_ignored) {
-	  int flags = FD_CLOSE;
-	  if (desc->is_ignored & INET_IGNORE_READ)
-	    flags |= FD_READ;
-	  if (desc->is_ignored & INET_IGNORE_WRITE)
-	    flags |= FD_WRITE;
-	  desc->is_ignored = INET_IGNORE_NONE;
-	  if (flags != FD_CLOSE)
-	    sock_select(desc, flags, 1);
-      } else
-	  return ctl_error(EINVAL, rbuf, rsize);
-
-      return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+    case INET_REQ_IFSET: {
+        DEBUGF(("inet_ctl(%ld): IFSET\r\n", (long) desc->port));
+        if (!IS_OPEN(desc)) {
+            return ctl_xerror(EXBADPORT, rbuf, rsize);
+        }
+        return inet_ctl_ifset(desc, buf, len, rbuf, rsize);
     }
 
-    case INET_REQ_GETSERVBYNAME: { /* L1 Name-String L2 Proto-String */
-	char namebuf[256];
-	char protobuf[256];
-	char tbuf[2];
-	struct servent* srv;
-	short port;
-	int n;
+    case INET_REQ_SETOPTS:
+        return inet_ctl_req_setopts(desc, buf, len, rbuf, rsize);
 
-	if (len < 2)
-	    return ctl_error(EINVAL, rbuf, rsize);
-	n = get_int8(buf); buf++; len--;
-	if (n >= len) /* the = sign makes the test inklude next length byte */
-	    return ctl_error(EINVAL, rbuf, rsize);
-	memcpy(namebuf, buf, n);
-	namebuf[n] = '\0';
-	len -= n; buf += n;
-	n = get_int8(buf); buf++; len--;
-	if (n > len)
-	    return ctl_error(EINVAL, rbuf, rsize);
-	memcpy(protobuf, buf, n);
-	protobuf[n] = '\0';
-	if ((srv = sock_getservbyname(namebuf, protobuf)) == NULL)
-	    return ctl_error(EINVAL, rbuf, rsize);
-	port = sock_ntohs(srv->s_port);
-	put_int16(port, tbuf);
-	return ctl_reply(INET_REP_OK, tbuf, 2, rbuf, rsize);
+    case INET_REQ_GETSTATUS: {
+        char tbuf[4];
+
+        DEBUGF(("inet_ctl(%ld): GETSTATUS\r\n", (long) desc->port));
+        put_int32(desc->state, tbuf);
+        return ctl_reply(INET_REP_OK, tbuf, 4, rbuf, rsize);
     }
 
-    case INET_REQ_GETSERVBYPORT: { /* P1 P0 L1 Proto-String */
-	char protobuf[256];
-	unsigned short port;
-	int n;
-	struct servent* srv;
+    case INET_REQ_GETTYPE:
+        return inet_ctl_req_gettype(desc, rbuf, rsize);
+    case INET_REQ_GETFD:
+        return inet_ctl_req_getfd(desc, rbuf, rsize);
+    case INET_REQ_GETHOSTNAME:
+        return inet_ctl_req_gethostname(desc, buf, len, rbuf, rsize);
+    case INET_REQ_GETPADDRS:
+        return inet_ctl_req_getpaddrs(desc, buf, len, rbuf, rsize);
+    case INET_REQ_PEER:
+        return inet_ctl_req_getpeername(desc, rbuf, rsize);
+    case INET_REQ_SETPEER:
+        return inet_ctl_req_setpeer(desc, buf, len, rbuf, rsize);
+    case INET_REQ_GETLADDRS:
+        return inet_ctl_req_getladdrs(desc, buf, len, rbuf, rsize);
+    case INET_REQ_NAME:
+        return inet_ctl_req_name(desc, rbuf, rsize);
+    case INET_REQ_SETNAME:
+        return inet_ctl_req_setname(desc, buf, len, rbuf, rsize);
+    case INET_REQ_BIND:
+        return inet_ctl_req_bind(desc, buf, len, rbuf, rsize);
+    case INET_REQ_IGNOREFD:
+        return inet_ctl_req_ignorefd(desc, buf, rbuf, rsize);
+    case INET_REQ_GETSERVBYNAME:
+        return inet_ctl_req_getservbyname(buf, len, rbuf, rsize);
+    case INET_REQ_GETSERVBYPORT:
+        return inet_ctl_req_getservbyport(buf, len, rbuf, rsize);
 
-	if (len < 3)
-	    return ctl_error(EINVAL, rbuf, rsize);
-	port = get_int16(buf);
-	port = sock_htons(port);
-	buf += 2;
-	n = get_int8(buf); buf++; len -= 3;
-	if (n > len)
-	    return ctl_error(EINVAL, rbuf, rsize);
-	memcpy(protobuf, buf, n);
-	protobuf[n] = '\0';
-	if ((srv = sock_getservbyport(port, protobuf)) == NULL)
-	    return ctl_error(EINVAL, rbuf, rsize);
-	len = strlen(srv->s_name);
-	return ctl_reply(INET_REP_OK, srv->s_name, len, rbuf, rsize);
-    }
-	
     default:
 	return ctl_xerror(EXBADPORT, rbuf, rsize);
     }
