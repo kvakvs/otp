@@ -9574,10 +9574,9 @@ static ErlDrvSSizeT tcp_inet_ctl(ErlDrvData e, unsigned int cmd,
     case TCP_REQ_SHUTDOWN:
         return tcp_inet_ctl_req_shutdown(desc, buf, len, rbuf, rsize);
     default:
-	DEBUGF(("tcp_inet_ctl(%ld): %u\r\n", (long)desc->inet.port, cmd)); 
-	return inet_ctl(INETP(desc), cmd, buf, len, rbuf, rsize);
+        DEBUGF(("tcp_inet_ctl(%ld): %u\r\n", (long) desc->inet.port, cmd));
+        return inet_ctl(INETP(desc), cmd, buf, len, rbuf, rsize);
     }
-
 }
 
 /*
@@ -11105,361 +11104,414 @@ static int packet_error(udp_descriptor* udesc, int err)
     return -1;
 }
 
+static ErlDrvSSizeT ERTS_INLINE
+packet_inet_ctl_req_open(inet_descriptor *desc, char* buf, ErlDrvSizeT len,
+                         char **rbuf, ErlDrvSizeT rsize) {
+    int type = SOCK_DGRAM;
+    int af = AF_INET;
+    ErlDrvSSizeT replen;
+
+    /* open socket and return internal index */
+    DEBUGF(("packet_inet_ctl(%ld): OPEN\r\n", (long)desc->port));
+    if (len != 2) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+
+    switch (buf[0]) {
+        case INET_AF_INET:  af = AF_INET; break;
+#if defined(HAVE_IN6) && defined(AF_INET6)
+            case INET_AF_INET6: af = AF_INET6; break;
+#endif
+#ifdef HAVE_SYS_UN_H
+            case INET_AF_LOCAL: af = AF_UNIX; break;
+#endif
+        default:
+            return ctl_xerror(str_eafnosupport, rbuf, rsize);
+    }
+
+    switch (buf[1]) {
+        case INET_TYPE_STREAM: type = SOCK_STREAM; break;
+        case INET_TYPE_DGRAM: type = SOCK_DGRAM; break;
+#ifdef HAVE_SCTP
+        case INET_TYPE_SEQPACKET: type = SOCK_SEQPACKET; break;
+#endif
+        default:
+            return ctl_error(EINVAL, rbuf, rsize);
+    }
+    replen = inet_ctl_open(desc, af, type, rbuf, rsize);
+
+    if ((*rbuf)[0] != INET_REP_ERROR) {
+        if (desc->active) { sock_select(desc, FD_READ, 1); }
+#ifdef HAVE_SO_BSDCOMPAT
+        /*
+         * Make sure that sending UDP packets to a non existing port on an
+         * existing machine doesn't close the socket. (Linux behaves this
+         * way)
+         */
+        if (should_use_so_bsdcompat()) {
+            int one = 1;
+            /* Ignore errors */
+            sock_setopt(desc->s, SOL_SOCKET, SO_BSDCOMPAT, &one, sizeof(one));
+        }
+#endif
+    }
+    return replen;
+}
+
+static ErlDrvSSizeT ERTS_INLINE
+packet_inet_ctl_req_fdopen(inet_descriptor *desc, char* buf, ErlDrvSizeT len,
+                           char **rbuf, ErlDrvSizeT rsize) {
+    /* pass in an open (and optionally bound) socket */
+    int type = SOCK_DGRAM;
+    int af = AF_INET;
+    ErlDrvSSizeT replen;
+    SOCKET s;
+    int bound;
+
+    DEBUGF(("packet inet_ctl(%ld): FDOPEN\r\n", (long)desc->port));
+    if (len != 6 && len != 10) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+
+    switch (buf[0]) {
+        case INET_AF_INET:  af = AF_INET; break;
+#if defined(HAVE_IN6) && defined(AF_INET6)
+            case INET_AF_INET6: af = AF_INET6; break;
+#endif
+#ifdef HAVE_SYS_UN_H
+            case INET_AF_LOCAL: af = AF_UNIX; break;
+#endif
+        default:
+            return ctl_xerror(str_eafnosupport, rbuf, rsize);
+    }
+
+    switch (buf[1]) {
+        case INET_TYPE_STREAM: type = SOCK_STREAM; break;
+        case INET_TYPE_DGRAM: type = SOCK_DGRAM; break;
+#ifdef HAVE_SCTP
+        case INET_TYPE_SEQPACKET: type = SOCK_SEQPACKET; break;
+#endif
+        default:
+            return ctl_error(EINVAL, rbuf, rsize);
+    }
+    s = (SOCKET)get_int32(buf+2);
+
+    if (len == 6) bound = 1;
+    else bound = get_int32(buf+2+4);
+
+    replen = inet_ctl_fdopen(desc, af, type, s, bound, rbuf, rsize);
+
+    if ((*rbuf)[0] != INET_REP_ERROR) {
+        if (desc->active) { sock_select(desc,FD_READ,1); }
+#ifdef HAVE_SO_BSDCOMPAT
+        /*
+         * Make sure that sending UDP packets to a non existing port on an
+         * existing machine doesn't close the socket. (Linux behaves this
+         * way)
+         */
+        if (should_use_so_bsdcompat()) {
+            int one = 1;
+            /* Ignore errors */
+            sock_setopt(desc->s, SOL_SOCKET, SO_BSDCOMPAT, &one, sizeof(one));
+        }
+#endif
+    }
+    return replen;
+}
+
+static ErlDrvSSizeT ERTS_INLINE
+packet_inet_ctl_req_close(inet_descriptor *desc, char **rbuf,
+                          ErlDrvSizeT rsize) {
+    DEBUGF(("packet_inet_ctl(%ld): CLOSE\r\n", (long)desc->port));
+    erl_inet_close(desc);
+    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+}
+
+#ifdef HAVE_SCTP
+static ErlDrvSSizeT ERTS_INLINE
+packet_inet_ctl_req_listen(inet_descriptor *desc, char* buf, ErlDrvSizeT len,
+                           char **rbuf, ErlDrvSizeT rsize) {
+    /* LISTEN is only for SCTP sockets, not UDP. This code is borrowed
+       from the TCP section. Returns: {ok,[]} on success. */
+    int backlog;
+
+    DEBUGF(("packet_inet_ctl(%ld): LISTEN\r\n", (long)desc->port));
+    if (!IS_SCTP(desc)) {
+        return ctl_xerror(EXBADPORT, rbuf, rsize);
+    }
+    if (!IS_OPEN(desc)) {
+        return ctl_xerror(EXBADPORT, rbuf, rsize);
+    }
+
+    if (len != 2) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+    backlog = get_int16(buf);
+
+    if (IS_SOCKET_ERROR(sock_listen(desc->s, backlog))) {
+        return ctl_error(sock_errno(), rbuf, rsize);
+    }
+
+    desc->state = INET_STATE_LISTENING;   /* XXX: not used? */
+    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+}
+#endif // HAVE_SCTP
+
+#ifdef HAVE_SCTP
+static ErlDrvSSizeT ERTS_INLINE
+packet_inet_ctl_req_bindx(inet_descriptor *desc, char* buf, ErlDrvSizeT len,
+                          char **rbuf, ErlDrvSizeT rsize) {
+    /* Multi-homing bind for SCTP: */
+    /* Add additional addresses by calling sctp_bindx with one address
+       at a time, since this is what some OSes promise will work.
+       Buff structure: Flags(1), ListItem,...:
+    */
+    inet_address addr;
+    char* curr;
+    int   add_flag, rflag;
+
+    if (!IS_SCTP(desc))
+        return ctl_xerror(EXBADPORT, rbuf, rsize);
+
+    curr = buf;
+    add_flag = get_int8(curr);
+    curr++;
+
+    /* Make the real flags: */
+    rflag = add_flag ? SCTP_BINDX_ADD_ADDR : SCTP_BINDX_REM_ADDR;
+
+    while (curr < buf+len)
+    {
+        char *xerror;
+        /* List item format: see "inet_set_faddress": */
+        ErlDrvSizeT alen  = buf + len - curr;
+        xerror = inet_set_faddress
+                (desc->sfamily, &addr, &curr, &alen);
+        if (xerror != NULL)
+            return ctl_xerror(xerror, rbuf, rsize);
+
+        /* Invoke the call: */
+        if (p_sctp_bindx(desc->s, (struct sockaddr *)&addr, 1,
+                         rflag) < 0)
+            return ctl_error(sock_errno(), rbuf, rsize);
+    }
+
+    desc->state = INET_STATE_OPEN;
+
+    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
+}
+#endif // HAVE_SCTP
+
+#ifdef HAVE_SCTP
+static ErlDrvSSizeT ERTS_INLINE
+packet_inet_ctl_req_peeloff(inet_descriptor *desc, udp_descriptor *udesc,
+                            char* buf, ErlDrvSizeT len,
+                            char **rbuf, ErlDrvSizeT rsize) {
+    Uint32 assoc_id;
+    udp_descriptor* new_udesc;
+    int err;
+    SOCKET new_socket;
+
+    DEBUGF(("packet_inet_ctl(%ld): PEELOFF\r\n", (long)desc->port));
+    if (!IS_SCTP(desc)) {
+        return ctl_xerror(EXBADPORT, rbuf, rsize);
+    }
+    if (!IS_OPEN(desc)) {
+        return ctl_xerror(EXBADPORT, rbuf, rsize);
+    }
+    if (!p_sctp_peeloff) {
+        return ctl_error(ENOTSUP, rbuf, rsize);
+    }
+    if (len != 4) {
+        return ctl_error(EINVAL, rbuf, rsize);
+    }
+    assoc_id = get_int32(buf);
+
+    new_socket = p_sctp_peeloff(desc->s, assoc_id);
+    if (IS_SOCKET_ERROR(new_socket)) {
+        return ctl_error(sock_errno(), rbuf, rsize);
+    }
+
+    desc->caller = driver_caller(desc->port);
+    if ((new_udesc = sctp_inet_copy(udesc, new_socket, &err)) == NULL) {
+        sock_close(new_socket);
+        desc->caller = 0;
+        return ctl_error(err, rbuf, rsize);
+    }
+    new_udesc->inet.state = INET_STATE_CONNECTED;
+    new_udesc->inet.stype = SOCK_STREAM;
+    SET_NONBLOCKING(new_udesc->inet.s);
+
+    inet_reply_ok_port(desc, new_udesc->inet.dport);
+    (*rbuf)[0] = INET_REP;
+    return 1;
+}
+#endif // HAVE_SCTP
+
+static ErlDrvSSizeT ERTS_INLINE
+packet_inet_ctl_req_connect(inet_descriptor *desc, char* buf, ErlDrvSizeT len,
+                           char **rbuf, ErlDrvSizeT rsize) {
+    /* UDP and SCTP connect operations are completely different. UDP
+       connect means only setting the default peer addr locally,  so
+       it is always synchronous. SCTP connect means actual establish-
+       ing of an SCTP association with a remote peer, so it is async-
+       ronous, and similar to TCP connect. However, unlike TCP, SCTP
+       allows the socket to have multiple simultaneous associations:
+    */
+    int code;
+    char tbuf[2];
+#ifdef HAVE_SCTP
+    unsigned timeout;
+#endif
+    DEBUGF(("packet_inet_ctl(%ld): CONNECT\r\n", (long)desc->port));
+
+    /* INPUT: [ Timeout(4), Port(2), Address(N) ] */
+
+    if (!IS_OPEN(desc))
+        return ctl_xerror(EXBADPORT, rbuf, rsize);
+
+#ifdef HAVE_SCTP
+    if (IS_SCTP(desc)) {
+        inet_address remote;
+        char *xerror;
+
+        if (IS_CONNECTING(desc))
+            return ctl_error(EINVAL, rbuf, rsize);
+        if (len < 6)
+            return ctl_error(EINVAL, rbuf, rsize);
+        timeout = get_int32(buf);
+        buf += 4;
+        len -= 4;
+
+        /* For SCTP, we do not set the peer's addr in desc->remote, as
+           multiple peers are possible: */
+        if ((xerror = inet_set_faddress
+                (desc->sfamily, &remote, &buf, &len)) != NULL)
+            return ctl_xerror(xerror, rbuf, rsize);
+
+        sock_select(desc, FD_CONNECT, 1);
+        code = sock_connect(desc->s, &remote.sa, len);
+
+        if (IS_SOCKET_ERROR(code) && (sock_errno() == EINPROGRESS)) {
+            /* XXX: Unix only -- WinSock would have a different cond! */
+            desc->state = INET_STATE_CONNECTING;
+            if (timeout != INET_INFINITY)
+                driver_set_timer(desc->port, timeout);
+            enq_async(desc, tbuf, INET_REQ_CONNECT);
+        }
+        else if (code == 0) { /* OK we are connected */
+            sock_select(desc, FD_CONNECT, 0);
+            desc->state = INET_STATE_CONNECTED;
+            enq_async(desc, tbuf, INET_REQ_CONNECT);
+            async_ok(desc);
+        }
+        else {
+            sock_select(desc, FD_CONNECT, 0);
+            return ctl_error(sock_errno(), rbuf, rsize);
+        }
+        return ctl_reply(INET_REP_OK, tbuf, 2, rbuf, rsize);
+    }
+#endif
+    /* UDP */
+    if (len == 0) {
+        /* What does it mean???  NULL sockaddr??? */
+        sock_connect(desc->s, (struct sockaddr*) NULL, 0);
+        desc->state &= ~INET_F_ACTIVE;
+        enq_async(desc, tbuf, INET_REQ_CONNECT);
+        async_ok (desc);
+    }
+    else if (len < 6)
+        return ctl_error(EINVAL, rbuf, rsize);
+    else {
+        char *xerror;
+        /* Ignore timeout */
+        buf += 4;
+        len -= 4;
+        if ((xerror = inet_set_faddress
+                (desc->sfamily, &desc->remote, &buf, &len)) != NULL)
+            return ctl_xerror(xerror, rbuf, rsize);
+
+        code = sock_connect(desc->s,
+                            (struct sockaddr*) &desc->remote, len);
+        if (IS_SOCKET_ERROR(code)) {
+            sock_connect(desc->s, (struct sockaddr*) NULL, 0);
+            desc->state &= ~INET_F_ACTIVE;
+            return ctl_error(sock_errno(), rbuf, rsize);
+        }
+        else /* ok we are connected */ {
+            enq_async(desc, tbuf, INET_REQ_CONNECT);
+            desc->state |= INET_F_ACTIVE;
+            async_ok (desc);
+        }
+    }
+    return ctl_reply(INET_REP_OK, tbuf, 2, rbuf, rsize);
+}
+
+static ErlDrvSSizeT ERTS_INLINE
+packet_inet_ctl_req_recv(inet_descriptor *desc, udp_descriptor *udesc,
+                         char* buf, ErlDrvSizeT len,
+                         char **rbuf, ErlDrvSizeT rsize) {
+    /* THIS IS A FRONT-END for "recv*" requests. It only enqueues the
+       request and possibly returns the data immediately available.
+       The actual data returning function is the back-end ("*input"):
+    */
+    unsigned timeout;
+    char tbuf[2];
+
+    DEBUGF(("packet_inet_ctl(%ld): RECV\r\n", (long)desc->port));
+    /* INPUT: Timeout(4), Length(4) */
+    if (!IS_OPEN(desc))
+        return ctl_xerror(EXBADPORT, rbuf, rsize);
+    if (desc->active || (len != 8))
+        return ctl_error(EINVAL, rbuf, rsize);
+    timeout = get_int32(buf);
+    /* The 2nd arg, Length(4), is ignored for both UDP and SCTP protocols,
+       since they are msg-oriented. */
+
+    if (enq_async(desc, tbuf, PACKET_REQ_RECV) < 0)
+        return ctl_error(EALREADY, rbuf, rsize);
+
+    if (packet_inet_input(udesc, desc->event) == 0) {
+        if (timeout == 0)
+            async_error_am(desc, am_timeout);
+        else {
+            if (timeout != INET_INFINITY)
+                driver_set_timer(desc->port, timeout);
+        }
+    }
+    return ctl_reply(INET_REP_OK, tbuf, 2, rbuf, rsize);
+}
+
 /*
 ** Various functions accessible via "port_control" on the Erlang side:
 */
 static ErlDrvSSizeT packet_inet_ctl(ErlDrvData e, unsigned int cmd, char* buf,
 				    ErlDrvSizeT len, char** rbuf, ErlDrvSizeT rsize)
 {
-    ErlDrvSSizeT replen;
-    udp_descriptor * udesc = (udp_descriptor *) e;
-    inet_descriptor* desc  = INETP(udesc);
-    int type = SOCK_DGRAM;
-    int af = AF_INET;
+    udp_descriptor *udesc = (udp_descriptor *) e;
+    inet_descriptor *desc = INETP(udesc);
 
     switch(cmd) {
-    case INET_REQ_OPEN:   /* open socket and return internal index */
-	DEBUGF(("packet_inet_ctl(%ld): OPEN\r\n", (long)desc->port)); 
-	if (len != 2) {
-	    return ctl_error(EINVAL, rbuf, rsize);
-	}
-	switch (buf[0]) {
-	case INET_AF_INET:  af = AF_INET; break;
-#if defined(HAVE_IN6) && defined(AF_INET6)
-	case INET_AF_INET6: af = AF_INET6; break;
-#endif
-#ifdef HAVE_SYS_UN_H
-	case INET_AF_LOCAL: af = AF_UNIX; break;
-#endif
-	default:
-	    return ctl_xerror(str_eafnosupport, rbuf, rsize);
-	}
-	switch (buf[1]) {
-	case INET_TYPE_STREAM: type = SOCK_STREAM; break;
-	case INET_TYPE_DGRAM: type = SOCK_DGRAM; break;
-#ifdef HAVE_SCTP
-	case INET_TYPE_SEQPACKET: type = SOCK_SEQPACKET; break;
-#endif
-	default:
-	    return ctl_error(EINVAL, rbuf, rsize);
-	}
-	replen = inet_ctl_open(desc, af, type, rbuf, rsize);
-
-	if ((*rbuf)[0] != INET_REP_ERROR) {
-	    if (desc->active)
-		sock_select(desc,FD_READ,1);
-#ifdef HAVE_SO_BSDCOMPAT
-	    /*
-	     * Make sure that sending UDP packets to a non existing port on an
-	     * existing machine doesn't close the socket. (Linux behaves this
-	     * way)
-	     */
-	    if (should_use_so_bsdcompat()) {
-		int one = 1;
-		/* Ignore errors */
-		sock_setopt(desc->s, SOL_SOCKET, SO_BSDCOMPAT, &one,
-			    sizeof(one));
-	    }
-#endif
-	}
-	return replen;
-
-
-    case INET_REQ_FDOPEN: {  /* pass in an open (and optionally bound) socket */
-	SOCKET s;
-        int bound;
-	DEBUGF(("packet inet_ctl(%ld): FDOPEN\r\n", (long)desc->port));
-	if (len != 6 && len != 10) {
-	    return ctl_error(EINVAL, rbuf, rsize);
-	}
-	switch (buf[0]) {
-	case INET_AF_INET:  af = AF_INET; break;
-#if defined(HAVE_IN6) && defined(AF_INET6)
-	case INET_AF_INET6: af = AF_INET6; break;
-#endif
-#ifdef HAVE_SYS_UN_H
-	case INET_AF_LOCAL: af = AF_UNIX; break;
-#endif
-	default:
-	    return ctl_xerror(str_eafnosupport, rbuf, rsize);
-	}
-	switch (buf[1]) {
-	case INET_TYPE_STREAM: type = SOCK_STREAM; break;
-	case INET_TYPE_DGRAM: type = SOCK_DGRAM; break;
-#ifdef HAVE_SCTP
-	case INET_TYPE_SEQPACKET: type = SOCK_SEQPACKET; break;
-#endif
-	default:
-	    return ctl_error(EINVAL, rbuf, rsize);
-	}
-	s = (SOCKET)get_int32(buf+2);
-
-        if (len == 6) bound = 1;
-        else bound = get_int32(buf+2+4);
-
-	replen = inet_ctl_fdopen(desc, af, type, s, bound, rbuf, rsize);
-
-	if ((*rbuf)[0] != INET_REP_ERROR) {
-	    if (desc->active)
-		sock_select(desc,FD_READ,1);
-#ifdef HAVE_SO_BSDCOMPAT
-	    /*
-	     * Make sure that sending UDP packets to a non existing port on an
-	     * existing machine doesn't close the socket. (Linux behaves this
-	     * way)
-	     */
-	    if (should_use_so_bsdcompat()) {
-		int one = 1;
-		/* Ignore errors */
-		sock_setopt(desc->s, SOL_SOCKET, SO_BSDCOMPAT, &one,
-			    sizeof(one));
-	    }
-#endif
-	}
-	return replen;
-    }
-
-
+    case INET_REQ_OPEN:
+        return packet_inet_ctl_req_open(desc, buf, len, rbuf, rsize);
+    case INET_REQ_FDOPEN:
+        return packet_inet_ctl_req_fdopen(desc, buf, len, rbuf, rsize);
     case INET_REQ_CLOSE:
-	DEBUGF(("packet_inet_ctl(%ld): CLOSE\r\n", (long)desc->port)); 
-	erl_inet_close(desc);
-	return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
-
-
-    case INET_REQ_CONNECT:  {
-	/* UDP and SCTP connect operations are completely different. UDP
-	   connect means only setting the default peer addr locally,  so
-	   it is always synchronous. SCTP connect means actual establish-
-	   ing of an SCTP association with a remote peer, so it is async-
-	   ronous, and similar to TCP connect. However, unlike TCP, SCTP
-	   allows the socket to have multiple simultaneous associations:
-	*/
-	int code;
-	char tbuf[2];
-#ifdef HAVE_SCTP
-	unsigned timeout;
-#endif
-	DEBUGF(("packet_inet_ctl(%ld): CONNECT\r\n", (long)desc->port)); 
-	
-	/* INPUT: [ Timeout(4), Port(2), Address(N) ] */
-
-	if (!IS_OPEN(desc))
-	    return ctl_xerror(EXBADPORT, rbuf, rsize);
-
-#ifdef HAVE_SCTP
-	if (IS_SCTP(desc)) { 
-	    inet_address remote;
-	    char *xerror;
-	    
-	    if (IS_CONNECTING(desc))
-		return ctl_error(EINVAL, rbuf, rsize);
-	    if (len < 6)
-		return ctl_error(EINVAL, rbuf, rsize);
-	    timeout = get_int32(buf);
-	    buf += 4;
-	    len -= 4;
-
-	    /* For SCTP, we do not set the peer's addr in desc->remote, as
-	       multiple peers are possible: */
-	    if ((xerror = inet_set_faddress
-		 (desc->sfamily, &remote, &buf, &len)) != NULL)
-	        return ctl_xerror(xerror, rbuf, rsize);
-	
-	    sock_select(desc, FD_CONNECT, 1);
-	    code = sock_connect(desc->s, &remote.sa, len);
-
-	    if (IS_SOCKET_ERROR(code) && (sock_errno() == EINPROGRESS)) {
-		/* XXX: Unix only -- WinSock would have a different cond! */
-		desc->state = INET_STATE_CONNECTING;
-		if (timeout != INET_INFINITY)
-		    driver_set_timer(desc->port, timeout);
-		enq_async(desc, tbuf, INET_REQ_CONNECT);
-	    }
-	    else if (code == 0) { /* OK we are connected */
-		sock_select(desc, FD_CONNECT, 0);
-		desc->state = INET_STATE_CONNECTED;
-		enq_async(desc, tbuf, INET_REQ_CONNECT);
-		async_ok(desc);
-	    }
-	    else {
-		sock_select(desc, FD_CONNECT, 0);
-		return ctl_error(sock_errno(), rbuf, rsize);
-	    }
-	    return ctl_reply(INET_REP_OK, tbuf, 2, rbuf, rsize);
-	}
-#endif
-	/* UDP */
-	if (len == 0) {
-	    /* What does it mean???  NULL sockaddr??? */
-	    sock_connect(desc->s, (struct sockaddr*) NULL, 0);
-	    desc->state &= ~INET_F_ACTIVE;
-	    enq_async(desc, tbuf, INET_REQ_CONNECT);
-	    async_ok (desc);
-	}
-	else if (len < 6)
-	    return ctl_error(EINVAL, rbuf, rsize);
-	else {
-	    char *xerror;
-	    /* Ignore timeout */
-	    buf += 4;
-	    len -= 4;
-	    if ((xerror = inet_set_faddress
-		 (desc->sfamily, &desc->remote, &buf, &len)) != NULL)
-	        return ctl_xerror(xerror, rbuf, rsize);
-	    
-	    code = sock_connect(desc->s,
-				(struct sockaddr*) &desc->remote, len);
-	    if (IS_SOCKET_ERROR(code)) {
-		sock_connect(desc->s, (struct sockaddr*) NULL, 0);
-		desc->state &= ~INET_F_ACTIVE;
-		return ctl_error(sock_errno(), rbuf, rsize);
-	    }
-	    else /* ok we are connected */ {
-		enq_async(desc, tbuf, INET_REQ_CONNECT);
-		desc->state |= INET_F_ACTIVE;
-		async_ok (desc);
-	    }
-	}
-	return ctl_reply(INET_REP_OK, tbuf, 2, rbuf, rsize);
-    }
+        return packet_inet_ctl_req_close(desc, rbuf, rsize);
+    case INET_REQ_CONNECT:
+        return packet_inet_ctl_req_connect(desc, buf, len, rbuf, rsize);
 
 #ifdef HAVE_SCTP
     case INET_REQ_LISTEN:
-	{	/* LISTEN is only for SCTP sockets, not UDP. This code is borrowed
-		   from the TCP section. Returns: {ok,[]} on success.
-		*/
-	    int backlog;
-	    
-	    DEBUGF(("packet_inet_ctl(%ld): LISTEN\r\n", (long)desc->port)); 
-	    if (!IS_SCTP(desc))
-		return ctl_xerror(EXBADPORT, rbuf, rsize);
-	    if (!IS_OPEN(desc))
-		return ctl_xerror(EXBADPORT, rbuf, rsize);
-
-	    if (len != 2)
-		return ctl_error(EINVAL, rbuf, rsize);
-	    backlog = get_int16(buf);
-
-	    if (IS_SOCKET_ERROR(sock_listen(desc->s, backlog)))
-		return ctl_error(sock_errno(), rbuf, rsize);
-
-	    desc->state = INET_STATE_LISTENING;   /* XXX: not used? */
-	    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
-	}
-
+        return packet_inet_ctl_req_listen(desc, buf, len, rbuf, rsize);
     case SCTP_REQ_BINDX:
-	{   /* Multi-homing bind for SCTP: */
-	    /* Add additional addresses by calling sctp_bindx with one address
-	       at a time, since this is what some OSes promise will work.
-	       Buff structure: Flags(1), ListItem,...:
-	    */
-	    inet_address addr;
-	    char* curr;
-	    int   add_flag, rflag;
-	    
-	    if (!IS_SCTP(desc))
-		return ctl_xerror(EXBADPORT, rbuf, rsize);
-
-	    curr = buf;
-	    add_flag = get_int8(curr);
-	    curr++;
-
-	    /* Make the real flags: */
-	    rflag = add_flag ? SCTP_BINDX_ADD_ADDR : SCTP_BINDX_REM_ADDR;
-
-	    while (curr < buf+len)
-		{
-		    char *xerror;
-		    /* List item format: see "inet_set_faddress": */
-		    ErlDrvSizeT alen  = buf + len - curr;
-		    xerror = inet_set_faddress
-		      (desc->sfamily, &addr, &curr, &alen);
-		    if (xerror != NULL)
-		        return ctl_xerror(xerror, rbuf, rsize);
-
-		    /* Invoke the call: */
-		    if (p_sctp_bindx(desc->s, (struct sockaddr *)&addr, 1,
-				     rflag) < 0)
-			return ctl_error(sock_errno(), rbuf, rsize);
-		}
-
-	    desc->state = INET_STATE_OPEN;
-
-	    return ctl_reply(INET_REP_OK, NULL, 0, rbuf, rsize);
-	}
-
+        return packet_inet_ctl_req_bindx(desc, buf, len, rbuf, rsize);
     case SCTP_REQ_PEELOFF:
-	{
-	    Uint32 assoc_id;
-	    udp_descriptor* new_udesc;
-	    int err;
-	    SOCKET new_socket;
-
-	    DEBUGF(("packet_inet_ctl(%ld): PEELOFF\r\n", (long)desc->port));
-	    if (!IS_SCTP(desc))
-		return ctl_xerror(EXBADPORT, rbuf, rsize);
-	    if (!IS_OPEN(desc))
-		return ctl_xerror(EXBADPORT, rbuf, rsize);
-	    if (! p_sctp_peeloff)
-		return ctl_error(ENOTSUP, rbuf, rsize);
-
-	    if (len != 4)
-		return ctl_error(EINVAL, rbuf, rsize);
-	    assoc_id = get_int32(buf);
-
-	    new_socket = p_sctp_peeloff(desc->s, assoc_id);
-	    if (IS_SOCKET_ERROR(new_socket)) {
-		return ctl_error(sock_errno(), rbuf, rsize);
-	    }
-
-	    desc->caller = driver_caller(desc->port);
-	    if ((new_udesc = sctp_inet_copy(udesc, new_socket, &err)) == NULL) {
-		sock_close(new_socket);
-		desc->caller = 0;
-		return ctl_error(err, rbuf, rsize);
-	    }
-	    new_udesc->inet.state = INET_STATE_CONNECTED;
-	    new_udesc->inet.stype = SOCK_STREAM;
-	    SET_NONBLOCKING(new_udesc->inet.s);
-
-	    inet_reply_ok_port(desc, new_udesc->inet.dport);
-	    (*rbuf)[0] = INET_REP;
-	    return 1;
-	}
+        return packet_inet_ctl_req_peeloff(desc, udesc, buf, len, rbuf, rsize);
 #endif  /* HAVE_SCTP */
 
     case PACKET_REQ_RECV:
-	{	/* THIS IS A FRONT-END for "recv*" requests. It only enqueues the
-		   request  and possibly returns the data  immediately available.
-		   The actual data returning function is the back-end ("*input"):
-		*/
-	    unsigned timeout;
-	    char tbuf[2];
-
-	    DEBUGF(("packet_inet_ctl(%ld): RECV\r\n", (long)desc->port)); 
-	    /* INPUT: Timeout(4), Length(4) */
-	    if (!IS_OPEN(desc))
-		return ctl_xerror(EXBADPORT, rbuf, rsize);
-	    if (desc->active || (len != 8))
-		return ctl_error(EINVAL, rbuf, rsize);
-	    timeout = get_int32(buf);
-	    /* The 2nd arg, Length(4), is ignored for both UDP and SCTP protocols,
-	       since they are msg-oriented. */
-
-	    if (enq_async(desc, tbuf, PACKET_REQ_RECV) < 0)
-		return ctl_error(EALREADY, rbuf, rsize);
-
-	    if (packet_inet_input(udesc, desc->event) == 0) {
-		if (timeout == 0)
-		    async_error_am(desc, am_timeout);
-		else {
-		    if (timeout != INET_INFINITY)
-			driver_set_timer(desc->port, timeout);
-		}
-	    }
-	    return ctl_reply(INET_REP_OK, tbuf, 2, rbuf, rsize);
-	}
-	
+        return packet_inet_ctl_req_recv(desc, udesc, buf, len, rbuf, rsize);
     default:
 	/* Delegate the request to the INET layer. In particular,
 	   INET_REQ_BIND goes here. If the req is not recognised
