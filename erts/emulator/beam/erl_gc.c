@@ -830,20 +830,39 @@ static ERTS_INLINE void offset_nstack(Process* p, Sint offs,
 
 #endif /* HIPE */
 
-void
-erts_garbage_collect_literals(Process* p, Eterm* literals,
-			      Uint byte_lit_size,
-			      OffheapHeader* oh)
+Heap ERTS_INLINE
+gclit_grow_old_heap(Process *p, Heap h, Words need) {
+    if (h.words >= need.words) {
+        /* Good to go */
+        return h;
+    }
+#error "not impl"
+    return h;
+}
+
+Heap ERTS_INLINE
+gclit_make_old_heap(Words need,
+                    Heap h)
 {
-    Uint lit_size = byte_lit_size / sizeof(Eterm);
-    Uint old_heap_size;
+    h.words = erts_next_heap_size(need.words, 0);
+    h.start = h.top = (Eterm *) ERTS_HEAP_ALLOC(ERTS_ALC_T_OLD_HEAP,
+                                                sizeof(Eterm) * h.words);
+    h.end = h.start + h.words;
+    return h;
+}
+
+void
+erts_garbage_collect_literals(Process *p, Eterm *literals,
+                              Uint byte_lit_size,
+                              OffheapHeader *offh)
+{
+    Words lit_size = { byte_lit_size / sizeof(Eterm) };
+    Heap old_heap = { OLD_HEAP(p), OLD_HTOP(p), OLD_HEND(p),
+                      OLD_HEND(p) - OLD_HEAP(p) };
     Eterm* temp_lit;
     Sint offs;
     Rootset rootset;            /* Rootset for GC (stack, dictionary, etc). */
-    Roots* roots;
-    char* area;
-    Uint area_size;
-    Eterm* old_htop;
+    LiteralArea area;
     Uint n;
     OffheapHeader** prev = NULL;
 
@@ -857,21 +876,22 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
     erts_smp_atomic32_read_bor_nob(&p->state, ERTS_PSFLG_GC);
 
     /*
-     * Assume the caller has already done a major collection. There are now
-     * old from-heap and young from-heap. We will now allocate an old heap
-     * to contain the literals.
+     * There may or may not be old heap at this moment. We check if it exists,
+     * and if it is large enough. If too small - we grow it and relocate data.
      */
 
     if (p->old_heap != NULL) {
-        /* Must NOT have an old heap, but if anything - run a full sweep,
-         * evicting old heap. */
-        ASSERT(0);
-    }
+        /* Ensure that old heap is large enough to fit literals too, or grow */
+        Words have_old = {p->old_hend - p->old_heap};
+        Words need_old = {(p->old_htop - p->old_heap) + lit_size.words};
+        need_old.words = erts_next_heap_size(need_old.words, 0);
 
-    old_heap_size = erts_next_heap_size(lit_size, 0);
-    p->old_heap = p->old_htop = (Eterm*) ERTS_HEAP_ALLOC(ERTS_ALC_T_OLD_HEAP,
-							 sizeof(Eterm)*old_heap_size);
-    p->old_hend = p->old_heap + old_heap_size;
+        /* Grow/relocate if needed */
+        old_heap = gclit_grow_old_heap(p, old_heap, need_old);
+    } else {
+        /* Allocate big enough old-heap and use it */
+        old_heap = gclit_make_old_heap(lit_size, old_heap);
+    }
 
     /*
      * We soon want to garbage collect the literals. But since a GC is
@@ -880,12 +900,16 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
      */
     temp_lit = (Eterm *) erts_alloc(ERTS_ALC_T_TMP, byte_lit_size);
     sys_memcpy(temp_lit, literals, byte_lit_size);
-    offs = temp_lit - literals;
-    offset_heap(temp_lit, lit_size, offs, (char *) literals, byte_lit_size);
-    offset_heap(p->heap, p->htop - p->heap, offs, (char *) literals, byte_lit_size);
-    offset_rootset(p, offs, (char *) literals, byte_lit_size, p->arg_reg, p->arity);
-    if (oh) {
-	oh = (OffheapHeader *) ((Eterm *)(void *) oh + offs);
+    offs = (Sint)(temp_lit - literals);
+
+    offset_heap(temp_lit, lit_size.words, offs,
+                (char *) literals, byte_lit_size);
+    offset_heap(HEAP_START(p), HEAP_TOP(p) - HEAP_START(p), offs,
+                (char *) literals, byte_lit_size);
+    offset_rootset(p, offs, (char *) literals, byte_lit_size,
+                   p->arg_reg, (int)p->arity);
+    if (offh) {
+        offh = (OffheapHeader *) ((Eterm *) (void *) offh + offs);
     }
 
     /*
@@ -894,62 +918,26 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
      * rootset.
      */
 
-    area = (char *) temp_lit;
-    area_size = byte_lit_size;
-    n = setup_rootset(p, p->arg_reg, p->arity, &rootset);
+    area.start = (char *) temp_lit;
+    area.bytes = byte_lit_size;
+    n = setup_rootset(p, p->arg_reg, (int)p->arity, &rootset);
 
     /* TODO: Make this use generic_roots_sweep */
-    roots = rootset.roots;
-    old_htop = sweep_literals_nstack(p, p->old_htop, area, area_size);
-    generic_roots_sweep(&rootset,
-                        NULL, &old_htop, /* inout inout */
-                        SweepOp_Literal, /* primary */
-                        SweepOp_None,    /* secondary */
-                        oh, mature);
-#if 0
-    while (n--) {
-        Eterm* g_ptr = roots->v;
-        Uint g_sz = roots->sz;
-	Eterm* ptr;
-	Eterm val;
-
-	roots++;
-
-        while (g_sz--) {
-            Eterm gval = *g_ptr;
-
-            switch (primary_tag(gval)) {
-	    case TAG_PRIMARY_BOXED:
-		ptr = boxed_val(gval);
-		val = *ptr;
-                if (IS_MOVED_BOXED(val)) {
-		    ASSERT(is_boxed(val));
-                    *g_ptr++ = val;
-		} else if (ErtsInArea(ptr, area, area_size)) {
-                    MOVE_BOXED(ptr,val,old_htop,g_ptr++);
-		} else {
-		    g_ptr++;
-		}
-		break;
-	    case TAG_PRIMARY_LIST:
-                ptr = list_val(gval);
-                val = *ptr;
-                if (IS_MOVED_CONS(val)) { /* Moved */
-                    *g_ptr++ = ptr[1];
-		} else if (ErtsInArea(ptr, area, area_size)) {
-                    MOVE_CONS(ptr,val,old_htop,g_ptr++);
-                } else {
-		    g_ptr++;
-		}
-		break;
-	    default:
-                g_ptr++;
-		break;
-	    }
-	}
+    //roots = rootset.roots;
+    old_heap.top = sweep_literals_nstack(p, old_heap.top,
+                                         area.start, area.bytes);
+    {
+        OldHeapArea oh = {area.start, area.bytes};
+        MatureArea mature_null = {NULL, 0};
+        /* Scan rootset, all literals which belong to oh (tmp area) will
+         * go to old_heap's top (secondary match) */
+        generic_roots_sweep(&rootset,
+                            NULL, &old_heap.top, /* in-out in-out */
+                            SweepOp_None,        /* primary */
+                            SweepOp_Literal,     /* secondary */
+                            oh, mature_null);
     }
-#endif //0
-    ASSERT(p->old_htop <= old_htop && old_htop <= p->old_hend);
+    //ASSERT(old_htop0 <= old_htop && old_htop <= p->old_hend);
     cleanup_rootset(&rootset);
 
     /*
@@ -958,22 +946,34 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
      */
 
     /* TODO: make this use generic sweep */
-    old_htop = sweep_literals_to_old_heap(p->heap, p->htop,
-                                          old_htop,
-                                          area, area_size);
+//    old_heap.top = sweep_literals_to_old_heap(p->heap, p->htop,
+//                                              old_heap.top,
+//                                              area);
     {
-        OldHeapArea tmp_oldheap = {(const char *) p->old_heap,
-                                   sizeof(Eterm) * old_heap_size};
+        OldHeapArea oh_null = {NULL, 0}; /* dummy value */
 
-        generic_sweep(p->old_heap, &old_htop, /* primary in out */
+        /* Mature SweepOp means only terms that are located in 'area' will be
+         * moved, and we passed it as 'mature' arg to generic sweep.
+         *
+         * First sweep young from-heap and evict all literals (from 'area')
+         */
+        generic_sweep(p->heap, &p->htop, /* in: htop will not be modified */
+                      old_heap.start, &old_heap.top, /* in-out */
+                      SweepOp_None,
+                      SweepOp_Mature,
+                      oh_null,
+                      area.start, area.bytes);
+
+        /* Sweep old from-heap and do the same - evict literals */
+        generic_sweep(old_heap.start, &old_heap.top, /* primary in-out */
                       NULL, NULL,             /* no secondary */
                       SweepOp_Mature,         /* primary */
                       SweepOp_None,           /* secondary */
-                      tmp_oldheap,
-                      area, area_size);
+                      oh_null,
+                      area.start, area.bytes);
     }
-    ASSERT(p->old_htop <= old_htop && old_htop <= p->old_hend);
-    p->old_htop = old_htop;
+    //ASSERT(p->old_htop <= old_htop && old_htop <= p->old_hend);
+    //p->old_htop = old_htop;
 
     /*
      * Prepare to sweep binaries. Since all MSOs on the new heap
@@ -981,7 +981,7 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
      * current MSO list and use that as a starting point.
      */
 
-    if (oh) {
+    if (offh) {
         prev = &MSO(p).first;
         while (*prev) {
             prev = &(*prev)->next;
@@ -992,12 +992,12 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
      * Sweep through all binaries in the temporary literal area.
      */
 
-    while (oh) {
-	if (IS_MOVED_BOXED(oh->thing_word)) {
+    while (offh) {
+	if (IS_MOVED_BOXED(offh->thing_word)) {
 	    Binary* bptr;
 	    OffheapHeader* ptr;
 
-	    ptr = (OffheapHeader*) boxed_val(oh->thing_word);
+	    ptr = (OffheapHeader*) boxed_val(offh->thing_word);
 	    ASSERT(thing_subtag(ptr->thing_word) == REFC_BINARY_SUBTAG);
 	    bptr = ((ProcBin*)ptr)->val;
 
@@ -1011,12 +1011,16 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
 	    *prev = ptr;
 	    prev = &ptr->next;
 	}
-	oh = oh->next;
+	offh = offh->next;
     }
 
     if (prev) {
         *prev = NULL;
     }
+
+#error "todo return old_heap to p-> fields"
+//    OLD_HEAP(p) = old_heap.
+//    OLD_HEND(p)
 
     /*
      * We no longer need this temporary area.
@@ -1766,73 +1770,6 @@ debug_sweep_check(const Eterm *hp, const Eterm *hend) {
     }
 }
 #endif
-
-/* TODO: Can this possibly be covered by generic sweep? */
-static Eterm*
-sweep_literals_to_old_heap(Eterm* heap_ptr, Eterm* heap_end, Eterm* htop,
-			   char* src, Uint src_size)
-{
-    while (heap_ptr < heap_end) {
-	Eterm* ptr;
-	Eterm val;
-	Eterm gval = *heap_ptr;
-
-	switch (primary_tag(gval)) {
-	case TAG_PRIMARY_BOXED: {
-	    ptr = boxed_val(gval);
-	    val = *ptr;
-	    if (IS_MOVED_BOXED(val)) {
-		ASSERT(is_boxed(val));
-		*heap_ptr++ = val;
-	    } else if (ErtsInArea(ptr, src, src_size)) {
-		MOVE_BOXED(ptr,val,htop,heap_ptr++);
-	    } else {
-		heap_ptr++;
-	    }
-	    break;
-	}
-	case TAG_PRIMARY_LIST: {
-	    ptr = list_val(gval);
-	    val = *ptr;
-	    if (IS_MOVED_CONS(val)) {
-		*heap_ptr++ = ptr[1];
-	    } else if (ErtsInArea(ptr, src, src_size)) {
-		MOVE_CONS(ptr,val,htop,heap_ptr++);
-	    } else {
-		heap_ptr++;
-	    }
-	    break;
-	}
-	case TAG_PRIMARY_HEADER: {
-	    if (!header_is_thing(gval)) {
-		heap_ptr++;
-	    } else {
-		if (header_is_bin_matchstate(gval)) {
-		    ErlBinMatchState *ms = (ErlBinMatchState*) heap_ptr;
-		    ErlBinMatchBuffer *mb = &(ms->mb);
-		    Eterm* origptr;
-		    origptr = &(mb->orig);
-		    ptr = boxed_val(*origptr);
-		    val = *ptr;
-		    if (IS_MOVED_BOXED(val)) {
-			*origptr = val;
-			mb->base = binary_bytes(*origptr);
-		    } else if (ErtsInArea(ptr, src, src_size)) {
-			MOVE_BOXED(ptr,val,htop,origptr);
-			mb->base = binary_bytes(*origptr);
-		    }
-		}
-		heap_ptr += (thing_arityval(gval)+1);
-	    }
-	    break;
-	}
-	default:
-	    heap_ptr++;
-	    break;
-	}
-    }
-    return htop;
-}
 
 /*
  * Move an area (heap fragment) by sweeping over it and set move markers.

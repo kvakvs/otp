@@ -147,7 +147,7 @@ Eterm erts_gc_after_bif_call_lhf(struct process* p, ErlHeapFragment *live_hf_end
 Eterm erts_gc_after_bif_call(struct process* p, Eterm result, Eterm* regs, Uint arity);
 void erts_garbage_collect_literals(struct process* p, Eterm* literals,
 				   Uint lit_size,
-				   struct erl_off_heap_header* oh);
+				   struct erl_off_heap_header* offh);
 Uint erts_next_heap_size(Uint, Uint);
 Eterm erts_heap_sizes(struct process* p);
 

@@ -82,6 +82,14 @@ typedef struct {
 typedef struct { const char *start; Uint bytes; } MatureArea;
 typedef struct { const char *start; Uint bytes; } OldHeapArea;
 typedef struct { const char *start; Uint bytes; } YoungHeapArea;
+typedef struct { char *start; Uint bytes; } LiteralArea;
+typedef struct { Uint words; } Words;
+typedef struct {
+    Eterm *start;
+    Eterm *top;
+    Eterm *end;
+    Uint words;
+} Heap;
 
 #ifdef DEBUG
 static void debug_sweep_check(const Eterm *hp, const Eterm *hend);
@@ -117,10 +125,7 @@ static void do_minor(Process *p, ErlHeapFragment *live_hf_end,
                      MatureArea mature,
                      Uint new_sz, Eterm* objv, int nobj);
 
-static Eterm *sweep_literals_to_old_heap(Eterm *heap_ptr, Eterm *heap_end,
-                                         Eterm *htop,
-                                         char *src, Uint src_size);
-static Eterm * collect_live_heap_frags(Process* p, ErlHeapFragment *live_hf_end,
+static Eterm *collect_live_heap_frags(Process* p, ErlHeapFragment *live_hf_end,
                                       Eterm* heap, Eterm* htop, Eterm* objv, int nobj);
 static int adjust_after_fullsweep(Process *p, int need, Eterm *objv, int nobj);
 static void shrink_new_heap(Process *p, Uint new_sz, Eterm *objv, int nobj);
@@ -193,7 +198,10 @@ typedef enum {
     SweepOp_Mature
 } SweepOp;
 
-/* NOTE: in sweep primary condition is checked after secondary! */
+/*
+ * NOTE: This (primary) condition is checked after secondary condition!
+ * Optimizer does fairly good job merging these checks with calling code
+ */
 static ERTS_FORCE_INLINE int
 is_in_primary_area(const Eterm *ptr,
                    const SweepOp type,
@@ -210,15 +218,16 @@ is_in_primary_area(const Eterm *ptr,
             return ! is_literal && !ErtsInArea(ptr, oh, oh_size);
         case SweepOp_Mature:
             return ErtsInArea(ptr, mature, mature_size);
-        case SweepOp_Literal:
-            return is_literal;
         default:
             ASSERT(!"unsupported primary sweep op");
     }
     ASSERT(0); return 0;
 }
 
-/* NOTE: in sweep secondary (this) condition is checked first */
+/*
+ * NOTE: in sweep secondary (this) condition is checked first
+ * Optimizer does fairly good job merging these checks with calling code
+ */
 static ERTS_FORCE_INLINE int
 is_in_secondary_area(const Eterm *ptr,
                      const SweepOp type,
@@ -238,12 +247,22 @@ is_in_secondary_area(const Eterm *ptr,
                        || ErtsInArea(ptr, oh, oh_size));
         case SweepOp_NotLiteral_Mature:
             return ! is_literal && ErtsInArea(ptr, mature, mature_size);
+        case SweepOp_Literal:
+            /* Tmp literal area is passed in oh */
+            return ErtsInArea(ptr, oh, oh_size);
+        case SweepOp_Mature:
+            return ErtsInArea(ptr, mature, mature_size);
         default:
             ASSERT(!"unsupported secondary sweep op");
     }
     ASSERT(0); return 0;
 }
 
+/*
+ * Performs sweep through given heap hp, moving values to primary_top or to
+ * secondary_top depending on SweepOps provided as arguments.
+ * Optimizer does fairly good job merging generic sweep with checks above
+ */
 static ERTS_FORCE_INLINE void
 generic_sweep(Eterm *hp, Eterm **primary_topp,
               Eterm *secondary_hp, Eterm **secondary_topp,
