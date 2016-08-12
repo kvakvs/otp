@@ -185,6 +185,7 @@ typedef struct {
 
 typedef enum {
     SweepOp_None,
+    SweepOp_Literal,
     SweepOp_NotLiteral,
     SweepOp_NotLiteral_NotOld,
     SweepOp_NotLiteral_OldOrMature,
@@ -201,15 +202,16 @@ is_in_primary_area(const Eterm *ptr,
                    const int is_literal)
 {
     switch (type) {
+        case SweepOp_None:
+            return 0;
         case SweepOp_NotLiteral:
             return ! is_literal;
-
         case SweepOp_NotLiteral_NotOld:
-            return ! is_literal
-                   && ! ErtsInArea(ptr, oh, oh_size);
-
+            return ! is_literal && !ErtsInArea(ptr, oh, oh_size);
         case SweepOp_Mature:
             return ErtsInArea(ptr, mature, mature_size);
+        case SweepOp_Literal:
+            return is_literal;
         default:
             ASSERT(!"unsupported primary sweep op");
     }
@@ -228,18 +230,14 @@ is_in_secondary_area(const Eterm *ptr,
     if (!o_htop) { return 0; }
 
     switch (type) {
+        case SweepOp_None:
+            return 0;
         case SweepOp_NotLiteral_OldOrMature:
             return ! is_literal
                    && (ErtsInArea(ptr, mature, mature_size)
                        || ErtsInArea(ptr, oh, oh_size));
-
         case SweepOp_NotLiteral_Mature:
-            return ! is_literal
-                    && ErtsInArea(ptr, mature, mature_size);
-
-        case SweepOp_None:
-            return 0;
-
+            return ! is_literal && ErtsInArea(ptr, mature, mature_size);
         default:
             ASSERT(!"unsupported secondary sweep op");
     }

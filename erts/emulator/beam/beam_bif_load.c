@@ -786,8 +786,10 @@ check_process_code(Process* rp, Module* modp, Uint flags, int *redsp, int fcalls
     ErtsMessage *msgp;
     ErlHeapFragment *hfrag;
 
-#define ERTS_ORDINARY_GC__ (1 << 0)
-#define ERTS_LITERAL_GC__  (1 << 1)
+    enum {
+        OrdinaryGcBit = (1 << 0),
+        LiteralGcBit  = (1 << 1)
+    };
 
     /*
      * Pick up limits for the module.
@@ -973,10 +975,10 @@ check_process_code(Process* rp, Module* modp, Uint flags, int *redsp, int fcalls
 	return am_false;
 
     try_literal_gc:
-	need_gc |= ERTS_LITERAL_GC__;
+	need_gc |= LiteralGcBit;
 
     try_gc:
-	need_gc |= ERTS_ORDINARY_GC__;
+	need_gc |= OrdinaryGcBit;
 
 	if ((done_gc & need_gc) == need_gc)
 	    return am_true;
@@ -995,24 +997,20 @@ check_process_code(Process* rp, Module* modp, Uint flags, int *redsp, int fcalls
 	rp->fvalue = NIL;
 	rp->ftrace = NIL;
 
-	if (need_gc & ERTS_ORDINARY_GC__) {
+	if (need_gc & OrdinaryGcBit) {
 	    FLAGS(rp) |= F_NEED_FULLSWEEP;
 	    *redsp += erts_garbage_collect_nobump(rp, 0, rp->arg_reg, rp->arity, fcalls);
-	    done_gc |= ERTS_ORDINARY_GC__;
+	    done_gc |= OrdinaryGcBit;
 	}
-	if (need_gc & ERTS_LITERAL_GC__) {
+	if (need_gc & LiteralGcBit) {
 	    struct erl_off_heap_header* oh;
 	    oh = modp->old.code_hdr->literals_off_heap;
 	    *redsp += lit_bsize / 64; /* Need, better value... */
 	    erts_garbage_collect_literals(rp, (Eterm*)literals, lit_bsize, oh);
-	    done_gc |= ERTS_LITERAL_GC__;
+	    done_gc |= LiteralGcBit;
 	}
 	need_gc = 0;
     }
-
-#undef ERTS_ORDINARY_GC__
-#undef ERTS_LITERAL_GC__
-
 }
 
 static int

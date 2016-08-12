@@ -847,8 +847,9 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
     Uint n;
     OffheapHeader** prev = NULL;
 
-    if (p->flags & F_DISABLE_GC)
-	return;
+    if (p->flags & F_DISABLE_GC) {
+        return;
+    }
 
     /*
      * Set GC state.
@@ -856,13 +857,17 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
     erts_smp_atomic32_read_bor_nob(&p->state, ERTS_PSFLG_GC);
 
     /*
-     * We assume that the caller has already done a major collection
-     * (which has discarded the old heap), so that we don't have to cope
-     * with pointer to literals on the old heap. We will now allocate
-     * an old heap to contain the literals.
+     * Assume the caller has already done a major collection. There are now
+     * old from-heap and young from-heap. We will now allocate an old heap
+     * to contain the literals.
      */
 
-    ASSERT(p->old_heap == 0);	/* Must NOT have an old heap yet. */
+    if (p->old_heap != NULL) {
+        /* Must NOT have an old heap, but if anything - run a full sweep,
+         * evicting old heap. */
+        ASSERT(0);
+    }
+
     old_heap_size = erts_next_heap_size(lit_size, 0);
     p->old_heap = p->old_htop = (Eterm*) ERTS_HEAP_ALLOC(ERTS_ALC_T_OLD_HEAP,
 							 sizeof(Eterm)*old_heap_size);
@@ -896,6 +901,12 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
     /* TODO: Make this use generic_roots_sweep */
     roots = rootset.roots;
     old_htop = sweep_literals_nstack(p, p->old_htop, area, area_size);
+    generic_roots_sweep(&rootset,
+                        NULL, &old_htop, /* inout inout */
+                        SweepOp_Literal, /* primary */
+                        SweepOp_None,    /* secondary */
+                        oh, mature);
+#if 0
     while (n--) {
         Eterm* g_ptr = roots->v;
         Uint g_sz = roots->sz;
@@ -937,6 +948,7 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
 	    }
 	}
     }
+#endif //0
     ASSERT(p->old_htop <= old_htop && old_htop <= p->old_hend);
     cleanup_rootset(&rootset);
 
@@ -2380,11 +2392,13 @@ is_ptr_in_old(const OffheapHeader *ptr,
     return ErtsInArea(ptr, oh.start, oh.bytes);
 }
 
+#ifdef DEBUG /* only used from debug_check_offheap */
 static int ERTS_FORCE_INLINE
 is_ptr_in_young(const OffheapHeader *ptr,
                 YoungHeapArea yng) {
     return ErtsInArea(ptr, yng.start, yng.bytes);
 }
+#endif
 
 /* Scan off-heap, ensure that young objects are followed by old objects */
 static void ERTS_INLINE
