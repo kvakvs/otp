@@ -9381,7 +9381,7 @@ scheduler_gc_proc(Process *c_p, int reds_left)
     return reds;
 }
 
-/*
+/*a
  * schedule() is called from BEAM (process_main()) or HiPE
  * (hipe_mode_switch()) when the current process is to be
  * replaced by a new process. 'calls' is the number of reduction

@@ -830,17 +830,47 @@ static ERTS_INLINE void offset_nstack(Process* p, Sint offs,
 
 #endif /* HIPE */
 
-Heap ERTS_INLINE
-gclit_grow_old_heap(Process *p, Heap h, Words need) {
+static Heap ERTS_INLINE
+gclit_grow_heap(Process *p, Heap h, Words need)
+{
+    Eterm *new_heap;
+    Sint offs;
+
     if (h.words >= need.words) {
-        /* Good to go */
-        return h;
+        return h; /* Nothing to do */
     }
-#error "not impl"
+    new_heap = (Eterm *) ERTS_HEAP_REALLOC(ERTS_ALC_T_HEAP,
+                                           (void *) h.start,
+                                           sizeof(Eterm) * h.words,
+                                           sizeof(Eterm) * need.words);
+
+    h.end = new_heap + need.words;
+    if ((offs = new_heap - h.start) != 0) { /* Move happened */
+        char *area = (char *) h.start;
+        Uint area_size = (char *) h.top - area;
+
+        offset_heap(new_heap, h.words, offs, area, area_size);
+
+        // TODO: Is usage of arg_reg/arity correct here?
+        offset_rootset(p, offs, area, area_size, p->arg_reg, p->arity);
+        h.top = new_heap + h.words;
+        h.start = new_heap;
+    }
+
+//#ifdef USE_VM_PROBES
+//    if (DTRACE_ENABLED(process_heap_grow)) {
+//        DTRACE_CHARBUF(pidbuf, DTRACE_TERM_BUF_SIZE);
+//
+//        dtrace_proc_str(p, pidbuf);
+//        DTRACE3(process_heap_grow, pidbuf, HEAP_SIZE(p), new_sz);
+//    }
+//#endif
+
+    h.words = need.words;
     return h;
 }
 
-Heap ERTS_INLINE
+static Heap ERTS_INLINE
 gclit_make_old_heap(Words need,
                     Heap h)
 {
@@ -851,20 +881,99 @@ gclit_make_old_heap(Words need,
     return h;
 }
 
+/*
+ * Copies literals area to new area of same size, shifts all box pointers
+ * inside of the area to stay consistent. Shifts register values which point
+ * to literal sto stay consistent. Not the stack?
+ */
+static LiteralArea ERTS_INLINE
+gclit_copy_literals(Process *p, const Eterm *literals, Words lit_size,
+                    OffheapHeader **poffh)
+{
+    Uint bytes = lit_size.words * sizeof(Eterm);
+    LiteralArea lit_copy = {(char *) erts_alloc(ERTS_ALC_T_TMP, bytes),
+                            bytes};
+    Sint offs;
+
+    sys_memcpy(lit_copy.start, literals, bytes);
+
+    offs = (Sint) (lit_copy.start - (char *) literals);
+
+    offset_heap((Eterm *) lit_copy.start, lit_size.words, offs,
+                (char *) literals, bytes);
+    offset_heap(HEAP_START(p), HEAP_TOP(p) - HEAP_START(p), offs,
+                (char *) literals, bytes);
+    offset_rootset(p, offs, (char *) literals, bytes,
+                   p->arg_reg, (int) p->arity);
+
+    if (*poffh) {
+        *poffh = (OffheapHeader *) ((Eterm *) (void *) (*poffh) + offs);
+    }
+
+    return lit_copy;
+}
+
+/*
+* Prepare to sweep binaries. Since all MSOs on the new heap
+* must be come before MSOs on the old heap, find the end of
+* current MSO list and use that as a starting point.
+*/
+static void gclit_sweep_mso(Process *p, OffheapHeader *offh) {
+    OffheapHeader **prev = NULL;
+    if (offh) {
+        prev = &MSO(p).first;
+        while (*prev) {
+            prev = &(*prev)->next;
+        }
+    }
+
+    /*
+     * Sweep through all binaries in the temporary literal area.
+     */
+
+    while (offh) {
+        if (IS_MOVED_BOXED(offh->thing_word)) {
+            Binary* bptr;
+            OffheapHeader* ptr;
+
+            ptr = (OffheapHeader*) boxed_val(offh->thing_word);
+            ASSERT(thing_subtag(ptr->thing_word) == REFC_BINARY_SUBTAG);
+            bptr = ((ProcBin*)ptr)->val;
+
+            /*
+             * This binary has been copied to the heap.
+             * We must increment its reference count and
+             * link it into the MSO list for the process.
+             */
+
+            erts_refc_inc(&bptr->refc, 1);
+            *prev = ptr;
+            prev = &ptr->next;
+        }
+        offh = offh->next;
+    }
+
+    if (prev) {
+        *prev = NULL;
+    }
+}
+
 void
 erts_garbage_collect_literals(Process *p, Eterm *literals,
                               Uint byte_lit_size,
                               OffheapHeader *offh)
 {
     Words lit_size = { byte_lit_size / sizeof(Eterm) };
-    Heap old_heap = { OLD_HEAP(p), OLD_HTOP(p), OLD_HEND(p),
-                      OLD_HEND(p) - OLD_HEAP(p) };
-    Eterm* temp_lit;
-    Sint offs;
+    Heap old_heap = { OLD_HEAP(p),  /* start*/
+                      OLD_HTOP(p),  /* top */
+                      OLD_HEND(p),  /* end */
+                      (Uint)(OLD_HEND(p) - OLD_HEAP(p)) /* words */ };
     Rootset rootset;            /* Rootset for GC (stack, dictionary, etc). */
-    LiteralArea area;
-    Uint n;
-    OffheapHeader** prev = NULL;
+    LiteralArea lit_copy;
+#ifdef DEBUG
+    const Eterm *old_htop0 = old_heap.top; /* original old.top for asserts */
+#endif
+    erts_printf("erts_gc_literals\r\n");
 
     if (p->flags & F_DISABLE_GC) {
         return;
@@ -882,12 +991,11 @@ erts_garbage_collect_literals(Process *p, Eterm *literals,
 
     if (p->old_heap != NULL) {
         /* Ensure that old heap is large enough to fit literals too, or grow */
-        Words have_old = {p->old_hend - p->old_heap};
         Words need_old = {(p->old_htop - p->old_heap) + lit_size.words};
         need_old.words = erts_next_heap_size(need_old.words, 0);
 
         /* Grow/relocate if needed */
-        old_heap = gclit_grow_old_heap(p, old_heap, need_old);
+        old_heap = gclit_grow_heap(p, old_heap, need_old);
     } else {
         /* Allocate big enough old-heap and use it */
         old_heap = gclit_make_old_heap(lit_size, old_heap);
@@ -898,19 +1006,7 @@ erts_garbage_collect_literals(Process *p, Eterm *literals,
      * destructive (MOVED markers are written), we must copy the literals
      * to a temporary area and change all references to literals.
      */
-    temp_lit = (Eterm *) erts_alloc(ERTS_ALC_T_TMP, byte_lit_size);
-    sys_memcpy(temp_lit, literals, byte_lit_size);
-    offs = (Sint)(temp_lit - literals);
-
-    offset_heap(temp_lit, lit_size.words, offs,
-                (char *) literals, byte_lit_size);
-    offset_heap(HEAP_START(p), HEAP_TOP(p) - HEAP_START(p), offs,
-                (char *) literals, byte_lit_size);
-    offset_rootset(p, offs, (char *) literals, byte_lit_size,
-                   p->arg_reg, (int)p->arity);
-    if (offh) {
-        offh = (OffheapHeader *) ((Eterm *) (void *) offh + offs);
-    }
+    lit_copy = gclit_copy_literals(p, literals, lit_size, &offh);
 
     /*
      * Now the literals are placed in memory that is safe to write into,
@@ -918,37 +1014,30 @@ erts_garbage_collect_literals(Process *p, Eterm *literals,
      * rootset.
      */
 
-    area.start = (char *) temp_lit;
-    area.bytes = byte_lit_size;
-    n = setup_rootset(p, p->arg_reg, (int)p->arity, &rootset);
+    setup_rootset(p, p->arg_reg, (int)p->arity, &rootset);
 
-    /* TODO: Make this use generic_roots_sweep */
-    //roots = rootset.roots;
     old_heap.top = sweep_literals_nstack(p, old_heap.top,
-                                         area.start, area.bytes);
+                                         lit_copy.start, lit_copy.bytes);
     {
-        OldHeapArea oh = {area.start, area.bytes};
+        OldHeapArea oh = {lit_copy.start, lit_copy.bytes};
         MatureArea mature_null = {NULL, 0};
-        /* Scan rootset, all literals which belong to oh (tmp area) will
-         * go to old_heap's top (secondary match) */
+        /*
+         * Scan rootset, all literals which belong to 'lit_copy' will
+         * go to old_heap's top (secondary match)
+         */
         generic_roots_sweep(&rootset,
-                            NULL, &old_heap.top, /* in-out in-out */
-                            SweepOp_None,        /* primary */
-                            SweepOp_Literal,     /* secondary */
+                            &old_heap.top, NULL, /* in-out in-out */
+                            SweepOp_Literal,     /* primary */
+                            SweepOp_None,        /* secondary */
                             oh, mature_null);
     }
-    //ASSERT(old_htop0 <= old_htop && old_htop <= p->old_hend);
+    ASSERT(is_between(old_heap.top, old_htop0, old_heap.end));
     cleanup_rootset(&rootset);
 
     /*
      * Now all references in the rootset to the literals have been updated.
      * Now we'll have to go through all heaps updating all other references.
      */
-
-    /* TODO: make this use generic sweep */
-//    old_heap.top = sweep_literals_to_old_heap(p->heap, p->htop,
-//                                              old_heap.top,
-//                                              area);
     {
         OldHeapArea oh_null = {NULL, 0}; /* dummy value */
 
@@ -962,7 +1051,7 @@ erts_garbage_collect_literals(Process *p, Eterm *literals,
                       SweepOp_None,
                       SweepOp_Mature,
                       oh_null,
-                      area.start, area.bytes);
+                      lit_copy.start, lit_copy.bytes);
 
         /* Sweep old from-heap and do the same - evict literals */
         generic_sweep(old_heap.start, &old_heap.top, /* primary in-out */
@@ -970,62 +1059,21 @@ erts_garbage_collect_literals(Process *p, Eterm *literals,
                       SweepOp_Mature,         /* primary */
                       SweepOp_None,           /* secondary */
                       oh_null,
-                      area.start, area.bytes);
+                      lit_copy.start, lit_copy.bytes);
     }
-    //ASSERT(p->old_htop <= old_htop && old_htop <= p->old_hend);
-    //p->old_htop = old_htop;
+    ASSERT(is_between(old_heap.top, old_htop0, old_heap.end));
 
-    /*
-     * Prepare to sweep binaries. Since all MSOs on the new heap
-     * must be come before MSOs on the old heap, find the end of
-     * current MSO list and use that as a starting point.
-     */
+    gclit_sweep_mso(p, offh);
 
-    if (offh) {
-        prev = &MSO(p).first;
-        while (*prev) {
-            prev = &(*prev)->next;
-        }
-    }
-
-    /*
-     * Sweep through all binaries in the temporary literal area.
-     */
-
-    while (offh) {
-	if (IS_MOVED_BOXED(offh->thing_word)) {
-	    Binary* bptr;
-	    OffheapHeader* ptr;
-
-	    ptr = (OffheapHeader*) boxed_val(offh->thing_word);
-	    ASSERT(thing_subtag(ptr->thing_word) == REFC_BINARY_SUBTAG);
-	    bptr = ((ProcBin*)ptr)->val;
-
-	    /*
-	     * This binary has been copied to the heap.
-	     * We must increment its reference count and
-	     * link it into the MSO list for the process.
-	     */
-
-	    erts_refc_inc(&bptr->refc, 1);
-	    *prev = ptr;
-	    prev = &ptr->next;
-	}
-	offh = offh->next;
-    }
-
-    if (prev) {
-        *prev = NULL;
-    }
-
-#error "todo return old_heap to p-> fields"
-//    OLD_HEAP(p) = old_heap.
-//    OLD_HEND(p)
+    OLD_HEAP(p) = old_heap.start;
+    OLD_HTOP(p) = old_heap.top;
+    OLD_HEND(p) = old_heap.end;
+    ErtsGcQuickSanityCheck(p);
 
     /*
      * We no longer need this temporary area.
      */
-    erts_free(ERTS_ALC_T_TMP, (void *) temp_lit);
+    erts_free(ERTS_ALC_T_TMP, (void *) lit_copy.start);
 
     /*
      * Restore status.
@@ -1033,6 +1081,7 @@ erts_garbage_collect_literals(Process *p, Eterm *literals,
     erts_smp_atomic32_read_band_nob(&p->state, ~ERTS_PSFLG_GC);
 }
 
+// TODO: Refactor this to use Heap struct and not modify Process fields until work is finished.
 static int
 minor_collection(Process* p, ErlHeapFragment *live_hf_end,
 		 int need, Eterm* objv, int nobj, Uint *recl)
@@ -1059,16 +1108,20 @@ minor_collection(Process* p, ErlHeapFragment *live_hf_end,
         if (OLD_HEAP(p) == NULL && mature.bytes != 0) {
             extra_old_heap_size = erts_next_heap_size(size_before, 1);
             heap_size += extra_old_heap_size;
-        } else if (OLD_HEAP(p))
+        } else if (OLD_HEAP(p)) {
             heap_size += OLD_HEND(p) - OLD_HEAP(p);
+        }
 
         /* Add potential new young heap size */
         extra_heap_size = next_heap_size(p, stack_size + size_before, 0);
         heap_size += extra_heap_size;
 
-        if (heap_size > MAX_HEAP_SIZE_GET(p))
-            if (reached_max_heap_size(p, heap_size, extra_heap_size, extra_old_heap_size))
+        if (heap_size > MAX_HEAP_SIZE_GET(p)) {
+            if (reached_max_heap_size(p, heap_size, extra_heap_size,
+                                      extra_old_heap_size)) {
                 return -2;
+            }
+        }
     }
 
     /*
@@ -1336,6 +1389,7 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
  * Major collection.
  */
 
+// TODO: Refactor this to use Heap struct and not modify Process fields until work is finished.
 static int
 major_collection(Process* p, ErlHeapFragment *live_hf_end,
 		 int need, Eterm* objv, int nobj, Uint *recl)
@@ -1738,6 +1792,7 @@ disallow_heap_frag_ref_in_old_heap(Process* p)
 #ifdef DEBUG
 static void
 debug_sweep_check(const Eterm *hp, const Eterm *hend) {
+    if (!hp && !hend) { return; /* no heap is fine too */ }
     while (hp != hend) {
         Eterm gval = *hp;
         ASSERT(hp < hend);

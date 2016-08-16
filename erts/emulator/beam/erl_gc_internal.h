@@ -82,8 +82,8 @@ typedef struct {
 typedef struct { const char *start; Uint bytes; } MatureArea;
 typedef struct { const char *start; Uint bytes; } OldHeapArea;
 typedef struct { const char *start; Uint bytes; } YoungHeapArea;
-typedef struct { char *start; Uint bytes; } LiteralArea;
 typedef struct { Uint words; } Words;
+typedef struct { char *start; Uint bytes; } LiteralArea;
 typedef struct {
     Eterm *start;
     Eterm *top;
@@ -218,6 +218,9 @@ is_in_primary_area(const Eterm *ptr,
             return ! is_literal && !ErtsInArea(ptr, oh, oh_size);
         case SweepOp_Mature:
             return ErtsInArea(ptr, mature, mature_size);
+        case SweepOp_Literal:
+            /* Tmp literal area is passed in oh */
+            return ErtsInArea(ptr, oh, oh_size);
         default:
             ASSERT(!"unsupported primary sweep op");
     }
@@ -388,7 +391,7 @@ generic_roots_sweep(Rootset *rs,
     Roots *roots = rs->roots;
     int n = rs->num_roots;
     Eterm *primary_top = *primary_topp;
-    Eterm *secondary_top = *secondary_topp;
+    Eterm *secondary_top = secondary_topp ? *secondary_topp : NULL;
 
     while (n--) {
         Eterm* g_ptr = roots->v;
@@ -452,5 +455,5 @@ generic_roots_sweep(Rootset *rs,
     }
 
     *primary_topp = primary_top;
-    *secondary_topp = secondary_top;
+    if (secondary_topp) { *secondary_topp = secondary_top; }
 }
