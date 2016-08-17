@@ -1698,7 +1698,7 @@ static BIF_RETTYPE process_flag_aux(Process *BIF_P,
 	   scb = NULL;
        else {
 	   Uint sz = sizeof(*scb) + (i-1) * sizeof(scb->ct[0]);
-	   scb = erts_alloc(ERTS_ALC_T_CALLS_BUF, sz);
+	   scb = (struct saved_calls *) erts_alloc(ERTS_ALC_T_CALLS_BUF, sz);
 	   scb->len = i;
 	   scb->cur = 0;
 	   scb->n = 0;
@@ -3519,7 +3519,7 @@ BIF_RETTYPE binary_to_float_1(BIF_ALIST_1)
      *  (there is no nstrtod :( )
      */
 
-    buf = erts_alloc(ERTS_ALC_T_TMP, size + 1);
+    buf = (byte *) erts_alloc(ERTS_ALC_T_TMP, size + 1);
 
     real_bin = binary_val(binary);
     if (*real_bin == HEADER_SUB_BIN) {

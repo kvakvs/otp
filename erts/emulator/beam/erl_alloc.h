@@ -406,7 +406,7 @@ NAME##_alloc(void)							\
 {									\
     TYPE *res = NAME##_pre_alloc();					\
     if (!res)								\
-	res = erts_alloc(ALCT, sizeof(TYPE));				\
+	res = (TYPE *) erts_alloc(ALCT, sizeof(TYPE));			\
     return res;								\
 }									\
 static ERTS_INLINE void							\

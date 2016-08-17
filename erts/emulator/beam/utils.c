@@ -160,10 +160,10 @@ erl_grow_estack(ErtsEStack* s, Uint need)
 	new_size = ((need / old_size) + 2) * old_size;
 
     if (s->start != s->edefault) {
-	s->start = erts_realloc(s->alloc_type, s->start,
+	s->start = (Eterm *) erts_realloc(s->alloc_type, s->start,
 				new_size*sizeof(Eterm));
     } else {
-	Eterm* new_ptr = erts_alloc(s->alloc_type, new_size*sizeof(Eterm));
+	Eterm* new_ptr = (Eterm *) erts_alloc(s->alloc_type, new_size*sizeof(Eterm));
 	sys_memcpy(new_ptr, s->start, old_size*sizeof(Eterm));
 	s->start = new_ptr;
     }
@@ -186,10 +186,10 @@ erl_grow_wstack(ErtsWStack* s, Uint need)
 	new_size = ((need / old_size) + 2) * old_size;
 
     if (s->wstart != s->wdefault) {
-	s->wstart = erts_realloc(s->alloc_type, s->wstart,
+	s->wstart = (UWord *) erts_realloc(s->alloc_type, s->wstart,
 				 new_size*sizeof(UWord));
     } else {
-	UWord* new_ptr = erts_alloc(s->alloc_type, new_size*sizeof(UWord));
+	UWord* new_ptr = (UWord *) erts_alloc(s->alloc_type, new_size*sizeof(UWord));
 	sys_memcpy(new_ptr, s->wstart, old_size*sizeof(UWord));
 	s->wstart = new_ptr;
     }
@@ -213,9 +213,9 @@ erl_grow_pstack(ErtsPStack* s, void* default_pstack, unsigned need_bytes)
 	new_size = ((need_bytes / old_size) + 2) * old_size;
 
     if (s->pstart != default_pstack) {
-	s->pstart = erts_realloc(s->alloc_type, s->pstart, new_size);
+	s->pstart = (byte *) erts_realloc(s->alloc_type, s->pstart, new_size);
     } else {
-	byte* new_ptr = erts_alloc(s->alloc_type, new_size);
+	byte* new_ptr = (byte *) erts_alloc(s->alloc_type, new_size);
 	sys_memcpy(new_ptr, s->pstart, old_size);
 	s->pstart = new_ptr;
     }
@@ -234,7 +234,7 @@ erl_grow_equeue(ErtsEQueue* q, Eterm* default_equeue)
     Uint new_size = old_size * 2;
     Uint first_part = (q->end - q->front);
     Uint second_part = (q->back - q->start);
-    Eterm* new_ptr = erts_alloc(q->alloc_type, new_size*sizeof(Eterm));
+    Eterm* new_ptr = (Eterm *) erts_alloc(q->alloc_type, new_size*sizeof(Eterm));
     ASSERT(q->back == q->front);   // of course the queue is full now!
     if (first_part > 0)
       sys_memcpy(new_ptr, q->front, first_part*sizeof(Eterm));
@@ -305,7 +305,7 @@ static const struct {
 		{ERTS_I64_LITERAL(0xf0), 4},
 		{ERTS_I64_LITERAL(0xff00), 8},
 		{ERTS_I64_LITERAL(0xffff0000), 16},
-		{ERTS_I64_LITERAL(0xffffffff00000000), 32}};
+		{(Sint64) ERTS_I64_LITERAL(0xffffffff00000000U), 32}};
 
 static ERTS_INLINE int
 fit_in_bits(Sint64 value, int start)
@@ -2411,8 +2411,8 @@ erts_dsprintf_buf_t *
 erts_create_logger_dsbuf(void)
 {
     erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_logger_dsbuf);
-    erts_dsprintf_buf_t *dsbufp = erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
-					     sizeof(erts_dsprintf_buf_t));
+    erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)
+        erts_alloc(ERTS_ALC_T_LOGGER_DSBUF, sizeof(erts_dsprintf_buf_t));
     sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
     dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_LOGGER_DSBUF,
 				      LOGGER_DSBUF_INC_SZ);
@@ -2548,8 +2548,8 @@ erts_create_tmp_dsbuf(Uint size)
 {
     Uint init_size = size ? size : TMP_DSBUF_INC_SZ;
     erts_dsprintf_buf_t init = ERTS_DSPRINTF_BUF_INITER(grow_tmp_dsbuf);
-    erts_dsprintf_buf_t *dsbufp = erts_alloc(ERTS_ALC_T_TMP_DSBUF,
-					     sizeof(erts_dsprintf_buf_t));
+    erts_dsprintf_buf_t *dsbufp = (erts_dsprintf_buf_t *)
+            erts_alloc(ERTS_ALC_T_TMP_DSBUF, sizeof(erts_dsprintf_buf_t));
     sys_memcpy((void *) dsbufp, (void *) &init, sizeof(erts_dsprintf_buf_t));
     dsbufp->str = (char *) erts_alloc(ERTS_ALC_T_TMP_DSBUF, init_size);
     dsbufp->str[0] = '\0';
@@ -4551,13 +4551,13 @@ char *
 erts_read_env(char *key)
 {
     size_t value_len = 256;
-    char *value = erts_alloc(ERTS_ALC_T_TMP, value_len);
+    char *value = (char *) erts_alloc(ERTS_ALC_T_TMP, value_len);
     int res;
     while (1) {
 	res = erts_sys_getenv_raw(key, value, &value_len);
 	if (res <= 0)
 	    break;
-	value = erts_realloc(ERTS_ALC_T_TMP, value, value_len);
+	value = (char *) erts_realloc(ERTS_ALC_T_TMP, value, value_len);
     }
     if (res != 0) {
 	erts_free(ERTS_ALC_T_TMP, value);

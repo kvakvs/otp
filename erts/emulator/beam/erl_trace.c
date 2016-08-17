@@ -1593,12 +1593,12 @@ monitor_long_gc(Process *p, Uint time) {
     };
     UWord values[] = {
 	time,
-	OLD_HEAP(p) ? OLD_HEND(p) - OLD_HEAP(p) : nullptr,
+        OLD_HEAP(p) ? (UWord)(OLD_HEND(p) - OLD_HEAP(p)) : 0,
 	HEAP_SIZE(p),
 	MBUF_SIZE(p),
-	STACK_START(p) - p->stop,
-	OLD_HEAP(p) ? OLD_HTOP(p) - OLD_HEAP(p) : 0,
-	HEAP_TOP(p) - HEAP_START(p)
+        (UWord)(STACK_START(p) - p->stop),
+	OLD_HEAP(p) ? (UWord)(OLD_HTOP(p) - OLD_HEAP(p)) : 0,
+        (UWord)(HEAP_TOP(p) - HEAP_START(p))
     };
 #ifdef DEBUG
     Eterm *hp_end;
@@ -1666,12 +1666,12 @@ monitor_large_heap(Process *p) {
 	am_heap_size
     };
     UWord values[] = {
-	OLD_HEAP(p) ? OLD_HEND(p) - OLD_HEAP(p) : 0,
+	OLD_HEAP(p) ? (UWord) (OLD_HEND(p) - OLD_HEAP(p)) : 0,
 	HEAP_SIZE(p),
 	MBUF_SIZE(p),
-	STACK_START(p) - p->stop,
-	OLD_HEAP(p) ? OLD_HTOP(p) - OLD_HEAP(p) : 0,
-	HEAP_TOP(p) - HEAP_START(p)
+        (UWord) (STACK_START(p) - p->stop),
+	OLD_HEAP(p) ? (UWord) (OLD_HTOP(p) - OLD_HEAP(p)) : 0,
+        (UWord) (HEAP_TOP(p) - HEAP_START(p))
     };
 #ifdef DEBUG
     Eterm *hp_end;
@@ -1930,7 +1930,7 @@ trace_port_receive(Port *t_p, Eterm caller, Eterm what, ...)
                 int i;
                 va_end(args);
                 if ((6 + evp->vsize * (2+PROC_BIN_SIZE+ERL_SUB_BIN_SIZE)) > LOCAL_HEAP_SIZE) {
-                    hp = erts_alloc(ERTS_ALC_T_TMP,
+                    hp = (Eterm *)erts_alloc(ERTS_ALC_T_TMP,
                                     (6 + evp->vsize * (2+PROC_BIN_SIZE+ERL_SUB_BIN_SIZE)) * sizeof(Eterm));
                     orig_hp = hp;
                 }
@@ -2749,7 +2749,7 @@ load_tracer_nif(const ErtsTracer tracer)
     }
 
     erts_smp_rwmtx_rwlock(&tracer_mtx);
-    tnif = hash_put(tracer_hash, &tnif_tmpl);
+    tnif = (ErtsTracerNif *) hash_put(tracer_hash, &tnif_tmpl);
     erts_smp_rwmtx_rwunlock(&tracer_mtx);
 
     return tnif;
@@ -2762,7 +2762,7 @@ lookup_tracer_nif(const ErtsTracer tracer)
     ErtsTracerNif *tnif;
     tnif_tmpl.module = ERTS_TRACER_MODULE(tracer);
     erts_smp_rwmtx_rlock(&tracer_mtx);
-    if ((tnif = hash_get(tracer_hash, &tnif_tmpl)) == NULL) {
+    if ((tnif = (ErtsTracerNif *) hash_get(tracer_hash, &tnif_tmpl)) == NULL) {
         erts_smp_rwmtx_runlock(&tracer_mtx);
         tnif = load_tracer_nif(tracer);
         ASSERT(!tnif || tnif->nif_mod);
@@ -3065,7 +3065,7 @@ static void free_tracer(void *p)
     if (is_immed(ERTS_TRACER_STATE(tracer))) {
         erts_free(ERTS_ALC_T_HEAP_FRAG, ptr_val(tracer));
     } else {
-        ErlHeapFragment *hf = (void*)((char*)(ptr_val(tracer)) - offsetof(ErlHeapFragment, mem));
+        ErlHeapFragment *hf = (ErlHeapFragment *)((char*)(ptr_val(tracer)) - offsetof(ErlHeapFragment, mem));
         free_message_buffer(hf);
     }
 }
@@ -3110,7 +3110,7 @@ erts_tracer_update(ErtsTracer *tracer, const ErtsTracer new_tracer)
         UWord size = 2 * sizeof(Eterm) + sizeof(ErtsThrPrgrLaterOp);
         ASSERT(is_list(*tracer));
         if (is_not_immed(ERTS_TRACER_STATE(*tracer))) {
-            hf = (void*)(((char*)(ptr_val(*tracer)) - offsetof(ErlHeapFragment, mem)));
+            hf = (ErlHeapFragment *) (((char*)(ptr_val(*tracer)) - offsetof(ErlHeapFragment, mem)));
             offs = hf->used_size;
             size = hf->alloc_size * sizeof(Eterm) + sizeof(ErlHeapFragment);
             ASSERT(offs == size_object(*tracer));
@@ -3133,7 +3133,7 @@ erts_tracer_update(ErtsTracer *tracer, const ErtsTracer new_tracer)
         /* If tracer state is an immediate we only allocate a 2 Eterm heap.
            Not sure if it is worth it, we save 4 words (sizeof(ErlHeapFragment))
            per tracer. */
-        Eterm *hp = erts_alloc(ERTS_ALC_T_HEAP_FRAG,
+        Eterm *hp = (Eterm *) erts_alloc(ERTS_ALC_T_HEAP_FRAG,
                                2*sizeof(Eterm) + sizeof(ErtsThrPrgrLaterOp));
         *tracer = CONS(hp, ERTS_TRACER_MODULE(new_tracer),
                        ERTS_TRACER_STATE(new_tracer));
@@ -3204,7 +3204,7 @@ static HashValue tracer_hash_fun(void* obj)
 
 static void *tracer_alloc_fun(void* tmpl)
 {
-    ErtsTracerNif *obj = erts_alloc(ERTS_ALC_T_TRACER_NIF,
+    ErtsTracerNif *obj = (ErtsTracerNif *) erts_alloc(ERTS_ALC_T_TRACER_NIF,
                                     sizeof(ErtsTracerNif) +
                                     sizeof(ErtsThrPrgrLaterOp));
     memcpy(obj, tmpl, sizeof(*obj));
@@ -3218,7 +3218,7 @@ static void tracer_free_fun_cb(void* obj)
 
 static void tracer_free_fun(void* obj)
 {
-    ErtsTracerNif *tnif = obj;
+    ErtsTracerNif *tnif = (ErtsTracerNif *) obj;
     erts_schedule_thr_prgr_later_op(
         tracer_free_fun_cb, obj,
         (ErtsThrPrgrLaterOp*)(tnif + 1));
