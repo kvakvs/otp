@@ -78,11 +78,12 @@ typedef struct {
     int num_roots;		/* Number of root arrays. */
 } Rootset;
 
-/* Two different types to avoid confusing argument order */
+typedef struct { Uint words; } Words;
+
+/* Different types to avoid confusing argument order */
 typedef struct { const char *start; Uint bytes; } MatureArea;
 typedef struct { const char *start; Uint bytes; } OldHeapArea;
 typedef struct { const char *start; Uint bytes; } YoungHeapArea;
-typedef struct { Uint words; } Words;
 typedef struct { char *start; Uint bytes; } LiteralArea;
 typedef struct {
     Eterm *start;
@@ -385,13 +386,16 @@ static void ERTS_FORCE_INLINE
 generic_roots_sweep(Rootset *rs,
                     Eterm **primary_topp,   /* in out */
                     Eterm **secondary_topp, /* in out */
-                    SweepOp primary_op, SweepOp secondary_op,
+                    const SweepOp primary_op,
+                    const SweepOp secondary_op,
                     OldHeapArea oh, MatureArea mature)
 {
     Roots *roots = rs->roots;
     int n = rs->num_roots;
     Eterm *primary_top = *primary_topp;
     Eterm *secondary_top = secondary_topp ? *secondary_topp : NULL;
+    const int is_sweeping_literals = (primary_op == SweepOp_Literal ||
+                                      secondary_op == SweepOp_Literal);
 
     while (n--) {
         Eterm* g_ptr = roots->v;
@@ -405,7 +409,9 @@ generic_roots_sweep(Rootset *rs,
             switch (primary_tag(gval)) {
                 case TAG_PRIMARY_BOXED: {
                     Eterm *ptr = boxed_val(gval);
-                    const int is_lit = erts_is_literal(gval, ptr);
+                    /* For literals sweep this has no use anyway */
+                    const int is_lit = is_sweeping_literals
+                                       ? 0 : erts_is_literal(gval, ptr);
                     val = *ptr;
                     if (IS_MOVED_BOXED(val)) {
                         ASSERT(is_boxed(val));
@@ -428,7 +434,9 @@ generic_roots_sweep(Rootset *rs,
 
                 case TAG_PRIMARY_LIST: {
                     Eterm *ptr = list_val(gval);
-                    const int is_lit = erts_is_literal(gval, ptr);
+                    /* For literals sweep this has no use anyway */
+                    const int is_lit = is_sweeping_literals
+                                       ? 0 : erts_is_literal(gval, ptr);
                     val = *ptr;
                     if (IS_MOVED_CONS(val)) {
                         *g_ptr++ = ptr[1];

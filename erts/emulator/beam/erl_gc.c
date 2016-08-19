@@ -833,29 +833,35 @@ static ERTS_INLINE void offset_nstack(Process* p, Sint offs,
 static Heap ERTS_INLINE
 gclit_grow_heap(Process *p, Heap h, Words need)
 {
-    Eterm *new_heap;
+    Eterm *grown;
     Sint offs;
+    ASSERT(need.words > h.words);
 
-    if (h.words >= need.words) {
-        return h; /* Nothing to do */
+    need.words = erts_next_heap_size(need.words, 0);
+    grown = (Eterm *) ERTS_HEAP_REALLOC(ERTS_ALC_T_OLD_HEAP,
+                                        (void *) h.start,
+                                        sizeof(Eterm) * h.words,
+                                        sizeof(Eterm) * need.words);
+
+    offs = (char *)grown - (char *)h.start;
+    if (offs != 0) { /* Move happened */
+        LiteralArea area = { (char *) h.start,
+                             (char *) h.top - (char *) h.start };
+        erts_printf("erts_gclit_grow %T: moved by %i\r\n", p->common.id, offs);
+
+        offset_heap(grown, h.words, offs, area.start, area.bytes);
+        offset_heap(HEAP_START(p), HEAP_TOP(p) - HEAP_START(p), offs,
+                    area.start, area.bytes);
+        offset_rootset(p, offs, area.start, area.bytes,
+                       p->arg_reg, (int) p->arity);
+
+        h.top = grown + (h.top - h.start);
+        h.start = grown;
+    } else {
+        erts_printf("erts_gclit_grow %T: not moved\r\n", p->common.id);
     }
-    new_heap = (Eterm *) ERTS_HEAP_REALLOC(ERTS_ALC_T_HEAP,
-                                           (void *) h.start,
-                                           sizeof(Eterm) * h.words,
-                                           sizeof(Eterm) * need.words);
-
-    h.end = new_heap + need.words;
-    if ((offs = new_heap - h.start) != 0) { /* Move happened */
-        char *area = (char *) h.start;
-        Uint area_size = (char *) h.top - area;
-
-        offset_heap(new_heap, h.words, offs, area, area_size);
-
-        // TODO: Is usage of arg_reg/arity correct here?
-        offset_rootset(p, offs, area, area_size, p->arg_reg, p->arity);
-        h.top = new_heap + h.words;
-        h.start = new_heap;
-    }
+    h.end = grown + need.words;
+    h.words = need.words;
 
 //#ifdef USE_VM_PROBES
 //    if (DTRACE_ENABLED(process_heap_grow)) {
@@ -866,14 +872,11 @@ gclit_grow_heap(Process *p, Heap h, Words need)
 //    }
 //#endif
 
-    h.words = need.words;
     return h;
 }
 
 static Heap ERTS_INLINE
-gclit_make_old_heap(Words need,
-                    Heap h)
-{
+gclit_make_old_heap(Words need, Heap h) {
     h.words = erts_next_heap_size(need.words, 0);
     h.start = h.top = (Eterm *) ERTS_HEAP_ALLOC(ERTS_ALC_T_OLD_HEAP,
                                                 sizeof(Eterm) * h.words);
@@ -890,24 +893,25 @@ static LiteralArea ERTS_INLINE
 gclit_copy_literals(Process *p, const Eterm *literals, Words lit_size,
                     OffheapHeader **poffh)
 {
-    Uint bytes = lit_size.words * sizeof(Eterm);
-    LiteralArea lit_copy = {(char *) erts_alloc(ERTS_ALC_T_TMP, bytes),
-                            bytes};
-    Sint offs;
+    Uint lit_size_bytes = lit_size.words * sizeof(Eterm);
+    LiteralArea lit_copy = {(char *) erts_alloc(ERTS_ALC_T_TMP, lit_size_bytes),
+                            lit_size_bytes};
+    Sint offs_bytes = lit_copy.start - (char *) literals;
 
-    sys_memcpy(lit_copy.start, literals, bytes);
+    sys_memcpy(lit_copy.start, literals, lit_size_bytes);
 
-    offs = (Sint) (lit_copy.start - (char *) literals);
-
-    offset_heap((Eterm *) lit_copy.start, lit_size.words, offs,
-                (char *) literals, bytes);
-    offset_heap(HEAP_START(p), HEAP_TOP(p) - HEAP_START(p), offs,
-                (char *) literals, bytes);
-    offset_rootset(p, offs, (char *) literals, bytes,
+    offset_heap((Eterm *) lit_copy.start, lit_size.words,
+                offs_bytes,
+                (char *) literals, lit_size_bytes);
+    offset_heap(HEAP_START(p), HEAP_TOP(p) - HEAP_START(p),
+                offs_bytes,
+                (char *) literals, lit_size_bytes);
+    offset_rootset(p, offs_bytes,
+                   (char *) literals, lit_size_bytes,
                    p->arg_reg, (int) p->arity);
 
     if (*poffh) {
-        *poffh = (OffheapHeader *) ((Eterm *) (void *) (*poffh) + offs);
+        *poffh = (OffheapHeader *) ((Eterm *) (void *) (*poffh) + offs_bytes);
     }
 
     return lit_copy;
@@ -930,7 +934,6 @@ static void gclit_sweep_mso(Process *p, OffheapHeader *offh) {
     /*
      * Sweep through all binaries in the temporary literal area.
      */
-
     while (offh) {
         if (IS_MOVED_BOXED(offh->thing_word)) {
             Binary* bptr;
@@ -941,9 +944,8 @@ static void gclit_sweep_mso(Process *p, OffheapHeader *offh) {
             bptr = ((ProcBin*)ptr)->val;
 
             /*
-             * This binary has been copied to the heap.
-             * We must increment its reference count and
-             * link it into the MSO list for the process.
+             * This binary has been copied to the heap. We must increment its
+             * reference count and link it into the MSO list for the process.
              */
 
             erts_refc_inc(&bptr->refc, 1);
@@ -964,16 +966,13 @@ erts_garbage_collect_literals(Process *p, Eterm *literals,
                               OffheapHeader *offh)
 {
     Words lit_size = { byte_lit_size / sizeof(Eterm) };
-    Heap old_heap = { OLD_HEAP(p),  /* start*/
-                      OLD_HTOP(p),  /* top */
-                      OLD_HEND(p),  /* end */
-                      (Uint)(OLD_HEND(p) - OLD_HEAP(p)) /* words */ };
+    Heap old_heap;
     Rootset rootset;            /* Rootset for GC (stack, dictionary, etc). */
     LiteralArea lit_copy;
 #ifdef DEBUG
     const Eterm *old_htop0 = old_heap.top; /* original old.top for asserts */
 #endif
-    erts_printf("erts_gc_literals\r\n");
+    erts_printf("erts_gc_literals %T\r\n", p->common.id);
 
     if (p->flags & F_DISABLE_GC) {
         return;
@@ -988,16 +987,28 @@ erts_garbage_collect_literals(Process *p, Eterm *literals,
      * There may or may not be old heap at this moment. We check if it exists,
      * and if it is large enough. If too small - we grow it and relocate data.
      */
+    old_heap.start = OLD_HEAP(p);
+    old_heap.top = OLD_HTOP(p);
+    old_heap.end = OLD_HEND(p);
+    old_heap.words = (Uint)(OLD_HEND(p) - OLD_HEAP(p));
 
-    if (p->old_heap != NULL) {
-        /* Ensure that old heap is large enough to fit literals too, or grow */
-        Words need_old = {(p->old_htop - p->old_heap) + lit_size.words};
-        need_old.words = erts_next_heap_size(need_old.words, 0);
+    if (old_heap.start != NULL) {
+        /* Ensure that old heap is large enough to fit literals too, or grow
+         * TODO: Do we need a larger margin here when growing oldheap?
+         */
+        Words need_old = {old_heap.words + lit_size.words};
 
-        /* Grow/relocate if needed */
-        old_heap = gclit_grow_heap(p, old_heap, need_old);
+        if (old_heap.words < need_old.words) { /* Grow/relocate if needed */
+            erts_printf("erts_gclit %T: grow to %u\r\n",
+                        p->common.id, need_old.words);
+            old_heap = gclit_grow_heap(p, old_heap, need_old);
+        } else {
+            erts_printf("erts_gclit_grow %T: no action, have %u > need %u\r\n",
+                        p->common.id, old_heap.words, need_old.words);
+        }
     } else {
         /* Allocate big enough old-heap and use it */
+        erts_printf("erts_gclit %T: make old %u\r\n", p->common.id, lit_size.words);
         old_heap = gclit_make_old_heap(lit_size, old_heap);
     }
 
@@ -1015,21 +1026,20 @@ erts_garbage_collect_literals(Process *p, Eterm *literals,
      */
 
     setup_rootset(p, p->arg_reg, (int)p->arity, &rootset);
-
     old_heap.top = sweep_literals_nstack(p, old_heap.top,
                                          lit_copy.start, lit_copy.bytes);
     {
-        OldHeapArea oh = {lit_copy.start, lit_copy.bytes};
+        OldHeapArea lit_copy1 = {lit_copy.start, lit_copy.bytes};
         MatureArea mature_null = {NULL, 0};
         /*
          * Scan rootset, all literals which belong to 'lit_copy' will
-         * go to old_heap's top (secondary match)
+         * go to old_heap's top (primary match)
          */
         generic_roots_sweep(&rootset,
                             &old_heap.top, NULL, /* in-out in-out */
                             SweepOp_Literal,     /* primary */
                             SweepOp_None,        /* secondary */
-                            oh, mature_null);
+                            lit_copy1, mature_null);
     }
     ASSERT(is_between(old_heap.top, old_htop0, old_heap.end));
     cleanup_rootset(&rootset);
@@ -1041,17 +1051,21 @@ erts_garbage_collect_literals(Process *p, Eterm *literals,
     {
         OldHeapArea oh_null = {NULL, 0}; /* dummy value */
 
-        /* Mature SweepOp means only terms that are located in 'area' will be
-         * moved, and we passed it as 'mature' arg to generic sweep.
+        /* Mature SweepOp means only terms that are located in 'lit_copy'
+         * will be moved, and we passed it as 'mature' arg to generic sweep.
          *
          * First sweep young from-heap and evict all literals (from 'area')
          */
-        generic_sweep(p->heap, &p->htop, /* in: htop will not be modified */
+#if DEBUG
+        Eterm *htop0 = HEAP_TOP(p); /* Ensure heap top won't be changed */
+#endif
+        generic_sweep(HEAP_START(p), & HEAP_TOP(p),  /* in only */
                       old_heap.start, &old_heap.top, /* in-out */
                       SweepOp_None,
                       SweepOp_Mature,
                       oh_null,
                       lit_copy.start, lit_copy.bytes);
+        ASSERT(HEAP_TOP(p) == htop0); /* Ensure heap top haven't changed */
 
         /* Sweep old from-heap and do the same - evict literals */
         generic_sweep(old_heap.start, &old_heap.top, /* primary in-out */
