@@ -82,6 +82,7 @@ typedef struct {
 typedef struct { const char *start; Uint bytes; } MatureArea;
 typedef struct { const char *start; Uint bytes; } OldHeapArea;
 typedef struct { const char *start; Uint bytes; } YoungHeapArea;
+typedef struct { char *start; Uint bytes; } LiteralArea;
 
 #ifdef DEBUG
 static void debug_sweep_check(const Eterm *hp, const Eterm *hend);

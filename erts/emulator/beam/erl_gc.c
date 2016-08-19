@@ -830,12 +830,66 @@ static ERTS_INLINE void offset_nstack(Process* p, Sint offs,
 
 #endif /* HIPE */
 
+typedef struct {
+    Eterm *start;
+    Eterm *top;
+    Eterm *end;
+} GrowHeap;
+
+static GrowHeap ERTS_INLINE
+gclit_grow_old_heap(Process *p, GrowHeap h, Uint need_words)
+{
+    Eterm *heap_copy;
+    Uint have_words = (Uint)(h.end - h.start);
+    ASSERT(need_words > have_words);
+
+    need_words = erts_next_heap_size(need_words, 0);
+    heap_copy = (Eterm *) ERTS_HEAP_REALLOC(ERTS_ALC_T_OLD_HEAP,
+                                            (void *) h.start,
+                                            sizeof(Eterm) * have_words,
+                                            sizeof(Eterm) * need_words);
+
+    if (heap_copy != h.start) { /* Move happened */
+        const Sint offs_words = heap_copy - h.start;
+        LiteralArea area = { (char *) h.start,
+                             (char *) h.end - (char *) h.start };
+        const Uint used_words = h.top - h.start;
+
+        erts_printf("erts_gclit_grow %T: moved by %i\r\n", p->common.id, offs_words);
+
+        offset_heap(heap_copy, used_words, offs_words, area.start, area.bytes);
+        // ASSUME NEW HEAP CANT REFER TO OLD
+//        offset_heap(HEAP_START(p), HEAP_TOP(p) - HEAP_START(p), offs_words,
+//                    area.start, area.bytes);
+        offset_rootset(p, offs_words, area.start, area.bytes,
+                       p->arg_reg, (int) p->arity);
+
+        h.top   = heap_copy + used_words;
+        h.start = heap_copy;
+        h.end   = heap_copy + need_words;
+    } else {
+        erts_printf("erts_gclit_grow %T: not moved\r\n", p->common.id);
+        h.end = heap_copy + need_words;
+    }
+
+//#ifdef USE_VM_PROBES
+//    if (DTRACE_ENABLED(process_heap_grow)) {
+//        DTRACE_CHARBUF(pidbuf, DTRACE_TERM_BUF_SIZE);
+//
+//        dtrace_proc_str(p, pidbuf);
+//        DTRACE3(process_heap_grow, pidbuf, HEAP_SIZE(p), new_sz);
+//    }
+//#endif
+
+    return h;
+}
+
 void
 erts_garbage_collect_literals(Process* p, Eterm* literals,
 			      Uint byte_lit_size,
 			      OffheapHeader* oh)
 {
-    Uint lit_size = byte_lit_size / sizeof(Eterm);
+    Uint lit_size_words = byte_lit_size / sizeof(Eterm);
     Uint old_heap_size;
     Eterm* temp_lit;
     Sint offs;
@@ -863,11 +917,24 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
      */
 
     if (OLD_HEAP(p) == NULL) {
-        old_heap_size = erts_next_heap_size(lit_size, 0);
+        old_heap_size = erts_next_heap_size(lit_size_words, 0);
         OLD_HEAP(p) = OLD_HTOP(p) 
                 = (Eterm *) ERTS_HEAP_ALLOC(ERTS_ALC_T_OLD_HEAP,
                                             sizeof(Eterm) * old_heap_size);
         OLD_HEND(p) = OLD_HEAP(p) + old_heap_size;
+    } else {
+        /* Possibly grow the old heap to fit literals */
+        Uint free_words = OLD_HEND(p) - OLD_HTOP(p);
+        if (free_words <= lit_size_words) {
+            Uint used_words = OLD_HTOP(p) - OLD_HEAP(p);
+            GrowHeap h = {OLD_HEAP(p), OLD_HTOP(p), OLD_HEND(p)};
+
+            h = gclit_grow_old_heap(p, h, lit_size_words + used_words);
+
+            OLD_HEAP(p) = h.start;
+            OLD_HTOP(p) = h.top;
+            OLD_HEND(p) = h.end;
+        }
     }
     
     /*
@@ -878,9 +945,12 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
     temp_lit = (Eterm *) erts_alloc(ERTS_ALC_T_TMP, byte_lit_size);
     sys_memcpy(temp_lit, literals, byte_lit_size);
     offs = temp_lit - literals;
-    offset_heap(temp_lit, lit_size, offs, (char *) literals, byte_lit_size);
-    offset_heap(HEAP_START(p), HEAP_TOP(p) - HEAP_START(p), offs, (char *) literals, byte_lit_size);
-    offset_rootset(p, offs, (char *) literals, byte_lit_size, p->arg_reg, p->arity);
+    offset_heap(temp_lit, lit_size_words, offs,
+                (char *) literals, byte_lit_size);
+    offset_heap(HEAP_START(p), HEAP_TOP(p) - HEAP_START(p), offs,
+                (char *) literals, byte_lit_size);
+    offset_rootset(p, offs, (char *) literals, byte_lit_size,
+                   p->arg_reg, p->arity);
     if (oh) {
 	oh = (OffheapHeader *) ((Eterm *)(void *) oh + offs);
     }
@@ -1017,6 +1087,7 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
      * Restore status.
      */
     erts_smp_atomic32_read_band_nob(&p->state, ~ERTS_PSFLG_GC);
+    erts_printf("e_gc_lit: done\r\n");
 }
 
 static int
@@ -1194,6 +1265,8 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 
     VERBOSE(DEBUG_SHCOPY, ("[pid=%T] MINOR GC: %p %p %p %p\n", p->common.id,
             HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p)));
+//    erts_printf("[pid=%T] MINOR GC: %p %p %p %p\r\n", p->common.id,
+//            HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p));
 
     n_htop = n_heap = (Eterm*) ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP,
 					       sizeof(Eterm)*new_sz);
@@ -1340,6 +1413,8 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 
     VERBOSE(DEBUG_SHCOPY, ("[pid=%T] MAJOR GC: %p %p %p %p\n", p->common.id,
                            HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p)));
+//    erts_printf("[pid=%T] MAJOR GC: %p %p %p %p\r\n", p->common.id,
+//            HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p));
 
     debug_scan_heap(HEAP_START(p), HEAP_TOP(p), OLD_HEAP(p), OLD_HTOP(p));
 
@@ -2209,7 +2284,7 @@ grow_new_heap(Process *p, Uint new_sz, Eterm* objv, int nobj)
     } else {
 	char* area = (char *) HEAP_START(p);
 	Uint area_size = (char *) HEAP_TOP(p) - area;
-        Eterm* prev_stop = STACK_TOP(p);
+        Eterm* prev_stop = STACK_TOP(p); /* this value never used */
 
         offset_heap(new_heap, heap_size, offs, area, area_size);
 
