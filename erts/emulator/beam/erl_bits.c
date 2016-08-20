@@ -92,7 +92,7 @@ void
 erts_bits_init_state(ERL_BITS_PROTO_0)
 {
     byte_buf_len = 1;
-    byte_buf = erts_alloc(ERTS_ALC_T_BITS_BUF, byte_buf_len);
+    byte_buf = (byte *) erts_alloc(ERTS_ALC_T_BITS_BUF, byte_buf_len);
 
     erts_bin_offset = 0;
 }
@@ -331,7 +331,7 @@ erts_bs_get_integer_2(Process *p, Uint num_bits, unsigned flags, ErlBinMatchBuff
     if (bytes <= sizeof bigbuf) {
 	LSB = bigbuf;
     } else {
-	LSB = erts_alloc(ERTS_ALC_T_TMP, bytes);
+	LSB = (byte *) erts_alloc(ERTS_ALC_T_TMP, bytes);
     }
     MSB = LSB + bytes - 1;
 
@@ -758,7 +758,7 @@ ERTS_INLINE need_byte_buf(ERL_BITS_PROTO_1(int need))
     if (byte_buf_len < need) {
 	erts_smp_atomic_add_nob(&bits_bufs_size, need - byte_buf_len);
 	byte_buf_len = need;
-	byte_buf = erts_realloc(ERTS_ALC_T_BITS_BUF, byte_buf, byte_buf_len);
+	byte_buf = (byte *) erts_realloc(ERTS_ALC_T_BITS_BUF, byte_buf, byte_buf_len);
     }
 }
 

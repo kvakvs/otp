@@ -125,7 +125,7 @@ static void cleanup_restart_context(RestartContext *rc)
 
 static void cleanup_restart_context_bin(Binary *bp)
 {
-    RestartContext *rc = ERTS_MAGIC_BIN_DATA(bp);
+    RestartContext *rc = (RestartContext *) ERTS_MAGIC_BIN_DATA(bp);
     cleanup_restart_context(rc);
 }
 
@@ -145,7 +145,7 @@ static Eterm make_magic_bin_for_restart(Process *p, RestartContext *rc)
 {
     Binary *mbp = erts_create_magic_binary(sizeof(RestartContext),
 					   cleanup_restart_context_bin);
-    RestartContext *restartp = ERTS_MAGIC_BIN_DATA(mbp);
+    RestartContext *restartp = (RestartContext *) ERTS_MAGIC_BIN_DATA(mbp);
     Eterm *hp;
     memcpy(restartp,rc,sizeof(RestartContext));
     hp = HAlloc(p, PROC_BIN_SIZE);
@@ -1132,7 +1132,7 @@ BIF_RETTYPE unicode_characters_to_list_2(BIF_ALIST_2)
     if (need < 0) {
 	BIF_ERROR(BIF_P,BADARG);
     }
-    bytes = alloc_restart(need);
+    bytes = (byte *) alloc_restart(need);
     cost_to_proc(BIF_P, simple_loops_to_common(cost_of_utf8_need)); 
     left = allowed_iterations(BIF_P) - 
 	simple_loops_to_common(cost_of_utf8_need);

@@ -338,7 +338,7 @@ thr_create_prepare(void)
 {
     erts_thr_create_data_t *tcdp;
 
-    tcdp = erts_alloc(ERTS_ALC_T_TMP, sizeof(erts_thr_create_data_t));
+    tcdp = (erts_thr_create_data_t *) erts_alloc(ERTS_ALC_T_TMP, sizeof(erts_thr_create_data_t));
 
 #ifdef ERTS_THR_HAVE_SIG_FUNCS
     erts_thr_sigmask(SIG_BLOCK, &thr_create_sigmask, &tcdp->saved_sigmask);
@@ -832,11 +832,7 @@ os_flavor(char* namebuf, 	/* Where to return the name. */
 }
 
 void
-os_version(pMajor, pMinor, pBuild)
-int* pMajor;			/* Pointer to major version. */
-int* pMinor;			/* Pointer to minor version. */
-int* pBuild;			/* Pointer to build number. */
-{
+os_version(int *pMajor, int *pMinor, int *pBuild) {
     struct utsname uts;		/* Information about the system. */
     char* release;		/* Pointer to the release string:
 				 * X.Y or X.Y.Z.
@@ -943,7 +939,7 @@ erts_sys_putenv(char *key, char *value)
 #ifdef HAVE_COPYING_PUTENV
     env = erts_alloc(ERTS_ALC_T_TMP, need);
 #else
-    env = erts_alloc(ERTS_ALC_T_PUTENV_STR, need);
+    env = (char *) erts_alloc(ERTS_ALC_T_PUTENV_STR, need);
     erts_smp_atomic_add_nob(&sys_misc_mem_sz, need);
 #endif
     strcpy(env,key);
@@ -1145,8 +1141,7 @@ void sys_preload_end(Preload* p)
    Here we assume that all schedulers are stopped so that erl_poll
    does not interfere with the select below.
 */
-int sys_get_key(fd)
-int fd;
+int sys_get_key(int fd)
 {
     int c, ret;
     unsigned char rbuf[64];

@@ -12222,7 +12222,7 @@ typedef struct {
 
 static void doit_exit_monitor(ErtsMonitor *mon, void *vpcontext)
 {
-    ExitMonitorContext *pcontext = vpcontext;
+    ExitMonitorContext *pcontext = (ExitMonitorContext *) vpcontext;
     DistEntry *dep;
     ErtsMonitor *rmon;
 
@@ -12386,7 +12386,7 @@ typedef struct {
 
 static void doit_exit_link(ErtsLink *lnk, void *vpcontext)
 {
-    ExitLinkContext *pcontext = vpcontext;
+    ExitLinkContext *pcontext = (ExitLinkContext *) vpcontext;
     /* Unpack context, it's readonly */
     Process *p = pcontext->p;
     Eterm reason = pcontext->reason;

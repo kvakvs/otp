@@ -347,7 +347,7 @@ int erts_fit_in_bits_uint(Uint value)
 }
 
 int
-erts_print(int to, void *arg, char *format, ...)
+erts_print(int to, void *arg, const char *format, ...)
 {
     int res;
     va_list arg_list;
@@ -404,7 +404,7 @@ erts_putc(int to, void *arg, char c)
 \*                                                                           */
 
 Eterm
-erts_bld_atom(Uint **hpp, Uint *szp, char *str)
+erts_bld_atom(Uint **hpp, Uint *szp, const char *str)
 {
     if (hpp)
 	return erts_atom_put((byte *) str, sys_strlen(str), ERTS_ATOM_ENC_LATIN1, 1);

@@ -94,8 +94,7 @@ static Eterm address_to_term(const void *address, Process *p)
 BIF_RETTYPE hipe_bifs_write_u8_2(BIF_ALIST_2)
 {
     unsigned char *address;
-
-    address = term_to_address(BIF_ARG_1);
+    address = (unsigned char *) term_to_address(BIF_ARG_1);
     if (!address || is_not_small(BIF_ARG_2))
 	BIF_ERROR(BIF_P, BADARG);
     *address = unsigned_val(BIF_ARG_2);
@@ -107,7 +106,7 @@ BIF_RETTYPE hipe_bifs_write_u32_2(BIF_ALIST_2)
     Uint32 *address;
     Uint value;
 
-    address = term_to_address(BIF_ARG_1);
+    address = (Uint32 *) term_to_address(BIF_ARG_1);
     if (!address || !hipe_word32_address_ok(address))
 	BIF_ERROR(BIF_P, BADARG);
     if (!term_to_Uint(BIF_ARG_2, &value))

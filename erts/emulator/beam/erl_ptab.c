@@ -391,7 +391,7 @@ erts_ptab_init_table(ErtsPTab *ptab,
     alloc_sz = tab_sz;
     if (!legacy)
 	alloc_sz += ERTS_ALC_CACHE_LINE_ALIGN_SIZE(size*sizeof(erts_smp_atomic32_t));
-    ptab->r.o.tab = erts_alloc_permanent_cache_aligned(atype, alloc_sz);
+    ptab->r.o.tab = (ethr_atomic_t *) erts_alloc_permanent_cache_aligned(atype, alloc_sz);
     tab_end = ((char *) ptab->r.o.tab) + tab_sz;
     tab_entry = ptab->r.o.tab;
     while (tab_end > ((char *) tab_entry)) {
@@ -639,7 +639,7 @@ erts_ptab_new_element(ErtsPTab *ptab,
 static void
 save_deleted_element(ErtsPTab *ptab, ErtsPTabElementCommon *ptab_el)
 {
-    ErtsPTabDeletedElement *ptdep = erts_alloc(ERTS_ALC_T_PTAB_LIST_DEL,
+    ErtsPTabDeletedElement *ptdep = (ErtsPTabDeletedElement *) erts_alloc(ERTS_ALC_T_PTAB_LIST_DEL,
 					       sizeof(ErtsPTabDeletedElement));
     ERTS_PTAB_LIST_ASSERT(ptab->list.data.deleted.start
 			  && ptab->list.data.deleted.end);
@@ -755,7 +755,7 @@ erts_ptab_list(Process *c_p, ErtsPTab *ptab)
     Eterm res_acc = NIL;
     Binary *mbp = erts_create_magic_binary(sizeof(ErtsPTabListBifData),
 					   cleanup_ptab_list_bif_data);
-    ErtsPTabListBifData *ptlbdp = ERTS_MAGIC_BIN_DATA(mbp);
+    ErtsPTabListBifData *ptlbdp = (ErtsPTabListBifData *) ERTS_MAGIC_BIN_DATA(mbp);
 
     ERTS_PTAB_LIST_DBG_TRACE(c_p->common.id, call);
     ptlbdp->ptab = ptab;
@@ -790,7 +790,7 @@ erts_ptab_list(Process *c_p, ErtsPTab *ptab)
 static void
 cleanup_ptab_list_bif_data(Binary *bp)
 {
-    ErtsPTabListBifData *ptlbdp = ERTS_MAGIC_BIN_DATA(bp);
+    ErtsPTabListBifData *ptlbdp = (ErtsPTabListBifData *) ERTS_MAGIC_BIN_DATA(bp);
     ErtsPTab *ptab = ptlbdp->ptab;
 
     ERTS_PTAB_LIST_DBG_TRACE(ptlbdp->debug.caller, call);
@@ -880,7 +880,7 @@ cleanup_ptab_list_bif_data(Binary *bp)
 static int
 ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 {
-    ErtsPTabListBifData *ptlbdp = ERTS_MAGIC_BIN_DATA(mbp);
+    ErtsPTabListBifData *ptlbdp = (ErtsPTabListBifData *) ERTS_MAGIC_BIN_DATA(mbp);
     ErtsPTab *ptab = ptlbdp->ptab;
     int have_reds;
     int reds;
@@ -889,7 +889,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
     do {
 	switch (ptlbdp->state) {
 	case INITIALIZING:
-	    ptlbdp->chunk = erts_alloc(ERTS_ALC_T_PTAB_LIST_CNKI,
+	    ptlbdp->chunk = (ErtsPTabListBifChunkInfo *) erts_alloc(ERTS_ALC_T_PTAB_LIST_CNKI,
 				       (sizeof(ErtsPTabListBifChunkInfo)
 					* ptab->list.data.chunks));
 	    ptlbdp->tix = 0;
@@ -901,7 +901,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 	    ERTS_PTAB_LIST_DBG_TRACE(c_p->common.id, init);
 
 	    ptlbdp->pid_sz = erts_ptab_count(ptab);
-	    ptlbdp->pid = erts_alloc(ERTS_ALC_T_PTAB_LIST_PIDS,
+	    ptlbdp->pid = (Eterm *) erts_alloc(ERTS_ALC_T_PTAB_LIST_PIDS,
 				     sizeof(Eterm)*ptlbdp->pid_sz);
 
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_FOUND_PIDS
@@ -920,7 +920,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 		 * releasing the table lock in between chunks.
 		 */
 		ptlbdp->bif_invocation
-		    = erts_alloc(ERTS_ALC_T_PTAB_LIST_DEL,
+		    = (ErtsPTabDeletedElement *) erts_alloc(ERTS_ALC_T_PTAB_LIST_DEL,
 				 sizeof(ErtsPTabDeletedElement));
 		ptlbdp->bif_invocation->ix = -1;
 		ptlbdp->bif_invocation->u.bif_invocation.interval
@@ -1231,7 +1231,7 @@ ptab_list_bif_engine(Process *c_p, Eterm *res_accp, Binary *mbp)
 		ptlbdp->state = RETURN_RESULT;
 	    else {
 		ptlbdp->pid_sz = min_ix;
-		ptlbdp->pid = erts_realloc(ERTS_ALC_T_PTAB_LIST_PIDS,
+		ptlbdp->pid = (Eterm *) erts_realloc(ERTS_ALC_T_PTAB_LIST_PIDS,
 					   ptlbdp->pid,
 					   sizeof(Eterm)*ptlbdp->pid_sz);
 #if ERTS_PTAB_LIST_BIF_DEBUGLEVEL >= ERTS_PTAB_LIST_DBGLVL_CHK_FOUND_PIDS

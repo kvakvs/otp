@@ -499,10 +499,10 @@ static ERTS_INLINE HashDbTerm* new_dbterm(DbTableHash* tb, Eterm obj)
 {
     HashDbTerm* p;
     if (tb->common.compress) {
-	p = db_store_term_comp(&tb->common, NULL, offsetof(HashDbTerm,dbterm), obj);
+	p = (HashDbTerm *) db_store_term_comp(&tb->common, NULL, offsetof(HashDbTerm,dbterm), obj);
     }
     else {
-	p = db_store_term(&tb->common, NULL, offsetof(HashDbTerm,dbterm), obj);
+	p = (HashDbTerm *) db_store_term(&tb->common, NULL, offsetof(HashDbTerm,dbterm), obj);
     }
     return p;
 }
@@ -513,10 +513,10 @@ static ERTS_INLINE HashDbTerm* replace_dbterm(DbTableHash* tb, HashDbTerm* old,
     HashDbTerm* ret;
     ASSERT(old != NULL);
     if (tb->common.compress) {
-	ret = db_store_term_comp(&tb->common, &(old->dbterm), offsetof(HashDbTerm,dbterm), obj);
+	ret = (HashDbTerm *) db_store_term_comp(&tb->common, &(old->dbterm), offsetof(HashDbTerm,dbterm), obj);
     }
     else {
-	ret = db_store_term(&tb->common, &(old->dbterm), offsetof(HashDbTerm,dbterm), obj);
+	ret = (HashDbTerm *) db_store_term(&tb->common, &(old->dbterm), offsetof(HashDbTerm,dbterm), obj);
     }
     return ret;
 }
@@ -2311,8 +2311,8 @@ static int analyze_pattern(DbTableHash *tb, Eterm pattern,
     }
 
     if (num_heads > 10) {
-	buff = erts_alloc(ERTS_ALC_T_DB_TMP, sizeof(Eterm) * num_heads * 3);
-	mpi->lists = erts_alloc(ERTS_ALC_T_DB_SEL_LIST,
+	buff = (Eterm *) erts_alloc(ERTS_ALC_T_DB_TMP, sizeof(Eterm) * num_heads * 3);
+	mpi->lists = (struct mp_prefound *) erts_alloc(ERTS_ALC_T_DB_SEL_LIST,
 				sizeof(*(mpi->lists)) * num_heads);	
     }
 

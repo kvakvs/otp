@@ -179,7 +179,7 @@ static ErtsLink *create_link(Uint type, Eterm pid)
 
 static ErtsSuspendMonitor *create_suspend_monitor(Eterm pid)
 {
-    ErtsSuspendMonitor *smon = erts_alloc(ERTS_ALC_T_SUSPEND_MON,
+    ErtsSuspendMonitor *smon = (ErtsSuspendMonitor *) erts_alloc(ERTS_ALC_T_SUSPEND_MON,
 					  sizeof(ErtsSuspendMonitor));
     smon->left = smon->right = NULL; /* Always the same initial value */
     smon->balance = 0;               /* Always the same initial value */
@@ -263,7 +263,7 @@ static void insertion_rotation(int dstack[], int dpos,
     int dir;
 
     while (state && ( dir = dstack[--dpos] ) != DIR_END) {
-	this = tstack[--tpos];
+	this = (ErtsMonitorOrLink **) tstack[--tpos];
 	p = *this;
 	if (dir == DIR_LEFT) {
 	    switch (p->balance) {
@@ -1028,7 +1028,7 @@ Eterm erts_debug_dump_links_1(BIF_ALIST_1)
 
 void erts_one_link_size(ErtsLink *lnk, void *vpu)
 {
-    Uint *pu = vpu;
+    Uint *pu = (Uint *) vpu;
     *pu += ERTS_LINK_SIZE*sizeof(Uint);
     if(!IS_CONST(lnk->pid))
 	*pu += NC_HEAP_SIZE(lnk->pid)*sizeof(Uint);
@@ -1038,7 +1038,7 @@ void erts_one_link_size(ErtsLink *lnk, void *vpu)
 }
 void erts_one_mon_size(ErtsMonitor *mon, void *vpu)
 {
-    Uint *pu = vpu;
+    Uint *pu = (Uint *) vpu;
     *pu += ERTS_MONITOR_SIZE*sizeof(Uint);
     if(!IS_CONST(mon->pid))
 	*pu += NC_HEAP_SIZE(mon->pid)*sizeof(Uint);

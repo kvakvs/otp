@@ -187,7 +187,7 @@ erts_init_async(void)
 	tot_size += sizeof(ErtsAlgndAsyncReadyQ)*erts_no_schedulers;
 #endif
 
-	ptr = erts_alloc_permanent_cache_aligned(ERTS_ALC_T_ASYNC_DATA,
+	ptr = (char *) erts_alloc_permanent_cache_aligned(ERTS_ALC_T_ASYNC_DATA,
 						 tot_size);
 
 	async = (ErtsAsyncData *) ptr;

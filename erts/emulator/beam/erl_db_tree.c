@@ -100,7 +100,7 @@ static DbTreeStack* get_any_stack(DbTableTree* tb)
     if (!erts_smp_atomic_xchg_acqb(&tb->is_stack_busy, 1)) {
 	return &tb->static_stack;
     }
-    stack = erts_db_alloc(ERTS_ALC_T_DB_STK, (DbTable *) tb,
+    stack = (DbTreeStack *) erts_db_alloc(ERTS_ALC_T_DB_STK, (DbTable *) tb,
 			  sizeof(DbTreeStack) + sizeof(TreeDbTerm*) * STACK_NEED);
     stack->pos = 0;
     stack->slot = 0;
@@ -133,12 +133,12 @@ static ERTS_INLINE void free_term(DbTableTree *tb, TreeDbTerm* p)
 
 static ERTS_INLINE TreeDbTerm* new_dbterm(DbTableTree *tb, Eterm obj)
 {
-    TreeDbTerm* p;
+    TreeDbTerm *p;
     if (tb->common.compress) {
-	p = db_store_term_comp(&tb->common, NULL, offsetof(TreeDbTerm,dbterm), obj);
+	p = (TreeDbTerm *) db_store_term_comp(&tb->common, NULL, offsetof(TreeDbTerm,dbterm), obj);
     }
     else {
-	p = db_store_term(&tb->common, NULL, offsetof(TreeDbTerm,dbterm), obj);
+	p = (TreeDbTerm *) db_store_term(&tb->common, NULL, offsetof(TreeDbTerm,dbterm), obj);
     }
     return p;
 }
@@ -148,10 +148,10 @@ static ERTS_INLINE TreeDbTerm* replace_dbterm(DbTableTree *tb, TreeDbTerm* old,
     TreeDbTerm* p;
     ASSERT(old != NULL);
     if (tb->common.compress) {
-	p = db_store_term_comp(&tb->common, &(old->dbterm), offsetof(TreeDbTerm,dbterm), obj);
+	p = (TreeDbTerm *) db_store_term_comp(&tb->common, &(old->dbterm), offsetof(TreeDbTerm,dbterm), obj);
     }
     else {
-	p = db_store_term(&tb->common, &(old->dbterm), offsetof(TreeDbTerm,dbterm), obj);
+	p = (TreeDbTerm *) db_store_term(&tb->common, &(old->dbterm), offsetof(TreeDbTerm,dbterm), obj);
     }
     return p;
 }
@@ -471,7 +471,7 @@ int db_create_tree(Process *p, DbTable *tbl)
 {
     DbTableTree *tb = &tbl->tree;
     tb->root = NULL;
-    tb->static_stack.array = erts_db_alloc(ERTS_ALC_T_DB_STK,
+    tb->static_stack.array = (TreeDbTerm **) erts_db_alloc(ERTS_ALC_T_DB_STK,
 					   (DbTable *) tb,
 					   sizeof(TreeDbTerm *) * STACK_NEED);
     tb->static_stack.pos = 0;
@@ -1988,7 +1988,7 @@ static int analyze_pattern(DbTableTree *tb, Eterm pattern,
 	return DB_ERROR_BADPARAM;
     }
     if (num_heads > 10) {
-	buff = erts_alloc(ERTS_ALC_T_DB_TMP, sizeof(Eterm) * num_heads * 3);
+	buff = (Eterm *) erts_alloc(ERTS_ALC_T_DB_TMP, sizeof(Eterm) * num_heads * 3);
     }
 
     matches = buff;

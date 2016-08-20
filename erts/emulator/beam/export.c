@@ -261,7 +261,8 @@ erts_find_function(Eterm m, Eterm f, unsigned int a, ErtsCodeIndex code_ix)
     struct export_templ templ;
     struct export_entry* ee;
 
-    ee = hash_get(&export_tables[code_ix].htable, init_template(&templ, m, f, a));
+    ee = (struct export_entry *) hash_get(&export_tables[code_ix].htable,
+                                          init_template(&templ, m, f, a));
     if (ee == NULL ||
 	(ee->ep->addressv[code_ix] == ee->ep->code+3 &&
 	 ee->ep->code[3] != (BeamInstr) BeamOp(op_i_generic_breakpoint))) {

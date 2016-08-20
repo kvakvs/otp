@@ -90,7 +90,7 @@ do {									\
     if ((On).pos >= (On).siz) {						\
 	(On).siz *= 2;							\
 	(On).data							\
-	    = (((On).def == (On).data)					\
+	    = (decltype((On).data)) (((On).def == (On).data)		\
 	       ? memcpy(erts_alloc(ERTS_ALC_T_DB_MC_STK,		\
 				   (On).siz*sizeof(*((On).data))),	\
 			(On).def,					\
@@ -419,8 +419,9 @@ get_match_pseudo_process(Process *c_p, Uint heap_size)
 
     esdp = c_p ? c_p->scheduler_data : erts_get_scheduler_data();
 
-    mpsp = esdp ? esdp->match_pseudo_process :
-        (ErtsMatchPseudoProcess*) erts_smp_tsd_get(match_pseudo_process_key);
+    mpsp = (ErtsMatchPseudoProcess *) (
+            esdp ? esdp->match_pseudo_process
+                 : erts_smp_tsd_get(match_pseudo_process_key));
 
     if (mpsp) {
         ASSERT(mpsp == erts_smp_tsd_get(match_pseudo_process_key));
@@ -499,319 +500,319 @@ static DMCGuardBif guard_tab[] =
 {
     {
 	am_is_atom,
-	&is_atom_1,
+	(void *) &is_atom_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_float,
-	&is_float_1,
+	(void *) &is_float_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_integer,
-	&is_integer_1,
+	(void *) &is_integer_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_list,
-	&is_list_1,
+	(void *) &is_list_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_number,
-	&is_number_1,
+	(void *) &is_number_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_pid,
-	&is_pid_1,
+	(void *) &is_pid_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_port,
-	&is_port_1,
+	(void *) &is_port_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_reference,
-	&is_reference_1,
+	(void *) &is_reference_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_tuple,
-	&is_tuple_1,
+	(void *) &is_tuple_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_map,
-	&is_map_1,
+	(void *) &is_map_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_binary,
-	&is_binary_1,
+	(void *) &is_binary_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_function,
-	&is_function_1,
+	(void *) &is_function_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_is_record,
-	&is_record_3,
+	(void *) &is_record_3,
 	3,
 	DBIF_ALL
     },
     {
 	am_abs,
-	&abs_1,
+	(void *) &abs_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_element,
-	&element_2,
+	(void *) &element_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_hd,
-	&hd_1,
+	(void *) &hd_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_length,
-	&length_1,
+	(void *) &length_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_node,
-	&node_1,
+	(void *) &node_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_node,
-	&node_0,
+	(void *) &node_0,
 	0,
 	DBIF_ALL
     },
     {
 	am_round,
-	&round_1,
+	(void *) &round_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_size,
-	&size_1,
+	(void *) &size_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_map_size,
-	&map_size_1,
+	(void *) &map_size_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_bit_size,
-	&bit_size_1,
+	(void *) &bit_size_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_tl,
-	&tl_1,
+	(void *) &tl_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_trunc,
-	&trunc_1,
+	(void *) &trunc_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_float,
-	&float_1,
+	(void *) &float_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_Plus,
-	&splus_1,
+	(void *) &splus_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_Minus,
-	&sminus_1,
+	(void *) &sminus_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_Plus,
-	&splus_2,
+	(void *) &splus_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Minus,
-	&sminus_2,
+	(void *) &sminus_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Times,
-	&stimes_2,
+	(void *) &stimes_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Div,
-	&div_2,
+	(void *) &div_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_div,
-	&intdiv_2,
+	(void *) &intdiv_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_rem,
-	&rem_2,
+	(void *) &rem_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_band,
-	&band_2,
+	(void *) &band_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_bor,
-	&bor_2,
+	(void *) &bor_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_bxor,
-	&bxor_2,
+	(void *) &bxor_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_bnot,
-	&bnot_1,
+	(void *) &bnot_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_bsl,
-	&bsl_2,
+	(void *) &bsl_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_bsr,
-	&bsr_2,
+	(void *) &bsr_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Gt,
-	&sgt_2,
+	(void *) &sgt_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Ge,
-	&sge_2,
+	(void *) &sge_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Lt,
-	&slt_2,
+	(void *) &slt_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Le,
-	&sle_2,
+	(void *) &sle_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Eq,
-	&seq_2,
+	(void *) &seq_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Eqeq,
-	&seqeq_2,
+	(void *) &seqeq_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Neq,
-	&sneq_2,
+	(void *) &sneq_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_Neqeq,
-	&sneqeq_2,
+	(void *) &sneqeq_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_not,
-	&not_1,
+	(void *) &not_1,
 	1,
 	DBIF_ALL
     },
     {
 	am_xor,
-	&xor_2,
+	(void *) &xor_2,
 	2,
 	DBIF_ALL
     },
     {
 	am_get_tcw,
-	&db_get_trace_control_word_0,
+	(void *) &db_get_trace_control_word_0,
 	0,
 	DBIF_TRACE_GUARD | DBIF_TRACE_BODY
     },
     {
 	am_set_tcw,
-	&db_set_trace_control_word_1,
+	(void *) &db_set_trace_control_word_1,
 	1,
 	DBIF_TRACE_BODY
     },
     {
 	am_set_tcw_fake,
-	&db_set_trace_control_word_fake_1,
+	(void *) &db_set_trace_control_word_fake_1,
 	1,
 	DBIF_TRACE_BODY
     }
@@ -1052,7 +1053,7 @@ Binary *db_match_set_compile(Process *p, Eterm matchexpr,
 	return NULL;
 
     if (num_heads > 5) {
-	buff = erts_alloc(ERTS_ALC_T_DB_TMP,
+	buff = (Eterm *) erts_alloc(ERTS_ALC_T_DB_TMP,
 			  sizeof(Eterm) * num_heads * 3);
     } else {
 	buff = sbuff;
@@ -1157,7 +1158,7 @@ Eterm db_match_set_lint(Process *p, Eterm matchexpr, Uint flags)
     }
 
     if (num_heads > 5) {
-	buff = erts_alloc(ERTS_ALC_T_DB_TMP,
+	buff = (Eterm *) erts_alloc(ERTS_ALC_T_DB_TMP,
 			  sizeof(Eterm) * num_heads * 3);
     } 
 
@@ -2555,7 +2556,7 @@ Eterm db_make_mp_binary(Process *p, Binary *mp, Eterm **hpp)
 
 DMCErrInfo *db_new_dmc_err_info(void) 
 {
-    DMCErrInfo *ret = erts_alloc(ERTS_ALC_T_DB_DMC_ERR_INFO,
+    DMCErrInfo *ret = (DMCErrInfo *) erts_alloc(ERTS_ALC_T_DB_DMC_ERR_INFO,
 				 sizeof(DMCErrInfo));
     ret->var_trans = NULL;
     ret->num_trans = 0;
@@ -2767,11 +2768,11 @@ static ERTS_INLINE byte* db_realloc_term(DbTableCommon* tb, void* old,
 {
     byte* ret;
     if (erts_ets_realloc_always_moves) {
-	ret = erts_db_alloc(ERTS_ALC_T_DB_TERM, (DbTable*)tb, new_sz);
+	ret = (byte *) erts_db_alloc(ERTS_ALC_T_DB_TERM, (DbTable*)tb, new_sz);
 	sys_memcpy(ret, old, offset);
 	erts_db_free(ERTS_ALC_T_DB_TERM, (DbTable*)tb, old, old_sz);
     } else {
-	ret = erts_db_realloc(ERTS_ALC_T_DB_TERM, (DbTable*)tb,
+	ret = (byte *) erts_db_realloc(ERTS_ALC_T_DB_TERM, (DbTable*)tb,
 			      old, old_sz, new_sz);
     }
     return ret;
@@ -2917,7 +2918,7 @@ void* db_store_term(DbTableCommon *tb, DbTerm* old, Uint offset, Eterm obj)
 	}
     }
     else {
-	basep = erts_db_alloc(ERTS_ALC_T_DB_TERM, (DbTable *)tb,
+	basep = (byte *) erts_db_alloc(ERTS_ALC_T_DB_TERM, (DbTable *)tb,
 			      (offset + sizeof(DbTerm) + sizeof(Eterm)*(size-1)));
 	newp = (DbTerm*) (basep + offset);
     }
@@ -2957,7 +2958,7 @@ void* db_store_term_comp(DbTableCommon *tb, DbTerm* old, Uint offset, Eterm obj)
 	}
     }
     else {
-	basep = erts_db_alloc(ERTS_ALC_T_DB_TERM, (DbTable*)tb, new_sz);
+	basep = (byte *) erts_db_alloc(ERTS_ALC_T_DB_TERM, (DbTable*)tb, new_sz);
 	newp = (DbTerm*) (basep + offset);
     }
 
@@ -2982,8 +2983,8 @@ void db_finalize_resize(DbUpdateHandle* handle, Uint offset)
 	(tbl->common.compress ?
 	 db_size_dbterm_comp(&tbl->common, make_tuple(handle->dbterm->tpl)) :
 	 sizeof(DbTerm)+sizeof(Eterm)*(handle->new_size-1));
-    byte* newp = erts_db_alloc(ERTS_ALC_T_DB_TERM, tbl, alloc_sz);
-    byte* oldp = *(handle->bp);
+    byte* newp = (byte *) erts_db_alloc(ERTS_ALC_T_DB_TERM, tbl, alloc_sz);
+    byte* oldp = (byte *) *(handle->bp);
 
     sys_memcpy(newp, oldp, offset);  /* copy only hash/tree header */
     *(handle->bp) = newp;
@@ -3135,7 +3136,7 @@ int db_eq_comp(DbTableCommon* tb, Eterm a, DbTerm* b)
     int is_eq;
 
     ASSERT(tb->compress);
-    hp = allocp = erts_alloc(ERTS_ALC_T_TMP, b->size*sizeof(Eterm));
+    hp = allocp = (Eterm *) erts_alloc(ERTS_ALC_T_TMP, b->size*sizeof(Eterm));
     tmp_offheap.first = NULL;
     tmp_b = db_copy_from_comp(tb, b, &hp, &tmp_offheap);
     is_eq = eq(a,tmp_b);
@@ -3298,7 +3299,7 @@ static void vadd_dmc_err(DMCErrInfo *err_info,
 
 
     /* Linked in in reverse order, to ease the formatting */
-    e = erts_alloc(ERTS_ALC_T_DB_DMC_ERROR, sizeof(DMCError));
+    e = (DMCError *) erts_alloc(ERTS_ALC_T_DB_DMC_ERROR, sizeof(DMCError));
     erts_vsnprintf(e->error_string, DMC_ERR_STR_LEN, str, args);
     e->variable = variable;
     e->severity = severity;
@@ -3374,7 +3375,7 @@ static DMCRet dmc_one_term(DMCContext *context,
 		       may be atoms that changed */
 		    context->matchexpr[j] = context->copy->mem[j];
 		}
-		heap->vars = erts_alloc(ERTS_ALC_T_DB_MS_CMPL_HEAP,
+		heap->vars = (DMCVariable *) erts_alloc(ERTS_ALC_T_DB_MS_CMPL_HEAP,
 					heap->size*sizeof(DMCVariable));
 		sys_memset(heap->vars, 0, heap->size * sizeof(DMCVariable));
 		DMC_CLEAR(*stack);
@@ -3545,7 +3546,7 @@ static DMCRet dmc_list(DMCContext *context,
 {
     int c1;
     int c2;
-    int ret;
+    DMCRet ret;
 
     if ((ret = dmc_expr(context, heap, text, CAR(list_val(t)), &c1)) != retOk)
 	return ret;
@@ -4795,7 +4796,7 @@ static DMCGuardBif *dmc_lookup_bif(Eterm t, int arity)
     DMCGuardBif node = {0,NULL,0};
     node.name = t;
     node.arity = arity;
-    return bsearch(&node, 
+    return (DMCGuardBif *) bsearch(&node,
 		   guard_tab, 
 		   sizeof(guard_tab) / sizeof(DMCGuardBif),
 		   sizeof(DMCGuardBif), 
@@ -4868,7 +4869,7 @@ static int match_compact(ErlHeapFragment *expr, DMCErrInfo *err_info)
 	  (int (*)(const void *, const void *)) &cmp_uint);
 
     if (err_info != NULL) { /* lint needs a translation table */
-	err_info->var_trans = erts_alloc(ERTS_ALC_T_DB_TRANS_TAB,
+	err_info->var_trans = (unsigned int *) erts_alloc(ERTS_ALC_T_DB_TRANS_TAB,
 					 sizeof(unsigned)*DMC_STACK_NUM(heap));
 	sys_memcpy(err_info->var_trans, DMC_STACK_DATA(heap),
 		   DMC_STACK_NUM(heap) * sizeof(unsigned));
@@ -5081,7 +5082,7 @@ static Eterm match_spec_test(Process *p, Eterm against, Eterm spec, int trace)
 	}
 	if (trace) {
 	    if (n)
-		arr = erts_alloc(ERTS_ALC_T_DB_TMP, sizeof(Eterm) * n);
+		arr = (Eterm *) erts_alloc(ERTS_ALC_T_DB_TMP, sizeof(Eterm) * n);
 	    else 
 		arr = NULL;
 	    l = against;
@@ -5095,7 +5096,7 @@ static Eterm match_spec_test(Process *p, Eterm against, Eterm spec, int trace)
 	    p->cp = NULL;
 	    res = erts_match_set_run_trace(p, p,
                       mps, arr, n,
-		      ERTS_PAM_COPY_RESULT|ERTS_PAM_IGNORE_TRACE_SILENT,
+                      (enum erts_pam_run_flags)(ERTS_PAM_COPY_RESULT|ERTS_PAM_IGNORE_TRACE_SILENT),
 		      &ret_flags);
 	    p->cp = save_cp;
 	} else {
@@ -5143,7 +5144,7 @@ static Eterm seq_trace_fake(Process *p, Eterm arg1)
 DbTerm* db_alloc_tmp_uncompressed(DbTableCommon* tb, DbTerm* org)
 {
     ErlOffHeap tmp_offheap;
-    DbTerm* res = erts_alloc(ERTS_ALC_T_TMP,
+    DbTerm* res = (DbTerm *) erts_alloc(ERTS_ALC_T_TMP,
 			     sizeof(DbTerm) + org->size*sizeof(Eterm));
     Eterm* hp = res->tpl;
     tmp_offheap.first = NULL;
@@ -5179,7 +5180,8 @@ Eterm db_match_dbterm(DbTableCommon* tb, Process* c_p, Binary* bprog,
 
     res = db_prog_match(c_p, c_p,
                         bprog, make_tuple(obj->tpl), NULL, 0,
-			ERTS_PAM_COPY_RESULT|ERTS_PAM_CONTIGUOUS_TUPLE, &dummy);
+                        (enum erts_pam_run_flags)(ERTS_PAM_COPY_RESULT|ERTS_PAM_CONTIGUOUS_TUPLE),
+                        &dummy);
 
     if (is_value(res) && hpp!=NULL) {
 	*hpp = HAlloc(c_p, extra);

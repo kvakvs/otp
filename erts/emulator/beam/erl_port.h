@@ -153,7 +153,7 @@ typedef struct ErtsXPortsList_ ErtsXPortsList;
  *
  */
 
-struct _erl_drv_port {
+typedef struct _erl_drv_port {
     ErtsPTabElementCommon common; /* *Need* to be first in struct */
 
     ErtsPortTaskSched sched;
@@ -188,11 +188,12 @@ struct _erl_drv_port {
     erts_smp_atomic_t psd;	 /* Port specific data */
     int reds; /* Only used while executing driver callbacks */
 
-    struct {
+    typedef struct {
         Eterm to;
         Uint32 ref[ERTS_MAX_REF_NUMBERS];
-    } *async_open_port;         /* Reference used with async open port */
-};
+    } AsyncOpenPort;
+    AsyncOpenPort *async_open_port;         /* Reference used with async open port */
+} ErlDrvPort_Struct;
 
 
 void erts_init_port_data(Port *);

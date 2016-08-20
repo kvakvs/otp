@@ -145,9 +145,7 @@ local uLong  getLong      (gz_stream *s);
    can be checked to distinguish the two cases (if errno is zero, the
    zlib error is Z_MEM_ERROR).
 */
-local ErtsGzFile gz_open (path, mode)
-    const char *path;
-    const char *mode;
+local ErtsGzFile gz_open (const char *path, const char *mode)
 {
     int err;
     int level = Z_DEFAULT_COMPRESSION; /* compression level */
@@ -297,9 +295,7 @@ local int gz_rewind (gz_stream *s)
 /* ===========================================================================
      Opens a gzip (.gz) file for reading or writing.
 */
-ErtsGzFile erts_gzopen (path, mode)
-    const char *path;
-    const char *mode;
+ErtsGzFile erts_gzopen (const char *path, const char *mode)
 {
     return gz_open (path, mode);
 }
@@ -310,8 +306,7 @@ ErtsGzFile erts_gzopen (path, mode)
    for end of file.
    IN assertion: the stream s has been sucessfully opened for reading.
 */
-local int get_byte(s)
-    gz_stream *s;
+local int get_byte(gz_stream *s)
 {
     if (s->z_eof) return EOF;
     if (s->stream.avail_in == 0) {
@@ -356,8 +351,7 @@ local int get_byte(s)
        s->stream.avail_in is zero for the first time, but may be non-zero
        for concatenated .gz files.
 */
-local void check_header(s)
-    gz_stream *s;
+local void check_header(gz_stream *s)
 {
     int method; /* method byte */
     int flags;  /* flags byte */
@@ -409,8 +403,7 @@ local void check_header(s)
  * Cleanup then free the given gz_stream. Return a zlib error code.
    Try freeing in the reverse order of allocations.
  */
-local int destroy (s)
-    gz_stream *s;
+local int destroy (gz_stream *s)
 {
     int err = Z_OK;
 
@@ -451,7 +444,7 @@ int
 erts_gzread(ErtsGzFile file, voidp buf, unsigned len)
 {
     gz_stream *s = (gz_stream*)file;
-    Bytef *start = buf; /* starting point for crc computation */
+    Bytef *start = (Bytef *) buf; /* starting point for crc computation */
     Byte  *next_out; /* == stream.next_out but not forced far (for MSDOS) */
 
     if (s == NULL || s->mode != 'r') return Z_STREAM_ERROR;
@@ -459,7 +452,7 @@ erts_gzread(ErtsGzFile file, voidp buf, unsigned len)
     if (s->z_err == Z_DATA_ERROR || s->z_err == Z_ERRNO) return -1;
     if (s->z_err == Z_STREAM_END) return 0;  /* EOF */
 
-    s->stream.next_out = next_out = buf;
+    s->stream.next_out = next_out = (Byte *) buf;
     s->stream.avail_out = len;
 
     while (s->stream.avail_out != 0) {
@@ -564,7 +557,7 @@ erts_gzwrite(ErtsGzFile file, voidp buf, unsigned len)
 
     if (s == NULL || s->mode != 'w') return Z_STREAM_ERROR;
 
-    s->stream.next_in = buf;
+    s->stream.next_in = (Bytef *) buf;
     s->stream.avail_in = len;
 
     while (s->stream.avail_in != 0) {
@@ -705,8 +698,7 @@ erts_gzflush(ErtsGzFile file, int flush)
 /* ===========================================================================
    Reads a long in LSB order from the given gz_stream. Sets 
 */
-local uLong getLong (s)
-    gz_stream *s;
+local uLong getLong (gz_stream *s)
 {
     uLong x = (uLong)get_byte(s);
     int c;

@@ -254,7 +254,7 @@ is_iotask_active(ErtsIoTask *io_task, erts_aint_t current_cio_time)
 static ERTS_INLINE ErtsDrvSelectDataState *
 alloc_drv_select_data(void)
 {
-    ErtsDrvSelectDataState *dsp = erts_alloc(ERTS_ALC_T_DRV_SEL_D_STATE,
+    ErtsDrvSelectDataState *dsp = (ErtsDrvSelectDataState *) erts_alloc(ERTS_ALC_T_DRV_SEL_D_STATE,
 					     sizeof(ErtsDrvSelectDataState));
     dsp->inport = NIL;
     dsp->outport = NIL;
@@ -276,7 +276,7 @@ free_drv_select_data(ErtsDrvSelectDataState *dsp)
 static ERTS_INLINE ErtsDrvEventDataState *
 alloc_drv_event_data(void)
 {
-    ErtsDrvEventDataState *dep = erts_alloc(ERTS_ALC_T_DRV_EV_D_STATE,
+    ErtsDrvEventDataState *dep = (ErtsDrvEventDataState *) erts_alloc(ERTS_ALC_T_DRV_EV_D_STATE,
 					    sizeof(ErtsDrvEventDataState));
     dep->port = NIL;
     dep->data = NULL;
@@ -428,7 +428,7 @@ grow_drv_ev_state(int min_ix)
 	for (i=0; i<DRV_EV_STATE_LOCK_CNT; i++) { /* lock all fd's */
 	    erts_smp_mtx_lock(&drv_ev_state_locks[i].lck);
 	}
-	drv_ev_state = (drv_ev_state
+	drv_ev_state = (ErtsDrvEventState *) (drv_ev_state
 			? erts_realloc(ERTS_ALC_T_DRV_EV_STATE,
 				       drv_ev_state,
 				       sizeof(ErtsDrvEventState)*new_len)
@@ -721,10 +721,10 @@ check_cleanup_active_fd(ErtsSysFdType fd,
     erts_smp_mtx_unlock(mtx);
 
     if (free_select)
-	free_drv_select_data(free_select);
+	free_drv_select_data((ErtsDrvSelectDataState *) free_select);
 #if ERTS_CIO_HAVE_DRV_EVENT
     if (free_event)
-	free_drv_event_data(free_event);
+	free_drv_event_data((ErtsDrvEventDataState *) free_event);
 #endif
 
 #if ERTS_CIO_DEFER_ACTIVE_EVENTS
@@ -827,7 +827,7 @@ add_active_fd(ErtsSysFdType fd)
 	pollset.active_fd.six = 0;
 	eix = size;
 	size += ERTS_ACTIVE_FD_INC;
-	pollset.active_fd.array = erts_realloc(ERTS_ALC_T_ACTIVE_FD_ARR,
+	pollset.active_fd.array = (ErtsSysFdType *) erts_realloc(ERTS_ALC_T_ACTIVE_FD_ARR,
 					       pollset.active_fd.array,
 					       sizeof(ErtsSysFdType)*size);
 	pollset.active_fd.size = size;
@@ -1639,7 +1639,7 @@ ERTS_CIO_EXPORT(erts_check_io)(int do_wait)
 
     pollres_len = erts_smp_atomic32_read_dirty(&pollset.active_fd.no) + ERTS_CHECK_IO_POLL_RES_LEN;
 
-    pollres = erts_alloc(ERTS_ALC_T_TMP, sizeof(ErtsPollResFd)*pollres_len);
+    pollres = (ErtsPollResFd *) erts_alloc(ERTS_ALC_T_TMP, sizeof(ErtsPollResFd)*pollres_len);
 
     erts_smp_atomic_set_nob(&pollset.in_poll_wait, 1);
 
@@ -1915,7 +1915,7 @@ ERTS_CIO_EXPORT(erts_init_check_io)(void)
     pollset.active_fd.eix = 0;
     erts_smp_atomic32_init_nob(&pollset.active_fd.no, 0);
     pollset.active_fd.size = ERTS_ACTIVE_FD_INC;
-    pollset.active_fd.array = erts_alloc(ERTS_ALC_T_ACTIVE_FD_ARR,
+    pollset.active_fd.array = (ErtsSysFdType *) erts_alloc(ERTS_ALC_T_ACTIVE_FD_ARR,
 					 sizeof(ErtsSysFdType)*ERTS_ACTIVE_FD_INC);
 #ifdef DEBUG
     {
@@ -2415,7 +2415,7 @@ ERTS_CIO_EXPORT(erts_check_io_debug)(ErtsCheckIoDebugInfo *ciodip)
     erts_smp_thr_progress_block(); /* stop the world to avoid messy locking */
 
 #ifdef ERTS_SYS_CONTINOUS_FD_NUMBERS
-    counters.epep = erts_alloc(ERTS_ALC_T_TMP, sizeof(ErtsPollEvents)*max_fds);
+    counters.epep = (ErtsPollEvents *) erts_alloc(ERTS_ALC_T_TMP, sizeof(ErtsPollEvents)*max_fds);
     ERTS_POLL_EXPORT(erts_poll_get_selected_events)(pollset.ps, counters.epep, max_fds);
     counters.internal_fds = 0;
 #endif

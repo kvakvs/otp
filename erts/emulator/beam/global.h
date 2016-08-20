@@ -627,7 +627,7 @@ do {							\
 do {\
     if (s.wstart == WSTK_DEF_STACK(s)) {\
 	UWord _wsz = WSTACK_COUNT(s);\
-	(dst)->wstart = erts_alloc(s.alloc_type,\
+	(dst)->wstart = (UWord *) erts_alloc(s.alloc_type,\
 				  DEF_WSTACK_SIZE * sizeof(UWord));\
 	memcpy((dst)->wstart, s.wstart,_wsz*sizeof(UWord));\
 	(dst)->wsp = (dst)->wstart + _wsz;\
@@ -825,7 +825,7 @@ do {							\
 do {\
     if (s.pstart == (byte*)PSTK_DEF_STACK(s)) {\
 	UWord _pbytes = PSTACK_COUNT(s) * sizeof(PSTACK_TYPE);\
-	(dst)->pstart = erts_alloc(s.alloc_type,\
+	(dst)->pstart = (byte *) erts_alloc(s.alloc_type,\
 				   sizeof(PSTK_DEF_STACK(s)));\
 	sys_memcpy((dst)->pstart, s.pstart, _pbytes);\
 	(dst)->psp = (dst)->pstart + _pbytes - sizeof(PSTACK_TYPE);\

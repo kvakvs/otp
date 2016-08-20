@@ -493,7 +493,8 @@ check_thr_progress:
     if (q->head.next.thr_progress_reached)
 #endif
     {
-	int um_refc_ix = q->head.next.um_refc_ix;
+	int um_refc_ix;
+        um_refc_ix = q->head.next.um_refc_ix;
 	if (erts_atomic_read_acqb(&q->tail.data.um_refc[um_refc_ix]) == 0) {
 	dirty:
 	    if (do_notify)

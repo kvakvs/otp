@@ -433,7 +433,7 @@ binary_to_list(Process *c_p, Eterm *hp, Eterm tail, byte *bytes,
     else {
 	Binary *mbp = erts_create_magic_binary(sizeof(ErtsB2LState),
 					       b2l_state_destructor);
-	ErtsB2LState *sp = ERTS_MAGIC_BIN_DATA(mbp);
+	ErtsB2LState *sp = (ErtsB2LState *) ERTS_MAGIC_BIN_DATA(mbp);
 	Eterm mb;
 
 	sp->res = tail;
@@ -732,7 +732,7 @@ list_to_binary_engine(ErtsL2BState *sp)
 static void
 l2b_state_destructor(Binary *mbp)
 {
-    ErtsL2BState *sp = ERTS_MAGIC_BIN_DATA(mbp); 
+    ErtsL2BState *sp = (ErtsL2BState *) ERTS_MAGIC_BIN_DATA(mbp);
     ASSERT(ERTS_MAGIC_BIN_DESTRUCTOR(mbp) == l2b_state_destructor);
     DESTROY_SAVED_ESTACK(&sp->buf.iolist.estack);
 }
@@ -787,7 +787,7 @@ list_to_binary_chunk(Eterm mb_eterm,
 	    Eterm *hp;
 	    Binary *mbp = erts_create_magic_binary(sizeof(ErtsL2BState),
 						   l2b_state_destructor);
-	    ErtsL2BState *new_sp = ERTS_MAGIC_BIN_DATA(mbp);
+	    ErtsL2BState *new_sp = (ErtsL2BState *) ERTS_MAGIC_BIN_DATA(mbp);
 
 	    ERTS_L2B_STATE_MOVE(new_sp, sp);
 	    sp = new_sp;
@@ -845,7 +845,7 @@ static BIF_RETTYPE list_to_binary_continue(BIF_ALIST_1)
     ASSERT(BIF_P->flags & F_DISABLE_GC);
 
     return list_to_binary_chunk(BIF_ARG_1,
-				ERTS_MAGIC_BIN_DATA(mbp),
+                                (ErtsL2BState *) ERTS_MAGIC_BIN_DATA(mbp),
 				ERTS_BIF_REDS_LEFT(BIF_P),
 				1);
 }

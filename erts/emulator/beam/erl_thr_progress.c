@@ -291,7 +291,7 @@ perhaps_thr_prgr_data(ErtsSchedulerData *esdp)
     if (esdp)
 	return &esdp->thr_progress_data;
     else
-	return erts_tsd_get(erts_thr_prgr_data_key__);
+	return (ErtsThrPrgrData *) erts_tsd_get(erts_thr_prgr_data_key__);
 }
 
 static ERTS_INLINE ErtsThrPrgrData *
@@ -325,7 +325,7 @@ tmp_thr_prgr_data(ErtsSchedulerData *esdp)
 	 * We only allocate the part up to the wakeup_request field
 	 * which is the first field only used by registered threads
 	 */
-	tpd = erts_alloc(ERTS_ALC_T_T_THR_PRGR_DATA,
+	tpd = (ErtsThrPrgrData *) erts_alloc(ERTS_ALC_T_T_THR_PRGR_DATA,
 			 offsetof(ErtsThrPrgrData, wakeup_request));
 	init_tmp_thr_prgr_data(tpd);
     }
@@ -411,7 +411,7 @@ erts_thr_progress_init(int no_schedulers, int managed, int unmanaged)
     tot_size += m_wakeup_size*ERTS_THR_PRGR_WAKEUP_DATA_SIZE;
     tot_size += um_wakeup_size*ERTS_THR_PRGR_WAKEUP_DATA_SIZE;
 
-    ptr = erts_alloc_permanent_cache_aligned(ERTS_ALC_T_THR_PRGR_IDATA,
+    ptr = (char *) erts_alloc_permanent_cache_aligned(ERTS_ALC_T_THR_PRGR_IDATA,
 					     tot_size);
 
     intrnl = (ErtsThrPrgrInternalData *) ptr;
@@ -513,7 +513,7 @@ erts_thr_progress_register_unmanaged_thread(ErtsThrPrgrCallbacks *callbacks)
      * We only allocate the part up to the leader field
      * which is the first field only used by managed threads
      */
-    tpd = erts_alloc(ERTS_ALC_T_THR_PRGR_DATA,
+    tpd = (ErtsThrPrgrData *) erts_alloc(ERTS_ALC_T_THR_PRGR_DATA,
 		     offsetof(ErtsThrPrgrData, leader));
     tpd->id = (int) erts_atomic32_inc_read_nob(&intrnl->misc.data.unmanaged_id);
     tpd->is_managed = 0;
@@ -557,7 +557,7 @@ erts_thr_progress_register_managed_thread(ErtsSchedulerData *esdp,
     if (esdp)
 	tpd = &esdp->thr_progress_data;
     else
-	tpd = erts_alloc(ERTS_ALC_T_THR_PRGR_DATA, sizeof(ErtsThrPrgrData));
+	tpd = (ErtsThrPrgrData *) erts_alloc(ERTS_ALC_T_THR_PRGR_DATA, sizeof(ErtsThrPrgrData));
 
     if (pref_wakeup
 	&& !erts_atomic32_xchg_nob(&intrnl->misc.data.pref_wakeup_used, 1))

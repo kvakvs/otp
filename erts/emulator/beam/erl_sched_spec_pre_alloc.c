@@ -66,7 +66,7 @@ erts_sspa_create(size_t blk_sz, int pa_size)
     tot_size = ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(erts_sspa_data_t));
     tot_size += chunk_mem_size*erts_no_schedulers;
 
-    p = erts_alloc_permanent_cache_aligned(ERTS_ALC_T_PRE_ALLOC_DATA, tot_size);
+    p = (char *) erts_alloc_permanent_cache_aligned(ERTS_ALC_T_PRE_ALLOC_DATA, tot_size);
     data = (erts_sspa_data_t *) p;
     p += ERTS_ALC_CACHE_LINE_ALIGN_SIZE(sizeof(erts_sspa_data_t));
     chunk_start = p;

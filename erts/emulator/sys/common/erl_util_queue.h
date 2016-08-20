@@ -56,7 +56,7 @@
 #define erts_circleq_push_head(Q, N)  \
     do {                              \
         (N)->next = (Q)->next;        \
-        (N)->prev = (void *)(Q);      \
+        (N)->prev = (decltype((N)->prev))(Q);      \
         (Q)->next->prev = (N);        \
         (Q)->next = (N);              \
     } while(0)

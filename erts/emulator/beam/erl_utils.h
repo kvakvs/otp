@@ -127,7 +127,7 @@ void erts_save_emu_args(int argc, char **argv);
 Eterm erts_get_emu_args(struct process *c_p);
 Eterm erts_get_ethread_info(struct process * c_p);
 
-Eterm erts_bld_atom(Uint **hpp, Uint *szp, char *str);
+Eterm erts_bld_atom(Uint **hpp, Uint *szp, const char *str);
 Eterm erts_bld_uint(Uint **hpp, Uint *szp, Uint ui);
 Eterm erts_bld_uword(Uint **hpp, Uint *szp, UWord uw);
 Eterm erts_bld_uint64(Uint **hpp, Uint *szp, Uint64 ui64);

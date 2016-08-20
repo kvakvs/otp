@@ -171,7 +171,7 @@ Hash* hash_new(int type, char* name, int size, HashFunctions fun)
 {
     Hash* h;
 
-    h = fun.meta_alloc(type, sizeof(Hash));
+    h = (Hash *) fun.meta_alloc(type, sizeof(Hash));
 
     h = hash_init(type, h, name, size, fun);
     h->is_allocated =  1;

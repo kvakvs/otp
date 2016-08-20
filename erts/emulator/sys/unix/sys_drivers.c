@@ -264,7 +264,7 @@ struct erl_drv_entry spawn_driver_entry = {
     NULL,
     NULL,
     NULL,
-    ERL_DRV_EXTENDED_MARKER,
+    (int) ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     ERL_DRV_FLAG_USE_PORT_LOCKING | ERL_DRV_FLAG_USE_INIT_ACK,
@@ -294,7 +294,7 @@ struct erl_drv_entry fd_driver_entry = {
     fd_flush, /* flush */
     NULL, /* call */
     NULL, /* event */
-    ERL_DRV_EXTENDED_MARKER,
+    (int) ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0, /* ERL_DRV_FLAGs */
@@ -321,7 +321,7 @@ struct erl_drv_entry vanilla_driver_entry = {
     NULL, /* flush */
     NULL, /* call */
     NULL, /* event */
-    ERL_DRV_EXTENDED_MARKER,
+    (int) ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0, /* ERL_DRV_FLAGs */
@@ -348,7 +348,7 @@ struct erl_drv_entry forker_driver_entry = {
     NULL,
     NULL,
     NULL,
-    ERL_DRV_EXTENDED_MARKER,
+    (int) ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
     0,
@@ -360,7 +360,7 @@ struct erl_drv_entry forker_driver_entry = {
 
 static int set_blocking_data(ErtsSysDriverData *dd) {
 
-    dd->blocking = erts_alloc(ERTS_ALC_T_SYS_BLOCKING, sizeof(ErtsSysBlocking));
+    dd->blocking = (ErtsSysBlocking *) erts_alloc(ERTS_ALC_T_SYS_BLOCKING, sizeof(ErtsSysBlocking));
 
     erts_smp_atomic_add_nob(&sys_misc_mem_sz, sizeof(ErtsSysBlocking));
 
@@ -404,7 +404,7 @@ create_driver_data(ErlDrvPort port_num,
         ((ifd != ofd || ofd == -1) || !(read_write & DO_READ)))
         size += sizeof(ErtsSysFdData);
 
-    data = erts_alloc(ERTS_ALC_T_DRV_TAB,size);
+    data = (char *) erts_alloc(ERTS_ALC_T_DRV_TAB,size);
     erts_smp_atomic_add_nob(&sys_misc_mem_sz, size);
 
     driver_data = (ErtsSysDriverData*)data;
@@ -676,7 +676,7 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name,
             iov_len += 1 + argv_len; /* num argvs including size int */
         }
 
-        io_vector = erts_alloc_fnf(ERTS_ALC_T_TMP, sizeof(struct iovec) * iov_len);
+        io_vector = (struct iovec *) erts_alloc_fnf(ERTS_ALC_T_TMP, sizeof(struct iovec) * iov_len);
 
         if (!io_vector) {
             close_pipes(ifd, ofd);
@@ -705,12 +705,12 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name,
         buffsz += len;
 
         io_vector[i].iov_base = cwd;
-        io_vector[i].iov_len = strlen(io_vector[i].iov_base) + 1;
+        io_vector[i].iov_len = strlen((const char *) io_vector[i].iov_base) + 1;
         buffsz += io_vector[i++].iov_len;
 
         if (wd) {
             io_vector[i].iov_base = wd;
-            io_vector[i].iov_len = strlen(io_vector[i].iov_base) + 1;
+            io_vector[i].iov_len = strlen((const char *) io_vector[i].iov_base) + 1;
             buffsz += io_vector[i++].iov_len;
         }
 
@@ -745,12 +745,12 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name,
                         io_vector[i].iov_base = cmd_line;
                     else
                         io_vector[i].iov_base = opts->argv[j];
-                    io_vector[i].iov_len = strlen(io_vector[i].iov_base) + 1;
+                    io_vector[i].iov_len = strlen((const char *) io_vector[i].iov_base) + 1;
                     buffsz += io_vector[i++].iov_len;
                 }
             } else {
                 io_vector[i].iov_base = cmd_line;
-                io_vector[i].iov_len = strlen(io_vector[i].iov_base) + 1;
+                io_vector[i].iov_len = strlen((const char *) io_vector[i].iov_base) + 1;
                 buffsz += io_vector[i++].iov_len;
             }
         }
@@ -778,7 +778,7 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name,
                 if (res >= io_vector[i].iov_len)
                     res -= io_vector[i].iov_len;
                 else {
-                    driver_enq(port_num, io_vector[i].iov_base + res,
+                    driver_enq(port_num, (char *) io_vector[i].iov_base + res,
                                io_vector[i].iov_len - res);
                     res = 0;
                 }
@@ -802,11 +802,11 @@ static ErlDrvData spawn_start(ErlDrvPort port_num, char* name,
 
     {
         /* send ofd[0] + ifd[1] + stderrfd to forker port */
-        ErtsSysForkerProto *proto =
+        ErtsSysForkerProto *proto = (ErtsSysForkerProto *)
             erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA,
                        sizeof(ErtsSysForkerProto));
         memset(proto, 0, sizeof(ErtsSysForkerProto));
-        proto->action = ErtsSysForkerProtoAction_Start;
+        proto->action = ErtsSysForkerProto::ErtsSysForkerProtoAction_Start;
         proto->u.start.fds[0] = ofd[0];
         proto->u.start.fds[1] = ifd[1];
         proto->u.start.fds[2] = stderrfd;
@@ -892,7 +892,7 @@ static ErlDrvSSizeT fd_control(ErlDrvData drv_data,
 	return 0;
     }
     if (rlen < 2*sizeof(Uint32)) {
-	*rbuf = driver_alloc(2*sizeof(Uint32));
+	*rbuf = (char *) driver_alloc(2*sizeof(Uint32));
     }
     memcpy(*rbuf,resbuff,2*sizeof(Uint32));
     return 2*sizeof(Uint32);
@@ -1206,7 +1206,7 @@ static void outputv(ErlDrvData e, ErlIOVec* ev)
         /* We try to write directly if the fd in non-blocking */
 	int vsize = ev->vsize > MAX_VSIZE ? MAX_VSIZE : ev->vsize;
 
-	n = writev(ofd, (const void *) (ev->iov), vsize);
+	n = writev(ofd, (const struct iovec *) (ev->iov), vsize);
 	if (n == ev->size)
 	    return; /* 0;*/
 	if (n < 0) {
@@ -1392,7 +1392,7 @@ static void ready_input(ErlDrvData e, ErlDrvEvent ready_fd)
             return;
         }
 
-        proto.action = ErtsSysForkerProtoAction_Ack;
+        proto.action = ErtsSysForkerProto_::ErtsSysForkerProtoAction_Ack;
 
         if (driver_sizeq(port_num) > 0) {
             driver_enq(port_num, (char*)&proto, sizeof(proto));
@@ -1507,7 +1507,7 @@ static void ready_input(ErlDrvData e, ErlDrvEvent ready_fd)
 		    continue;
 		}
 		else {		/* The last message we got was split */
-		        char *buf = erts_alloc_fnf(ERTS_ALC_T_FD_ENTRY_BUF, h);
+                    char *buf = (char *) erts_alloc_fnf(ERTS_ALC_T_FD_ENTRY_BUF, h);
 		    if (!buf) {
 			errno = ENOMEM;
 			port_inp_failure(dd, -1);
@@ -1593,7 +1593,7 @@ fd_async(void *async_data)
     driver_pdl_lock(dd->blocking->pdl);
     iov0 = driver_peekq(dd->port_num, &iovlen);
     iovlen = iovlen < MAXIOV ? iovlen : MAXIOV;
-    iov = erts_alloc_fnf(ERTS_ALC_T_SYS_WRITE_BUF,
+    iov = (SysIOVec *) erts_alloc_fnf(ERTS_ALC_T_SYS_WRITE_BUF,
                          sizeof(SysIOVec)*iovlen);
     if (!iov) {
         res = -1;
@@ -1694,7 +1694,7 @@ static ErlDrvData forker_start(ErlDrvPort port_num, char* name,
                    + 1 /* DIR_SEPARATOR_CHAR */
                    + sizeof(CHILD_SETUP_PROG_NAME)
                    + 1);
-    child_setup_prog = erts_alloc(ERTS_ALC_T_CS_PROG_PATH, csp_path_sz);
+    child_setup_prog = (char *) erts_alloc(ERTS_ALC_T_CS_PROG_PATH, csp_path_sz);
     erts_snprintf(child_setup_prog, csp_path_sz,
                   "%s%c%s",
                   bindir,
@@ -1764,7 +1764,7 @@ static void forker_ready_input(ErlDrvData e, ErlDrvEvent fd)
     int res;
     ErtsSysForkerProto *proto;
 
-    proto = erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA, sizeof(*proto));
+    proto = (ErtsSysForkerProto *) erts_alloc(ERTS_ALC_T_DRV_CTRL_DATA, sizeof(*proto));
 
     if ((res = read(fd, proto, sizeof(*proto))) < 0) {
         if (errno == ERRNO_BLOCK)

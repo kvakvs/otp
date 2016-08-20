@@ -923,7 +923,7 @@ static void array_shrink(ProcDict **ppd, unsigned int need)
     if (siz >= (*ppd)->arraySize)
 	return; /* Only shrink */
 
-    *ppd = PD_REALLOC(((void *) *ppd),
+    *ppd = (ProcDict *) PD_REALLOC(((void *) *ppd),
 		      PD_SZ2BYTES((*ppd)->arraySize),
 		      PD_SZ2BYTES(siz));
 
@@ -939,7 +939,7 @@ static void ensure_array_size(ProcDict **ppdict, unsigned int size)
     if (pd == NULL) {
 	Uint siz = next_array_size(size);
 
-        pd = PD_ALLOC(PD_SZ2BYTES(siz));
+        pd = (ProcDict *) PD_ALLOC(PD_SZ2BYTES(siz));
 	for (i = 0; i < siz; ++i) 
 	    pd->data[i] = NIL;
 	pd->arraySize = siz;
@@ -947,7 +947,7 @@ static void ensure_array_size(ProcDict **ppdict, unsigned int size)
     } else if (size > pd->arraySize) {
 	Uint osize = pd->arraySize;
 	Uint nsize = next_array_size(size);
-	pd = PD_REALLOC(((void *) pd),
+	pd = (ProcDict *) PD_REALLOC(((void *) pd),
 			     PD_SZ2BYTES(osize),
 			     PD_SZ2BYTES(nsize));
 	for (i = osize; i < nsize; ++i)

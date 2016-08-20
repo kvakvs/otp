@@ -217,7 +217,7 @@ erts_port_task_alloc_p2p_sig_data(void)
 ErtsProc2PortSigData *
 erts_port_task_alloc_p2p_sig_data_extra(size_t extra, void **extra_ptr)
 {
-    ErtsPortTask *ptp = erts_alloc(ERTS_ALC_T_PORT_TASK,
+    ErtsPortTask *ptp = (ErtsPortTask *) erts_alloc(ERTS_ALC_T_PORT_TASK,
                                    sizeof(ErtsPortTask) + extra);
 
     *extra_ptr = ptp+1;
@@ -364,7 +364,7 @@ busy_wait_move_to_busy_queue(Port *pp, ErtsPortTask *ptp)
 	if (tabp->pre_alloc_busy_caller.caller == am_undefined)
 	    bcp = &tabp->pre_alloc_busy_caller;
 	else
-	    bcp = erts_alloc(ERTS_ALC_T_BUSY_CALLER,
+	    bcp = (ErtsPortTaskBusyCaller *) erts_alloc(ERTS_ALC_T_BUSY_CALLER,
 			     sizeof(ErtsPortTaskBusyCaller));
 	bcp->caller = caller;
 	bcp->count = 1;
@@ -1507,7 +1507,7 @@ erts_port_task_schedule(Eterm id,
 	if (!(ptp->u.alive.flags & ERTS_PT_FLG_NOSUSPEND))
 	    set_tmp_handle(ptp, pthp);
 	else {
-	    ns_pthlp = erts_alloc(ERTS_ALC_T_PT_HNDL_LIST,
+	    ns_pthlp = (ErtsPortTaskHandleList *) erts_alloc(ERTS_ALC_T_PT_HNDL_LIST,
 				  sizeof(ErtsPortTaskHandleList));
 	    set_handle(ptp, &ns_pthlp->handle);
 	}

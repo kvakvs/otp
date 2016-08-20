@@ -691,7 +691,7 @@ void hipe_inc_nstack(Process *p)
 {
     unsigned old_size = p->hipe.nstend - p->hipe.nstack;
     unsigned new_size = hipe_next_nstack_size(old_size);
-    Eterm *new_nstack = erts_alloc(ERTS_ALC_T_HIPE, new_size*sizeof(Eterm));
+    Eterm *new_nstack = (Eterm *) erts_alloc(ERTS_ALC_T_HIPE, new_size*sizeof(Eterm));
     unsigned used_size = p->hipe.nstend - p->hipe.nsp;
 
     sys_memcpy(new_nstack+new_size-used_size, p->hipe.nsp, used_size*sizeof(Eterm));

@@ -423,12 +423,87 @@
 
 #endif
 
-/* Forward declaration of lookup tables (See below in this file) used in list to
- * integer conversions for different bases. Also used in bignum printing.
+/*
+ * How many bits are needed to store 1 digit of given base in binary
+ * Wo.Alpha formula: Table [log2[n], {n,2,36}]
  */
-static const byte digits_per_sint_lookup[36-1];
-static const byte digits_per_small_lookup[36-1];
-static const Sint largest_power_of_base_lookup[36-1];
+static const double lg2_lookup[36-1] = {
+    1.0, 1.58496, 2.0, 2.32193, 2.58496, 2.80735, 3.0, 3.16993, 3.32193,
+    3.45943, 3.58496, 3.70044, 3.80735, 3.90689, 4.0, 4.08746, 4.16993, 4.24793,
+    4.32193, 4.39232, 4.45943, 4.52356, 4.58496, 4.64386, 4.70044, 4.75489,
+    4.80735, 4.85798, 4.90689, 4.9542, 5.0, 5.04439, 5.08746, 5.12928, 5.16993
+};
+static ERTS_INLINE double lookup_log2(Uint base) {
+    return lg2_lookup[base - 2];
+}
+
+/*
+ * How many digits can fit into a signed int (Sint) for given base, we take
+ * one digit away just to be on the safer side (some corner cases).
+ */
+static const byte digits_per_sint_lookup[36-1] = {
+#if (SIZEOF_VOID_P == 4)
+    /* Wo.Alpha formula: Table [Trunc[31 / log[2,n]]-1, {n, 2, 36}] */
+    30, 18, 14, 12, 10, 10, 9, 8, 8, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5,
+    5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4
+#elif (SIZEOF_VOID_P == 8)
+    /* Wo.Alpha formula: Table [Trunc[63 / log[2,n]]-1, {n, 2, 36}] */
+    62, 38, 30, 26, 23, 21, 20, 18, 17, 17, 16, 16, 15, 15, 14, 14, 14, 13, 13,
+    13, 13, 12, 12, 12, 12, 12, 12, 11, 11, 11, 11, 11, 11, 11, 11
+#else
+    #error "Please produce a lookup table for the new architecture"
+#endif
+};
+
+/*
+ * How many digits can fit into Erlang Small (SMALL_BITS-1) counting sign bit
+ */
+static const byte digits_per_small_lookup[36-1] = {
+#if (SIZEOF_VOID_P == 4)
+    /* Wo.Alpha formula: Table [Trunc[27 / log[2,n]]-1, {n, 2, 36}] */
+    27, 17, 13, 11, 10, 9, 9, 8, 8, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5,
+    5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
+#elif (SIZEOF_VOID_P == 8)
+    /* Wo.Alpha formula: Table [Trunc[59 / log[2,n]]-1, {n, 2, 36}] */
+    59, 37, 29, 25, 22, 21, 19, 18, 17, 17, 16, 15, 15, 15, 14, 14, 14, 13, 13,
+    13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 11, 11, 11, 11, 11, 11
+#else
+    #error "Please produce a lookup table for the new architecture"
+#endif
+};
+
+/*
+ * Largest power of base which can be represented in a signed int (Sint).
+ * Calculated by base 2..36 to the power of corresponding element from
+ * digits_per_sint_lookup.
+ */
+static const Sint largest_power_of_base_lookup[36-1] = {
+#if (SIZEOF_VOID_P == 4)
+    /* Wo.Alpha formula: Table [Pow[n, Trunc[31 / log[2,n]]-1], {n, 2, 36}] */
+    1073741824, 387420489, 268435456, 244140625, 60466176, 282475249, 134217728,
+    43046721, 100000000, 19487171, 35831808, 62748517, 105413504, 11390625,
+    16777216, 24137569, 34012224, 47045881, 64000000, 85766121, 5153632,
+    6436343,7962624, 9765625, 11881376, 14348907, 17210368, 20511149, 24300000,
+    28629151, 33554432, 39135393, 45435424, 52521875, 1679616
+#elif (SIZEOF_VOID_P == 8)
+    /* Wo.Alpha formula: Table [Pow[n, Trunc[63 / log[2,n]]-1], {n, 2, 36}]
+     * with LL added after each element manually */
+    4611686018427387904LL, 1350851717672992089LL, 1152921504606846976LL,
+    1490116119384765625LL, 789730223053602816LL, 558545864083284007LL,
+    1152921504606846976LL, 150094635296999121LL, 100000000000000000LL,
+    505447028499293771LL, 184884258895036416LL, 665416609183179841LL,
+    155568095557812224LL, 437893890380859375LL, 72057594037927936LL,
+    168377826559400929LL, 374813367582081024LL, 42052983462257059LL,
+    81920000000000000LL, 154472377739119461LL, 282810057883082752LL,
+    21914624432020321LL, 36520347436056576LL, 59604644775390625LL,
+    95428956661682176LL, 150094635296999121LL, 232218265089212416LL,
+    12200509765705829LL, 17714700000000000LL, 25408476896404831LL,
+    36028797018963968LL, 50542106513726817LL, 70188843638032384LL,
+    96549157373046875LL, 131621703842267136LL
+#else
+    #error "Please produce a lookup table for the new architecture"
+#endif
+};
 
 static ERTS_INLINE byte get_digits_per_signed_int(Uint base) {
     return digits_per_sint_lookup[base-2];
@@ -2582,88 +2657,6 @@ static ERTS_INLINE byte c2int_digit_from_base(byte ch) {
             : (10 + (ch <= 'Z' ? ch - 'A' : ch - 'a'));
 }
 
-/*
- * How many bits are needed to store 1 digit of given base in binary
- * Wo.Alpha formula: Table [log2[n], {n,2,36}]
- */
-static const double lg2_lookup[36-1] = {
-    1.0, 1.58496, 2.0, 2.32193, 2.58496, 2.80735, 3.0, 3.16993, 3.32193,
-    3.45943, 3.58496, 3.70044, 3.80735, 3.90689, 4.0, 4.08746, 4.16993, 4.24793,
-    4.32193, 4.39232, 4.45943, 4.52356, 4.58496, 4.64386, 4.70044, 4.75489,
-    4.80735, 4.85798, 4.90689, 4.9542, 5.0, 5.04439, 5.08746, 5.12928, 5.16993
-};
-static ERTS_INLINE double lookup_log2(Uint base) {
-    return lg2_lookup[base - 2];
-}
-
-/*
- * How many digits can fit into a signed int (Sint) for given base, we take
- * one digit away just to be on the safer side (some corner cases).
- */
-static const byte digits_per_sint_lookup[36-1] = {
-#if (SIZEOF_VOID_P == 4)
-    /* Wo.Alpha formula: Table [Trunc[31 / log[2,n]]-1, {n, 2, 36}] */
-    30, 18, 14, 12, 10, 10, 9, 8, 8, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5,
-    5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4
-#elif (SIZEOF_VOID_P == 8)
-    /* Wo.Alpha formula: Table [Trunc[63 / log[2,n]]-1, {n, 2, 36}] */
-    62, 38, 30, 26, 23, 21, 20, 18, 17, 17, 16, 16, 15, 15, 14, 14, 14, 13, 13,
-    13, 13, 12, 12, 12, 12, 12, 12, 11, 11, 11, 11, 11, 11, 11, 11
-#else
-    #error "Please produce a lookup table for the new architecture"
-#endif
-};
-
-/*
- * How many digits can fit into Erlang Small (SMALL_BITS-1) counting sign bit
- */
-static const byte digits_per_small_lookup[36-1] = {
-#if (SIZEOF_VOID_P == 4)
-    /* Wo.Alpha formula: Table [Trunc[27 / log[2,n]]-1, {n, 2, 36}] */
-    27, 17, 13, 11, 10, 9, 9, 8, 8, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5, 5,
-    5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
-#elif (SIZEOF_VOID_P == 8)
-    /* Wo.Alpha formula: Table [Trunc[59 / log[2,n]]-1, {n, 2, 36}] */
-    59, 37, 29, 25, 22, 21, 19, 18, 17, 17, 16, 15, 15, 15, 14, 14, 14, 13, 13,
-    13, 13, 13, 12, 12, 12, 12, 12, 12, 12, 11, 11, 11, 11, 11, 11
-#else
-    #error "Please produce a lookup table for the new architecture"
-#endif
-};
-
-/*
- * Largest power of base which can be represented in a signed int (Sint).
- * Calculated by base 2..36 to the power of corresponding element from
- * digits_per_sint_lookup.
- */
-static const Sint largest_power_of_base_lookup[36-1] = {
-#if (SIZEOF_VOID_P == 4)
-    /* Wo.Alpha formula: Table [Pow[n, Trunc[31 / log[2,n]]-1], {n, 2, 36}] */
-    1073741824, 387420489, 268435456, 244140625, 60466176, 282475249, 134217728,
-    43046721, 100000000, 19487171, 35831808, 62748517, 105413504, 11390625,
-    16777216, 24137569, 34012224, 47045881, 64000000, 85766121, 5153632,
-    6436343,7962624, 9765625, 11881376, 14348907, 17210368, 20511149, 24300000,
-    28629151, 33554432, 39135393, 45435424, 52521875, 1679616
-#elif (SIZEOF_VOID_P == 8)
-    /* Wo.Alpha formula: Table [Pow[n, Trunc[63 / log[2,n]]-1], {n, 2, 36}]
-     * with LL added after each element manually */
-    4611686018427387904LL, 1350851717672992089LL, 1152921504606846976LL,
-    1490116119384765625LL, 789730223053602816LL, 558545864083284007LL,
-    1152921504606846976LL, 150094635296999121LL, 100000000000000000LL,
-    505447028499293771LL, 184884258895036416LL, 665416609183179841LL,
-    155568095557812224LL, 437893890380859375LL, 72057594037927936LL,
-    168377826559400929LL, 374813367582081024LL, 42052983462257059LL,
-    81920000000000000LL, 154472377739119461LL, 282810057883082752LL,
-    21914624432020321LL, 36520347436056576LL, 59604644775390625LL,
-    95428956661682176LL, 150094635296999121LL, 232218265089212416LL,
-    12200509765705829LL, 17714700000000000LL, 25408476896404831LL,
-    36028797018963968LL, 50542106513726817LL, 70188843638032384LL,
-    96549157373046875LL, 131621703842267136LL
-#else
-    #error "Please produce a lookup table for the new architecture"
-#endif
-};
-
 Eterm erts_chars_to_integer(Process *BIF_P, char *bytes, 
 			   Uint size, const int base) {
     Eterm res;
@@ -2848,7 +2841,7 @@ LTI_result_t erts_list_to_integer(Process *BIF_P, Eterm orig_list,
      Eterm res;
      Eterm lst = orig_list;
      Eterm tail = lst;
-     int error_res = LTI_BAD_STRUCTURE;
+     LTI_result_t error_res = LTI_BAD_STRUCTURE;
      const Uint digits_per_small = get_digits_per_small(base);
      const Uint digits_per_Sint = get_digits_per_signed_int(base);
 
