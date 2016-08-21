@@ -145,7 +145,7 @@ void *hipe_make_native_stub(void *callee_exp, unsigned int beamArity)
      * and P_ARITY offsets fit in 8-bit signed displacements or not.
      * The rel32 offset in the final jmp depends on its actual location,
      * which also depends on the size of the previous instructions.
-     * Arity is stored with a movb because (a) Björn tells me arities
+     * Arity is stored with a movb because (a) Bjï¿½rn tells me arities
      * are <= 255, and (b) a movb is smaller and faster than a movl.
      */
     unsigned int codeSize;
@@ -157,7 +157,7 @@ void *hipe_make_native_stub(void *callee_exp, unsigned int beamArity)
       (P_CALLEE_EXP >= 128 ? 3 : 0) +
       ((P_CALLEE_EXP + 4) >= 128 ? 3 : 0) +
       (P_ARITY >= 128 ? 3 : 0);
-    codep = code = alloc_code(codeSize);
+    codep = code = (unsigned char *) alloc_code(codeSize);
     if (!code)
 	return NULL;
 

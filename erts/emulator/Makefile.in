@@ -241,8 +241,9 @@ else
 EMU_CC  = @EMU_CC@
 endif
 WFLAGS  = @WFLAGS@
+FORCECPPFLAGS = -x c++ --std=c++14 -Dthis=this_ -Dnew=new_ -Dclass=class_ -Dexport=export_
 CFLAGS0 = @STATIC_CFLAGS@ $(TYPE_FLAGS) $(FLAVOR_FLAGS) $(DEFS) $(WFLAGS) $(THR_DEFS) $(ARCHCFLAGS) $(GIT_VSN)
-CFLAGS  = @STATIC_CFLAGS@ -x c++ --std=c++14 -Dthis=this_ -Dnew=new_ -Dclass=class_ -Dexport=export_ $(TYPE_FLAGS) $(FLAVOR_FLAGS) $(DEFS) $(WFLAGS) $(THR_DEFS) $(ARCHCFLAGS) $(GIT_VSN)
+CFLAGS  = @STATIC_CFLAGS@ $(FORCECPPFLAGS) $(TYPE_FLAGS) $(FLAVOR_FLAGS) $(DEFS) $(WFLAGS) $(THR_DEFS) $(ARCHCFLAGS) $(GIT_VSN)
 HCC     = @HCC@
 LD      = @LD@
 DEXPORT = @DEXPORT@
