@@ -34,10 +34,11 @@ typedef struct {
 Uint setup_rootset(Process*, Eterm*, int, Rootset*);
 void cleanup_rootset(Rootset *rootset);
 
-Eterm *full_sweep_heaps(Process *p, int hibernate,
-                        Eterm *n_heap, Eterm *n_htop,
-                        char *oh_start, Uint oh_size,
-                        Eterm *objv, int nobj);
+Eterm *full_sweep_heaps(Process *p, int hibernate, Eterm *primary_hp,
+                        Eterm **primary_topp, Eterm *secondary_hp,
+                        Eterm **secondary_topp, const char *oh_start,
+                        Uint oh_bytes, const char *mature_start,
+                        Uint mature_bytes, Eterm *objv, int nobj);
 
 /*
  * Offheap sweeping facilities

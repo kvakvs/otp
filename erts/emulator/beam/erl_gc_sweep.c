@@ -157,27 +157,30 @@ void cleanup_rootset(Rootset* rootset)
 }
 
 Eterm *
-full_sweep_heaps(Process *p,
-                 int hibernate,
-                 Eterm *n_heap, Eterm *n_htop,
-                 char *oh_start, Uint oh_size,
+full_sweep_heaps(Process *p, int hibernate,
+                 Eterm *primary_hp, Eterm **primary_topp,
+                 Eterm *secondary_hp, Eterm **secondary_topp,
+                 const char *oh_start, Uint oh_bytes,
+                 const char *mature_start, Uint mature_bytes,
                  Eterm *objv, int nobj)
 {
     Rootset rootset;
     setup_rootset(p, objv, nobj, &rootset);
 
 #ifdef HIPE
-    if (hibernate)
+    if (hibernate) {
         hipe_empty_nstack(p);
-    else
-        n_htop = fullsweep_nstack(p, n_htop);
+    } else {
+        *primary_topp = fullsweep_nstack(p, *primary_topp);
+    }
 #endif
 
     /* All that is not literal -> n_htop */
     generic_roots_sweep(&rootset,
-                        &n_htop, NULL,      /* in out, none */
-                        SweepOp_NotLiteral, /* primary */
-                        SweepOp_None,       /* secondary */
+                        primary_topp,       /* in out */
+                        secondary_topp,     /* in out */
+                        SweepOp_NotLiteral_OldOrMature, /* primary */
+                        SweepOp_NotLiteral,             /* secondary */
                         NULL, 0,            /* oh_start, bytes */
                         NULL, 0);           /* mature_start, bytes */
 
@@ -190,11 +193,18 @@ full_sweep_heaps(Process *p,
      * until all is copied.
      */
 
-    generic_sweep(n_heap, &n_htop,
-                  NULL, NULL,
+    generic_sweep(primary_hp, primary_topp,
+                  secondary_hp, secondary_topp,
                   SweepOp_NotLiteral,
+                  SweepOp_NotLiteral_OldOrMature,
+                  oh_start, oh_bytes,
+                  mature_start, mature_bytes);
+
+    generic_sweep(secondary_hp, secondary_topp,
+                  NULL, NULL,
+                  SweepOp_NotLiteral_OldOrMature,
                   SweepOp_None,
-                  oh_start, oh_size,
+                  oh_start, oh_bytes,
                   NULL, 0);
 
     if (MSO(p).first) {
@@ -207,8 +217,6 @@ full_sweep_heaps(Process *p,
                        (OLD_HEND(p) - OLD_HEAP(p)) * sizeof(Eterm));
         OLD_HEAP(p) = OLD_HTOP(p) = OLD_HEND(p) = NULL;
     }
-
-    return n_htop;
 }
 
 static Uint64 ERTS_INLINE

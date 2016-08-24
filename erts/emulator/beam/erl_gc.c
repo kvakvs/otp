@@ -776,14 +776,9 @@ erts_garbage_collect_hibernate(Process* p)
 				    sizeof(Eterm)*heap_size);
     htop = heap;
 
-    htop = full_sweep_heaps(p,
-			    1,
-			    heap,
-			    htop,
-			    (char *) p->old_heap,
-			    (char *) p->old_htop - (char *) p->old_heap,
-			    p->arg_reg,
-			    p->arity);
+    htop = full_sweep_heaps(p, 1, heap, htop, NULL, NULL, (char *) p->old_heap,
+                            (char *) p->old_htop - (char *) p->old_heap, NULL,
+                            0, p->arg_reg, p->arity);
 
     ERTS_HEAP_FREE(ERTS_ALC_T_HEAP,
 		   (p->abandoned_heap
@@ -919,13 +914,13 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
 {
     Uint lit_size = byte_lit_size / sizeof(Eterm);
     Uint old_heap_size;
-    Eterm* temp_lit;
+    Eterm *temp_lit;
     Sint offs;
     Rootset rootset;            /* Rootset for GC (stack, dictionary, etc). */
-    char* area_start;
-    Uint area_size;
-    Eterm* old_htop;
-    struct erl_off_heap_header** prev = NULL;
+    char *area_start;
+    Uint area_bytes;
+    Eterm *old_htop;
+    struct erl_off_heap_header **prev = NULL;
 
     if (p->flags & F_DISABLE_GC)
 	return;
@@ -969,9 +964,9 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
      */
 
     area_start = (char *) temp_lit;
-    area_size = byte_lit_size;
+    area_bytes = byte_lit_size;
     setup_rootset(p, p->arg_reg, p->arity, &rootset);
-    old_htop = sweep_literals_nstack(p, p->old_htop, area_start, area_size);
+    old_htop = sweep_literals_nstack(p, p->old_htop, area_start, area_bytes);
 
     /* All that belongs to lit copy area_start -> old_htop (passed as mature arg) */
     generic_roots_sweep(&rootset,
@@ -979,7 +974,7 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
                         SweepOp_Mature,
                         SweepOp_None,
                         NULL, 0,
-                        area_start, area_size);
+                        area_start, area_bytes);
     ASSERT(p->old_htop <= old_htop && old_htop <= p->old_hend);
 
     cleanup_rootset(&rootset);
@@ -995,7 +990,7 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
                   SweepOp_None,    /* primary - no action */
                   SweepOp_Mature,  /* secondary - take all from 'area' */
                   NULL, 0,
-                  area_start, area_size);
+                  area_start, area_bytes);
 
     /* All in old heap that belongs to lit copy 'area' -> old_htop */
     generic_sweep(OLD_HEAP(p), &old_htop,
@@ -1003,7 +998,7 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
                   SweepOp_Mature,
                   SweepOp_None,
                   NULL, 0, /* (char *) OLD_HEAP(p), sizeof(Eterm) * old_heap_size, */
-                  area_start, area_size);
+                  area_start, area_bytes);
     ASSERT(p->old_htop <= old_htop && old_htop <= p->old_hend);
     p->old_htop = old_htop;
 
@@ -1353,15 +1348,21 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 		 int need, Eterm* objv, int nobj, Uint *recl)
 {
     Uint size_before, size_after, stack_size;
-    Eterm* n_heap;
-    Eterm* n_htop;
-    char* oh = (char *) OLD_HEAP(p);
-    Uint oh_size = (char *) OLD_HTOP(p) - oh;
-    Uint new_sz, stk_sz;
+    Eterm *n_heap, *n_htop;
+    Eterm *o_heap = NULL, *o_htop = NULL;
+    const char *oh_start = (char *) OLD_HEAP(p);
+    Uint oh_bytes = (char *) OLD_HTOP(p) - oh_start;
+    const char *mature_start;
+    Uint mature_bytes;
+    Uint old_sz, new_sz, stk_sz;
     int adjusted;
 
     VERBOSE(DEBUG_SHCOPY, ("[pid=%T] MAJOR GC: %p %p %p %p\n", p->common.id,
                            HEAP_START(p), HEAP_END(p), OLD_HEAP(p), OLD_HEND(p)));
+
+    mature_start = p->abandoned_heap ? (const char *) p->abandoned_heap
+                                     : (const char *) HEAP_START(p);
+    mature_bytes = HIGH_WATER(p) ? (char *) HIGH_WATER(p) - mature_start : 0;
 
     /*
      * Do a fullsweep GC. First figure out the size of the heap
@@ -1382,7 +1383,7 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
     if (new_sz == HEAP_SIZE(p) && FLAGS(p) & F_HEAP_GROW) {
         new_sz = next_heap_size(p, HEAP_SIZE(p), 1);
     }
-
+    old_sz = next_heap_size(p, new_sz, 1);
 
     if (MAX_HEAP_SIZE_GET(p)) {
         Uint heap_size = size_before;
@@ -1404,6 +1405,10 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
     FLAGS(p) &= ~(F_HEAP_GROW|F_NEED_FULLSWEEP);
     n_htop = n_heap = (Eterm *) ERTS_HEAP_ALLOC(ERTS_ALC_T_HEAP,
 						sizeof(Eterm)*new_sz);
+    if (mature_bytes || oh_start) {
+        o_htop = o_heap = (Eterm *) ERTS_HEAP_ALLOC(ERTS_ALC_T_OLD_HEAP,
+                                                    sizeof(Eterm) * old_sz);
+    }
 
     if (live_hf_end != ERTS_INVALID_HFRAG_PTR) {
 	/*
@@ -1414,7 +1419,12 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 					 objv, nobj);
     }
 
-    n_htop = full_sweep_heaps(p, 0, n_heap, n_htop, oh, oh_size, objv, nobj);
+    full_sweep_heaps(p, 0,               /* process, hibernate */
+                     n_heap, &n_htop,    /* primary in, in out */
+                     o_heap, &o_htop,    /* secondary in, in out */
+                     oh_start, oh_bytes,         /* old */
+                     mature_start, mature_bytes, /* mature */
+                     objv, nobj);
 
     /* Move the stack to the end of the heap */
     stk_sz = HEAP_END(p) - p->stop;
@@ -1435,6 +1445,16 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 		    ? p->abandoned_heap
 		    : HEAP_START(p)),
 		   p->heap_sz * sizeof(Eterm));
+
+    if (OLD_HEAP(p)) {
+        ERTS_HEAP_FREE(ERTS_ALC_T_OLD_HEAP,
+                       OLD_HEAP(p),
+                       (OLD_HTOP(p) - OLD_HEAP(p)) * sizeof(Eterm));
+        OLD_HEAP(p) = o_heap;
+        OLD_HTOP(p) = o_htop;
+        OLD_HEND(p) = o_heap + old_sz;
+    }
+
     p->abandoned_heap = NULL;
     p->flags &= ~F_ABANDONED_HEAP_USE;
     HEAP_START(p) = n_heap;
