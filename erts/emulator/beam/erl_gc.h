@@ -18,7 +18,8 @@
  * %CopyrightEnd%
  */
 
-#pragma once
+#ifndef __ERL_GC_H
+#define __ERL_GC_H
 
 #if defined(ERL_WANT_GC_INTERNALS__) || defined(ERTS_DO_INCL_GLB_INLINE_FUNC_DEF)
 
@@ -156,3 +157,5 @@ void erts_offset_heap(Eterm*, Uint, Sint, Eterm*, Eterm*);
 void erts_free_heap_frags(struct process* p);
 Eterm erts_max_heap_size_map(Sint, Uint, Eterm **, Uint *);
 int erts_max_heap_size(Eterm, Uint *, Uint *);
+
+#endif /* __ERL_GC_H */

@@ -1,4 +1,24 @@
-#pragma once
+/*
+ * %CopyrightBegin%
+ *
+ * Copyright Ericsson AB 2002-2016. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * %CopyrightEnd%
+ */
+#ifndef __ERL_GC_SWEEP_H
+#define __ERL_GC_SWEEP_H
 
 #if defined(DEBUG) || 0
 #define ERTS_GC_DEBUG
@@ -22,75 +42,112 @@
 typedef struct {
     Eterm* v;   /* Pointers to vectors with terms to GC (e.g. the stack). */
     Uint sz;    /* Size of each vector. */
-} Roots;
+} ErtsGCRoots;
 
 typedef struct {
-    Roots def[32];  /* Default storage. */
-    Roots* roots;   /* Pointer to root set array. */
-    Uint size;	    /* Storage size. */
-    int num_roots;  /* Number of root arrays. */
-} Rootset;
+    ErtsGCRoots def[32];    /* Default storage. */
+    ErtsGCRoots *roots;     /* Pointer to root set array. */
+    Uint size;	            /* Storage size. */
+    int num_roots;          /* Number of root arrays. */
+} ErtsGCRootset;
 
-Uint setup_rootset(Process*, Eterm*, int, Rootset*);
-void cleanup_rootset(Rootset *rootset);
+Uint erts_gc_rootset_new(Process *p,
+                         Eterm *objv, int nobj,
+                         ErtsGCRootset *rootset);
+void erts_gc_rootset_done(ErtsGCRootset *rootset);
 
-Eterm *full_sweep_heaps(Process *p, int hibernate, Eterm *primary_hp,
-                        Eterm **primary_topp, Eterm *secondary_hp,
-                        Eterm **secondary_topp, const char *oh_start,
-                        Uint oh_bytes, const char *mature_start,
-                        Uint mature_bytes, Eterm *objv, int nobj);
+void erts_gc_full_sweep_heaps(Process *p, int hibernate, Eterm *primary_hp,
+                              Eterm **primary_topp, Eterm *secondary_hp,
+                              Eterm **secondary_topp, const char *oh_start,
+                              Uint oh_bytes, const char *mature_start,
+                              Uint mature_bytes, Eterm *objv, int nobj);
 
-/*
- * Offheap sweeping facilities
- */
-typedef struct {
-    struct erl_off_heap_header* new_candidates;
-    struct erl_off_heap_header* new_candidates_end;
-    struct erl_off_heap_header* old_candidates;
-    Uint no_of_candidates;
-    Uint no_of_active;
-} ShrinkCandidates;
+void erts_gc_sweep_off_heap(Process *p, int fullsweep);
 
-void sweep_off_heap(Process *p, int fullsweep);
+static Uint64 ERTS_INLINE
+erts_gc_do_next_vheap_size(Uint64 vheap, Uint64 vheap_sz) {
+
+    /*                grow
+     *
+     * vheap_sz ======================
+     *
+     * vheap 75% +    grow
+     *          ----------------------
+     *
+     * vheap 25 - 75% same
+     *          ----------------------
+     *
+     * vheap ~ - 25% shrink
+     *
+     *          ----------------------
+     */
+
+    if ((Uint64) vheap/3 > (Uint64) (vheap_sz/4)) {
+        Uint64 new_vheap_sz = vheap_sz;
+
+        while((Uint64) vheap/3 > (Uint64) (vheap_sz/4)) {
+            /* the golden ratio = 1.618 */
+            new_vheap_sz = (Uint64) vheap_sz * 1.618;
+            if (new_vheap_sz < vheap_sz ) {
+                return vheap_sz;
+            }
+            vheap_sz = new_vheap_sz;
+        }
+
+        return vheap_sz;
+    }
+
+    if (vheap < (Uint64) (vheap_sz/4)) {
+        return (vheap_sz >> 1);
+    }
+
+    return vheap_sz;
+}
+
+static Uint64 ERTS_INLINE
+erts_gc_next_vheap_size(Process *p, Uint64 vheap, Uint64 vheap_sz) {
+    Uint64 new_vheap_sz = erts_gc_do_next_vheap_size(vheap, vheap_sz);
+    return new_vheap_sz < p->min_vheap_size ? p->min_vheap_size : new_vheap_sz;
+}
 
 typedef enum {
-    SweepOp_None,
-    SweepOp_NotLiteral,
-    SweepOp_NotLiteral_NotOld,
-    SweepOp_NotLiteral_OldOrMature,
-    SweepOp_NotLiteral_Mature,
-    SweepOp_Mature
-} SweepOp;
+    ErtsGC_SweepOp_None,
+    ErtsGC_SweepOp_NotLiteral,
+    ErtsGC_SweepOp_NotLiteral_NotOld,
+    ErtsGC_SweepOp_NotLiteral_OldOrMature,
+    ErtsGC_SweepOp_NotLiteral_Mature,
+    ErtsGC_SweepOp_Mature
+} ErtsGCSweepOp;
 
 /* NOTE: during sweeps primary condition is checked AFTER secondary! */
 static ERTS_FORCE_INLINE int
-is_in_primary_area(const Eterm *ptr,
-                   const SweepOp type,
-                   const char *oh_start, Uint oh_size,
-                   const char *mature_start, Uint mature_size,
-                   const int is_literal)
+erts_gc_is_in_primary_area(const Eterm *ptr,
+                           const ErtsGCSweepOp type,
+                           const char *oh_start, Uint oh_size,
+                           const char *mature_start, Uint mature_size,
+                           const int is_literal)
 {
     switch (type) {
-        case SweepOp_NotLiteral:
-            return ! is_literal;
+        case ErtsGC_SweepOp_NotLiteral:
+            return !is_literal;
 
-        case SweepOp_NotLiteral_NotOld:
-            return ! is_literal
-                   && ! ErtsInArea(ptr, oh_start, oh_size);
+        case ErtsGC_SweepOp_NotLiteral_NotOld:
+            return !is_literal
+                   && !ErtsInArea(ptr, oh_start, oh_size);
 
-        case SweepOp_Mature:
+        case ErtsGC_SweepOp_Mature:
             return ErtsInArea(ptr, mature_start, mature_size);
 
-        case SweepOp_NotLiteral_OldOrMature:
-            return ! is_literal
+        case ErtsGC_SweepOp_NotLiteral_OldOrMature:
+            return !is_literal
                    && (ErtsInArea(ptr, mature_start, mature_size)
                        || ErtsInArea(ptr, oh_start, oh_size));
 
-        case SweepOp_NotLiteral_Mature:
-            return ! is_literal
+        case ErtsGC_SweepOp_NotLiteral_Mature:
+            return !is_literal
                    && ErtsInArea(ptr, mature_start, mature_size);
 
-        case SweepOp_None:
+        case ErtsGC_SweepOp_None:
             return 0;
 
         default:
@@ -101,27 +158,27 @@ is_in_primary_area(const Eterm *ptr,
 
 /* NOTE: in sweep secondary (this) condition is checked first */
 static ERTS_FORCE_INLINE int
-is_in_secondary_area(const Eterm *ptr,
-                     const SweepOp type,
-                     const char *oh_start, Uint oh_size,
-                     const char *mature_start, Uint mature_size,
-                     const Eterm *secondary_top,
-                     const int is_literal)
+erts_gc_is_in_secondary_area(const Eterm *ptr,
+                             const ErtsGCSweepOp type,
+                             const char *oh_start, Uint oh_size,
+                             const char *mature_start, Uint mature_size,
+                             const Eterm *secondary_top,
+                             const int is_literal)
 {
     if (!secondary_top) { return 0; }
-    return is_in_primary_area(ptr, type,
-                              oh_start, oh_size,
-                              mature_start, mature_size,
-                              is_literal);
+    return erts_gc_is_in_primary_area(ptr, type,
+                                      oh_start, oh_size,
+                                      mature_start, mature_size,
+                                      is_literal);
 }
 
 static ERTS_FORCE_INLINE void
-generic_sweep(Eterm *hp, Eterm **primary_topp,
-              Eterm *secondary_hp, Eterm **secondary_topp,
-              const SweepOp primary_op,
-              const SweepOp secondary_op,
-              const char *oh_start, Uint oh_bytes,
-              const char *mature_start, Uint mature_bytes)
+erts_gc_generic_sweep(Eterm *hp, Eterm **primary_topp,
+                      Eterm *secondary_hp, Eterm **secondary_topp,
+                      const ErtsGCSweepOp primary_op,
+                      const ErtsGCSweepOp secondary_op,
+                      const char *oh_start, Uint oh_bytes,
+                      const char *mature_start, Uint mature_bytes)
 {
     Eterm gval;
     Eterm *primary_top = *primary_topp;
@@ -146,15 +203,17 @@ generic_sweep(Eterm *hp, Eterm **primary_topp,
                 if (IS_MOVED_BOXED(val)) {
                     ASSERT(is_boxed(val));
                     *hp++ = val;
-                } else if (is_in_secondary_area(ptr, secondary_op,
-                                                oh_start, oh_bytes,
-                                                mature_start, mature_bytes,
-                                                secondary_top, is_lit)) {
+                } else if (erts_gc_is_in_secondary_area(ptr, secondary_op,
+                                                        oh_start, oh_bytes,
+                                                        mature_start,
+                                                        mature_bytes,
+                                                        secondary_top, is_lit)) {
                     MOVE_BOXED(ptr, val, secondary_top, hp++);
-                } else if (is_in_primary_area(ptr, primary_op,
-                                              oh_start, oh_bytes,
-                                              mature_start, mature_bytes,
-                                              is_lit)) {
+                } else if (erts_gc_is_in_primary_area(ptr, primary_op,
+                                                      oh_start, oh_bytes,
+                                                      mature_start,
+                                                      mature_bytes,
+                                                      is_lit)) {
                     MOVE_BOXED(ptr, val, primary_top, hp++);
                 } else {
                     hp++;
@@ -168,15 +227,17 @@ generic_sweep(Eterm *hp, Eterm **primary_topp,
 
                 if (IS_MOVED_CONS(val)) {
                     *hp++ = ptr[1];
-                } else if (is_in_secondary_area(ptr, secondary_op,
-                                                oh_start, oh_bytes,
-                                                mature_start, mature_bytes,
-                                                secondary_top, is_lit)) {
+                } else if (erts_gc_is_in_secondary_area(ptr, secondary_op,
+                                                        oh_start, oh_bytes,
+                                                        mature_start,
+                                                        mature_bytes,
+                                                        secondary_top, is_lit)) {
                     MOVE_CONS(ptr, val, secondary_top, hp++);
-                } else if (is_in_primary_area(ptr, primary_op,
-                                              oh_start, oh_bytes,
-                                              mature_start, mature_bytes,
-                                              is_lit)) {
+                } else if (erts_gc_is_in_primary_area(ptr, primary_op,
+                                                      oh_start, oh_bytes,
+                                                      mature_start,
+                                                      mature_bytes,
+                                                      is_lit)) {
                     MOVE_CONS(ptr, val, primary_top, hp++);
                 } else {
                     hp++;
@@ -198,16 +259,22 @@ generic_sweep(Eterm *hp, Eterm **primary_topp,
                         if (IS_MOVED_BOXED(val)) {
                             *origptr = val;
                             mb->base = binary_bytes(*origptr);
-                        } else if (is_in_secondary_area(ptr, secondary_op,
-                                                        oh_start, oh_bytes,
-                                                        mature_start, mature_bytes,
-                                                        secondary_top, is_lit)) {
+                        } else if (erts_gc_is_in_secondary_area(ptr,
+                                                                secondary_op,
+                                                                oh_start,
+                                                                oh_bytes,
+                                                                mature_start,
+                                                                mature_bytes,
+                                                                secondary_top,
+                                                                is_lit)) {
                             MOVE_BOXED(ptr, val, secondary_top, origptr);
                             mb->base = binary_bytes(*origptr);
-                        } else if (is_in_primary_area(ptr, primary_op,
-                                                      oh_start, oh_bytes,
-                                                      mature_start, mature_bytes,
-                                                      is_lit)) {
+                        } else if (erts_gc_is_in_primary_area(ptr, primary_op,
+                                                              oh_start,
+                                                              oh_bytes,
+                                                              mature_start,
+                                                              mature_bytes,
+                                                              is_lit)) {
                             MOVE_BOXED(ptr, val, primary_top, origptr);
                             mb->base = binary_bytes(*origptr);
                         }
@@ -231,14 +298,15 @@ generic_sweep(Eterm *hp, Eterm **primary_topp,
 }
 
 static void ERTS_FORCE_INLINE
-generic_roots_sweep(Rootset *rs,
-                    Eterm **primary_topp,   /* in out */
-                    Eterm **secondary_topp, /* in out */
-                    SweepOp primary_op, SweepOp secondary_op,
-                    const char *oh_start, Uint oh_bytes,
-                    const char *mature_start, Uint mature_bytes)
+erts_gc_generic_roots_sweep(ErtsGCRootset *rs,
+                            Eterm **primary_topp,   /* in out */
+                            Eterm **secondary_topp, /* in out */
+                            ErtsGCSweepOp primary_op,
+                            ErtsGCSweepOp secondary_op,
+                            const char *oh_start, Uint oh_bytes,
+                            const char *mature_start, Uint mature_bytes)
 {
-    Roots *roots = rs->roots;
+    ErtsGCRoots *roots = rs->roots;
     int n = rs->num_roots;
     Eterm *primary_top = *primary_topp;
     Eterm *secondary_top = secondary_topp ? *secondary_topp : NULL;
@@ -260,15 +328,18 @@ generic_roots_sweep(Rootset *rs,
                     if (IS_MOVED_BOXED(val)) {
                         ASSERT(is_boxed(val));
                         *g_ptr++ = val;
-                    } else if (is_in_secondary_area(ptr, secondary_op,
-                                                    oh_start, oh_bytes,
-                                                    mature_start, mature_bytes,
-                                                    secondary_top, is_lit)) {
+                    } else if (erts_gc_is_in_secondary_area(ptr, secondary_op,
+                                                            oh_start, oh_bytes,
+                                                            mature_start,
+                                                            mature_bytes,
+                                                            secondary_top,
+                                                            is_lit)) {
                         MOVE_BOXED(ptr, val, secondary_top, g_ptr++);
-                    } else if (is_in_primary_area(ptr, primary_op,
-                                                  oh_start, oh_bytes,
-                                                  mature_start, mature_bytes,
-                                                  is_lit)) {
+                    } else if (erts_gc_is_in_primary_area(ptr, primary_op,
+                                                          oh_start, oh_bytes,
+                                                          mature_start,
+                                                          mature_bytes,
+                                                          is_lit)) {
                         MOVE_BOXED(ptr, val, primary_top, g_ptr++);
                     } else {
                         g_ptr++;
@@ -282,15 +353,18 @@ generic_roots_sweep(Rootset *rs,
                     val = *ptr;
                     if (IS_MOVED_CONS(val)) {
                         *g_ptr++ = ptr[1];
-                    } else if (is_in_secondary_area(ptr, secondary_op,
-                                                    oh_start, oh_bytes,
-                                                    mature_start, mature_bytes,
-                                                    secondary_top, is_lit)) {
+                    } else if (erts_gc_is_in_secondary_area(ptr, secondary_op,
+                                                            oh_start, oh_bytes,
+                                                            mature_start,
+                                                            mature_bytes,
+                                                            secondary_top,
+                                                            is_lit)) {
                         MOVE_CONS(ptr, val, secondary_top, g_ptr++);
-                    } else if (is_in_primary_area(ptr, primary_op,
-                                                  oh_start, oh_bytes,
-                                                  mature_start, mature_bytes,
-                                                  is_lit)) {
+                    } else if (erts_gc_is_in_primary_area(ptr, primary_op,
+                                                          oh_start, oh_bytes,
+                                                          mature_start,
+                                                          mature_bytes,
+                                                          is_lit)) {
                         MOVE_CONS(ptr, val, primary_top, g_ptr++);
                     } else {
                         g_ptr++;
@@ -307,3 +381,5 @@ generic_roots_sweep(Rootset *rs,
     *primary_topp = primary_top;
     if (secondary_topp) { *secondary_topp = secondary_top; }
 }
+
+#endif /* __ERL_GC_SWEEP_H */

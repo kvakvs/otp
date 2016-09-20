@@ -1,3 +1,22 @@
+/*
+ * %CopyrightBegin%
+ *
+ * Copyright Ericsson AB 2002-2016. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * %CopyrightEnd%
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -24,10 +43,21 @@
 #define ERTS_INACT_WR_PB_LEAVE_LIMIT 10
 #define ERTS_INACT_WR_PB_LEAVE_PERCENTAGE 10
 
+/*
+ * Offheap sweeping facilities
+ */
+typedef struct {
+    struct erl_off_heap_header* new_candidates;
+    struct erl_off_heap_header* new_candidates_end;
+    struct erl_off_heap_header* old_candidates;
+    Uint no_of_candidates;
+    Uint no_of_active;
+} ShrinkCandidates;
+
 Uint
-setup_rootset(Process *p, Eterm *objv, int nobj, Rootset *rootset)
+erts_gc_rootset_new(Process *p, Eterm *objv, int nobj, ErtsGCRootset *rootset)
 {
-    Roots* roots;
+    ErtsGCRoots* roots;
     Uint n;
 
     n = 0;
@@ -121,8 +151,8 @@ setup_rootset(Process *p, Eterm *objv, int nobj, Rootset *rootset)
                 Uint new_size = n + p->msg.len;
                 ERTS_GC_ASSERT(roots == rootset->def);
                 roots = erts_alloc(ERTS_ALC_T_ROOTSET,
-                                   new_size*sizeof(Roots));
-                sys_memcpy(roots, rootset->def, n*sizeof(Roots));
+                                   new_size*sizeof(ErtsGCRoots));
+                sys_memcpy(roots, rootset->def, n*sizeof(ErtsGCRoots));
                 rootset->size = new_size;
             }
 
@@ -149,23 +179,23 @@ setup_rootset(Process *p, Eterm *objv, int nobj, Rootset *rootset)
     return n;
 }
 
-void cleanup_rootset(Rootset* rootset)
+void erts_gc_rootset_done(ErtsGCRootset *rootset)
 {
     if (rootset->roots != rootset->def) {
         erts_free(ERTS_ALC_T_ROOTSET, rootset->roots);
     }
 }
 
-Eterm *
-full_sweep_heaps(Process *p, int hibernate,
-                 Eterm *primary_hp, Eterm **primary_topp,
-                 Eterm *secondary_hp, Eterm **secondary_topp,
-                 const char *oh_start, Uint oh_bytes,
-                 const char *mature_start, Uint mature_bytes,
-                 Eterm *objv, int nobj)
+void
+erts_gc_full_sweep_heaps(Process *p, int hibernate,
+                         Eterm *primary_hp, Eterm **primary_topp,
+                         Eterm *secondary_hp, Eterm **secondary_topp,
+                         const char *oh_start, Uint oh_bytes,
+                         const char *mature_start, Uint mature_bytes,
+                         Eterm *objv, int nobj)
 {
-    Rootset rootset;
-    setup_rootset(p, objv, nobj, &rootset);
+    ErtsGCRootset rootset;
+    erts_gc_rootset_new(p, objv, nobj, &rootset);
 
 #ifdef HIPE
     if (hibernate) {
@@ -176,15 +206,15 @@ full_sweep_heaps(Process *p, int hibernate,
 #endif
 
     /* All that is not literal -> n_htop */
-    generic_roots_sweep(&rootset,
-                        primary_topp,       /* in out */
-                        secondary_topp,     /* in out */
-                        SweepOp_NotLiteral_OldOrMature, /* primary */
-                        SweepOp_NotLiteral,             /* secondary */
-                        NULL, 0,            /* oh_start, bytes */
-                        NULL, 0);           /* mature_start, bytes */
+    erts_gc_generic_roots_sweep(&rootset,
+                                primary_topp,       /* in out */
+                                secondary_topp,     /* in out */
+                                ErtsGC_SweepOp_NotLiteral_OldOrMature, /* primary */
+                                ErtsGC_SweepOp_NotLiteral,             /* secondary */
+                                NULL, 0,            /* oh_start, bytes */
+                                NULL, 0);           /* mature_start, bytes */
 
-    cleanup_rootset(&rootset);
+    erts_gc_rootset_done(&rootset);
 
     /*
      * Now all references on the stack point to the new heap. However,
@@ -193,22 +223,22 @@ full_sweep_heaps(Process *p, int hibernate,
      * until all is copied.
      */
 
-    generic_sweep(primary_hp, primary_topp,
-                  secondary_hp, secondary_topp,
-                  SweepOp_NotLiteral,
-                  SweepOp_NotLiteral_OldOrMature,
-                  oh_start, oh_bytes,
-                  mature_start, mature_bytes);
+    erts_gc_generic_sweep(primary_hp, primary_topp,
+                          secondary_hp, secondary_topp,
+                          ErtsGC_SweepOp_NotLiteral,
+                          ErtsGC_SweepOp_NotLiteral_OldOrMature,
+                          oh_start, oh_bytes,
+                          mature_start, mature_bytes);
 
-    generic_sweep(secondary_hp, secondary_topp,
-                  NULL, NULL,
-                  SweepOp_NotLiteral_OldOrMature,
-                  SweepOp_None,
-                  oh_start, oh_bytes,
-                  NULL, 0);
+    erts_gc_generic_sweep(secondary_hp, secondary_topp,
+                          NULL, NULL,
+                          ErtsGC_SweepOp_NotLiteral_OldOrMature,
+                          ErtsGC_SweepOp_None,
+                          oh_start, oh_bytes,
+                          NULL, 0);
 
     if (MSO(p).first) {
-        sweep_off_heap(p, 1);
+        erts_gc_sweep_off_heap(p, 1);
     }
 
     if (OLD_HEAP(p) != NULL) {
@@ -217,52 +247,6 @@ full_sweep_heaps(Process *p, int hibernate,
                        (OLD_HEND(p) - OLD_HEAP(p)) * sizeof(Eterm));
         OLD_HEAP(p) = OLD_HTOP(p) = OLD_HEND(p) = NULL;
     }
-}
-
-static Uint64 ERTS_INLINE
-do_next_vheap_size(Uint64 vheap, Uint64 vheap_sz) {
-
-    /*                grow
-     *
-     * vheap_sz ======================
-     *
-     * vheap 75% +    grow
-     *          ----------------------
-     *
-     * vheap 25 - 75% same
-     *          ----------------------
-     *
-     * vheap ~ - 25% shrink
-     *
-     *          ----------------------
-     */
-
-    if ((Uint64) vheap/3 > (Uint64) (vheap_sz/4)) {
-        Uint64 new_vheap_sz = vheap_sz;
-
-        while((Uint64) vheap/3 > (Uint64) (vheap_sz/4)) {
-            /* the golden ratio = 1.618 */
-            new_vheap_sz = (Uint64) vheap_sz * 1.618;
-            if (new_vheap_sz < vheap_sz ) {
-                return vheap_sz;
-            }
-            vheap_sz = new_vheap_sz;
-        }
-
-        return vheap_sz;
-    }
-
-    if (vheap < (Uint64) (vheap_sz/4)) {
-        return (vheap_sz >> 1);
-    }
-
-    return vheap_sz;
-}
-
-static Uint64 ERTS_INLINE
-next_vheap_size(Process* p, Uint64 vheap, Uint64 vheap_sz) {
-    Uint64 new_vheap_sz = do_next_vheap_size(vheap, vheap_sz);
-    return new_vheap_sz < p->min_vheap_size ? p->min_vheap_size : new_vheap_sz;
 }
 
 static ERTS_INLINE void
@@ -312,7 +296,7 @@ link_live_proc_bin(ShrinkCandidates *shrink,
 }
 
 void
-sweep_off_heap(Process *p, int fullsweep)
+erts_gc_sweep_off_heap(Process *p, int fullsweep)
 {
     ShrinkCandidates shrink = {0};
     struct erl_off_heap_header* ptr;
@@ -404,9 +388,11 @@ sweep_off_heap(Process *p, int fullsweep)
     }
 
     if (fullsweep) {
-        BIN_OLD_VHEAP_SZ(p) = next_vheap_size(p, BIN_OLD_VHEAP(p) + MSO(p).overhead, BIN_OLD_VHEAP_SZ(p));
+        BIN_OLD_VHEAP_SZ(p) = erts_gc_next_vheap_size(p, BIN_OLD_VHEAP(p) +
+                                                         MSO(p).overhead,
+                                                      BIN_OLD_VHEAP_SZ(p));
     }
-    BIN_VHEAP_SZ(p)     = next_vheap_size(p, bin_vheap, BIN_VHEAP_SZ(p));
+    BIN_VHEAP_SZ(p)     = erts_gc_next_vheap_size(p, bin_vheap, BIN_VHEAP_SZ(p));
     MSO(p).overhead     = bin_vheap;
 
     /*

@@ -43,7 +43,6 @@
 #include "erl_bif_unique.h"
 #include "dist.h"
 
-#define ERL_WANT_GCSWEEP_INTERNALS__ 1
 #include "erl_gc_sweep.h"
 
 # define STACK_SZ_ON_HEAP(p) ((p)->hend - (p)->stop)
@@ -100,7 +99,6 @@ static void move_msgq_to_heap(Process *p);
 static int reached_max_heap_size(Process *p, Uint total_heap_size,
                                  Uint extra_heap_size, Uint extra_old_heap_size);
 static void init_gc_info(ErtsGCInfo *gcip);
-static Uint64 next_vheap_size(Process* p, Uint64 vheap, Uint64 vheap_sz);
 
 #ifdef HARDDEBUG
 static void disallow_heap_frag_ref_in_heap(Process* p);
@@ -776,9 +774,13 @@ erts_garbage_collect_hibernate(Process* p)
 				    sizeof(Eterm)*heap_size);
     htop = heap;
 
-    htop = full_sweep_heaps(p, 1, heap, htop, NULL, NULL, (char *) p->old_heap,
-                            (char *) p->old_htop - (char *) p->old_heap, NULL,
-                            0, p->arg_reg, p->arity);
+    erts_gc_full_sweep_heaps(p, 1,
+                             heap, &htop,
+                             NULL, NULL,
+                             (char *) p->old_heap,
+                             (char *) p->old_htop - (char *) p->old_heap,
+                             NULL,
+                             0, p->arg_reg, p->arity);
 
     ERTS_HEAP_FREE(ERTS_ALC_T_HEAP,
 		   (p->abandoned_heap
@@ -916,7 +918,7 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
     Uint old_heap_size;
     Eterm *temp_lit;
     Sint offs;
-    Rootset rootset;            /* Rootset for GC (stack, dictionary, etc). */
+    ErtsGCRootset rootset;            /* Rootset for GC (stack, dictionary, etc). */
     char *area_start;
     Uint area_bytes;
     Eterm *old_htop;
@@ -965,19 +967,19 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
 
     area_start = (char *) temp_lit;
     area_bytes = byte_lit_size;
-    setup_rootset(p, p->arg_reg, p->arity, &rootset);
+    erts_gc_rootset_new(p, p->arg_reg, p->arity, &rootset);
     old_htop = sweep_literals_nstack(p, p->old_htop, area_start, area_bytes);
 
     /* All that belongs to lit copy area_start -> old_htop (passed as mature arg) */
-    generic_roots_sweep(&rootset,
-                        &old_htop, NULL,
-                        SweepOp_Mature,
-                        SweepOp_None,
-                        NULL, 0,
-                        area_start, area_bytes);
+    erts_gc_generic_roots_sweep(&rootset,
+                                &old_htop, NULL,
+                                ErtsGC_SweepOp_Mature,
+                                ErtsGC_SweepOp_None,
+                                NULL, 0,
+                                area_start, area_bytes);
     ASSERT(p->old_htop <= old_htop && old_htop <= p->old_hend);
 
-    cleanup_rootset(&rootset);
+    erts_gc_rootset_done(&rootset);
 
     /*
      * Now all references in the rootset to the literals have been updated.
@@ -985,20 +987,22 @@ erts_garbage_collect_literals(Process* p, Eterm* literals,
      */
 
     /* All in yng heap that belongs to lit copy area_start -> old_htop */
-    generic_sweep(HEAP_START(p), & HEAP_TOP(p), /* in, in (used as heap end) */
-                  OLD_HEAP(p), &old_htop,       /* in, in out */
-                  SweepOp_None,    /* primary - no action */
-                  SweepOp_Mature,  /* secondary - take all from 'area' */
-                  NULL, 0,
-                  area_start, area_bytes);
+    erts_gc_generic_sweep(HEAP_START(p),
+                          &HEAP_TOP(p), /* in, in (used as heap end) */
+                          OLD_HEAP(p), &old_htop,       /* in, in out */
+                          ErtsGC_SweepOp_None,    /* primary - no action */
+                          ErtsGC_SweepOp_Mature,  /* secondary - take all from 'area' */
+                          NULL, 0,
+                          area_start, area_bytes);
 
     /* All in old heap that belongs to lit copy 'area' -> old_htop */
-    generic_sweep(OLD_HEAP(p), &old_htop,
-                  NULL, NULL,
-                  SweepOp_Mature,
-                  SweepOp_None,
-                  NULL, 0, /* (char *) OLD_HEAP(p), sizeof(Eterm) * old_heap_size, */
-                  area_start, area_bytes);
+    erts_gc_generic_sweep(OLD_HEAP(p), &old_htop,
+                          NULL, NULL,
+                          ErtsGC_SweepOp_Mature,
+                          ErtsGC_SweepOp_None,
+                          NULL,
+                          0, /* (char *) OLD_HEAP(p), sizeof(Eterm) * old_heap_size, */
+                          area_start, area_bytes);
     ASSERT(p->old_htop <= old_htop && old_htop <= p->old_hend);
     p->old_htop = old_htop;
 
@@ -1217,7 +1221,7 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 	 char *mature_start, Uint mature_bytes,
 	 Uint new_sz, Eterm* objv, int nobj)
 {
-    Rootset rootset;            /* Rootset for GC (stack, dictionary, etc). */
+    ErtsGCRootset rootset;            /* Rootset for GC (stack, dictionary, etc). */
     Eterm* n_htop;
     Uint n;
     Eterm* old_htop = OLD_HTOP(p);
@@ -1240,17 +1244,18 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 					 objv, nobj);
     }
 
-    setup_rootset(p, objv, nobj, &rootset);
+    erts_gc_rootset_new(p, objv, nobj, &rootset);
     /* 1. All that is mature -> old_htop.
      * 2. All that is in young gen (!lit,!old) -> n_htop.  */
-    generic_roots_sweep(&rootset,
-                        &n_htop, &old_htop,        /* prim in out, sec in out */
-                        SweepOp_NotLiteral_NotOld, /* primary */
-                        SweepOp_Mature,            /* secondary */
-                        oh_start, oh_bytes,
-                        mature_start, mature_bytes);
+    erts_gc_generic_roots_sweep(&rootset,
+                                &n_htop,
+                                &old_htop,        /* prim in out, sec in out */
+                                ErtsGC_SweepOp_NotLiteral_NotOld, /* primary */
+                                ErtsGC_SweepOp_Mature,            /* secondary */
+                                oh_start, oh_bytes,
+                                mature_start, mature_bytes);
 
-    cleanup_rootset(&rootset);
+    erts_gc_rootset_done(&rootset);
 
     /*
      * Now all references in the rootset point to the new heap. However,
@@ -1261,21 +1266,21 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
 
     if (mature_bytes == 0) {
         /* All that is in young gen (!lit,!old) -> n_htop */
-        generic_sweep(n_heap, &n_htop,           /* primary, in out */
-                      NULL, NULL,                /* no secondary */
-                      SweepOp_NotLiteral_NotOld, /* primary */
-                      SweepOp_None,              /* secondary */
-                      oh_start, oh_bytes,
-                      NULL, 0);
+        erts_gc_generic_sweep(n_heap, &n_htop,           /* primary, in out */
+                              NULL, NULL,                /* no secondary */
+                              ErtsGC_SweepOp_NotLiteral_NotOld, /* primary */
+                              ErtsGC_SweepOp_None,              /* secondary */
+                              oh_start, oh_bytes,
+                              NULL, 0);
     } else {
         /* 1. All that is mature -> old_htop.
          * 2. All that is in young gen (!lit,!old) -> OLD_HEAP(p).  */
-        generic_sweep(n_heap, &n_htop,           /* primary in out */
-                      OLD_HEAP(p), &old_htop,    /* secondary in out */
-                      SweepOp_NotLiteral_NotOld, /* primary */
-                      SweepOp_Mature,            /* secondary */
-                      oh_start, oh_bytes,
-                      mature_start, mature_bytes);
+        erts_gc_generic_sweep(n_heap, &n_htop,           /* primary in out */
+                              OLD_HEAP(p), &old_htop,    /* secondary in out */
+                              ErtsGC_SweepOp_NotLiteral_NotOld, /* primary */
+                              ErtsGC_SweepOp_Mature,            /* secondary */
+                              oh_start, oh_bytes,
+                              mature_start, mature_bytes);
     }
 
     /*
@@ -1284,18 +1289,18 @@ do_minor(Process *p, ErlHeapFragment *live_hf_end,
      */
 
     if (OLD_HTOP(p) < old_htop) {
-        generic_sweep(OLD_HTOP(p), &old_htop,    /* primary, in out */
-                      NULL, NULL,                /* no secondary */
-                      SweepOp_NotLiteral_NotOld, /* primary */
-                      SweepOp_None,              /* secondary */
-                      oh_start, oh_bytes,
-                      NULL, 0);
+        erts_gc_generic_sweep(OLD_HTOP(p), &old_htop,    /* primary, in out */
+                              NULL, NULL,                /* no secondary */
+                              ErtsGC_SweepOp_NotLiteral_NotOld, /* primary */
+                              ErtsGC_SweepOp_None,              /* secondary */
+                              oh_start, oh_bytes,
+                              NULL, 0);
     }
     OLD_HTOP(p) = old_htop;
     HIGH_WATER(p) = n_htop;
 
     if (MSO(p).first) {
-	sweep_off_heap(p, 0);
+        erts_gc_sweep_off_heap(p, 0);
     }
 
 #ifdef HARDDEBUG
@@ -1419,12 +1424,12 @@ major_collection(Process* p, ErlHeapFragment *live_hf_end,
 					 objv, nobj);
     }
 
-    full_sweep_heaps(p, 0,               /* process, hibernate */
-                     n_heap, &n_htop,    /* primary in, in out */
-                     o_heap, &o_htop,    /* secondary in, in out */
-                     oh_start, oh_bytes,         /* old */
-                     mature_start, mature_bytes, /* mature */
-                     objv, nobj);
+    erts_gc_full_sweep_heaps(p, 0,               /* process, hibernate */
+                             n_heap, &n_htop,    /* primary in, in out */
+                             o_heap, &o_htop,    /* secondary in, in out */
+                             oh_start, oh_bytes,         /* old */
+                             mature_start, mature_bytes, /* mature */
+                             objv, nobj);
 
     /* Move the stack to the end of the heap */
     stk_sz = HEAP_END(p) - p->stop;
@@ -1883,7 +1888,8 @@ move_msgq_to_heap(Process *p)
 
     if (pre_oh != MSO(p).overhead) {
 	/* Got new binaries; update vheap size... */
-	BIN_VHEAP_SZ(p) = next_vheap_size(p, MSO(p).overhead, BIN_VHEAP_SZ(p));
+	BIN_VHEAP_SZ(p) = erts_gc_next_vheap_size(p, MSO(p).overhead,
+                                                  BIN_VHEAP_SZ(p));
     }
 }
 
