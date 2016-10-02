@@ -26,7 +26,7 @@
   xmlns:exsl="http://exslt.org/common"
   extension-element-prefixes="exsl">
 
-  <xsl:preserve-space elements="code pre p"/>
+  <!--<xsl:preserve-space elements="p"/>-->
   <xsl:strip-space elements="*"/>
   <xsl:output method="text" encoding="UTF-8" indent="no"/>
 
@@ -133,7 +133,7 @@
     <!-- It is assumed there is no support for overloaded specs
          (there is no spec with more than one clause) -->
     <xsl:if test="count($clause/guard) > 0 or count($type) > 0">
-      <xsl:text>&#10;Types[1]: &#10;</xsl:text>
+      <xsl:text>&#10;</xsl:text>
 
         <xsl:choose>
           <xsl:when test="$output_subtypes">
@@ -221,10 +221,18 @@
       <xsl:variable name="tname" select="typename"/>
       <xsl:variable name="string" select="string"/>
       <xsl:if test="string-length($string) > 0">
-	<xsl:text>&#10;</xsl:text>
+	<xsl:text>    :type: </xsl:text>
 	<xsl:apply-templates select="$string"/>
 	<xsl:text>&#10;</xsl:text>
-	<xsl:apply-templates select="$type_desc[@variable = $tname]"/>
+
+        <xsl:variable name='temp'>
+          <xsl:apply-templates select="$type_desc[@variable = $tname]"/>
+        </xsl:variable>
+        <xsl:call-template name="printIndented">
+          <xsl:with-param name="indent" select='"    "'/>
+          <xsl:with-param name="text" select="$temp"/>
+        </xsl:call-template>
+        <xsl:text>&#10;</xsl:text>
       </xsl:if>
     </xsl:for-each>
   </xsl:template>
@@ -234,10 +242,19 @@
     <xsl:param name="local_types"/>
 
     <xsl:for-each select ="$local_types">
-      <xsl:text>&#10;</xsl:text>
-      <xsl:call-template name="type_name">
-	<xsl:with-param name="mode" select="'local_type'"/>
+      <xsl:text>    :type: </xsl:text>
+
+      <xsl:variable name='temp'>
+        <xsl:call-template name="type_name">
+          <xsl:with-param name="mode" select="'local_type'"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:call-template name="printIndented">
+        <xsl:with-param name="indent" select='"    "'/>
+        <xsl:with-param name="text" select="$temp"/>
       </xsl:call-template>
+      <xsl:text>&#10;</xsl:text>
+
       <xsl:text>&#10;</xsl:text>
       <xsl:variable name="tname" select="@name"/>
       <xsl:variable name="tnvars" select="@n_vars"/>
@@ -497,16 +514,27 @@
 
   <!-- Note -->
   <xsl:template match="note">
-    <xsl:text>.. note:&#10;</xsl:text>
-    <xsl:text>    </xsl:text>
-    <xsl:apply-templates/>
-    <xsl:text>&#10;&#10;</xsl:text>
+    <xsl:text>&#10;&#10;.. note:: </xsl:text>
+    <xsl:variable name='temp'>
+      <xsl:apply-templates/>
+    </xsl:variable>
+    <xsl:call-template name="printIndented">
+      <xsl:with-param name="indent" select='"    "'/>
+      <xsl:with-param name="text" select="$temp"/>
+    </xsl:call-template>
+    <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
   <!-- Warning -->
   <xsl:template match="warning">
-    <xsl:text>Warning:</xsl:text>
-    <xsl:apply-templates/>
+    <xsl:text>&#10;&#10;.. warning:: </xsl:text>
+    <xsl:variable name='temp'>
+      <xsl:apply-templates/>
+    </xsl:variable>
+    <xsl:call-template name="printIndented">
+      <xsl:with-param name="indent" select='"    "'/>
+      <xsl:with-param name="text" select="$temp"/>
+    </xsl:call-template>
     <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
@@ -534,7 +562,7 @@
         <xsl:value-of select="$content"/>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:text>&#10;.LP</xsl:text>
+        <xsl:text>&#10;</xsl:text>
         <xsl:value-of select="$content"/>
       </xsl:otherwise>
     </xsl:choose>
@@ -601,13 +629,15 @@
     <xsl:if test="$text">
       <xsl:value-of select="$indent" />
       <xsl:variable name="thisLine" select="substring-before($text, '&#10;')" />
+      <xsl:variable name="remaining" select="substring-after($text, '&#10;')" />
       <xsl:choose>
-        <xsl:when test="$thisLine"><!-- $text contains at least one newline -->
+        <xsl:when test="(string-length($thisLine) > 0)
+        or (string-length($remaining) > 0)"><!-- $text contains at least one newline -->
           <!-- print this line -->
           <xsl:value-of select="concat($thisLine, '&#10;')" />
-          <!-- and recurse to process the rest -->
+          <!-- recurse to process the rest -->
           <xsl:call-template name="printIndented">
-            <xsl:with-param name="text" select="substring-after($text, '&#10;')" />
+            <xsl:with-param name="text" select="$remaining" />
             <xsl:with-param name="indent" select="$indent" />
           </xsl:call-template>
         </xsl:when>
@@ -621,18 +651,24 @@
   <!-- Code -->
   <xsl:template match="code">
     <xsl:text>&#10;.. code-block:: erlang&#10;</xsl:text>
+    <xsl:variable name='temp'>
+      <xsl:apply-templates/>
+    </xsl:variable>
     <xsl:call-template name="printIndented">
-      <xsl:with-param name="indent" select="'    '"/>
-      <xsl:with-param name="text"><xsl:apply-templates/></xsl:with-param>
+      <xsl:with-param name="indent" select='"    "'/>
+      <xsl:with-param name="text" select="$temp"/>
     </xsl:call-template>
   </xsl:template>
 
   <!-- Pre -->
   <xsl:template match="pre">
     <xsl:text>&#10;.. code-block:: erlang&#10;</xsl:text>
+    <xsl:variable name='temp'>
+      <xsl:apply-templates/>
+    </xsl:variable>
     <xsl:call-template name="printIndented">
-      <xsl:with-param name="indent" select="'    '"/>
-      <xsl:with-param name="text"><xsl:apply-templates/></xsl:with-param>
+      <xsl:with-param name="indent" select='"    "'/>
+      <xsl:with-param name="text" select="$temp"/>
     </xsl:call-template>
   </xsl:template>
 
@@ -756,7 +792,7 @@
 
   <!-- Func -->
   <xsl:template match="func">
-    <xsl:text>&#10;.. py:function:: </xsl:text>
+    <xsl:text>&#10;&#10;.. py:function:: </xsl:text>
     <xsl:apply-templates select="name"/>
     <xsl:apply-templates
         select="name[string-length(@arity) > 0 and position()=last()]"
@@ -817,7 +853,7 @@
   <xsl:template match="type">
     <!-- The case where @name != 0 is taken care of in "type_name" -->
     <xsl:if test="string-length(@name) = 0 and string-length(@variable) = 0">
-      <xsl:text>&#10;Types[2]: &#10;</xsl:text>
+      <xsl:text>&#10;</xsl:text>
       <xsl:apply-templates/>
     </xsl:if>
   </xsl:template>
@@ -855,7 +891,7 @@
 
   <!-- Aname -->
   <xsl:template match="authors/aname">
-    <xsl:text>&#10;.LP&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
     <xsl:apply-templates/>
   </xsl:template>
 
