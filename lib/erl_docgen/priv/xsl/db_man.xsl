@@ -100,17 +100,13 @@
       </xsl:when>
       <xsl:when test="ancestor::erlref">
 	<xsl:apply-templates select="$spec/contract/clause/head"/>
-        <xsl:text>&#10;.br</xsl:text>
+        <xsl:text>&#10;</xsl:text>
       </xsl:when>
     </xsl:choose>
   </xsl:template>
 
   <xsl:template match="head">
-    <xsl:text>&#10;.nf&#10;</xsl:text>
-    <xsl:text>&#10;.B&#10;</xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>&#10;.br</xsl:text>
-    <xsl:text>&#10;.fi</xsl:text>
   </xsl:template>
 
   <!-- The *last* <name name="..." arity=".."/> -->
@@ -137,10 +133,7 @@
     <!-- It is assumed there is no support for overloaded specs
          (there is no spec with more than one clause) -->
     <xsl:if test="count($clause/guard) > 0 or count($type) > 0">
-      <xsl:text>&#10;.RS</xsl:text>
-      <xsl:text>&#10;.LP</xsl:text>
-      <xsl:text>&#10;Types:&#10;</xsl:text>
-      <xsl:text>&#10;.RS 3</xsl:text>
+      <xsl:text>&#10;Types[1]: &#10;</xsl:text>
 
         <xsl:choose>
           <xsl:when test="$output_subtypes">
@@ -166,9 +159,8 @@
           <xsl:with-param name="type_desc" select="$type_desc"/>
           <xsl:with-param name="local_types" select="$local_types"/>
         </xsl:call-template>
-        <xsl:text>&#10;.RE</xsl:text>
 
-      <xsl:text>&#10;.RE</xsl:text>
+      <xsl:text>&#10;</xsl:text>
 
     </xsl:if>
   </xsl:template>
@@ -231,7 +223,7 @@
       <xsl:if test="string-length($string) > 0">
 	<xsl:text>&#10;</xsl:text>
 	<xsl:apply-templates select="$string"/>
-	<xsl:text>&#10;.br</xsl:text>
+	<xsl:text>&#10;</xsl:text>
 	<xsl:apply-templates select="$type_desc[@variable = $tname]"/>
       </xsl:if>
     </xsl:for-each>
@@ -246,7 +238,7 @@
       <xsl:call-template name="type_name">
 	<xsl:with-param name="mode" select="'local_type'"/>
       </xsl:call-template>
-      <xsl:text>&#10;.br</xsl:text>
+      <xsl:text>&#10;</xsl:text>
       <xsl:variable name="tname" select="@name"/>
       <xsl:variable name="tnvars" select="@n_vars"/>
       <xsl:apply-templates select=
@@ -261,19 +253,21 @@
 
   <!-- Similar to <d> -->
   <xsl:template match="type_desc">
-    <xsl:text>&#10;.RS 2&#10;</xsl:text><xsl:apply-templates/>
-    <xsl:text>&#10;.RE</xsl:text>
+    <xsl:apply-templates/>
   </xsl:template>
 
   <!-- Datatypes -->
   <xsl:template match="datatypes">
-    <xsl:text>&#10;.SH DATA TYPES</xsl:text>
+    <xsl:text>&#10;DATA TYPES</xsl:text>
+    <xsl:text>&#10;----------&#10;</xsl:text>
     <xsl:apply-templates/>
   </xsl:template>
 
   <!-- Datatype -->
   <xsl:template match="datatype">
+    <xsl:text>&#10;.. c:type:: </xsl:text>
     <xsl:apply-templates/>
+    <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
   <xsl:template name="type_name">
@@ -316,45 +310,32 @@
 	</xsl:choose>
       </xsl:when>
       <xsl:otherwise> <!-- <datatype> with <name> -->
-        <xsl:text>&#10;.nf&#10;</xsl:text>
-        <xsl:text>&#10;.B&#10;</xsl:text>
         <xsl:apply-templates/>
-        <xsl:text>&#10;.br</xsl:text>
-        <xsl:text>&#10;.fi</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
   <xsl:template match="typehead">
-    <xsl:text>&#10;.nf&#10;&#10;</xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>&#10;.br</xsl:text>
-    <xsl:text>&#10;.fi</xsl:text>
   </xsl:template>
 
   <xsl:template match="typehead" mode="local_type">
-    <xsl:text>.nf&#10;</xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>&#10;.fi</xsl:text>
   </xsl:template>
 
   <!-- Not used right now -->
   <xsl:template match="local_defs">
-    <xsl:text>&#10;.RS</xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>&#10;.RE</xsl:text>
   </xsl:template>
 
   <xsl:template match="local_def">
-    <xsl:text>&#10;</xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>&#10;.br</xsl:text>
   </xsl:template>
 
   <!-- The name of data types -->
   <xsl:template match="marker">
     <xsl:if test="string-length(.) != 0">
-      <xsl:text>\fB</xsl:text><xsl:apply-templates/><xsl:text>\fR\&amp;</xsl:text>
+      <xsl:apply-templates/>
     </xsl:if>
   </xsl:template>
 
@@ -477,32 +458,27 @@
   <!-- Lists -->
 
   <xsl:template match="list">
-    <xsl:text>&#10;.RS 2</xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>&#10;.RE&#10;</xsl:text>
   </xsl:template>
 
   <xsl:template match="list/item">
-    <xsl:text>&#10;.TP 2&#10;</xsl:text>
-    <xsl:text>*&#10;</xsl:text>
+    <xsl:text>*   </xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>&#10;.LP</xsl:text>
+    <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
   <xsl:template match="taglist">
-    <xsl:text>&#10;.RS 2</xsl:text>
     <xsl:apply-templates select="tag|item"/>
-    <xsl:text>&#10;.RE</xsl:text>
   </xsl:template>
 
   <xsl:template match="taglist/tag">
-    <xsl:text>&#10;.TP 2&#10;</xsl:text>
-    <xsl:text>.B&#10;</xsl:text>
-    <xsl:apply-templates/><xsl:text>:&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:apply-templates/><xsl:text>&#10;</xsl:text>
   </xsl:template>
 
   <xsl:template match="taglist/item">
-    <xsl:apply-templates/>
+    <xsl:text>    </xsl:text><xsl:apply-templates/>
+    <xsl:text>&#10;&#10;</xsl:text>
   </xsl:template>
 
   <xsl:template match="item/p">
@@ -514,54 +490,36 @@
         <xsl:value-of select="$content"/>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:text>&#10;.RS 2</xsl:text>
-        <xsl:text>&#10;.LP&#10;</xsl:text>
         <xsl:value-of select="$content"/>
-        <xsl:text>&#10;.RE</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
   <!-- Note -->
   <xsl:template match="note">
-    <xsl:text>&#10;.LP&#10;</xsl:text>
-    <xsl:text>&#10;.RS -4</xsl:text>
-    <xsl:text>&#10;.B&#10;</xsl:text>
-    <xsl:text>Note:</xsl:text>
-    <xsl:text>&#10;.RE</xsl:text>
+    <xsl:text>.. note:&#10;</xsl:text>
+    <xsl:text>    </xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#10;&#10;</xsl:text>
   </xsl:template>
 
   <!-- Warning -->
   <xsl:template match="warning">
-    <xsl:text>&#10;.LP&#10;</xsl:text>
-    <xsl:text>&#10;.RS -4</xsl:text>
-    <xsl:text>&#10;.B&#10;</xsl:text>
     <xsl:text>Warning:</xsl:text>
-    <xsl:text>&#10;.RE</xsl:text>
     <xsl:apply-templates/>
     <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
   <!-- Do -->
   <xsl:template match="do">
-    <xsl:text>&#10;.LP&#10;</xsl:text>
-    <xsl:text>&#10;.RS -4</xsl:text>
-    <xsl:text>&#10;.B&#10;</xsl:text>
     <xsl:text>Do:</xsl:text>
-    <xsl:text>&#10;.RE</xsl:text>
     <xsl:apply-templates/>
     <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
   <!-- Dont -->
   <xsl:template match="dont">
-    <xsl:text>&#10;.LP&#10;</xsl:text>
-    <xsl:text>&#10;.RS -4</xsl:text>
-    <xsl:text>&#10;.B&#10;</xsl:text>
     <xsl:text>Dont:</xsl:text>
-    <xsl:text>&#10;.RE</xsl:text>
     <xsl:apply-templates/>
     <xsl:text>&#10;</xsl:text>
   </xsl:template>
@@ -584,15 +542,17 @@
 
  <!-- Paragraph -->
   <xsl:template match="p">
-    <xsl:text>&#10;.LP&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
     <xsl:apply-templates/>
+    <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
   <!-- Inline elements -->
   <xsl:template match="i">
-    <xsl:text>\fI</xsl:text>
+    <xsl:text>*</xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>\fR\&amp; </xsl:text>
+    <xsl:text>* </xsl:text>
   </xsl:template>
 
   <xsl:template match="br">
@@ -600,26 +560,25 @@
       <xsl:when test="ancestor::head">
         <!-- The header of Dialyzer specs.
              .B makes next line appear in bold face -->
-        <xsl:text>&#10;.B&#10;</xsl:text>
       </xsl:when>
       <xsl:otherwise>
-        <xsl:text>&#10;.br&#10;</xsl:text>
+        <xsl:text>&#10;</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
   <xsl:template match="c">
-    <xsl:text>\fI</xsl:text><xsl:apply-templates/><xsl:text>\fR\&amp;</xsl:text>
+    <xsl:text>``</xsl:text><xsl:apply-templates/><xsl:text>`` </xsl:text>
   </xsl:template>
 
   <xsl:template match="em">
-    <xsl:text>\fI</xsl:text> <xsl:apply-templates/><xsl:text>\fR\&amp;</xsl:text>
+    <xsl:text>*</xsl:text> <xsl:apply-templates/><xsl:text>* </xsl:text>
   </xsl:template>
 
   <xsl:template match="strong">
-    <xsl:text>\fB</xsl:text>
+    <xsl:text>**</xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>\fR\&amp; </xsl:text>
+    <xsl:text>** </xsl:text>
   </xsl:template>
 
   <xsl:template match="seealso">
@@ -629,25 +588,52 @@
 	<xsl:apply-templates/>
       </xsl:when>
       <xsl:otherwise>
-	<xsl:text>\fB</xsl:text><xsl:apply-templates/><xsl:text>\fR\&amp;</xsl:text>
+	<xsl:apply-templates/>
+        <xsl:text>&#10;</xsl:text>
       </xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
+  <xsl:template name="printIndented">
+    <xsl:param name="text" />
+    <xsl:param name="indent" />
+
+    <xsl:if test="$text">
+      <xsl:value-of select="$indent" />
+      <xsl:variable name="thisLine" select="substring-before($text, '&#10;')" />
+      <xsl:choose>
+        <xsl:when test="$thisLine"><!-- $text contains at least one newline -->
+          <!-- print this line -->
+          <xsl:value-of select="concat($thisLine, '&#10;')" />
+          <!-- and recurse to process the rest -->
+          <xsl:call-template name="printIndented">
+            <xsl:with-param name="text" select="substring-after($text, '&#10;')" />
+            <xsl:with-param name="indent" select="$indent" />
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:value-of select="$text" />
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:if>
+  </xsl:template>
+
   <!-- Code -->
   <xsl:template match="code">
-    <xsl:text>&#10;.LP&#10;</xsl:text>
-    <xsl:text>.nf&#10;</xsl:text>
-    <xsl:apply-templates/>
-    <xsl:text>&#10;.fi</xsl:text>
+    <xsl:text>&#10;.. code-block:: erlang&#10;</xsl:text>
+    <xsl:call-template name="printIndented">
+      <xsl:with-param name="indent" select="'    '"/>
+      <xsl:with-param name="text"><xsl:apply-templates/></xsl:with-param>
+    </xsl:call-template>
   </xsl:template>
 
   <!-- Pre -->
   <xsl:template match="pre">
-    <xsl:text>&#10;.LP&#10;</xsl:text>
-    <xsl:text>.nf&#10;</xsl:text>
-    <xsl:apply-templates/>
-    <xsl:text>&#10;.fi</xsl:text>
+    <xsl:text>&#10;.. code-block:: erlang&#10;</xsl:text>
+    <xsl:call-template name="printIndented">
+      <xsl:with-param name="indent" select="'    '"/>
+      <xsl:with-param name="text"><xsl:apply-templates/></xsl:with-param>
+    </xsl:call-template>
   </xsl:template>
 
 
@@ -677,9 +663,12 @@
       </xsl:choose>
     </xsl:variable>
 
-    <xsl:text>.TH </xsl:text><xsl:value-of select="module"/><xsl:text> 3 "</xsl:text><xsl:value-of select="$appname"/><xsl:text> </xsl:text><xsl:value-of select="$appver"/><xsl:text>" "</xsl:text><xsl:value-of select="$companyname"/><xsl:text>" "Erlang Module Definition"&#10;</xsl:text>
-    <xsl:text>.SH NAME&#10;</xsl:text>
-    <xsl:value-of select="module"/><xsl:text> \- </xsl:text><xsl:value-of select="modulesummary"/><xsl:text>&#10;</xsl:text>
+    <!--<xsl:text></xsl:text><xsl:value-of select="module"/><xsl:text> </xsl:text><xsl:value-of-->
+      <!--select="$appname"/><xsl:text> </xsl:text>-->
+      <!--<xsl:value-of select="$appver"/><xsl:text> </xsl:text><xsl:value-of select="$companyname"/>-->
+      <!--<xsl:text> &#45;&#45; Erlang Module Definition&#10;</xsl:text>-->
+    <xsl:value-of select="module"/><xsl:text> - </xsl:text><xsl:value-of select="modulesummary"/><xsl:text>&#10;</xsl:text>
+    <xsl:text>===================&#10;&#10;</xsl:text>
     <xsl:apply-templates/>
   </xsl:template>
 
@@ -753,19 +742,21 @@
 
   <!-- Description -->
   <xsl:template match="description">
-    <xsl:text>.SH DESCRIPTION</xsl:text>
+    <xsl:text>DESCRIPTION&#10;</xsl:text>
+    <xsl:text>-----------&#10;</xsl:text>
     <xsl:apply-templates/>
   </xsl:template>
 
   <!-- Funcs -->
   <xsl:template match="funcs">
-    <xsl:text>&#10;.SH EXPORTS</xsl:text>
+    <xsl:text>&#10;EXPORTS</xsl:text>
+    <xsl:text>&#10;-------&#10;</xsl:text>
     <xsl:apply-templates/>
   </xsl:template>
 
   <!-- Func -->
   <xsl:template match="func">
-    <xsl:text>&#10;.LP</xsl:text>
+    <xsl:text>&#10;.. py:function:: </xsl:text>
     <xsl:apply-templates select="name"/>
     <xsl:apply-templates
         select="name[string-length(@arity) > 0 and position()=last()]"
@@ -794,7 +785,7 @@
   </xsl:template>
 
   <xsl:template name="name">
-    <xsl:text>&#10;.B&#10;</xsl:text>
+    <xsl:text>&#10;</xsl:text>
     <xsl:choose>
       <xsl:when test="ancestor::cref">
         <xsl:value-of select="ret"/>
@@ -807,7 +798,7 @@
         <xsl:apply-templates/>
       </xsl:otherwise>
     </xsl:choose>
-    <xsl:text>&#10;.br</xsl:text>
+    <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
   <xsl:template name="maybe-space-after-ret">
@@ -826,34 +817,27 @@
   <xsl:template match="type">
     <!-- The case where @name != 0 is taken care of in "type_name" -->
     <xsl:if test="string-length(@name) = 0 and string-length(@variable) = 0">
-      <xsl:text>&#10;.RS</xsl:text>
-      <xsl:text>&#10;.LP</xsl:text>
-      <xsl:text>&#10;Types:&#10;</xsl:text>
-      <xsl:text>&#10;.RS 3</xsl:text>
+      <xsl:text>&#10;Types[2]: &#10;</xsl:text>
       <xsl:apply-templates/>
-      <xsl:text>&#10;.RE</xsl:text>
-      <xsl:text>&#10;.RE</xsl:text>
     </xsl:if>
   </xsl:template>
 
 
   <!-- V -->
   <xsl:template match="v">
-    <xsl:text>&#10;</xsl:text><xsl:apply-templates/>
-    <xsl:text>&#10;.br</xsl:text>
+    <xsl:text>    :type: </xsl:text>
+    <xsl:apply-templates/>
+    <xsl:text>&#10;</xsl:text>
   </xsl:template>
 
   <!-- D -->
   <xsl:template match="d">
-    <xsl:text>&#10;.RS 2&#10;</xsl:text><xsl:apply-templates/>
-    <xsl:text>&#10;.RE</xsl:text>
+    <xsl:apply-templates/>
   </xsl:template>
 
   <!-- Desc -->
   <xsl:template match="desc">
-    <xsl:text>&#10;.RS</xsl:text>
     <xsl:apply-templates/>
-    <xsl:text>&#10;.RE</xsl:text>
   </xsl:template>
 
 
@@ -955,7 +939,7 @@
       </xsl:call-template>
     </xsl:variable>
     <xsl:value-of select="$space_before"/>
-    <xsl:value-of select="$reply"/>
+    <xsl:value-of select="$startstring"/>
     <xsl:value-of select="$space_after"/>
   </xsl:template>
 
