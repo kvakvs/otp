@@ -4873,7 +4873,7 @@ static BIF_RETTYPE bif_return_trap(BIF_ALIST_2)
     default:
 	break;
     }
-    BIF_RET(res);
+    BIF_RET_TRACE(BIF_P, res);
 }
 
 /*
@@ -4953,6 +4953,15 @@ erts_bif_prep_await_proc_exit_apply_trap(Process *c_p,
 	term = TUPLE3(hp, module, function, term);
 	ERTS_BIF_PREP_TRAP3_NO_RET(await_proc_exit_trap, c_p, pid, am_apply, term);
     }
+}
+
+extern BeamInstr beam_return_op[]; /* in beam_emu.c */
+
+Eterm erts_bif_handle_return_trace(Process *p, Eterm result) {
+    erts_printf("bif.c: bif_handle_return_trace triggered\r\n");
+    p->i = &beam_return_op[0];
+    p->arg_reg[0] = result;
+    return THE_NON_VALUE;
 }
 
 Export bif_return_trap_export;

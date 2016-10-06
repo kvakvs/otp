@@ -252,7 +252,7 @@ BIF_RETTYPE lists_member_2(BIF_ALIST_2)
     int max_iter = 10 * CONTEXT_REDS;
 
     if (is_nil(BIF_ARG_2)) {
-	BIF_RET(am_false);
+	BIF_RET_TRACE(BIF_P, am_false);
     } else if (is_not_list(BIF_ARG_2)) {
 	BIF_ERROR(BIF_P, BADARG);
     }
@@ -267,14 +267,14 @@ BIF_RETTYPE lists_member_2(BIF_ALIST_2)
 	}
 	item = CAR(list_val(list));
 	if ((item == term) || (non_immed_key && eq(item, term))) {
-	    BIF_RET2(am_true, CONTEXT_REDS - max_iter/10);
+	    BIF_RET2_TRACE(BIF_P, am_true, CONTEXT_REDS - max_iter/10);
 	}
 	list = CDR(list_val(list));
     }
     if (is_not_nil(list))  {
 	BIF_ERROR(BIF_P, BADARG);
     }
-    BIF_RET2(am_false, CONTEXT_REDS - max_iter/10);
+    BIF_RET2_TRACE(BIF_P, am_false, CONTEXT_REDS - max_iter/10);
 }
 
 BIF_RETTYPE lists_reverse_2(BIF_ALIST_2)
@@ -290,7 +290,7 @@ BIF_RETTYPE lists_reverse_2(BIF_ALIST_2)
      * Handle legal and illegal non-lists quickly.
      */
     if (is_nil(BIF_ARG_1)) {
-	BIF_RET(BIF_ARG_2);
+	BIF_RET_TRACE(BIF_P, BIF_ARG_2);
     } else if (is_not_list(BIF_ARG_1)) {
     error:
 	BIF_ERROR(BIF_P, BADARG);
@@ -312,7 +312,7 @@ BIF_RETTYPE lists_reverse_2(BIF_ALIST_2)
     }
     HEAP_TOP(BIF_P) = hp;
     if (is_nil(list)) {
-	BIF_RET(result);
+	BIF_RET_TRACE(BIF_P, result);
     }
 
     /*
@@ -341,7 +341,7 @@ BIF_RETTYPE lists_reverse_2(BIF_ALIST_2)
 	n--;
     }
     if (is_nil(list)) {
-	BIF_RET(result);
+	BIF_RET_TRACE(BIF_P, result);
     } else {
 	BUMP_ALL_REDS(BIF_P);
 	BIF_TRAP2(bif_export[BIF_lists_reverse_2], BIF_P, list, result);
@@ -356,9 +356,9 @@ lists_keymember_3(BIF_ALIST_3)
     res = keyfind(BIF_lists_keymember_3, BIF_P,
 		  BIF_ARG_1, BIF_ARG_2, BIF_ARG_3);
     if (is_value(res) && is_tuple(res)) {
-	return am_true;
+	BIF_RET_TRACE(BIF_P, am_true);
     } else {
-	return res;
+	BIF_RET_TRACE(BIF_P, res);
     }
 }
 
@@ -370,18 +370,19 @@ lists_keysearch_3(BIF_ALIST_3)
     res = keyfind(BIF_lists_keysearch_3, BIF_P,
 		  BIF_ARG_1, BIF_ARG_2, BIF_ARG_3);
     if (is_non_value(res) || is_not_tuple(res)) {
-	return res;
+	BIF_RET_TRACE(BIF_P, res);
     } else {			/* Tuple */
 	Eterm* hp = HAlloc(BIF_P, 3);
-	return TUPLE2(hp, am_value, res);
+	BIF_RET_TRACE(BIF_P, TUPLE2(hp, am_value, res));
     }
 }
 
 BIF_RETTYPE
 lists_keyfind_3(BIF_ALIST_3)
 {
-    return keyfind(BIF_lists_keyfind_3, BIF_P,
-		   BIF_ARG_1, BIF_ARG_2, BIF_ARG_3);
+    BIF_RET_TRACE(BIF_P,
+                  keyfind(BIF_lists_keyfind_3, BIF_P,
+                          BIF_ARG_1, BIF_ARG_2, BIF_ARG_3));
 }
 
 static Eterm

@@ -147,7 +147,22 @@ do {									\
     return (x);					\
 } while(0)
 
+/* Use BIF_RET_TRACE instead of BIF_RET in trap continuations */
 #define BIF_RET(x) return (x)
+
+/* Called from BIF_RET_TRACE macro when process is being traced in the
+ * middle of a BIF call. */
+Eterm erts_bif_handle_return_trace(Process *p, Eterm result);
+
+#define BIF_RET_TRACE(Proc, Result)                             \
+    if ((Proc)->flags & F_RETURN_TRACE) {                       \
+        return erts_bif_handle_return_trace((Proc), (Result));  \
+    } else {                                                    \
+        return (Result);                                        \
+    }
+#define BIF_RET2_TRACE(Proc, Result, Gc)                        \
+    BUMP_REDS((Proc), (Gc));                                    \
+    BIF_RET_TRACE((Proc), (Result));
 
 #define ERTS_BIF_PREP_RET(Ret, Val) ((Ret) = (Val))
 

@@ -225,6 +225,7 @@ BeamInstr beam_return_to_trace[1];   /* OpCode(i_return_to_trace) */
 BeamInstr beam_return_trace[1];      /* OpCode(i_return_trace) */
 BeamInstr beam_exception_trace[1];   /* UGLY also OpCode(i_return_trace) */
 BeamInstr beam_return_time_trace[1]; /* OpCode(i_return_time_trace) */
+BeamInstr beam_return_op[1];         /* Used by BIF_RET_TRACE macro */
 
 
 /*
@@ -5127,6 +5128,7 @@ do {						\
      beam_return_trace[0]      = (BeamInstr) OpCode(return_trace);
      beam_exception_trace[0]   = (BeamInstr) OpCode(return_trace); /* UGLY */
      beam_return_time_trace[0] = (BeamInstr) OpCode(i_return_time_trace);
+     beam_return_op[0]         = (BeamInstr) OpCode(return);
 
      /*
       * Enter all BIFs into the export table.

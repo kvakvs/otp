@@ -356,7 +356,7 @@ crc32_2(BIF_ALIST_2)
 	BUMP_ALL_REDS(BIF_P);
 	BIF_TRAP2(bif_export[BIF_crc32_2], BIF_P, res_sum, rest);
     }
-    BIF_RET(res_sum);
+    BIF_RET_TRACE(BIF_P, res_sum);
 }
 
 BIF_RETTYPE
@@ -436,7 +436,7 @@ adler32_2(BIF_ALIST_2)
 	BUMP_ALL_REDS(BIF_P);
 	BIF_TRAP2(bif_export[BIF_adler32_2], BIF_P, res_sum, rest);
     }
-    BIF_RET(res_sum);
+    BIF_RET_TRACE(BIF_P, res_sum);
 }
 
 BIF_RETTYPE
@@ -578,7 +578,7 @@ md5_update_2(BIF_ALIST_2)
 	BIF_TRAP2(bif_export[BIF_md5_update_2], BIF_P, bin, rest);
     }
     BUMP_REDS(BIF_P,res);
-    BIF_RET(bin);
+    BIF_RET_TRACE(BIF_P, bin);
 }
 
 BIF_RETTYPE

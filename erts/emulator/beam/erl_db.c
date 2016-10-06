@@ -2825,7 +2825,7 @@ BIF_RETTYPE ets_match_spec_run_r_3(BIF_ALIST_3)
     }
 
     if (BIF_ARG_1 == NIL) {
-	BIF_RET(BIF_ARG_3);
+	BIF_RET_TRACE(BIF_P, BIF_ARG_3);
     }
     for (lst = BIF_ARG_1; is_list(lst); lst = CDR(list_val(lst))) {
 	if (++i > CONTEXT_REDS) {
@@ -2845,7 +2845,7 @@ BIF_RETTYPE ets_match_spec_run_r_3(BIF_ALIST_3)
     if (lst != NIL) {
 	goto error;
     }
-    BIF_RET2(ret,i);
+    BIF_RET2_TRACE(BIF_P, ret, i);
 }
 
 

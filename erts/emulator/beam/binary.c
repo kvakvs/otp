@@ -414,7 +414,7 @@ binary_to_list_chunk(Process *c_p,
 	ASSERT(!(c_p->flags & F_DISABLE_GC));
     }
 
-    return ret;
+    BIF_RET_TRACE(c_p, ret);
 }
 
 static ERTS_INLINE BIF_RETTYPE
@@ -484,19 +484,19 @@ BIF_RETTYPE binary_to_list_1(BIF_ALIST_1)
 
     size = binary_size(BIF_ARG_1);
     reds_left = ERTS_BIF_REDS_LEFT(BIF_P);
-    one_chunk = size < reds_left*ERTS_B2L_BYTES_PER_REDUCTION;
-    if (!one_chunk) {
-	if (size < L2B_B2L_MIN_EXEC_REDS*ERTS_B2L_BYTES_PER_REDUCTION) {
-	    if (reds_left <= L2B_B2L_RESCHED_REDS) {
-		/* Yield and do it with full context reds... */
-		ERTS_BIF_YIELD1(bif_export[BIF_binary_to_list_1],
-				BIF_P, BIF_ARG_1);
-	    }
-	    /* Allow a bit more reductions... */
-	    one_chunk = 1;
-	    reds_left = L2B_B2L_MIN_EXEC_REDS;
-	}
-    }
+    one_chunk = 0; //size < reds_left*ERTS_B2L_BYTES_PER_REDUCTION;
+//    if (!one_chunk) {
+//	if (size < L2B_B2L_MIN_EXEC_REDS*ERTS_B2L_BYTES_PER_REDUCTION) {
+//	    if (reds_left <= L2B_B2L_RESCHED_REDS) {
+//		/* Yield and do it with full context reds... */
+//		ERTS_BIF_YIELD1(bif_export[BIF_binary_to_list_1],
+//				BIF_P, BIF_ARG_1);
+//	    }
+//	    /* Allow a bit more reductions... */
+//	    one_chunk = 1;
+//	    reds_left = L2B_B2L_MIN_EXEC_REDS;
+//	}
+//    }
 
     ERTS_GET_REAL_BIN(BIF_ARG_1, real_bin, offset, bitoffs, bitsize);
     if (bitsize != 0) {
@@ -834,7 +834,7 @@ list_to_binary_chunk(Eterm mb_eterm,
 	ERTS_BIF_PREP_ERROR(ret,c_p, EXC_INTERNAL_ERROR);
 	break;
     }
-    return ret;
+    BIF_RET_TRACE(c_p, ret);
 }
 
 static BIF_RETTYPE list_to_binary_continue(BIF_ALIST_1)

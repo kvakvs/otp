@@ -1770,7 +1770,7 @@ static BIF_RETTYPE binary_find_trap(BIF_ALIST_3)
     Binary *bin = ((ProcBin *) binary_val(BIF_ARG_3))->val;
     runres = do_binary_find(BIF_P, BIF_ARG_1, NULL, bin, BIF_ARG_2, &result);
     if (runres == DO_BIN_MATCH_OK) {
-	BIF_RET(result);
+	BIF_RET_TRACE(BIF_P, result);
     } else {
 	BUMP_ALL_REDS(BIF_P);
 	BIF_TRAP3(&binary_find_trap_export, BIF_P, BIF_ARG_1, result, BIF_ARG_3);
@@ -2228,7 +2228,7 @@ static BIF_RETTYPE do_longest_common_trap(Process *p, Eterm bin_term, Eterm curr
     epos = erts_make_integer(pos,p);
     if (res == CL_OK) {
 	BUMP_REDS(p, (save_reds - reds) / COMMON_LOOP_FACTOR);
-	BIF_RET(epos);
+	BIF_RET_TRACE(p, epos);
     } else {
 	ASSERT(res == CL_RESTART);
 	/* Copy all heap binaries that are not already copied (aligned) */
@@ -2429,7 +2429,7 @@ static BIF_RETTYPE binary_bin_to_list_trap(BIF_ALIST_3)
     ERTS_GET_BINARY_BYTES(BIF_ARG_1,bytes,bit_offs,bit_size);
     if (do_bin_to_list(BIF_P, bytes, bit_offs, start, &len, &res) ==
 	BIN_TO_LIST_OK) {
-	BIF_RET(res);
+	BIF_RET_TRACE(BIF_P, res);
     }
     return do_trap_bin_to_list(BIF_P,BIF_ARG_1,start,len,res);
 }
@@ -2759,7 +2759,7 @@ BIF_RETTYPE binary_copy_trap(BIF_ALIST_2)
 	OH_OVERHEAD(&(MSO(BIF_P)), target_size / sizeof(Eterm));
 	BUMP_REDS(BIF_P,(pos - opos) / BINARY_COPY_LOOP_FACTOR);
 
-	BIF_RET(make_binary(pb));
+	BIF_RET_TRACE(BIF_P, make_binary(pb));
     }
 }
 

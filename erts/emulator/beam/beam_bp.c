@@ -32,6 +32,7 @@
 #include "erl_binary.h"
 #include "beam_bp.h"
 #include "erl_term.h"
+#include "erl_ptab.h"
 
 /* *************************************************************************
 ** Macros
@@ -687,6 +688,86 @@ erts_generic_breakpoint(Process* c_p, BeamInstr* I, Eterm* reg)
     }
 }
 
+static ERTS_INLINE Eterm *
+ensure_heap_for_trace_frame(Process *p, int need, Eterm *stack_top,
+                            Eterm *regs, int live)
+{
+    ASSERT(!ERTS_PROC_IS_EXITING(p));
+    if (need) {
+        ASSERT(HEAP_TOP(p) <= stack_top && stack_top <= HEAP_END(p));
+        if (stack_top - need < HEAP_TOP(p)) {
+            Uint old_delay_gc = p->flags & F_DELAY_GC;
+
+            p->flags |= F_DELAY_GC;
+            erts_garbage_collect(p, need, regs, live);
+            p->flags = (p->flags & (~F_DELAY_GC)) | old_delay_gc;
+
+            /* stack_top is outdated and invalid after this location */
+            ERTS_VERIFY_UNUSED_TEMP_ALLOC(p);
+            ASSERT(HEAP_TOP(p) <= STACK_TOP(p) && STACK_TOP(p) <= HEAP_END(p));
+            return STACK_TOP(p);
+        }
+    }
+    return stack_top;
+}
+
+ERTS_FORCE_INLINE static int
+trace_extra_heap_size_for(ErtsTracer tracer) {
+    return 1 + 3 + size_object(tracer);
+}
+
+/*
+ * Handles situation when a BIF was traced and it trapped.
+ * 1. Ensures stack/heap size is enough
+ * 2. Pushes trace instruction and return address on stack and sets
+ *    F_RETURN_TRACE process flag.
+ * 3. Later BIF_RET_TRACE (replaced BIF_RET) in the trap destination
+ *    C fun will detect this flag and simulate a return opcode.
+ */
+extern BeamInstr *em_apply_bif; /* defined in beam_emu.c */
+
+static void ERTS_INLINE
+trace_handle_bif_trap(Process *p, Export *exp, BeamInstr *I, int is_apply,
+                      ErtsTracer tracer) {
+    if (exp->code[3] != (BeamInstr) em_apply_bif) {
+        /* If trap destination points to Erlang code - clear F_RETURN_TRACE
+         * instead and do nothing */
+        erts_printf("beam_bp: ignore trap, apply is used\r\n");
+        p->flags &= ~F_RETURN_TRACE;
+        return;
+    } else {
+        /* For apply we don't push next instruction addr, so 3 */
+        const int FRAME_SIZE = is_apply ? 3 : 4;
+        const int EXTRA_HEAP_SIZE = trace_extra_heap_size_for(tracer);
+
+        /* expand heap if needed */
+        ensure_heap_for_trace_frame(p,
+                                    FRAME_SIZE + EXTRA_HEAP_SIZE,
+                                    p->stop,
+                                    p->arg_reg, (int) p->arity);
+        {
+            Eterm *stack_top = (p->stop -= FRAME_SIZE);
+
+            ASSERT(HEAP_TOP(p) <= stack_top && stack_top <= HEAP_END(p));
+            ASSERT(IS_TRACER_VALID(tracer));
+
+            if (!is_apply) {
+                stack_top[3] = make_cp(I + 2);
+            }
+            stack_top[2] = copy_object(tracer, p);
+            stack_top[1] = (Eterm) &exp->code[0];
+            stack_top[0] = make_cp(p->cp);
+            p->cp = (BeamInstr *) beam_return_trace;
+        }
+    }
+
+    erts_smp_proc_lock(p, ERTS_PROC_LOCKS_ALL_MINOR);
+    ERTS_TRACE_FLAGS(p) |= F_EXCEPTION_TRACE;
+    erts_smp_proc_unlock(p, ERTS_PROC_LOCKS_ALL_MINOR);
+
+    p->flags |= F_RETURN_TRACE;
+}
+
 /*
  * Entry point called by the trace wrap functions in erl_bif_wrap.c
  *
@@ -716,6 +797,9 @@ erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
 	bp = &g->data[erts_active_bp_ix()];
 	bp_flags = bp->flags;
     }
+
+//    erts_printf("bif_trace (applying %d) %T:%T %T\r\n", applying,
+//        ep->code[0], ep->code[1], p->common.id);
 
     /*
      * Make continuation pointer OK, it is not during direct BIF calls,
@@ -793,7 +877,15 @@ erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
      * they usually appear in normal code... */
     if (is_non_value(result)) {
 	Uint reason = p->freason;
-	if (reason != TRAP) {
+	if (reason == TRAP) {
+            erts_printf("beam_bp: Tracing %T:%T - trap returned\r\n",
+                        ep->code[0], ep->code[1]);
+            if (flags_meta & MATCH_SET_RX_TRACE) {
+                trace_handle_bif_trap(p, ep, I, applying, meta_tracer);
+            } else if (flags & MATCH_SET_RX_TRACE) {
+                trace_handle_bif_trap(p, ep, I, applying, ERTS_TRACER(p));
+            }
+        } else {
 	    Eterm class;
 	    Eterm value = p->fvalue;
 	    /* Expand error value like in handle_error() */
