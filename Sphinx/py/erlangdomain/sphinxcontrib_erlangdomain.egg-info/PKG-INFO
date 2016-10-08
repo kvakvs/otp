@@ -1,0 +1,28 @@
+Metadata-Version: 1.1
+Name: sphinxcontrib-erlangdomain
+Version: 0.1.dev20161007
+Summary: Sphinx extension sphinxcontrib-erlangdomain
+Home-page: http://bitbucket.org/birkenfeld/sphinx-contrib
+Author: SHIBUKAWA Yoshiki
+Author-email: yoshiki at shibu.jp
+License: BSD
+Download-URL: http://pypi.python.org/pypi/sphinxcontrib-erlangdomain
+Description: 
+        This package contains the sphinxcontrib-erlangdomain Sphinx extension.
+        
+        This extension adds Ruby Domain to Sphinx.
+        It needs Sphinx 1.0 or newer.
+        
+        Detail document: http://packages.python.org/sphinxcontrib-erlangdomain/
+        
+Platform: any
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Ruby
+Classifier: Topic :: Documentation
+Classifier: Topic :: Utilities

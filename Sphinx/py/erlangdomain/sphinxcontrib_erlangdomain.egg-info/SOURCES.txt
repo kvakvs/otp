@@ -1,0 +1,14 @@
+LICENSE
+MANIFEST.in
+README.rst
+setup.cfg
+setup.py
+sphinxcontrib/__init__.py
+sphinxcontrib/erlangdomain.py
+sphinxcontrib_erlangdomain.egg-info/PKG-INFO
+sphinxcontrib_erlangdomain.egg-info/SOURCES.txt
+sphinxcontrib_erlangdomain.egg-info/dependency_links.txt
+sphinxcontrib_erlangdomain.egg-info/namespace_packages.txt
+sphinxcontrib_erlangdomain.egg-info/not-zip-safe
+sphinxcontrib_erlangdomain.egg-info/requires.txt
+sphinxcontrib_erlangdomain.egg-info/top_level.txt
