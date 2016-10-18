@@ -4958,7 +4958,6 @@ erts_bif_prep_await_proc_exit_apply_trap(Process *c_p,
 extern BeamInstr beam_return_op[]; /* in beam_emu.c */
 
 Eterm erts_bif_handle_return_trace(Process *p, Eterm result) {
-    erts_printf("bif.c: bif_handle_return_trace triggered\r\n");
     p->i = &beam_return_op[0];
     p->arg_reg[0] = result;
     return THE_NON_VALUE;

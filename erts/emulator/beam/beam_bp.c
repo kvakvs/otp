@@ -733,15 +733,12 @@ trace_handle_bif_trap(Process *p, Export *exp, BeamInstr *I, int is_apply,
     if (TRAPPING_TO_ERL_CODE) {
         /* If trap destination points to Erlang code - clear F_RETURN_TRACE
          * instead and do nothing */
-        erts_printf("beam_bp: ignore trap, apply is used\r\n");
         p->flags &= ~F_RETURN_TRACE;
         return;
     } else {
         /* For apply we don't push next instruction addr, so 3 */
         const int FRAME_SIZE = 3;
         const int EXTRA_HEAP_SIZE = trace_extra_heap_size_for(tracer);
-        erts_printf("beam_bp:tr_h_bif_t: frame %d extraheap %d\r\n",
-                    FRAME_SIZE, EXTRA_HEAP_SIZE);
 
         /* expand heap if needed */
         ensure_heap_for_trace_frame(p,
@@ -879,8 +876,6 @@ erts_bif_trace(int bif_index, Process* p, Eterm* args, BeamInstr* I)
     if (is_non_value(result)) {
 	Uint reason = p->freason;
 	if (reason == TRAP && ! (p->flags & F_RETURN_TRACE)) {
-            erts_printf("beam_bp: Tracing %T:%T - trap returned\r\n",
-                        ep->code[0], ep->code[1]);
             if (flags_meta & MATCH_SET_RX_TRACE) {
                 trace_handle_bif_trap(p, ep, I, applying, meta_tracer);
             } else if (flags & MATCH_SET_RX_TRACE) {

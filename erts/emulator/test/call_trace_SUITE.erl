@@ -21,18 +21,49 @@
 
 -module(call_trace_SUITE).
 
--export([all/0, suite/0,
-         init_per_testcase/2,end_per_testcase/2,
-         hipe/1,process_specs/1,basic/1,flags/1,errors/1,pam/1,change_pam/1,
-         return_trace/1,exception_trace/1,on_load/1,deep_exception/1,
-         upgrade/1,
-         exception_nocatch/1,bit_syntax/1]).
+-export([
+    all/0,
+    basic/1,
+    bit_syntax/1,
+    change_pam/1,
+    deep_exception/1,
+    end_per_testcase/2,
+    errors/1,
+    exception_nocatch/1,
+    exception_trace/1,
+    flags/1,
+    hipe/1,
+    init_per_testcase/2,
+    on_load/1,
+    pam/1,
+    process_specs/1,
+    return_trace/1,
+    return_trace_trapping_bif/1,
+    suite/0,
+    upgrade/1
+]).
 
 %% Helper functions.
 
--export([bar/0,foo/0,foo/1,foo/2,expect/1,worker_foo/1,pam_foo/2,nasty/0,
-         id/1,deep/3,deep_1/3,deep_2/2,deep_3/2,deep_4/1,deep_5/1,
-         bs_sum_a/2,bs_sum_b/2]).
+-export([
+    bar/0,
+    bs_sum_a/2,
+    bs_sum_b/2,
+    deep/3,
+    deep_1/3,
+    deep_2/2,
+    deep_3/2,
+    deep_4/1,
+    deep_5/1,
+    expect/1,
+    foo/0,
+    foo/1,
+    foo/2,
+    id/1,
+    nasty/0,
+    pam_foo/2,
+    worker_foo/1
+]).
 
 %% Debug
 -export([abbr/1,abbr/2]).
@@ -49,8 +80,9 @@ all() ->
     Common = [errors, on_load],
     NotHipe = [process_specs, basic, flags, pam, change_pam,
                upgrade,
-               return_trace, exception_trace, deep_exception,
-               exception_nocatch, bit_syntax],
+               return_trace, return_trace_trapping_bif,
+               exception_trace, deep_exception, exception_nocatch,
+               bit_syntax],
     Hipe = [hipe],
     case test_server:is_native(call_trace_SUITE) of
         true -> Hipe ++ Common;
@@ -1404,3 +1436,59 @@ reverse(L) ->
 reverse([], R) -> R;
 reverse([H|T], R) ->
     reverse(T, [H|R]).
+
+%%%
+%%% Trapping BIF tracing testcase and helpers
+%%%
+
+%% @doc Build a very long string of Nisses
+very_large_nisse(N, Accum) when N < 0 -> Accum;
+very_large_nisse(N, Accum) ->
+    very_large_nisse(N - 7, [$N, $i, $s, $s, $e, 32 | Accum]).
+
+%% @doc Run trace test on a BIF with large input that is guaranteed to trap.
+%% Tests BIF trap trace implementation of OTP13722.
+%% Performs both call_bif_e and apply invocations.
+return_trace_trapping_bif(_Config) ->
+    Nisse    = very_large_nisse(64000, []), % long enough to trigger a trap
+    Expected = erlang:adler32(Nisse),
+
+    %% Try calling directly with call_bif_e
+    tr_fun(fun() -> erlang:adler32(Nisse) end, erlang, adler32),
+    true = tr_flush(Expected),
+
+    %% Try applying
+    tr_apply(erlang, adler32, [Nisse]),
+    true = tr_flush(Expected),
+    ok.
+
+tr_apply(M, F, Args) ->
+    do_trace(fun() -> apply(M, F, Args) end, M, F).
+
+tr_fun(Fun, M, F) ->
+    do_trace(Fun, M, F).
+
+do_trace(Fun, M, F) ->
+    Self = self(),
+    dbg:tracer(process, {
+        fun(X, Out) -> Self ! X, Out end,
+        user
+    }),
+    dbg:p(self(), c),
+    dbg:tp(M, F, cx),
+    Fun(),
+
+    dbg:stop_clear().
+
+tr_flush(Expected) ->
+    receive
+        {trace, _Pid, call, {M1, F1, _Args}, _} ->
+            io:format("Call: ~p:~p~n", [M1, F1]),
+            tr_flush(Expected);
+        {trace, _Pid, return_from, {M2, F2, _Arity}, V} ->
+            io:format("Return: ~p:~p value ~p expected ~p ~n",
+                      [M2, F2, V, Expected]),
+            Expected =:= V
+    after 3000 ->
+        false
+    end.
