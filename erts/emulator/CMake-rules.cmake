@@ -243,7 +243,8 @@ set(SRC_ERL_EMU_GEN
     ${BIN_DIR}/erl_bif_table.h  ${BIN_DIR}/erl_bif_table.c
     ${BIN_DIR}/erl_bif_wrap.c   ${BIN_DIR}/erl_bif_list.h
     ${BIN_DIR}/erl_atom_table.c ${BIN_DIR}/erl_atom_table.h
-    ${BIN_DIR}/erl_pbifs.c
+#    ${BIN_DIR}/erl_pbifs.c
+    ${BIN_DIR}/erl_gc_bifs.c
     ${BIN_DIR}/erl_version.h
     ${BIN_DIR}/erl_compile_flags.h
 
@@ -317,7 +318,9 @@ if(CONF_HIPE)
         ${HIPE_DIR}/hipe_bif64.c           ${HIPE_DIR}/hipe_bif64.h
         ${HIPE_DIR}/hipe_debug.c           ${HIPE_DIR}/hipe_debug.h
         ${HIPE_DIR}/hipe_gc.c              ${HIPE_DIR}/hipe_gc.h
+        ${HIPE_DIR}/hipe_load.c
         ${HIPE_DIR}/hipe_mode_switch.c     ${HIPE_DIR}/hipe_mode_switch.h
+        ${HIPE_DIR}/hipe_module.c
         ${HIPE_DIR}/hipe_native_bif.c      ${HIPE_DIR}/hipe_native_bif.h
         ${HIPE_DIR}/hipe_process.h
 
@@ -342,7 +345,7 @@ set(SRC_ERL_EMU
     beam/beam_emu.c
     beam/beam_load.c          beam/beam_load.h
     beam/beam_ranges.c
-    beam/benchmark.c          beam/benchmark.h
+#    beam/benchmark.c          beam/benchmark.h
     beam/bif.c                beam/bif.h
     beam/big.c                beam/big.h
     beam/binary.c
@@ -598,7 +601,7 @@ endif(CONF_HIPE)
 add_custom_command(OUTPUT ${BIN_DIR}/erl_bif_table.h ${BIN_DIR}/erl_bif_table.c
                           ${BIN_DIR}/erl_bif_wrap.c ${BIN_DIR}/erl_bif_list.h
                           ${BIN_DIR}/erl_atom_table.c ${BIN_DIR}/erl_atom_table.h
-                          ${BIN_DIR}/erl_pbifs.c
+                          ${BIN_DIR}/erl_gc_bifs.c
     COMMAND LANG=C ${PERL_EXECUTABLE} utils/make_tables
     ARGS -src ${BIN_DIR} -include ${BIN_DIR} ${ATOMS} ${BIFS}
     WORKING_DIRECTORY ${SRC_DIR}
