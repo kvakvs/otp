@@ -117,3 +117,14 @@ endif(ERTS_SMP)
 export(TARGETS erl-emulator erl-emulator-generated erl-runtime erl-drivers
             erl-pcre erl-sys erl-zlib erl-hipe erl-hipe-generated erl-bifs
        FILE ${CMAKE_BINARY_DIR}/export-emulator.cmake)
+
+include(../../PVS-Studio.cmake)
+pvs_studio_add_target(TARGET analyze ALL
+        FORMAT tasklist
+        PREPROCESSOR gcc
+        LOG "PVS-Report.tasks"
+        ANALYZE erl-emulator
+        #        CXX_FLAGS ${PREPROCESSOR_ADDITIONAL_FLAGS}
+        #        C_FLAGS ${PREPROCESSOR_ADDITIONAL_FLAGS}
+        #        CONFIG "/path/to/PVS-Studio.cfg"
+        )
