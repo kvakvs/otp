@@ -184,7 +184,7 @@ typedef struct {
 #define MAP_SUBTAG		(0xF << _TAG_PRIMARY_SIZE) /* MAP */
 
 typedef enum {
-    ERTS_TAG_HEADER_TUPLE = 0,
+    ERTS_TAG_HEADER_ARITYVAL = 0,
     ERTS_TAG_HEADER_BIN_MATCHSTATE = 1,
     ERTS_TAG_HEADER_POSBIG = 2,
     ERTS_TAG_HEADER_NEGBIG = 3,
@@ -251,18 +251,33 @@ erts_uterm_make(Eterm t) {
     return u;
 }
 
-#define header_is_transparent(x) \
- (((x) & (_HEADER_SUBTAG_MASK)) == ARITYVAL_SUBTAG)
-#define header_is_arityval(x)	(((x) & _HEADER_SUBTAG_MASK) == ARITYVAL_SUBTAG)
-#define header_is_thing(x)	(!header_is_transparent((x)))
-#define header_is_bin_matchstate(x)	((((x) & (_HEADER_SUBTAG_MASK)) == BIN_MATCHSTATE_SUBTAG))
+ERTS_FORCE_INLINE int
+header_is_transparent(Eterm x) {
+    UnionTerm u = erts_uterm_make(x);
+    ASSERT(u.header.tag == ERTS_TAG_PRIMARY_HEADER);
+    return u.header.header_tag == ERTS_TAG_HEADER_ARITYVAL;
+}
+
+#define header_is_thing(x)      (!header_is_transparent(x))
+
+ERTS_FORCE_INLINE int
+header_is_bin_matchstate(Eterm x) {
+    UnionTerm u = erts_uterm_make(x);
+    ASSERT(u.header.tag == ERTS_TAG_PRIMARY_HEADER);
+    return u.header.header_tag == ERTS_TAG_HEADER_BIN_MATCHSTATE;
+}
 
 #define _CPMASK		0x3
 
 /* immediate object access methods */
-#define is_immed(x)		(((x) & _TAG_PRIMARY_MASK) == TAG_PRIMARY_IMMED1)
-#define is_not_immed(x)		(!is_immed((x)))
-#define IS_CONST(x)		is_immed((x))
+ERTS_FORCE_INLINE int
+is_immed(Eterm x) {
+    return (erts_uterm_make(x).primary.tag == ERTS_TAG_PRIMARY_IMMED1);
+}
+#define is_not_immed(x)         (!is_immed(x))
+
+#define IS_CONST(x)		(is_immed((x)))
+
 #if TAG_PRIMARY_IMMED1 == _TAG_PRIMARY_MASK
 #define is_both_immed(x,y)	is_immed(((x)&(y)))
 #else
