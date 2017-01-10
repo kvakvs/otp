@@ -74,6 +74,20 @@ struct erl_node_; /* Declared in erl_node_tables.h */
 #define TAG_PRIMARY_LIST	0x1
 #define TAG_PRIMARY_BOXED	0x2
 #define TAG_PRIMARY_IMMED1	0x3
+typedef enum {
+    ERTS_TAG_PRIMARY_HEADER = 0,
+    ERTS_TAG_PRIMARY_LIST = 1,
+    ERTS_TAG_PRIMARY_BOXED = 2,
+    ERTS_TAG_PRIMARY_IMMED1 = 3
+} ErtsTermPrimaryTag;
+
+#define ERTS_TERM_BITS (8 * ERTS_SIZEOF_ETERM)
+
+/* Bit-struct Term representation as primary tag and value */
+typedef struct {
+    ErtsTermPrimaryTag  tag:_TAG_PRIMARY_SIZE;
+    UWord               value:(ERTS_TERM_BITS - _TAG_PRIMARY_SIZE);
+} ErtsTermAsPrimary;
 
 #define primary_tag(x)	((x) & _TAG_PRIMARY_MASK)
 
@@ -83,12 +97,40 @@ struct erl_node_; /* Declared in erl_node_tables.h */
 #define _TAG_IMMED1_PORT	((0x1 << _TAG_PRIMARY_SIZE) | TAG_PRIMARY_IMMED1)
 #define _TAG_IMMED1_IMMED2	((0x2 << _TAG_PRIMARY_SIZE) | TAG_PRIMARY_IMMED1)
 #define _TAG_IMMED1_SMALL	((0x3 << _TAG_PRIMARY_SIZE) | TAG_PRIMARY_IMMED1)
+typedef enum {
+    ERTS_TAG_IMMED1_PID = 0,
+    ERTS_TAG_IMMED1_PORT = 1,
+    ERTS_TAG_IMMED1_IMMED2 = 2,
+    ERTS_TAG_IMMED1_SMALL = 3
+} ErtsTermImm1Tag;
+
+/* Bit-struct Term representation as imm1 tag and value */
+typedef struct {
+    /* This must be ERTS_TAG_PRIMARY_IMMED1, can assert on this */
+    ErtsTermPrimaryTag  tag:_TAG_PRIMARY_SIZE;
+    ErtsTermImm1Tag     imm1_tag:_TAG_IMMED1_SIZE;
+    UWord               value:(ERTS_TERM_BITS - _TAG_PRIMARY_SIZE - _TAG_IMMED1_SIZE);
+} ErtsTermAsImmed1;
 
 #define _TAG_IMMED2_SIZE	6
 #define _TAG_IMMED2_MASK	0x3F
 #define _TAG_IMMED2_ATOM	((0x0 << _TAG_IMMED1_SIZE) | _TAG_IMMED1_IMMED2)
 #define _TAG_IMMED2_CATCH	((0x1 << _TAG_IMMED1_SIZE) | _TAG_IMMED1_IMMED2)
 #define _TAG_IMMED2_NIL		((0x3 << _TAG_IMMED1_SIZE) | _TAG_IMMED1_IMMED2)
+typedef enum {
+    ERTS_TAG_IMMED2_ATOM = 0,
+    ERTS_TAG_IMMED2_CATCH = 1,
+    ERTS_TAG_IMMED2_NIL = 3
+} ErtsTermImm2Tag;
+
+/* Bit-struct Term representation as imm1 tag and value */
+typedef struct {
+    /* This must be ERTS_TAG_PRIMARY_IMMED1, can assert on this */
+    ErtsTermPrimaryTag  tag:_TAG_PRIMARY_SIZE;
+    ErtsTermImm1Tag     imm1_tag:_TAG_IMMED1_SIZE;  /* 4 bits */
+    ErtsTermImm2Tag     imm2_tag:(_TAG_IMMED2_SIZE - _TAG_IMMED1_SIZE); /* 2 bits */
+    UWord               value:(ERTS_TERM_BITS - _TAG_PRIMARY_SIZE - _TAG_IMMED2_SIZE);
+} ErtsTermAsImmed2;
 
 /*
  * HEADER representation:
@@ -141,6 +183,24 @@ struct erl_node_; /* Declared in erl_node_tables.h */
 #define EXTERNAL_REF_SUBTAG	(0xE << _TAG_PRIMARY_SIZE) /* EXTERNAL_REF */
 #define MAP_SUBTAG		(0xF << _TAG_PRIMARY_SIZE) /* MAP */
 
+typedef enum {
+    ERTS_TAG_HEADER_TUPLE = 0,
+    ERTS_TAG_HEADER_BIN_MATCHSTATE = 1,
+    ERTS_TAG_HEADER_POSBIG = 2,
+    ERTS_TAG_HEADER_NEGBIG = 3,
+    ERTS_TAG_HEADER_REF = 4,
+    ERTS_TAG_HEADER_FUN = 5,
+    ERTS_TAG_HEADER_FLOAT = 6,
+    ERTS_TAG_HEADER_EXPORT = 7,
+    ERTS_TAG_HEADER_REFC_BIN = 8,
+    ERTS_TAG_HEADER_HEAP_BIN = 9,
+    ERTS_TAG_HEADER_SUB_BIN = 0xA,
+    /* _BINARY_XXX_MASK depends on 0xB being unused */
+    ERTS_TAG_HEADER_EXT_PID = 0xC,
+    ERTS_TAG_HEADER_EXT_PORT = 0xD,
+    ERTS_TAG_HEADER_EXT_REF = 0xE,
+    ERTS_TAG_HEADER_MAP = 0xF
+} ErtsTermHeaderTag;
 
 #define _TAG_HEADER_ARITYVAL       (TAG_PRIMARY_HEADER|ARITYVAL_SUBTAG)
 #define _TAG_HEADER_FUN	           (TAG_PRIMARY_HEADER|FUN_SUBTAG)
@@ -162,6 +222,34 @@ struct erl_node_; /* Declared in erl_node_tables.h */
 #define _TAG_HEADER_MASK	0x3F
 #define _HEADER_SUBTAG_MASK	0x3C	/* 4 bits for subtag */
 #define _HEADER_ARITY_OFFS	6
+
+/* Bit-struct Term representation as boxed Header */
+typedef struct {
+    /* This must be ERTS_TAG_PRIMARY_HEADER, can assert on this */
+    ErtsTermPrimaryTag  tag:_TAG_PRIMARY_SIZE;
+    ErtsTermHeaderTag   header_tag:(_HEADER_ARITY_OFFS - _TAG_PRIMARY_SIZE);  /* 4 bits */
+    UWord               value:(ERTS_TERM_BITS - _HEADER_ARITY_OFFS);
+} ErtsTermAsHeader;
+
+/*
+ * New Term
+ * Allows simultaneous access as various aspects of an Eterm
+ */
+typedef union {
+    UWord               raw;
+    Eterm               term;
+    ErtsTermAsPrimary   primary;
+    ErtsTermAsImmed1    immed1;
+    ErtsTermAsImmed2    immed2;
+    ErtsTermAsHeader    header;
+} UnionTerm;
+
+ERTS_FORCE_INLINE UnionTerm
+erts_uterm_make(Eterm t) {
+    UnionTerm u;
+    u.term = t;
+    return u;
+}
 
 #define header_is_transparent(x) \
  (((x) & (_HEADER_SUBTAG_MASK)) == ARITYVAL_SUBTAG)
