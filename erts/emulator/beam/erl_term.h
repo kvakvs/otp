@@ -245,11 +245,7 @@ typedef union {
 } UnionTerm;
 
 ERTS_FORCE_INLINE UnionTerm
-erts_uterm_make(Eterm t) {
-    UnionTerm u;
-    u.term = t;
-    return u;
-}
+erts_uterm_make(Eterm t) { return *((UnionTerm *)&u); }
 
 ERTS_FORCE_INLINE int
 header_is_transparent(Eterm x) {
