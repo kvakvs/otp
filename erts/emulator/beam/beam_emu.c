@@ -58,7 +58,7 @@
 #  define CountCase(OpCode) lb_count_##OpCode
 #  define Goto(Rel) goto *((void *)Rel)
 #  define LabelAddr(Label) &&Label
-#  define OpCode(OpCode)  (&&lb_##OpCode)
+#  define OpCode(OpCode)  ((BeamInstr*)(&&lb_##OpCode))
 #endif
 
 #ifdef ERTS_ENABLE_LOCK_CHECK
@@ -153,7 +153,7 @@ do {                                     \
 
 #define SET_I(ip) \
    ASSERT(VALID_INSTR(* (Eterm *)(ip))); \
-   I = (ip)
+   I = (BeamInstr*)(ip)
 
 /*
  * Register target (X or Y register).
@@ -2127,7 +2127,9 @@ void process_main(Eterm * x_reg_array, FloatDef* f_reg_array)
 	 if (timeout_value == am_infinity)
 	     c_p->flags |= F_TIMO;
 	 else {
-	     int tres = erts_set_proc_timer_term(c_p, timeout_value);
+	     int tres;
+             /* Workaround for C++ "jump bypasses variable initialization" */
+             tres = erts_set_proc_timer_term(c_p, timeout_value);
 	     if (tres == 0) {
 		 /*
 		  * The timer routiner will set c_p->i to the value in
@@ -2601,7 +2603,7 @@ do {						\
 	Eterm result;
 
 	GetArg1(2, tmp_reg[0]);
-	bf = (BifFunction) Arg(1);
+	bf = (ErtsBifFunc) Arg(1);
 	ERTS_DBG_CHK_REDS(c_p, FCALLS);
 	c_p->fcalls = FCALLS;
 	PROCESS_MAIN_CHK_LOCKS(c_p);
@@ -2856,27 +2858,27 @@ do {						\
 	Eterm result;
 	BeamInstr *next;
 	ErlHeapFragment *live_hf_end;
-        Export *export = (Export*)Arg(0);
+        Export *export_ = (Export*)Arg(0);
 
 
         if (!((FCALLS - 1) > 0 || (FCALLS-1) > neg_o_reds)) {
             /* If we have run out of reductions, we do a context
                switch before calling the bif */
-            c_p->arity = GET_BIF_ARITY(export);
-            c_p->current = &export->info.mfa;
+            c_p->arity = GET_BIF_ARITY(export_);
+            c_p->current = &export_->info.mfa;
             goto context_switch3;
         }
 
         ERTS_MSACC_SET_BIF_STATE_CACHED_X(
-            GET_BIF_MODULE(export), GET_BIF_ADDRESS(export));
+            GET_BIF_MODULE(export_), GET_BIF_ADDRESS(export_));
 
-	bf = GET_BIF_ADDRESS(export);
+	bf = (ErtsBifFunc)GET_BIF_ADDRESS(export_);
 
 	PRE_BIF_SWAPOUT(c_p);
 	ERTS_DBG_CHK_REDS(c_p, FCALLS);
 	c_p->fcalls = FCALLS - 1;
 	if (FCALLS <= 0) {
-	   save_calls(c_p, export);
+	   save_calls(c_p, export_);
 	}
 	PreFetch(1, next);
 	ASSERT(!ERTS_PROC_IS_EXITING(c_p));
@@ -2890,7 +2892,7 @@ do {						\
 	ERTS_HOLE_CHECK(c_p);
 	ERTS_SMP_REQ_PROC_MAIN_LOCK(c_p);
 	if (ERTS_IS_GC_DESIRED(c_p)) {
-	    Uint arity = GET_BIF_ARITY(export);
+	    Uint arity = GET_BIF_ARITY(export_);
 	    result = erts_gc_after_bif_call_lhf(c_p, live_hf_end, result, reg, arity);
 	    E = c_p->stop;
 	}
@@ -2919,7 +2921,7 @@ do {						\
 	 * Error handling.  SWAPOUT is not needed because it was done above.
 	 */
 	ASSERT(c_p->stop == E);
-	I = handle_error(c_p, I, reg, &export->info.mfa);
+	I = handle_error(c_p, I, reg, &export_->info.mfa);
 	goto post_error_handling;
     }
 
@@ -3596,8 +3598,9 @@ do {						\
 	    ASSERT(!ERTS_PROC_IS_EXITING(c_p));
 	    {
 		typedef Eterm NifF(struct enif_environment_t*, int argc, Eterm argv[]);
-		NifF* fp = vbf = (NifF*) I[1];
-		struct enif_environment_t env;
+		NifF* fp = (NifF*) I[1];
+                vbf = (BifFunction)fp;
+                struct enif_environment_t env;
 #ifdef ERTS_SMP
 		ASSERT(c_p->scheduler_data);
 #endif
@@ -3661,7 +3664,7 @@ do {						\
 	    ERTS_SMP_UNREQ_PROC_MAIN_LOCK(c_p);
 	    ERTS_VERIFY_UNUSED_TEMP_ALLOC(c_p);
 	    {
-		ErtsBifFunc bf = vbf;
+		ErtsBifFunc bf = (ErtsBifFunc)vbf;
 		ASSERT(!ERTS_PROC_IS_EXITING(c_p));
 		live_hf_end = c_p->mbuf;
 		ERTS_CHK_MBUF_SZ(c_p);
@@ -4040,8 +4043,11 @@ do {						\
 
      GetArg2(1, Op1, Op2);
      if (is_both_small(Op1, Op2)) {
-	 Sint Arg1 = signed_val(Op1);
-	 Sint Arg2 = signed_val(Op2);
+	 Sint Arg1;
+	 Sint Arg2;
+         /* Workaround for C++ "jump bypasses variable initialization" */
+         Arg1 = signed_val(Op1);
+         Arg2 = signed_val(Op2);
 
 	 if (Arg1 >= 0 && Arg2 >= 0) {
 	     BsSafeMul(Arg2, Unit, goto system_limit, Op1);
@@ -4991,7 +4997,7 @@ do {						\
 	 c_p->cp = 0;
 	 Goto(*I);
        case HIPE_MODE_SWITCH_RES_CALL_EXPORTED:
-	 c_p->i = c_p->hipe.u.callee_exp->addressv[erts_active_code_ix()];
+	 c_p->i = (BeamInstr*)c_p->hipe.u.callee_exp->addressv[erts_active_code_ix()];
 	 /*fall through*/
        case HIPE_MODE_SWITCH_RES_CALL_BEAM:
 	 SET_I(c_p->i);
@@ -6207,7 +6213,7 @@ call_error_handler(Process* p, ErtsCodeMFA* mfa, Eterm* reg, Eterm func)
     reg[0] = mfa->module;
     reg[1] = mfa->function;
     reg[2] = args;
-    return ep->addressv[erts_active_code_ix()];
+    return (BeamInstr*)ep->addressv[erts_active_code_ix()];
 }
 
 static Export*
@@ -6358,7 +6364,7 @@ BeamInstr *I, Uint stack_offset)
 {
     int arity;
     Export* ep;
-    Eterm tmp, this;
+    Eterm tmp, this_;
 
     /*
      * Check the arguments which should be of the form apply(Module,
@@ -6384,14 +6390,14 @@ BeamInstr *I, Uint stack_offset)
 	/* The module argument may be either an atom or an abstract module
 	 * (currently implemented using tuples, but this might change).
 	 */
-	this = THE_NON_VALUE;
+	this_ = THE_NON_VALUE;
 	if (is_not_atom(module)) {
 	    Eterm* tp;
 
 	    if (is_not_tuple(module)) goto error;
 	    tp = tuple_val(module);
 	    if (arityval(tp[0]) < 1) goto error;
-	    this = module;
+	    this_ = module;
 	    module = tp[1];
 	    if (is_not_atom(module)) goto error;
 	}
@@ -6448,8 +6454,8 @@ BeamInstr *I, Uint stack_offset)
     if (is_not_nil(tmp)) {	/* Must be well-formed list */
 	goto error;
     }
-    if (this != THE_NON_VALUE) {
-        reg[arity++] = this;
+    if (this_ != THE_NON_VALUE) {
+        reg[arity++] = this_;
     }
 
     /*
@@ -6466,7 +6472,7 @@ BeamInstr *I, Uint stack_offset)
     }
     apply_bif_error_adjustment(p, ep, reg, arity, I, stack_offset);
     DTRACE_GLOBAL_CALL_FROM_EXPORT(p, ep);
-    return ep->addressv[erts_active_code_ix()];
+    return (BeamInstr*)ep->addressv[erts_active_code_ix()];
 }
 
 static BeamInstr*
@@ -6521,7 +6527,7 @@ fixed_apply(Process* p, Eterm* reg, Uint arity,
     }
     apply_bif_error_adjustment(p, ep, reg, arity, I, stack_offset);
     DTRACE_GLOBAL_CALL_FROM_EXPORT(p, ep);
-    return ep->addressv[erts_active_code_ix()];
+    return (BeamInstr*)ep->addressv[erts_active_code_ix()];
 }
 
 int
@@ -6768,7 +6774,7 @@ call_fun(Process* p,		/* Current process. */
 		reg[1] = fun;
 		reg[2] = args;
 		reg[3] = NIL;
-		return ep->addressv[code_ix];
+		return (BeamInstr*)ep->addressv[code_ix];
 	    }
 	}
     } else if (is_export_header(hdr)) {
@@ -6780,7 +6786,7 @@ call_fun(Process* p,		/* Current process. */
 
 	if (arity == actual_arity) {
 	    DTRACE_GLOBAL_CALL(p, &ep->info.mfa);
-	    return ep->addressv[erts_active_code_ix()];
+	    return (BeamInstr*)ep->addressv[erts_active_code_ix()];
 	} else {
 	    /*
 	     * Wrong arity. First build a list of the arguments.

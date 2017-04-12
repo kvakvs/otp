@@ -258,29 +258,29 @@ static __inline__ void *hipe_closure_stub_address(unsigned int arity)
     return nbif_ccallemu0;
 #else	/* > 0 */
     switch (arity) {
-      case 0:	return nbif_ccallemu0;
+      case 0:	return (void*)nbif_ccallemu0;
 #if NR_ARG_REGS == 1
-      default:	return nbif_ccallemu1;
+      default:	return (void*)nbif_ccallemu1;
 #else	/* > 1 */
-      case 1:	return nbif_ccallemu1;
+      case 1:	return (void*)nbif_ccallemu1;
 #if NR_ARG_REGS == 2
-      default:	return nbif_ccallemu2;
+      default:	return (void*)nbif_ccallemu2;
 #else	/* > 2 */
-      case 2:	return nbif_ccallemu2;
+      case 2:	return (void*)nbif_ccallemu2;
 #if NR_ARG_REGS == 3
-      default:	return nbif_ccallemu3;
+      default:	return (void*)nbif_ccallemu3;
 #else	/* > 3 */
-      case 3:	return nbif_ccallemu3;
+      case 3:	return (void*)nbif_ccallemu3;
 #if NR_ARG_REGS == 4
-      default:	return nbif_ccallemu4;
+      default:	return (void*)nbif_ccallemu4;
 #else	/* > 4 */
-      case 4:	return nbif_ccallemu4;
+      case 4:	return (void*)nbif_ccallemu4;
 #if NR_ARG_REGS == 5
-      default:	return nbif_ccallemu5;
+      default:	return (void*)nbif_ccallemu5;
 #else	/* > 5 */
-      case 5:	return nbif_ccallemu5;
+      case 5:	return (void*)nbif_ccallemu5;
 #if NR_ARG_REGS == 6
-      default:	return nbif_ccallemu6;
+      default:	return (void*)nbif_ccallemu6;
 #else
 #error "NR_ARG_REGS > 6 NOT YET IMPLEMENTED"
 #endif	/* > 6 */
