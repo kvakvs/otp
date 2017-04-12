@@ -406,17 +406,17 @@ ETHR_NATMC_FUNC__(dec_return_mb)(ETHR_ATMC_T__ *var)
 
 static ETHR_INLINE ETHR_AINT_T__
 ETHR_NATMC_FUNC__(cmpxchg_mb)(ETHR_ATMC_T__ *var,
-			      ETHR_AINT_T__ new,
+			      ETHR_AINT_T__ new_,
 			      ETHR_AINT_T__ exp)
 {
 #if defined(AO_HAVE_fetch_compare_and_swap_full)
     return (ETHR_AINT_T__) AO_fetch_compare_and_swap_full(&var->counter,
 							  (AO_t) exp,
-							  (AO_t) new);
+							  (AO_t) new_);
 #else
     ETHR_AINT_T__ act;
     do {
-	if (AO_compare_and_swap_full(&var->counter, (AO_t) exp, (AO_t) new))
+	if (AO_compare_and_swap_full(&var->counter, (AO_t) exp, (AO_t) new_))
 	    return exp;
 #ifdef AO_HAVE_load_acquire
 	act = (ETHR_AINT_T__) AO_load_acquire(&var->counter);
@@ -443,17 +443,17 @@ ETHR_NATMC_FUNC__(cmpxchg_mb)(ETHR_ATMC_T__ *var,
 
 static ETHR_INLINE ETHR_AINT_T__
 ETHR_NATMC_FUNC__(cmpxchg)(ETHR_ATMC_T__ *var,
-			   ETHR_AINT_T__ new,
+			   ETHR_AINT_T__ new_,
 			   ETHR_AINT_T__ exp)
 {
 #if defined(AO_HAVE_fetch_compare_and_swap)
     return (ETHR_AINT_T__) AO_fetch_compare_and_swap(&var->counter,
 						     (AO_t) exp,
-						     (AO_t) new);
+						     (AO_t) new_);
 #else
     ETHR_AINT_T__ act;
     do {
-	if (AO_compare_and_swap(&var->counter, (AO_t) exp, (AO_t) new))
+	if (AO_compare_and_swap(&var->counter, (AO_t) exp, (AO_t) new_))
 	    return exp;
 #ifdef AO_HAVE_load
 	act = (ETHR_AINT_T__) AO_load(&var->counter);
@@ -477,17 +477,17 @@ ETHR_NATMC_FUNC__(cmpxchg)(ETHR_ATMC_T__ *var,
 
 static ETHR_INLINE ETHR_AINT_T__
 ETHR_NATMC_FUNC__(cmpxchg_acqb)(ETHR_ATMC_T__ *var,
-				ETHR_AINT_T__ new,
+				ETHR_AINT_T__ new_,
 				ETHR_AINT_T__ exp)
 {
 #if defined(AO_HAVE_fetch_compare_and_swap_acquire)
     return (ETHR_AINT_T__) AO_fetch_compare_and_swap_acquire(&var->counter,
 							     (AO_t) exp,
-							     (AO_t) new);
+							     (AO_t) new_);
 #else
     ETHR_AINT_T__ act;
     do {
-	if (AO_compare_and_swap_acquire(&var->counter, (AO_t) exp, (AO_t) new))
+	if (AO_compare_and_swap_acquire(&var->counter, (AO_t) exp, (AO_t) new_))
 	    return exp;
 #ifdef AO_HAVE_load_acquire
 	act = (ETHR_AINT_T__) AO_load_acquire(&var->counter);
@@ -514,17 +514,17 @@ ETHR_NATMC_FUNC__(cmpxchg_acqb)(ETHR_ATMC_T__ *var,
 
 static ETHR_INLINE ETHR_AINT_T__
 ETHR_NATMC_FUNC__(cmpxchg_rb)(ETHR_ATMC_T__ *var,
-			      ETHR_AINT_T__ new,
+			      ETHR_AINT_T__ new_,
 			      ETHR_AINT_T__ exp)
 {
 #if defined(AO_HAVE_fetch_compare_and_swap_read)
     return (ETHR_AINT_T__) AO_fetch_compare_and_swap_read(&var->counter,
 							     (AO_t) exp,
-							     (AO_t) new);
+							     (AO_t) new_);
 #else
     ETHR_AINT_T__ act;
     do {
-	if (AO_compare_and_swap_read(&var->counter, (AO_t) exp, (AO_t) new))
+	if (AO_compare_and_swap_read(&var->counter, (AO_t) exp, (AO_t) new_))
 	    return exp;
 #if defined(AO_HAVE_load_read)
 	act = (ETHR_AINT_T__) AO_load_read(&var->counter);
@@ -557,17 +557,17 @@ ETHR_NATMC_FUNC__(cmpxchg_rb)(ETHR_ATMC_T__ *var,
 
 static ETHR_INLINE ETHR_AINT_T__
 ETHR_NATMC_FUNC__(cmpxchg_relb)(ETHR_ATMC_T__ *var,
-				ETHR_AINT_T__ new,
+				ETHR_AINT_T__ new_,
 				ETHR_AINT_T__ exp)
 {
 #if defined(AO_HAVE_fetch_compare_and_swap_release)
     return (ETHR_AINT_T__) AO_fetch_compare_and_swap_release(&var->counter,
 							     (AO_t) exp,
-							     (AO_t) new);
+							     (AO_t) new_);
 #else
     ETHR_AINT_T__ act;
     do {
-	if (AO_compare_and_swap_release(&var->counter, (AO_t) exp, (AO_t) new))
+	if (AO_compare_and_swap_release(&var->counter, (AO_t) exp, (AO_t) new_))
 	    return exp;
 #ifdef AO_HAVE_load
 	act = (ETHR_AINT_T__) AO_load(&var->counter);
@@ -591,17 +591,17 @@ ETHR_NATMC_FUNC__(cmpxchg_relb)(ETHR_ATMC_T__ *var,
 
 static ETHR_INLINE ETHR_AINT_T__
 ETHR_NATMC_FUNC__(cmpxchg_wb)(ETHR_ATMC_T__ *var,
-			      ETHR_AINT_T__ new,
+			      ETHR_AINT_T__ new_,
 			      ETHR_AINT_T__ exp)
 {
 #if defined(AO_HAVE_fetch_compare_and_swap_write)
     return (ETHR_AINT_T__) AO_fetch_compare_and_swap_write(&var->counter,
 							   (AO_t) exp,
-							   (AO_t) new);
+							   (AO_t) new_);
 #else
     ETHR_AINT_T__ act;
     do {
-	if (AO_compare_and_swap_write(&var->counter, (AO_t) exp, (AO_t) new))
+	if (AO_compare_and_swap_write(&var->counter, (AO_t) exp, (AO_t) new_))
 	    return exp;
 #ifdef AO_HAVE_load
 	act = (ETHR_AINT_T__) AO_load(&var->counter);

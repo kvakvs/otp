@@ -91,13 +91,13 @@ ETHR_NATMC_FUNC__(addr)(ETHR_ATMC_T__ *var)
 
 static ETHR_INLINE ETHR_AINT_T__
 ETHR_NATMC_FUNC__(cmpxchg_mb)(ETHR_ATMC_T__ *var,
-			      ETHR_AINT_T__ new,
+			      ETHR_AINT_T__ new_,
 			      ETHR_AINT_T__ old)
 {
     __asm__ __volatile__(
       "lock; cmpxchg" ETHR_AINT_SUFFIX__ " %2, %3"
       : "=a"(old), "=m"(var->counter)
-      : "r"(new), "m"(var->counter), "0"(old)
+      : "r"(new_), "m"(var->counter), "0"(old)
       : "cc", "memory"); /* full memory clobber to make this a compiler barrier */
     return old;
 }

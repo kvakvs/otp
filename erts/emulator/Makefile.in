@@ -690,13 +690,13 @@ $(OBJDIR)/beams.$(RES_EXT): $(TARGET)/beams.rc
 endif
 
 ifneq ($(filter tile-%,$(TARGET)),)
-$(OBJDIR)/beam_emu.o: beam/beam_emu.c
+$(OBJDIR)/beam_emu.o: beam/beam_emu.cpp
 	$(V_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) \
          $(INCLUDES) -c $< -o $@
 else
 # Usually the same as the default rule, but certain platforms (e.g. win32) mix
 # different compilers
-$(OBJDIR)/beam_emu.o: beam/beam_emu.c
+$(OBJDIR)/beam_emu.o: beam/beam_emu.cpp
 	$(V_EMU_CC) $(subst -O2, $(GEN_OPT_FLGS), $(CFLAGS)) $(INCLUDES) -c $< -o $@
 endif
 

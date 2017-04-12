@@ -44,36 +44,36 @@ ethr_native_rwlock_init(ethr_native_rwlock_t *lock)
 static ETHR_INLINE void
 ethr_native_read_unlock(ethr_native_rwlock_t *lock)
 {
-    unsigned int old, new;
+    unsigned int old, new_;
 
     ETHR_MEMBAR(ETHR_LoadLoad|ETHR_StoreLoad);
     do {
 	old = lock->lock;
-	new = old-1;
+	new_ = old-1;
 	__asm__ __volatile__(
 	    "cas [%2], %1, %0"
-	    : "=&r"(new)
-	    : "r"(old), "r"(&lock->lock), "0"(new)
+	    : "=&r"(new_)
+	    : "r"(old), "r"(&lock->lock), "0"(new_)
 	    : "memory");
-    } while (__builtin_expect(old != new, 0));
+    } while (__builtin_expect(old != new_, 0));
 }
 
 static ETHR_INLINE int
 ethr_native_read_trylock(ethr_native_rwlock_t *lock)
 {
-    int old, new;
+    int old, new_;
 
     do {
 	old = lock->lock;
 	if (__builtin_expect(old < 0, 0))
 	    return 0;
-	new = old+1;
+	new_ = old+1;
 	__asm__ __volatile__(
 	    "cas [%2], %1, %0"
-	    : "=&r"(new)
-	    : "r"(old), "r"(&lock->lock), "0"(new)
+	    : "=&r"(new_)
+	    : "r"(old), "r"(&lock->lock), "0"(new_)
 	    : "memory");
-    } while (__builtin_expect(old != new, 0));
+    } while (__builtin_expect(old != new_, 0));
     ETHR_MEMBAR(ETHR_StoreLoad|ETHR_StoreStore);
     return 1;
 }
@@ -106,19 +106,19 @@ ethr_native_write_unlock(ethr_native_rwlock_t *lock)
 static ETHR_INLINE int
 ethr_native_write_trylock(ethr_native_rwlock_t *lock)
 {
-    unsigned int old, new;
+    unsigned int old, new_;
 
     do {
 	old = lock->lock;
 	if (__builtin_expect(old != 0, 0))
 	    return 0;
-	new = -1;
+	new_ = -1;
 	__asm__ __volatile__(
 	    "cas [%2], %1, %0"
-	    : "=&r"(new)
-	    : "r"(old), "r"(&lock->lock), "0"(new)
+	    : "=&r"(new_)
+	    : "r"(old), "r"(&lock->lock), "0"(new_)
 	    : "memory");
-    } while (__builtin_expect(old != new, 0));
+    } while (__builtin_expect(old != new_, 0));
     ETHR_MEMBAR(ETHR_StoreLoad|ETHR_StoreStore);
     return 1;
 }

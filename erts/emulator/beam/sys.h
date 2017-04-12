@@ -943,7 +943,7 @@ erts_refc_inc_unless(erts_refc_t *refcp,
 {
     erts_aint_t val = erts_atomic_read_nob((erts_atomic_t *) refcp);
     while (1) {
-        erts_aint_t exp, new;
+        erts_aint_t exp, new_;
 #ifdef ERTS_REFC_DEBUG
         if (val < 0)
             erts_exit(ERTS_ABORT_EXIT,
@@ -952,11 +952,11 @@ erts_refc_inc_unless(erts_refc_t *refcp,
 #endif
         if (val == unless_val)
             return val;
-        new = val + 1;
+        new_ = val + 1;
         exp = val;
-        val = erts_atomic_cmpxchg_nob((erts_atomic_t *) refcp, new, exp);
+        val = erts_atomic_cmpxchg_nob((erts_atomic_t *) refcp, new_, exp);
         if (val == exp)
-            return new;
+            return new_;
     }
 }
 
@@ -1075,7 +1075,7 @@ erts_smp_refc_inc_unless(erts_smp_refc_t *refcp,
 {
     erts_aint_t val = erts_smp_atomic_read_nob((erts_smp_atomic_t *) refcp);
     while (1) {
-        erts_aint_t exp, new;
+        erts_aint_t exp, new_;
 #ifdef ERTS_REFC_DEBUG
         if (val < 0)
             erts_exit(ERTS_ABORT_EXIT,
@@ -1084,11 +1084,11 @@ erts_smp_refc_inc_unless(erts_smp_refc_t *refcp,
 #endif
         if (val == unless_val)
             return val;
-        new = val + 1;
+        new_ = val + 1;
         exp = val;
-        val = erts_smp_atomic_cmpxchg_nob((erts_smp_atomic_t *) refcp, new, exp);
+        val = erts_smp_atomic_cmpxchg_nob((erts_smp_atomic_t *) refcp, new_, exp);
         if (val == exp)
-            return new;
+            return new_;
     }
 }
 

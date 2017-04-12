@@ -355,12 +355,12 @@ erts_proc_lock_flags_bor(erts_proc_lock_t *lck, ErtsProcLocks mask)
 }
 
 ERTS_GLB_INLINE ErtsProcLocks
-erts_proc_lock_flags_cmpxchg(erts_proc_lock_t *lck, ErtsProcLocks new,
+erts_proc_lock_flags_cmpxchg(erts_proc_lock_t *lck, ErtsProcLocks new_,
                              ErtsProcLocks expected)
 {
     ErtsProcLocks res = lck->flags;
     if (res == expected)
-        lck->flags = new;
+        lck->flags = new_;
     return res;
 }
 

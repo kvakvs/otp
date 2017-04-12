@@ -245,7 +245,7 @@ erts_port_runq(Port *prt)
 
 
 ERTS_GLB_INLINE void *erts_prtsd_get(Port *p, int ix);
-ERTS_GLB_INLINE void *erts_prtsd_set(Port *p, int ix, void *new);
+ERTS_GLB_INLINE void *erts_prtsd_set(Port *p, int ix, void *new_);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 

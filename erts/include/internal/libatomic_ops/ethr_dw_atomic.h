@@ -225,9 +225,9 @@ static ETHR_INLINE void
 ETHR_NDWA_FUNC__(set)(ethr_native_dw_atomic_t *var,
 		      ETHR_NDWA_VAL_ARG_TYPE__ val)
 {
-    AO_double_t new;
-    ETHR_NDWA_VAL2AOVAL__(new, val);
-    AO_double_store(&var->dw_mem, new);
+    AO_double_t new_;
+    ETHR_NDWA_VAL2AOVAL__(new_, val);
+    AO_double_store(&var->dw_mem, new_);
 }
 
 #endif
@@ -244,9 +244,9 @@ static ETHR_INLINE void
 ETHR_NDWA_FUNC__(set_wb)(ethr_native_dw_atomic_t *var,
 			 ETHR_NDWA_VAL_ARG_TYPE__ val)
 {
-    AO_double_t new;
-    ETHR_NDWA_VAL2AOVAL__(new, val);
-    AO_double_store_write(&var->dw_mem, new);
+    AO_double_t new_;
+    ETHR_NDWA_VAL2AOVAL__(new_, val);
+    AO_double_store_write(&var->dw_mem, new_);
 }
 
 #endif
@@ -263,9 +263,9 @@ static ETHR_INLINE void
 ETHR_NDWA_FUNC__(set_relb)(ethr_native_dw_atomic_t *var,
 			   ETHR_NDWA_VAL_ARG_TYPE__ val)
 {
-    AO_double_t new;
-    ETHR_NDWA_VAL2AOVAL__(new, val);
-    AO_double_store_release(&var->dw_mem, new);
+    AO_double_t new_;
+    ETHR_NDWA_VAL2AOVAL__(new_, val);
+    AO_double_store_release(&var->dw_mem, new_);
 }
 
 #endif
@@ -280,13 +280,13 @@ ETHR_NDWA_FUNC__(set_relb)(ethr_native_dw_atomic_t *var,
 
 static ETHR_INLINE ETHR_NDWA_RET_3_TYPE__
 ETHR_NDWA_FUNC__(cmpxchg_mb)(ethr_native_dw_atomic_t *var,
-			     ETHR_NDWA_VAL_ARG_TYPE__ new,
+			     ETHR_NDWA_VAL_ARG_TYPE__ new_,
 			     ETHR_NDWA_VAL_ARG_TYPE__ exp)
 {
     AO_double_t ao_act, ao_new, ao_exp;
 
     ETHR_NDWA_VAL2AOVAL__(ao_exp, exp);
-    ETHR_NDWA_VAL2AOVAL__(ao_new, new);
+    ETHR_NDWA_VAL2AOVAL__(ao_new, new_);
 
     do {
 	int xchgd;
@@ -330,13 +330,13 @@ ETHR_NDWA_FUNC__(cmpxchg_mb)(ethr_native_dw_atomic_t *var,
 
 static ETHR_INLINE ETHR_NDWA_RET_3_TYPE__
 ETHR_NDWA_FUNC__(cmpxchg)(ethr_native_dw_atomic_t *var,
-			  ETHR_NDWA_VAL_ARG_TYPE__ new,
+			  ETHR_NDWA_VAL_ARG_TYPE__ new_,
 			  ETHR_NDWA_VAL_ARG_TYPE__ exp)
 {
     AO_double_t ao_act, ao_new, ao_exp;
 
     ETHR_NDWA_VAL2AOVAL__(ao_exp, exp);
-    ETHR_NDWA_VAL2AOVAL__(ao_new, new);
+    ETHR_NDWA_VAL2AOVAL__(ao_new, new_);
 
     do {
 	int xchgd;
@@ -376,13 +376,13 @@ ETHR_NDWA_FUNC__(cmpxchg)(ethr_native_dw_atomic_t *var,
 
 static ETHR_INLINE ETHR_NDWA_RET_3_TYPE__
 ETHR_NDWA_FUNC__(cmpxchg_rb)(ethr_native_dw_atomic_t *var,
-			     ETHR_NDWA_VAL_ARG_TYPE__ new,
+			     ETHR_NDWA_VAL_ARG_TYPE__ new_,
 			     ETHR_NDWA_VAL_ARG_TYPE__ exp)
 {
     AO_double_t ao_act, ao_new, ao_exp;
 
     ETHR_NDWA_VAL2AOVAL__(ao_exp, exp);
-    ETHR_NDWA_VAL2AOVAL__(ao_new, new);
+    ETHR_NDWA_VAL2AOVAL__(ao_new, new_);
 
     do {
 	int xchgd;
@@ -432,13 +432,13 @@ ETHR_NDWA_FUNC__(cmpxchg_rb)(ethr_native_dw_atomic_t *var,
 
 static ETHR_INLINE ETHR_NDWA_RET_3_TYPE__
 ETHR_NDWA_FUNC__(cmpxchg_acqb)(ethr_native_dw_atomic_t *var,
-			       ETHR_NDWA_VAL_ARG_TYPE__ new,
+			       ETHR_NDWA_VAL_ARG_TYPE__ new_,
 			       ETHR_NDWA_VAL_ARG_TYPE__ exp)
 {
     AO_double_t ao_act, ao_new, ao_exp;
 
     ETHR_NDWA_VAL2AOVAL__(ao_exp, exp);
-    ETHR_NDWA_VAL2AOVAL__(ao_new, new);
+    ETHR_NDWA_VAL2AOVAL__(ao_new, new_);
 
     do {
 	int xchgd;
@@ -482,13 +482,13 @@ ETHR_NDWA_FUNC__(cmpxchg_acqb)(ethr_native_dw_atomic_t *var,
 
 static ETHR_INLINE ETHR_NDWA_RET_3_TYPE__
 ETHR_NDWA_FUNC__(cmpxchg_wb)(ethr_native_dw_atomic_t *var,
-			     ETHR_NDWA_VAL_ARG_TYPE__ new,
+			     ETHR_NDWA_VAL_ARG_TYPE__ new_,
 			     ETHR_NDWA_VAL_ARG_TYPE__ exp)
 {
     AO_double_t ao_act, ao_new, ao_exp;
 
     ETHR_NDWA_VAL2AOVAL__(ao_exp, exp);
-    ETHR_NDWA_VAL2AOVAL__(ao_new, new);
+    ETHR_NDWA_VAL2AOVAL__(ao_new, new_);
 
     do {
 	int xchgd;
@@ -528,13 +528,13 @@ ETHR_NDWA_FUNC__(cmpxchg_wb)(ethr_native_dw_atomic_t *var,
 
 static ETHR_INLINE ETHR_NDWA_RET_3_TYPE__
 ETHR_NDWA_FUNC__(cmpxchg_relb)(ethr_native_dw_atomic_t *var,
-			       ETHR_NDWA_VAL_ARG_TYPE__ new,
+			       ETHR_NDWA_VAL_ARG_TYPE__ new_,
 			       ETHR_NDWA_VAL_ARG_TYPE__ exp)
 {
     AO_double_t ao_act, ao_new, ao_exp;
 
     ETHR_NDWA_VAL2AOVAL__(ao_exp, exp);
-    ETHR_NDWA_VAL2AOVAL__(ao_new, new);
+    ETHR_NDWA_VAL2AOVAL__(ao_new, new_);
 
     do {
 	int xchgd;

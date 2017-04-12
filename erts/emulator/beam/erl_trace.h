@@ -75,7 +75,7 @@ void erts_init_trace(void);
 void erts_trace_check_exiting(Eterm exiting);
 ErtsTracer erts_set_system_seq_tracer(Process *c_p,
                                       ErtsProcLocks c_p_locks,
-                                      ErtsTracer new);
+                                      ErtsTracer new_);
 ErtsTracer erts_get_system_seq_tracer(void);
 void erts_change_default_proc_tracing(int setflags, Uint flagsp,
                                       const ErtsTracer tracerp);

@@ -132,10 +132,10 @@ ethr_native_atomic32_xchg_acqb(ethr_native_atomic32_t *var, ethr_sint32_t val)
 
 static ETHR_INLINE ethr_sint32_t
 ethr_native_atomic32_cmpxchg_acqb(ethr_native_atomic32_t *var,
-				  ethr_sint32_t new,
+				  ethr_sint32_t new_,
 				  ethr_sint32_t expected)
 {
-    return atomic_compare_and_exchange_val_acq(&var->counter, new, expected);
+    return atomic_compare_and_exchange_val_acq(&var->counter, new_, expected);
 }
 
 #endif /* ETHR_TRY_INLINE_FUNCS */

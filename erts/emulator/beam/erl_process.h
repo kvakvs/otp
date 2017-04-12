@@ -2005,7 +2005,7 @@ void *erts_psd_set_init(Process *p, int ix, void *data);
 ERTS_GLB_INLINE void *
 erts_psd_get(Process *p, int ix);
 ERTS_GLB_INLINE void *
-erts_psd_set(Process *p, int ix, void *new);
+erts_psd_set(Process *p, int ix, void *new_);
 
 #if ERTS_GLB_INLINE_INCL_FUNC_DEF
 

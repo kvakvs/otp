@@ -103,14 +103,14 @@ ETHR_NATMC_FUNC__(read)(ETHR_ATMC_T__ *var)
 #endif
 
 static ETHR_INLINE ETHR_AINT_T__
-ETHR_NATMC_FUNC__(cmpxchg)(ETHR_ATMC_T__ *var, ETHR_AINT_T__ new, ETHR_AINT_T__ old)
+ETHR_NATMC_FUNC__(cmpxchg)(ETHR_ATMC_T__ *var, ETHR_AINT_T__ new_, ETHR_AINT_T__ old)
 {
     __asm__ __volatile__(
       ETHR_CAS__ " [%2], %1, %0"
-      : "=&r"(new)
-      : "r"(old), "r"(&var->counter), "0"(new)
+      : "=&r"(new_)
+      : "r"(old), "r"(&var->counter), "0"(new_)
       : "memory");
-    return new;
+    return new_;
 }
 
 #if ETHR_INCLUDE_ATOMIC_IMPL__ == 4
@@ -120,9 +120,9 @@ ETHR_NATMC_FUNC__(cmpxchg)(ETHR_ATMC_T__ *var, ETHR_AINT_T__ new, ETHR_AINT_T__ 
 #endif
 
 static ETHR_INLINE ETHR_AINT_T__
-ETHR_NATMC_FUNC__(cmpxchg_acqb)(ETHR_ATMC_T__ *var, ETHR_AINT_T__ new, ETHR_AINT_T__ old)
+ETHR_NATMC_FUNC__(cmpxchg_acqb)(ETHR_ATMC_T__ *var, ETHR_AINT_T__ new_, ETHR_AINT_T__ old)
 {
-    ETHR_AINT_T__ res = ETHR_NATMC_FUNC__(cmpxchg)(var, new, old);
+    ETHR_AINT_T__ res = ETHR_NATMC_FUNC__(cmpxchg)(var, new_, old);
     ETHR_MEMBAR(ETHR_StoreLoad|ETHR_StoreStore);
     return res;
 }

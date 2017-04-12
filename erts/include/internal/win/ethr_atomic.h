@@ -395,9 +395,9 @@ ETHR_NATMC_FUNC__(or_retold_mb)(ETHR_ATMC_T__ *var, ETHR_AINT_T__ mask)
 #endif
 
 static ETHR_INLINE ETHR_AINT_T__
-ETHR_NATMC_FUNC__(xchg_mb)(ETHR_ATMC_T__ *var, ETHR_AINT_T__ new)
+ETHR_NATMC_FUNC__(xchg_mb)(ETHR_ATMC_T__ *var, ETHR_AINT_T__ new_)
 {
-    return ETHR_ILCKD__(Exchange)(&var->value, new);
+    return ETHR_ILCKD__(Exchange)(&var->value, new_);
 }
 
 #endif
@@ -412,10 +412,10 @@ ETHR_NATMC_FUNC__(xchg_mb)(ETHR_ATMC_T__ *var, ETHR_AINT_T__ new)
 
 static ETHR_INLINE ETHR_AINT_T__
 ETHR_NATMC_FUNC__(cmpxchg_mb)(ETHR_ATMC_T__ *var,
-			      ETHR_AINT_T__ new,
+			      ETHR_AINT_T__ new_,
 			      ETHR_AINT_T__ old)
 {
-    return ETHR_ILCKD__(CompareExchange)(&var->value, new, old);
+    return ETHR_ILCKD__(CompareExchange)(&var->value, new_, old);
 }
 
 #endif
@@ -430,10 +430,10 @@ ETHR_NATMC_FUNC__(cmpxchg_mb)(ETHR_ATMC_T__ *var,
 
 static ETHR_INLINE ETHR_AINT_T__
 ETHR_NATMC_FUNC__(cmpxchg_acqb)(ETHR_ATMC_T__ *var,
-				ETHR_AINT_T__ new,
+				ETHR_AINT_T__ new_,
 				ETHR_AINT_T__ old)
 {
-    return ETHR_ILCKD_ACQ__(CompareExchange)(&var->value, new, old);
+    return ETHR_ILCKD_ACQ__(CompareExchange)(&var->value, new_, old);
 }
 
 #endif
@@ -448,10 +448,10 @@ ETHR_NATMC_FUNC__(cmpxchg_acqb)(ETHR_ATMC_T__ *var,
 
 static ETHR_INLINE ETHR_AINT_T__
 ETHR_NATMC_FUNC__(cmpxchg_relb)(ETHR_ATMC_T__ *var,
-				ETHR_AINT_T__ new,
+				ETHR_AINT_T__ new_,
 				ETHR_AINT_T__ old)
 {
-    return ETHR_ILCKD_REL__(CompareExchange)(&var->value, new, old);
+    return ETHR_ILCKD_REL__(CompareExchange)(&var->value, new_, old);
 }
 
 #endif

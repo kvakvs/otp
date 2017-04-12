@@ -197,7 +197,7 @@ ethr_native_atomic32_dec_return_relb(ethr_native_atomic32_t *var)
 static ETHR_INLINE ethr_sint32_t
 ethr_native_atomic32_and_retold(ethr_native_atomic32_t *var, ethr_sint32_t mask)
 {
-    ethr_sint32_t old, new;
+    ethr_sint32_t old, new_;
 
     __asm__ __volatile__(
 	"1:\t"
@@ -205,7 +205,7 @@ ethr_native_atomic32_and_retold(ethr_native_atomic32_t *var, ethr_sint32_t mask)
 	"and	%1,%0,%3\n\t"
 	"stwcx.	%1,0,%2\n\t"
 	"bne-	1b\n\t"
-	: "=&r"(old), "=&r"(new)
+	: "=&r"(old), "=&r"(new_)
 	: "r"(&var->counter), "r"(mask)
 	: "cc", "memory");
     return old;
@@ -240,7 +240,7 @@ ethr_native_atomic32_and_retold_relb(ethr_native_atomic32_t *var, ethr_sint32_t 
 static ETHR_INLINE ethr_sint32_t
 ethr_native_atomic32_or_retold(ethr_native_atomic32_t *var, ethr_sint32_t mask)
 {
-    ethr_sint32_t old, new;
+    ethr_sint32_t old, new_;
 
     __asm__ __volatile__(
 	"1:\t"
@@ -248,7 +248,7 @@ ethr_native_atomic32_or_retold(ethr_native_atomic32_t *var, ethr_sint32_t mask)
 	"or	%1,%0,%3\n\t"
 	"stwcx.	%1,0,%2\n\t"
 	"bne-	1b\n\t"
-	: "=&r"(old), "=&r"(new)
+	: "=&r"(old), "=&r"(new_)
 	: "r"(&var->counter), "r"(mask)
 	: "cc", "memory");
     return old;
@@ -324,7 +324,7 @@ ethr_native_atomic32_xchg_relb(ethr_native_atomic32_t *var, ethr_sint32_t val)
 
 static ETHR_INLINE ethr_sint32_t
 ethr_native_atomic32_cmpxchg(ethr_native_atomic32_t *var,
-			     ethr_sint32_t new,
+			     ethr_sint32_t new_,
 			     ethr_sint32_t expected)
 {
   ethr_sint32_t old;
@@ -338,7 +338,7 @@ ethr_native_atomic32_cmpxchg(ethr_native_atomic32_t *var,
     "bne-	1b\n\t"
     "2:"
     : "=&r"(old)
-    : "r"(new), "r"(&var->counter), "r"(expected)
+    : "r"(new_), "r"(&var->counter), "r"(expected)
     : "cc", "memory");
 
     return old;
@@ -348,7 +348,7 @@ ethr_native_atomic32_cmpxchg(ethr_native_atomic32_t *var,
 
 static ETHR_INLINE ethr_sint32_t
 ethr_native_atomic32_cmpxchg_acqb(ethr_native_atomic32_t *var,
-				  ethr_sint32_t new,
+				  ethr_sint32_t new_,
 				  ethr_sint32_t expected)
 {
   ethr_sint32_t old;
@@ -363,7 +363,7 @@ ethr_native_atomic32_cmpxchg_acqb(ethr_native_atomic32_t *var,
     "isync\n"
     "2:"
     : "=&r"(old)
-    : "r"(new), "r"(&var->counter), "r"(expected)
+    : "r"(new_), "r"(&var->counter), "r"(expected)
     : "cc", "memory");
 
     return old;
@@ -375,7 +375,7 @@ ethr_native_atomic32_cmpxchg_acqb(ethr_native_atomic32_t *var,
 
 static ETHR_INLINE ethr_sint32_t
 ethr_native_atomic32_cmpxchg_relb(ethr_native_atomic32_t *var,
-				  ethr_sint32_t new,
+				  ethr_sint32_t new_,
 				  ethr_sint32_t expected)
 {
     ethr_sint32_t actual;
@@ -413,7 +413,7 @@ ethr_native_atomic32_cmpxchg_relb(ethr_native_atomic32_t *var,
 
     ethr_lwsync__();
 
-    actual = ethr_native_atomic32_cmpxchg(var, new, expected);
+    actual = ethr_native_atomic32_cmpxchg(var, new_, expected);
 
 #ifndef ETHR_PPC_HAVE_LWSYNC
     /* We checked for lwsync support in runtime... */
@@ -431,7 +431,7 @@ ethr_native_atomic32_cmpxchg_relb(ethr_native_atomic32_t *var,
     if (actual != expected)
 	return actual; /* Fail... */
     /* Try again... */
-    return ethr_native_atomic32_cmpxchg(var, new, expected);
+    return ethr_native_atomic32_cmpxchg(var, new_, expected);
 }
 
 #endif
