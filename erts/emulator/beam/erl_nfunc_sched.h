@@ -95,7 +95,7 @@ ERTS_GLB_INLINE Process *erts_proc_shadow2real(Process *c_p);
 ERTS_GLB_INLINE NifExport *
 erts_get_proc_nif_export(Process *c_p, int argc)
 {
-    NifExport *nep = ERTS_PROC_GET_NIF_TRAP_EXPORT(c_p);
+    NifExport *nep = (NifExport*)ERTS_PROC_GET_NIF_TRAP_EXPORT(c_p);
     if (!nep || (nep->argc < 0 && nep->argv_size < argc))
 	return erts_new_proc_nif_export(c_p, argc);
     return nep;
@@ -126,7 +126,7 @@ erts_setup_nif_export_rootset(Process* proc, Eterm** objv, Uint* nobj)
 ERTS_GLB_INLINE int
 erts_check_nif_export_in_area(Process *p, char *start, Uint size)
 {
-    NifExport *nep = ERTS_PROC_GET_NIF_TRAP_EXPORT(p);
+    NifExport *nep = (NifExport*)ERTS_PROC_GET_NIF_TRAP_EXPORT(p);
     if (!nep || nep->argc < 0)
 	return 0;
     if (ErtsInArea(nep->pc, start, size))
@@ -179,7 +179,7 @@ erts_nif_export_check_save_trace(Process *c_p, Eterm result,
 				 ErtsTracer meta_tracer)
 {
     if (is_non_value(result) && c_p->freason == TRAP) {
-	NifExport *nep = ERTS_PROC_GET_NIF_TRAP_EXPORT(c_p);
+	NifExport *nep = (NifExport*)ERTS_PROC_GET_NIF_TRAP_EXPORT(c_p);
 	if (nep && nep->argc >= 0) {
 	    erts_nif_export_save_trace(c_p, nep, applying, ep,
 				       cp, flags, flags_meta,

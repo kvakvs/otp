@@ -105,7 +105,7 @@ Uint32 erts_call_trace(Process *p, ErtsCodeInfo *info, struct binary *match_spec
                        Eterm* args, int local, ErtsTracer *tracer);
 void erts_trace_return(Process* p, ErtsCodeMFA *mfa, Eterm retval,
                        ErtsTracer *tracer);
-void erts_trace_exception(Process* p, ErtsCodeMFA *mfa, Eterm class, Eterm value,
+void erts_trace_exception(Process* p, ErtsCodeMFA *mfa, Eterm class_, Eterm value,
                           ErtsTracer *tracer);
 void erts_trace_return_to(Process *p, BeamInstr *pc);
 void trace_sched(Process*, ErtsProcLocks, Eterm);

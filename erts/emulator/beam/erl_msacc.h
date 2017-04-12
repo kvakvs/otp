@@ -249,7 +249,7 @@ void erts_msacc_init_thread(char *type, int id, int liberty);
     ERTS_DECLARE_DUMMY(Uint __erts_msacc_state) = ERTS_MSACC_STATE_OTHER;
 #define ERTS_MSACC_IS_ENABLED_CACHED() ERTS_UNLIKELY(__erts_msacc_cache != NULL)
 #define ERTS_MSACC_UPDATE_CACHE()                                       \
-    __erts_msacc_cache = erts_msacc_enabled ? ERTS_MSACC_TSD_GET() : NULL
+    __erts_msacc_cache = erts_msacc_enabled ? (ErtsMsAcc *)ERTS_MSACC_TSD_GET() : NULL
 
 
 /* The defines below implicitly declare and load a new cache */
