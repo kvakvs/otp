@@ -268,11 +268,14 @@ ETHR_PROTO_NORETURN__ ethr_fatal_error__(const char *file,
 #define __builtin_expect(X, Y) (X)
 #endif
 
-#if ETHR_AT_LEAST_GCC_VSN__(3, 1, 1)
-#  define ETHR_CHOOSE_EXPR __builtin_choose_expr
-#else
+#ifdef __cplusplus
 #  define ETHR_CHOOSE_EXPR(B, E1, E2) ((B) ? (E1) : (E2))
-#endif
+#else
+#  if ETHR_AT_LEAST_GCC_VSN__(3, 1, 1)
+#    define ETHR_CHOOSE_EXPR __builtin_choose_expr
+#  else
+#  endif /* GCC 3.1.1+ */
+#endif /* C++ */
 
 #if ((defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))) \
      || (defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_AMD64))))

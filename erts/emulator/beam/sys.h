@@ -241,17 +241,21 @@ __decl_noreturn void __noreturn erl_assert_error(const char* expr, const char *f
  * Compile time assert
  * (the actual compiler error msg can be a bit confusing)
  */
-#if ERTS_AT_LEAST_GCC_VSN__(3,1,1)
-# define ERTS_CT_ASSERT(e) \
-    do { \
-	enum { compile_time_assert__ = __builtin_choose_expr((e),0,(void)0) }; \
-    } while(0)
+#ifdef __cplusplus
+#  define ERTS_CT_ASSERT(e) static_assert(e, #e)
 #else
-# define ERTS_CT_ASSERT(e) \
-    do { \
-        enum { compile_time_assert__ = 1/(e) }; \
-    } while (0)
-#endif
+#  if ERTS_AT_LEAST_GCC_VSN__(3,1,1)
+#    define ERTS_CT_ASSERT(e) \
+       do { \
+         enum { compile_time_assert__ = __builtin_choose_expr((e),0,(void)0) }; \
+       } while(0)
+#  else
+#  define ERTS_CT_ASSERT(e) \
+     do { \
+       enum { compile_time_assert__ = 1/(e) }; \
+     } while (0)
+#  endif /* GCC 3.1.1+ */
+#endif /* C++ */
 
 /*
  * Microsoft C/C++: We certainly want to use stdarg.h and prototypes.
