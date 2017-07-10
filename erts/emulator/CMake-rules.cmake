@@ -182,6 +182,7 @@ add_definitions(
     -DHAVE_CONFIG_H
     -D_GNU_SOURCE=1
     -DERLANG_INTEGRATION
+    -DERTS_ENDIANNESS=-1
     -DLIBSCTP=libsctp.so.1
     ${EMU_THR_DEFS}
     )
@@ -244,7 +245,7 @@ set(SRC_ERL_EMU_GEN
     ${BIN_DIR}/erl_bif_wrap.c   ${BIN_DIR}/erl_bif_list.h
     ${BIN_DIR}/erl_atom_table.c ${BIN_DIR}/erl_atom_table.h
 #    ${BIN_DIR}/erl_pbifs.c
-    ${BIN_DIR}/erl_gc_bifs.c
+#    ${BIN_DIR}/erl_gc_bifs.c
     ${BIN_DIR}/erl_version.h
     ${BIN_DIR}/erl_compile_flags.h
 
@@ -338,6 +339,7 @@ set(SRC_ERL_EMU_MAIN
 to_cpp(SRC_ERL_EMU_MAIN)
 
 set(SRC_ERL_EMU
+    /home/kv/proj/otp/erts/emulator/test/nif_SUITE_data/nif_SUITE.c
     beam/atom.c               beam/atom.h
     beam/beam_bif_load.c
     beam/beam_bp.c            beam/beam_bp.h
@@ -446,6 +448,7 @@ set(SRC_SYS_OS
     )
 set(SRC_ERL_SYS
     sys/common/erl_check_io.h
+    sys/common/erl_check_io.c
     sys/common/erl_mmap.c               sys/common/erl_mmap.h
     sys/common/erl_mtrace_sys_wrap.c
     sys/common/erl_mseg.c               sys/common/erl_mseg.h
@@ -601,7 +604,6 @@ endif(CONF_HIPE)
 add_custom_command(OUTPUT ${BIN_DIR}/erl_bif_table.h ${BIN_DIR}/erl_bif_table.c
                           ${BIN_DIR}/erl_bif_wrap.c ${BIN_DIR}/erl_bif_list.h
                           ${BIN_DIR}/erl_atom_table.c ${BIN_DIR}/erl_atom_table.h
-                          ${BIN_DIR}/erl_gc_bifs.c
     COMMAND LANG=C ${PERL_EXECUTABLE} utils/make_tables
     ARGS -src ${BIN_DIR} -include ${BIN_DIR} ${ATOMS} ${BIFS}
     WORKING_DIRECTORY ${SRC_DIR}
