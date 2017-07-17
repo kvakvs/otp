@@ -32,7 +32,7 @@
 -export([
     basic/1, reload_error/1, upgrade/1, heap_frag/1,
     t_on_load/1,
-    select/1, select_steal/1,
+    select/1, select_steal/1, select_drv_steal/1,
     monitor_process_a/1,
     monitor_process_b/1,
     monitor_process_c/1,
@@ -79,7 +79,7 @@ all() ->
     [{group, G} || G <- api_groups()]
         ++
     [reload_error, heap_frag, types, many_args,
-     select, select_steal,
+     select, select_steal, select_drv_steal,
      {group, monitor},
      monitor_frenzy,
      hipe,
@@ -620,6 +620,20 @@ select_steal_child_process(Parent, RFd) ->
     % do not do this here - stop_selecting(R2Fd, R2Rsrc, Ref2),
     Parent ! {self(), done}.
 
+%% @doc Write to WFd, select and ensure that self() receives the notification
+%% and that RFd receives the data
+select_steal_ensure_events(RFd, WFd, Ref) ->
+    RandomBin = crypto:hash(sha2, term_to_binary(make_ref())),
+    [] = flush(0),
+    ok = write_nif(WFd, RandomBin),
+    [{select, R, Ref, ready_input}] = flush(),
+    RandomBin = read_nif(R, byte_size(RandomBin)),
+
+    select_nif(RFd, ?ERL_NIF_SELECT_READ, RFd, self(), Ref),
+
+    ?assertMatch([{select, RFd, Ref, ready_input}], flush()),
+    ?assertEqual(RandomBin, read_nif(RFd, byte_size(RandomBin))).
+
 %% @doc Similar to select/1 test, make a double ended pipe. Then try to steal
 %% the socket, see what happens.
 select_steal(Config) when is_list(Config) ->
@@ -632,7 +646,7 @@ select_steal(Config) when is_list(Config) ->
     ?assertEqual(0, select_nif(RFd, ?ERL_NIF_SELECT_READ, RFd, null, Ref)),
     ?assertEqual([], flush(0)),
 
-    %% Spawn a process and do some stealing
+    %% Spawn a process and do some stealing NIF1 -> NIF2
     Parent = self(),
     Pid = spawn_link(fun() -> select_steal_child_process(Parent, RFd) end),
 
@@ -642,8 +656,11 @@ select_steal(Config) when is_list(Config) ->
 
     ?assertMatch([{Pid, done}], flush(1)),  % synchronize with the child
 
-    %% Try to select from the parent pid (steal back)
-    ?assertEqual(0, select_nif(RFd, ?ERL_NIF_SELECT_READ, RFd, Pid, Ref)),
+    %% Try to select (steal back) NIF2 -> NIF1
+    ?assertEqual(0, select_nif(RFd, ?ERL_NIF_SELECT_READ, RFd, null, Ref)),
+
+    %% Ensure that events arrive here
+    select_steal_ensure_events(RFd, WFd, Ref),
 
     %% Ensure that no data is hanging and close.
     %% Rfd is stolen at this point.
@@ -659,6 +676,58 @@ select_steal(Config) when is_list(Config) ->
     stop_selecting(RFd, RPtr, Ref),
     stop_selecting(WFd, WPtr, Ref),
     io:format(standard_error, "steal test done~n", []),
+    ok.
+
+%% @doc Similar to select_steal and select test: create a pipe, create a port
+%% driver, select by NIF, steal by the driver, steal back by NIF again.
+select_drv_steal(Config) ->
+    ensure_lib_loaded(Config),
+
+    Ref = make_ref(),
+    {{RFd, RPtr}, {WFd, WPtr}} = pipe_nif(),
+    RFdNative = fd_native_value_nif(RFd), % get integer OS value
+
+    %% Bind the socket to current pid in enif_select
+    ?assertEqual(0, select_nif(RFd, ?ERL_NIF_SELECT_READ, RFd, null, Ref)),
+    ?assertEqual(0, select_nif(WFd, ?ERL_NIF_SELECT_READ, WFd, null, Ref)),
+
+    %% Open our custom fd_thief_drv and ask it to steal from us
+    DrvName = 'fd_thief_drv',
+    DrvPath = proplists:get_value(data_dir, Config),
+    erl_ddll:start(),
+    case erl_ddll:load_driver(DrvPath, DrvName) of
+        ok -> ok;
+        {error, Error} ->
+            ct:pal("~s\n", [erl_ddll:format_error(Error)]),
+            ?assert(false)
+    end,
+    Port = erlang:open_port({spawn, DrvName}, []),
+
+    %% Let the driver steal the fd. Encoded fd consumes leading 4 or 8 bytes
+    ?assertEqual(0, erlang:port_control(Port, $s, <<RFdNative:64/little>>)),
+
+    %% TODO: Test does not run past this point (assert crash in C)
+
+    ?assertMatch({fd_thief, Port, done, _}, flush(0)),
+    ?assertEqual(ok, write_nif(WFd, <<5, "hello">>)),
+
+    %% Ask the driver to check the data we sent it (0 = ok)
+    ?assertMatch({fd_thief, Port, done, _}, flush(0)),
+
+    %% Try to select (steal back) Driver -> NIF1
+    ?assertEqual(0, select_nif(RFd, ?ERL_NIF_SELECT_READ, RFd, null, Ref)),
+
+    %% Ensure that events arrive here
+    select_steal_ensure_events(RFd, WFd, Ref),
+
+    %% Finished with the driver
+    erlang:port_close(Port),
+    ok = erl_ddll:unload_driver(DrvName),
+    ok = erl_ddll:stop(),
+
+    stop_selecting(RFd, RPtr, Ref),
+    stop_selecting(WFd, WPtr, Ref),
+    io:format(standard_error, "drv_steal test done~n", []),
     ok.
 
 check_stop_ret(?ERL_NIF_SELECT_STOP_CALLED) -> ok;    
@@ -3090,11 +3159,12 @@ term_to_binary_nif(_, _) -> ?nif_stub.
 binary_to_term_nif(_, _, _) -> ?nif_stub.
 port_command_nif(_, _) -> ?nif_stub.
 format_term_nif(_,_) -> ?nif_stub.
-select_nif(_,_,_,_,_) -> ?nif_stub.
-dupe_resource_nif(_) -> ?nif_stub.
-pipe_nif() -> ?nif_stub.
-write_nif(_,_) -> ?nif_stub.
-read_nif(_,_) -> ?nif_stub.
+select_nif(_,_,_,_,_) -> ?nif_stub. % wrap enif_select on a FD
+dupe_resource_nif(_) -> ?nif_stub. % duplicate a resource with the same FD
+fd_native_value_nif(_) -> ?nif_stub. % get numeric FD value from a resource
+pipe_nif() -> ?nif_stub. % create a pipe with in/out pair of FDs
+write_nif(_,_) -> ?nif_stub. % send into FD
+read_nif(_,_) -> ?nif_stub. % read from FD
 is_closed_nif(_) -> ?nif_stub.
 last_fd_stop_call() -> ?nif_stub.
 alloc_monitor_resource_nif() -> ?nif_stub.

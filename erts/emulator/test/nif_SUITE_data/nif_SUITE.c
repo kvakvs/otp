@@ -2539,6 +2539,26 @@ static ERL_NIF_TERM dupe_resource_nif(ErlNifEnv* env, int argc,
     }
 }
 
+/*
+ * Extract a native integer value of a fd in resource
+ */
+static ERL_NIF_TERM fd_native_value_nif(ErlNifEnv* env, int argc,
+                                        const ERL_NIF_TERM argv[]) {
+    struct fd_resource* orig_rsrc;
+
+    if (!get_fd(env, argv[0], &orig_rsrc)) {
+        return enif_make_badarg(env);
+    } else {
+        struct fd_resource* new_rsrc;
+        new_rsrc = enif_alloc_resource(fd_resource_type,
+                                       sizeof(struct fd_resource));
+        ErlNifEvent result = orig_rsrc->fd;
+        enif_release_resource(new_rsrc);
+
+        return enif_make_int(env, result);
+    }
+}
+
 static ERL_NIF_TERM write_nif(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
     struct fd_resource* fdr;
@@ -3275,11 +3295,12 @@ static ErlNifFunc nif_funcs[] =
     {"format_term_nif", 2, format_term},
     {"select_nif", 5, select_nif},
 #ifndef __WIN32__
-    {"pipe_nif", 0, pipe_nif},
-    {"write_nif", 2, write_nif},
     {"dupe_resource_nif", 1, dupe_resource_nif},
-    {"read_nif", 2, read_nif},
+    {"fd_native_value_nif", 1, fd_native_value_nif},
     {"is_closed_nif", 1, is_closed_nif},
+    {"pipe_nif", 0, pipe_nif},
+    {"read_nif", 2, read_nif},
+    {"write_nif", 2, write_nif},
 #endif
     {"last_fd_stop_call", 0, last_fd_stop_call},
     {"alloc_monitor_resource_nif", 0, alloc_monitor_resource_nif},
