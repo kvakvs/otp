@@ -129,7 +129,8 @@ only_simulated() ->
      port_in_host_header,
      redirect_port_in_host_header,
      relaxed,
-     multipart_chunks
+     multipart_chunks,
+     chunked_101_response
     ].
 
 misc() ->
@@ -206,9 +207,10 @@ init_per_testcase(wait_for_whole_response, Config) ->
     ct:timetrap({seconds, 60*3}),
     Config;
 init_per_testcase(Case, Config) when Case == post;
-				     Case == delete;
-				     Case == post_delete;
-				     Case == post_stream ->
+                                     Case == delete;
+                                     Case == post_delete;
+                                     Case == post_stream;
+                                     Case == chunked_101_response ->
     ct:timetrap({seconds, 30}),
     Config;
 init_per_testcase(_Case, Config) ->
@@ -1178,6 +1180,16 @@ wait_for_whole_response(Config) when is_list(Config) ->
      RespSeqNumServer ! shutdown,
      ReqSeqNumServer ! shutdown.
 
+%%-------------------------------------------------------------------------
+
+chunked_101_response(doc) ->
+    ["HTTPC was unable to handle a chunked HTTP 101 response"];
+chunked_101_response(Config) when is_list(Config) ->
+    Request  = {url(group_name(Config), "/chunked_101.html", Config), []},
+    Resp = httpc:request(get, Request, [], []),
+    ct:pal("~p", [Resp]),
+    {ok, {{_,200,_}, [_ | _], _Body = [_ | _]}} = Resp.
+
 %%--------------------------------------------------------------------
 %% Internal Functions ------------------------------------------------
 %%--------------------------------------------------------------------
@@ -2030,9 +2042,20 @@ handle_uri(_,"/multipart_chunks.html",_,_,Socket,_) ->
     send(Socket, Head),
     send_multipart_chunks(Socket),
     http_chunk:encode_last();
+
 handle_uri("HEAD",_,_,_,_,_) ->
     "HTTP/1.1 200 ok\r\n" ++
 	"Content-Length:0\r\n\r\n";
+
+handle_uri(_, "/chunked_101.html", _, _, _, _) ->
+    "HTTP/1.1 101 Switching Protocol" ++ ?CRLF ++
+    "Transfer-Encoding: chunked" ++ ?CRLF ++
+    "Content-Type: text/plain" ++ ?CRLF ++
+    ?CRLF ++
+    "7" ++ ?CRLF ++ "hello" ++ ?CRLF ++
+    "7" ++ ?CRLF ++ "world" ++ ?CRLF ++
+    "0" ++ ?CRLF ++ ?CRLF;
+
 handle_uri(_,_,_,_,_,DefaultResponse) ->
     DefaultResponse.
 
