@@ -1,0 +1,7 @@
+BasedOnStyle: Mozilla
+IndentWidth: 4
+ColumnLimit: 80
+Language: Cpp
+BraceWrapping:
+  AfterControlStatement: true
+BreakBeforeBraces: Attach

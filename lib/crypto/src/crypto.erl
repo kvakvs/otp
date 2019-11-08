@@ -97,6 +97,28 @@
 -on_load(on_load/0).
 -define(CRYPTO_NIF_VSN,302).
 
+-type key_integer() :: integer() | binary(). % Always binary() when used as return value
+
+-type sha1() :: sha.
+-type sha2() :: sha224 | sha256 | sha384 | sha512.
+
+-type pk_sign_verify_algs() :: rsa | dss | eddsa.
+-type rsa_digest_type() :: sha1() | sha2() | md5 | ripemd160.
+-type dss_digest_type() :: sha1() | sha2().
+
+%%-type rsa_public() :: [key_integer()]. % [E, N]
+-type rsa_private() :: [key_integer()]. % [E, N, D] | [E, N, D, P1, P2, E1, E2, C]
+%%-type rsa_params() :: {ModulusSizeInBits :: integer(), PublicExponent :: key_integer()}.
+
+%%-type dss_public() :: [key_integer()]. % [P, Q, G, Y]
+-type dss_private() :: [key_integer()]. % [P, Q, G, X]
+
+-type edwards_curve_ed() :: ed25519 | ed448.
+
+%%-type eddsa_public() :: key_integer().
+-type eddsa_private() :: key_integer().
+-type eddsa_params() :: edwards_curve_ed().
+
 -define(nif_stub,nif_stub_error(?LINE)).
 nif_stub_error(Line) ->
     erlang:nif_error({nif_not_loaded,module,?MODULE,line,Line}).
@@ -423,12 +445,19 @@ verify(Algorithm, Type, Data, Signature, Key) ->
     verify(Algorithm, Type, Data, Signature, Key, []).
 
 %% Backwards compatible
+-spec verify(Algorithm :: pk_sign_verify_algs(),
+    DigestType :: rsa_digest_type() | dss_digest_type() | none,
+    Msg :: iodata() | {digest, iodata()},
+    Key :: rsa_private() | dss_private() | [eddsa_private() | eddsa_params()],
+    Signature :: binary()) -> any().
+
 verify(Algorithm = dss, none, Digest, Signature, Key, Options) ->
     verify(Algorithm, sha, {digest, Digest}, Signature, Key, Options);
+
 verify(Algorithm, Type, Data, Signature, Key, Options) ->
     case pkey_verify_nif(Algorithm, Type, Data, Signature, format_pkey(Algorithm, Key), Options) of
-	notsup -> erlang:error(notsup);
-	Boolean -> Boolean
+        notsup -> erlang:error(notsup);
+        Boolean -> Boolean
     end.
 
 
@@ -436,13 +465,20 @@ sign(Algorithm, Type, Data, Key) ->
     sign(Algorithm, Type, Data, Key, []).
 
 %% Backwards compatible
+-spec sign(Algorithm :: pk_sign_verify_algs(),
+    DigestType :: rsa_digest_type() | dss_digest_type() | none,
+    MessageOrDigest :: iodata() | {digest, iodata()},
+    Key :: rsa_private() | dss_private() | [eddsa_private() | eddsa_params()],
+    Options :: any()) -> binary().
+
 sign(Algorithm = dss, none, Digest, Key, Options) ->
     sign(Algorithm, sha, {digest, Digest}, Key, Options);
+
 sign(Algorithm, Type, Data, Key, Options) ->
     case pkey_sign_nif(Algorithm, Type, Data, format_pkey(Algorithm, Key), Options) of
-	error -> erlang:error(badkey, [Algorithm, Type, Data, Key, Options]);
-	notsup -> erlang:error(notsup);
-	Signature -> Signature
+        error -> erlang:error(badkey, [Algorithm, Type, Data, Key, Options]);
+        notsup -> erlang:error(notsup);
+        Signature -> Signature
     end.
 
 

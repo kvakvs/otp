@@ -70,11 +70,13 @@ RELSYSDIR = $(RELEASE_PATH)/lib/crypto-$(VSN)
 # ----------------------------------------------------
 # Misc Macros
 # ----------------------------------------------------
-CRYPTO_OBJS = $(OBJDIR)/crypto$(TYPEMARKER).o
+CRYPTO_OBJS = $(OBJDIR)/crypto$(TYPEMARKER).o \
+	$(OBJDIR)/eddsa$(TYPEMARKER).o
 CALLBACK_OBJS = $(OBJDIR)/crypto_callback$(TYPEMARKER).o
 NIF_MAKEFILE = $(PRIVDIR)/Makefile
 CRYPTO_STATIC_OBJS = $(OBJDIR)/crypto_static$(TYPEMARKER).o\
-	$(OBJDIR)/crypto_callback_static$(TYPEMARKER).o
+	$(OBJDIR)/crypto_callback_static$(TYPEMARKER).o\
+	$(OBJDIR)/eddsa$(TYPEMARKER).o
 
 NIF_ARCHIVE = $(LIBDIR)/crypto$(TYPEMARKER).a
 
