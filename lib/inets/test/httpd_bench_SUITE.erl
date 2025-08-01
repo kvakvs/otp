@@ -240,12 +240,11 @@ setup(_Config, _LocalNode) ->
     case net_adm:ping(Node) of
 	pong -> ok;
 	pang ->
-%%	    {ok, Node} = slave:start(Host, inets_perf_server, PeerArgs, no_link, Prog)
-	    {ok, Node} = peer:start(#{
+            {ok, Node} = peer:start(#{
                 host => Host,
                 name => inets_perf_server,
                 args => PeerArgs,
-                peer_down => continue, % old option: no_link
+                peer_down => continue,
                 exec => Prog
             })
     end,

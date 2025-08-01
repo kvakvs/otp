@@ -1,5 +1,5 @@
 %% Debug: silence | info | log | debug
-{debug,  [{ctrl, info}, {proxy, silence}, {slave, silence}, {client, silence}]}.
+{debug,  [{ctrl, info}, {proxy, silence}, {follower, silence}, {client, silence}]}.
 {server, {"/usr/local/bin", "fooserver"}}.
 %% {port,   8888}.             % integer() > 0
 {server_dir, "/tmp/hdlt"}. % Absolute path

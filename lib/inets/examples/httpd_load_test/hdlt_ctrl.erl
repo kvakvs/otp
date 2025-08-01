@@ -51,8 +51,9 @@
 -define(SSH_CONNECT_TIMEOUT,        5000).
 -define(NODE_START_TIMEOUT,         5000).
 -define(LOCAL_PROXY_START_TIMEOUT,  ?NODE_START_TIMEOUT * 4).
--define(DEFAULT_DEBUGS, 
-	[{ctrl, info}, {follower, silence}, {proxy, silence}, {client, silence}]).
+-define(DEBUGS_OPTION_KEYS,   [ctrl, proxy, follower, client]).
+-define(DEBUGS_OPTION_VALUES, [silence, info, log, debug]).
+-define(DEFAULT_DEBUGS,       lists:zip(?DEBUGS_OPTION_KEYS, ?DEBUGS_OPTION_VALUES)).
 -define(DEFAULT_WORK_SIM,           10000).
 -define(DEFAULT_DATA_SIZE_START,    500).
 -define(DEFAULT_DATA_SIZE_END,      1500).
@@ -504,7 +505,7 @@ local_follower_module() ->
 	Path when is_list(Path) ->
 	    Path;
 	_ ->
-	    exit({follower_module_not_found, Mod})
+            exit({follower_module_not_found, Mod})
     end.
 
 follower_module() ->
@@ -725,7 +726,7 @@ proxy_loop(#proxy{mode      = started,
     receive
 	{proxy_request, Ref, From, {start_node, Debug}} ->
 	    ?LOG("[starting] received start_node order", []),
-	    case hdlt_follower_node:start_link(Host, NodeName,
+            case hdlt_follower_node:start_link(Host, NodeName,
                 ErlPath, Paths, Args, Debug) of
 		{ok, Node} ->
 		    ?DEBUG("[starting] node ~p started - now monitor", [Node]),
@@ -1241,13 +1242,13 @@ verify_debugs([{Tag, Debug}|Debugs]) ->
     verify_debugs(Debugs).
 
 verify_debug(Tag, Debug) ->
-    case lists:member(Tag, [ctrl, proxy, follower, client]) of
+    case lists:member(Tag, ?DEBUGS_OPTION_KEYS) of
 	true ->
 	    ok;
 	false ->
 	    exit({bad_debug_tag, Tag})
     end,
-    case lists:member(Debug, [silence, info, log, debug]) of
+    case lists:member(Debug, ?DEBUGS_OPTION_VALUES) of
 	true ->
 	    ok;
 	false ->

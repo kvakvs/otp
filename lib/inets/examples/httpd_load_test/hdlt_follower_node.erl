@@ -114,17 +114,17 @@ wait_for_follower_node(Parent, Host, Name, Node, Paths, Args,
     case (catch mk_cmd(Host, Name, Paths, Args, Waiter, Prog)) of
 	{ok, Cmd} ->
   	    ?DEBUG("command generated: ~n~s", [Cmd]),
-	    case (catch ssh_follower_start(Host, Cmd)) of
+            case (catch ssh_follower_start(Host, Cmd)) of
 		{ok, Conn, _Chan} ->
  		    ?DEBUG("ssh channel created", []),
 		    receive
-			{FollowerPid, follower_started} ->
- 			    ?DEBUG("follower started: ~p", [FollowerPid]),
+                        {FollowerPid, follower_started} ->
+                            ?DEBUG("follower started: ~p", [FollowerPid]),
 			    unregister(Waiter),
-			    follower_started(Parent, LinkTo, FollowerPid, Conn,
-					     DebugLevel)
+                            follower_started(Parent, LinkTo, FollowerPid, Conn,
+                                             DebugLevel)
 		    after 32000 ->
-			    ?INFO("follower node failed to report in on time",
+                            ?INFO("follower node failed to report in on time",
 				  []),
 			    %% If it seems that the node was partially started,
 			    %% try to kill it.
@@ -200,8 +200,8 @@ follower_started(ReplyTo, Master, Follower, Conn, Level)
   when is_pid(Master) andalso is_pid(Follower) ->
     process_flag(trap_exit, true),
     SName = lists:flatten(
-	      io_lib:format("HDLT FOLLOWER CTRL[~p,~p]",
-			    [self(), node(Follower)])),
+              io_lib:format("HDLT FOLLOWER CTRL[~p,~p]",
+                            [self(), node(Follower)])),
     ?SET_NAME(SName),
     ?SET_LEVEL(Level), 
     ?LOG("initiating", []),
@@ -219,18 +219,18 @@ follower_running(Master, MasterRef, Follower, FollowerRef, Conn) ->
     receive
 	{'DOWN', MasterRef, process, _Object, _Info} ->
 	    ?LOG("received DOWN from master", []),
-	    erlang:demonitor(FollowerRef, [flush]),
-	    Follower ! {nodedown, node()},
+            erlang:demonitor(FollowerRef, [flush]),
+            Follower ! {nodedown, node()},
 	    ssh:close(Conn);
 
-	{'DOWN', FollowerRef, process, Object, _Info} ->
-	    ?LOG("received DOWN from follower (~p)", [Object]),
+        {'DOWN', FollowerRef, process, Object, _Info} ->
+            ?LOG("received DOWN from follower (~p)", [Object]),
 	    erlang:demonitor(MasterRef, [flush]),
 	    ssh:close(Conn);
 
 	Other ->
 	    ?DEBUG("received unknown: ~n~p", [Other]),
-	    follower_running(Master, MasterRef, Follower, FollowerRef, Conn)
+            follower_running(Master, MasterRef, Follower, FollowerRef, Conn)
 
     end.
 
@@ -255,7 +255,7 @@ mk_cmd(Host, Name, Paths, Args, Waiter, Prog) ->
 			 " -detached -nopinput ", 
 			 Args, " ", 
 			 " -sname ", Name, "@", Host,
-			 " -s ", ?MODULE, " follower_node_start ", node(),
+                         " -s ", ?MODULE, " follower_node_start ", node(),
 			 " ", Waiter,
 			 " ", PaPaths]))}.
 
@@ -267,12 +267,12 @@ follower_node_start([Master, Waiter]) ->
     spawn(?MODULE, wait_for_master_to_die, [Master, Waiter, silence]);
 follower_node_start([Master, Waiter, Level]) ->
     spawn(?MODULE, wait_for_master_to_die, [Master, Waiter, Level]).
-	
+
 
 wait_for_master_to_die(Master, Waiter, Level) ->
     process_flag(trap_exit, true),
     SName = lists:flatten(
-	      io_lib:format("HDLT-FOLLOWER MASTER MONITOR[~p,~p,~p]",
+              io_lib:format("HDLT-FOLLOWER MASTER MONITOR[~p,~p,~p]",
 			    [self(), node(), Master])), 
     ?SET_NAME(SName),
     ?SET_LEVEL(Level), 
