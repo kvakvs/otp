@@ -193,8 +193,11 @@ next(Tests, Options) ->
 	    none
     end.
 
-%% Temporary suppression
--compile([{nowarn_deprecated_function,[{slave,start_link,3},{slave,stop,1}]}]).
+%% Converts a string into list of strings via argparse, or passes lists of strings unchanged.
+parse_peer_args([]) -> [];
+parse_peer_args(Args = [C | _]) when is_integer(C) ->
+    argparse:parse(Args);
+parse_peer_args(Args = [S | _]) when is_list(S) -> Args.
 
 %% this returns either a #test{} or #group{} record, or {data, T} to
 %% signal that T has been substituted for the given representation
@@ -336,12 +339,16 @@ parse({node, N, A, T1}=T, Options) when is_atom(N) ->
 %% 			       end,
 %% 			   ?debugVal({started, StartedNet}),
 			   {Name, Host} = eunit_lib:split_node(N),
-			   {ok, Node} = slave:start_link(Host, Name, A),
+                           {ok, Node} = peer:start_link(#{
+                               host => Host,
+                               name => Name,
+                               args => parse_peer_args(A)
+                           }),
 			   {Node, StartedNet}
 		   end,
 		   fun ({Node, StopNet}) ->
 %% 			   ?debugVal({stop, StopNet}),
-			   slave:stop(Node),
+                           peer:stop(Node),
 			   case StopNet of
 			       true -> net_kernel:stop();
 			       false -> ok
