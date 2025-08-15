@@ -38,8 +38,6 @@ extern "C" {
 #include "wxe_helpers.h"
 #include "wxe_callback_impl.h"
 
-#include <vector>
-
 #if !wxCHECK_VERSION(2,9,0)
 #define wxeLocaleC wxChar *
 #define wxeLocaleC2String(Str) wxString(Str)

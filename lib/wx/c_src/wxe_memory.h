@@ -20,84 +20,52 @@
  * %CopyrightEnd%
  */
 
-#ifndef _WXE_MEMORY_H
-#define	_WXE_MEMORY_H
+#pragma once
 
-class intListElement {
- public:
-    intListElement(int Element) {car = Element; cdr = NULL;};
-    intListElement(int Element, intListElement *list)
-    {car = Element; cdr = list;};
-    int car;
-    intListElement *cdr;
-};
+#include <list>
 
-class intList {
- public:
-    intList() {list = NULL;};
-    ~intList() {
-	intListElement *head = list;
-	while(head) {
-	    intListElement *tail=head->cdr;
-	    delete head;
-	    head = tail;
-	} };
-    bool IsEmpty() {return list == NULL;};
-    void Append(int Element) { list = new intListElement(Element, list); };
-    int Pop() {
-	intListElement *temp = list;
-	int res = list->car;
-	list = temp->cdr;
-	delete temp;
-	return res;
-    }
-    intListElement *list;
-};
-
-class wxe_badarg
-{
- public:
-  wxe_badarg(int Ref) : ref(Ref) { var = NULL; } ;
-  wxe_badarg(const char * Var) : var(Var) { } ;
-  int ref;
-  const char * var;
+class wxe_badarg final : public std::exception {
+public:
+  explicit wxe_badarg(int Ref) : ref(Ref) {}
+  explicit wxe_badarg(const char *Var) : var(Var) {}
+  int ref{};
+  const char *var{};
 };
 
 class wxeMemEnv {
- public:
-    wxeMemEnv() {
-        create();
-    };
-    void create() {
-        ref2ptr = (void **) enif_alloc(128*sizeof(void *));
-	ref2ptr[0] = NULL;
-	next = 1;
-	max = 128;
-        tmp_env = enif_alloc_env();
-        free.list = NULL;
-    };
+public:
+  wxeMemEnv() {
+    ref2ptr = static_cast<void **>(enif_alloc(128 * sizeof(void *)));
+    ref2ptr[0] = nullptr;
+    next = 1;
+    max = 128;
+    tmp_env = enif_alloc_env();
+  }
 
-    // ~wxeMemEnv() {}; // done in WxeApp::destroyMemEnv
+  void *getPtr(ErlNifEnv *env, ERL_NIF_TERM term, const char *arg,
+               ERL_NIF_TERM *type = nullptr) const {
+    int index, tpl_sz;
+    const ERL_NIF_TERM *tpl;
+    if (!enif_get_tuple(env, term, &tpl_sz, &tpl) && tpl_sz != 4)
+      throw wxe_badarg(arg);
+    if (!enif_get_int(env, tpl[1], &index))
+      throw wxe_badarg(arg);
+    if (type)
+      *type = tpl[2];
+    void *temp = ref2ptr[index];
+    if (index < next && (index == 0 || temp != nullptr))
+      return temp;
+    throw wxe_badarg(arg);
+  }
 
-    void * getPtr(ErlNifEnv *env, ERL_NIF_TERM term, const char *arg, ERL_NIF_TERM * type = NULL) {
-        int index, tpl_sz;
-        const ERL_NIF_TERM *tpl;
-        if(!enif_get_tuple(env, term, &tpl_sz, &tpl) && tpl_sz != 4) throw wxe_badarg(arg);
-        if(!enif_get_int(env, tpl[1], &index)) throw wxe_badarg(arg);
-        if(type) *type = tpl[2];
-        void * temp = ref2ptr[index];
-        if((index < next) && ((index == 0) || (temp != (void *)NULL)))
-            return temp;
-        throw wxe_badarg(arg);
-    };
-
-    int  next;
-    int  max;
-    void ** ref2ptr;
-    intList   free;
-    wxe_me_ref *me_ref;  // backreference
-    ErlNifPid owner;
-    ErlNifEnv *tmp_env;
+  int next{};
+  int max{};
+  /// Array value owned by the emulator.
+  void **ref2ptr{}; // TODO: Ownership/destruction?
+  std::list<int> free;
+  wxe_me_ref *me_ref{}; // backreference
+  ErlNifPid owner{};
+  ErlNifEnv *tmp_env{}; // TODO: Ownership/destruction?
 };
 
 class wxeRefData {
@@ -120,5 +88,3 @@ class wxeRefData {
 // WX_DECLARE_HASH_MAP(ErlNifPid, wxeMemEnv*, wxIntegerHash, wxIntegerEqual, wxeMemMap);
 
 WX_DECLARE_VOIDPTR_HASH_MAP(wxeRefData *, ptrMap);
-
-#endif

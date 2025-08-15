@@ -62,7 +62,7 @@ extern ErlNifCond  * wxe_batch_locker_c;
 extern ErlNifPid  init_caller;
 extern int wxe_status;
 
-wxeFifo * wxe_queue = NULL;
+wxeFifo * wxe_queue = nullptr;
 
 unsigned int wxe_idle_processed = 0;
 unsigned int wxe_needs_signal = 0;  // inside batch if larger than 0
@@ -182,7 +182,7 @@ bool WxeApp::OnInit()
 
   global_me = new wxeMemEnv();
   wxe_queue = new wxeFifo(2000);
-  cb_return = NULL;
+  cb_return = nullptr;
   recurse_level = 0;
   delayed_delete = new wxeFifo(100);
   delayed_cleanup  = new wxList;
@@ -316,16 +316,16 @@ void handle_event_callback(wxe_me_ref *mr, ErlNifPid process)
     return;
   // enif_fprintf(stderr, "CB EV start %T \r\n", process);
   // Is thread safe if pdl have been incremented
-  if(mr->memenv && enif_monitor_process(NULL, mr, &process, &monitor) == 0) {
+  if(mr->memenv && enif_monitor_process(nullptr, mr, &process, &monitor) == 0) {
     // Should we be able to handle commands when recursing? probably
-    app->cb_return = NULL;
+    app->cb_return = nullptr;
     app->recurse_level++;
     app->dispatch_cb(wxe_queue, (wxeMemEnv *) mr->memenv, process);
     app->recurse_level--;
-    enif_demonitor_process(NULL, mr, &monitor);
+    enif_demonitor_process(nullptr, mr, &monitor);
   } else {
     // enif_fprintf(stderr, "CB %T is not alive ignoring\r\n", process);
-    app->cb_return = NULL;
+    app->cb_return = nullptr;
   }
   // enif_fprintf(stderr, "CB EV done %T \r\n", process);
 }
@@ -344,7 +344,7 @@ int WxeApp::dispatch_cmds()
   // Cleanup old memenv's and deleted objects
   if(recurse_level == 0) {
     wxeCommand *curr;
-    while((curr = delayed_delete->Get()) != NULL) {
+    while((curr = delayed_delete->Get()) != nullptr) {
       wxe_dispatch(*curr);
       delayed_delete->DeleteCmd(curr);
     }
@@ -373,7 +373,7 @@ int WxeApp::dispatch(wxeFifo * batch)
   enif_mutex_lock(wxe_batch_locker_m);
   wxe_idle_processed = 1;
   while(true) {
-    while((event = batch->Get()) != NULL) {
+    while((event = batch->Get()) != nullptr) {
       wait += 1;
       switch(event->op) {
       case WXE_BATCH_END:
@@ -475,7 +475,7 @@ void WxeApp::dispatch_cb(wxeFifo * batch, wxeMemEnv * memenv, ErlNifPid process)
             enif_mutex_unlock(wxe_batch_locker_m);
             return;
           case WXE_CB_DIED:
-            cb_return = NULL;
+            cb_return = nullptr;
             batch->DeleteCmd(event);
             wxe_needs_wakeup = 1;
             enif_mutex_unlock(wxe_batch_locker_m);
@@ -571,7 +571,6 @@ void * newMemEnv(ErlNifEnv* env, wxe_me_ref *mr)
   WxeApp * app = (WxeApp *) wxTheApp;
   wxeMemEnv* global_me = app->global_me;
   wxeMemEnv* memenv = new wxeMemEnv();
-  memenv->create();
 
   for(int i = 0; i < global_me->next; i++) {
     memenv->ref2ptr[i] = global_me->ref2ptr[i];
@@ -590,7 +589,7 @@ void WxeApp::destroyMemEnv(wxeMetaCommand &Ecmd)
   wxe_needs_wakeup = 1;
   enif_mutex_unlock(wxe_batch_locker_m);
 
-  wxWindow *parent = NULL;
+  wxWindow *parent = nullptr;
 
   if(!Ecmd.me_ref || !Ecmd.me_ref->memenv) {
     wxString msg;
@@ -620,7 +619,7 @@ void WxeApp::destroyMemEnv(wxeMetaCommand &Ecmd)
 	  if(parent) {
 	    ptrMap::iterator parentRef = ptr2ref.find(parent);
             // if the parent is already dead delete the parent ref
-	    if(parentRef == ptr2ref.end()) { win->SetParent(NULL); }
+	    if(parentRef == ptr2ref.end()) { win->SetParent(nullptr); }
 	  }
           // Delay delete until we are out of dispatch*
 	  if(recurse_level == 0) { delete win; }
@@ -675,7 +674,7 @@ void WxeApp::destroyMemEnv(wxeMetaCommand &Ecmd)
 	wxeRefData *refd = it->second;
 	if(refd->alloc_in_erl) {
 	  if((refd->type == 8) && ((wxObject *)ptr)->IsKindOf(CLASSINFO(wxBufferedDC))) {
-	    ((wxBufferedDC *)ptr)->m_dc = NULL; // Workaround
+	    ((wxBufferedDC *)ptr)->m_dc = nullptr; // Workaround
 	  }
 	  wxString msg;
 	  bool cleanup_ref=true;
@@ -711,7 +710,7 @@ void WxeApp::destroyMemEnv(wxeMetaCommand &Ecmd)
   enif_free(memenv->ref2ptr);
   enif_free_env(memenv->tmp_env);
   if(wxe_debug) enif_fprintf(stderr, "Deleting memenv %d\r\n", memenv);
-  Ecmd.me_ref->memenv = NULL;
+  Ecmd.me_ref->memenv = nullptr;
   enif_release_resource(Ecmd.me_ref);
 }
 
@@ -722,7 +721,7 @@ wxeRefData * WxeApp::getRefData(void *ptr) {
     wxeRefData *refd = it->second;
     return refd;
   }
-  return NULL;
+  return nullptr;
 }
 
 
@@ -732,13 +731,14 @@ wxeRefData * WxeApp::getRefData(void *ptr) {
 
 int WxeApp::newPtr(void * ptr, int type, wxeMemEnv *memenv) {
   int ref;
-  intList free = memenv->free;
+  auto &free = memenv->free;
 
-  if(free.IsEmpty()) {
+  if(free.empty()) {
     ref = memenv->next++;
   } else {
-    ref = free.Pop();
-  };
+    ref = free.front();
+    free.pop_front();
+  }
   if(ref >= memenv->max) {
     memenv->max *= 2;
     memenv->ref2ptr = (void **) enif_realloc(memenv->ref2ptr,memenv->max * sizeof(void*));
@@ -774,13 +774,14 @@ int WxeApp::getRef(void * ptr, wxeMemEnv *memenv, int type) {
     ptr2ref.erase(it);
   }
   int ref;
-  intList free = memenv->free;
+  auto &free = memenv->free;
 
-  if(free.IsEmpty()) {
+  if(free.empty()) {
     ref = memenv->next++;
   } else {
-    ref = free.Pop();
-  };
+    ref = free.front();
+    free.pop_front();
+  }
   if(ref >= memenv->max) {
     memenv->max *= 2;
     memenv->ref2ptr = (void **) enif_realloc(memenv->ref2ptr,memenv->max * sizeof(void*));
@@ -798,10 +799,10 @@ void WxeApp::clearPtr(void * ptr) {
 
   if(it != ptr2ref.end()) {
     wxeRefData *refd = it->second;
-    intList free = refd->memenv->free;
+    auto &free = refd->memenv->free;
     int ref = refd->ref;
-    refd->memenv->ref2ptr[ref] = NULL;
-    free.Append(ref);
+    refd->memenv->ref2ptr[ref] = nullptr;
+    free.push_back(ref);
 
     if(!enif_is_pid_undefined(&(refd->pid))) {
       // Send terminate pid to owner
@@ -816,7 +817,7 @@ void WxeApp::clearPtr(void * ptr) {
       for(wxSizerItemList::compatibility_iterator node = list.GetFirst();
 	  node; node = node->GetNext()) {
 	wxSizerItem *item = node->GetData();
-	wxObject *content=NULL;
+	wxObject *content = nullptr;
 	if((content = item->GetWindow()))
 	  if(ptr2ref.end() == ptr2ref.find(content)) {
 	    wxString msg;
@@ -846,7 +847,7 @@ void WxeApp::clearPtr(void * ptr) {
 
 int WxeApp::registerPid(int index, ErlNifPid pid, wxeMemEnv * memenv) {
   void * temp = memenv->ref2ptr[index];
-  if((index < memenv->next) && ((index == 0) || (temp != (void *) NULL))) {
+  if((index < memenv->next) && ((index == 0) || (temp != (void *)nullptr))) {
     ptrMap::iterator it;
     it = ptr2ref.find(temp);
     if(it != ptr2ref.end()) {
