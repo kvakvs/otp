@@ -23,6 +23,7 @@ dnl %CopyrightEnd%
 AC_INIT
 
 m4_include([otp.m4])
+m4_include([ax_cxx_compile_stdcxx.m4])
 
 AC_CONFIG_AUX_DIR([${ERL_TOP}/make/autoconf])
 
@@ -76,16 +77,19 @@ AC_PROG_RANLIB
 AC_PROG_CPP
 LM_PROG_LD
 
-AC_LANG_PUSH([C++])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-  [[#ifndef __cplusplus
-    #error "broken C++"
-    #endif]])],,
-  [CXX=;])
-AC_LANG_POP([C++])
-if test "X$CXX" = X ; then
-   WX_MSG_ERROR([Can not find C++ compiler])
-fi
+dnl This literally may make some of the following C++ related macros obsolete
+AX_CXX_COMPILE_STDCXX(11, , mandatory)
+
+dnl AC_LANG_PUSH([C++])
+dnl AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+dnl   [[#ifndef __cplusplus
+dnl     #error "broken C++"
+dnl     #endif]])],,
+dnl   [CXX=;])
+dnl AC_LANG_POP([C++])
+dnl if test "X$CXX" = X ; then
+dnl    WX_MSG_ERROR([Can not find C++ compiler])
+dnl fi
 WXERL_CAN_BUILD_DRIVER=false
 
 AC_MSG_NOTICE(Building for [$host_os])
