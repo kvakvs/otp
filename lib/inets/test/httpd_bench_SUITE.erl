@@ -39,8 +39,7 @@
 %% Common Test interface functions -----------------------------------
 %%--------------------------------------------------------------------
 suite() -> 
-    [{timetrap, {minutes, 1}},
-     {ct_hooks,[{ts_install_cth,[{nodenames,2}]}]}].
+    [{timetrap, {minutes, 1}}].
 
 all() -> 
     [
@@ -210,7 +209,7 @@ server_name(Config, [Server | Rest]) ->
     end.
 
 server_name(httpd_pid) ->   
-   "inets";
+    "inets";
 server_name(nginx_port) -> 
     "nginx";
 server_name(dummy_pid) ->
@@ -227,11 +226,10 @@ setup(_Config, _LocalNode) ->
 		   RemHost
 	   end,
     Node = list_to_atom("inets_perf_server@" ++ Host),
-    SlaveArgs = case init:get_argument(pa) of
-	       {ok, PaPaths} ->
-		   lists:append([" -pa " ++ P || [P] <- PaPaths]);
-	       _ -> []
-	   end,
+    PeerArgs = case init:get_argument(pa) of
+                   {ok, PaPaths} -> ["-pa" | PaPaths];
+                   _ -> []
+               end,
     Prog =
 	case os:find_executable("erl") of
 	    false -> "erl";
@@ -240,7 +238,14 @@ setup(_Config, _LocalNode) ->
     case net_adm:ping(Node) of
 	pong -> ok;
 	pang ->
-	    {ok, Node} = slave:start(Host, inets_perf_server, SlaveArgs, no_link, Prog)
+            PeerOpts = #{
+                host => Host,
+                name => inets_perf_server,
+                args => PeerArgs,
+                peer_down => continue, % respect previously used no_link option
+                exec => Prog
+            },
+	    {ok, Node} = peer:start(PeerOpts)
     end,
     Path = code:get_path(),
     true = rpc:call(Node, code, set_path, [Path]),
@@ -319,10 +324,9 @@ do_runs(Client, Config) ->
     Name = filename:join(DataDir, File), 
     Args = ?MODULE:Client(Config),
     ?MODULE:Client({init, Args}),
-    Run = 
-	fun() ->
-		ok = ?MODULE:Client(Args, N)	
-	end,
+    Run = fun() ->
+              ok = ?MODULE:Client(Args, N)
+          end,
     {ok, Info} = file:read_file_info(Name, []),
     Length = Info#file_info.size,
     {TimeInMicro, _} = timer:tc(Run),
@@ -330,7 +334,9 @@ do_runs(Client, Config) ->
     BytesPerSecond = (1000000 * N * Length) div TimeInMicro,
     {{tps, ReqPerSecond}, {mbps, BytesPerSecond}}.
 
-
+%% Client handler for httpc-based test cases
+%% httpc_client/1 is called once with the config, to create args which will be then passed
+%% again into httpc_client/1 as {init, Args}.
 httpc_client({init, [_, Profile, URL, Headers, HTTPOpts]}) ->
      %% Make sure pipelining feature will kick in when appropriate. 
     {ok, {{_ ,200, "OK"}, _,_}} = httpc:request(get,{URL, Headers}, HTTPOpts, 
@@ -344,7 +350,20 @@ httpc_client(Config) ->
     URL = (?config(urlfun,Config))(File),
     Headers =  ?config(http_headers, Config),
     HTTPOpts = ?config(http_opts, Config),
+    case Protocol of
+        "http" -> [];
+        "https" -> % httpc would like to know more about certificates used in the test
+            AllCertOpts = proplists:get_value(client_verification_opts, cert_opts(Config)),
+            SSLOpts = [
+                {verify_peer, true},
+                {cacertfile, proplists:get_value(cacertfile, AllCertOpts)}
+            ],
+            [{ssl, SSLOpts}]
+    end,
     [Protocol, Profile, URL, Headers, HTTPOpts].
+
+%% This will receive arguments (Args, N) where N is iterations count,
+%% with Args produced by httpc_client/1 above.
 httpc_client(_,0) ->
     ok;
 httpc_client([Protocol, Profile, URL, Headers, HTTPOpts], N) ->
@@ -352,6 +371,9 @@ httpc_client([Protocol, Profile, URL, Headers, HTTPOpts], N) ->
 									     {socket_opts, [{nodelay, true}]}], Profile),
     httpc_client([Protocol, Profile, URL, Headers, HTTPOpts], N-1).
 
+%% Client handler based on httpd_test_lib
+%% httpd_lib_client/1 is called once with the config, to create args which will be then passed
+%% again into httpd_lib_client/1 as {init, Args}.
 httpd_lib_client({init, [_, Type, Version, Request, Host, Port, Opts]}) ->
     ok = httpd_test_lib:verify_request(Type, Host, 
      				       Port,  
@@ -388,6 +410,8 @@ httpd_lib_client(Config) ->
     httpd_lib_client(Args, 1),
     Args.
 
+%% This will receive arguments (Args, N) where N is iterations count,
+%% with Args produced by httpd_lib_client/1 above.
 httpd_lib_client(_, 0) ->
     ok;
 httpd_lib_client([true, Type, Version, Request, Host, Port, Opts], N) ->
@@ -406,6 +430,9 @@ httpd_lib_client([false, Type, Version, Request, Host, Port, Opts] = List, N) ->
 					{version, Version}], infinity),
     httpd_lib_client(List, N-1).
 
+%% Client handler for wget-based test cases
+%% wget_client/1 is called once with the config, to create args which will be then passed
+%% again into wget_client/1 as {init, Args}.
 wget_client({init,_}) ->
     ok;
 wget_client(Config) ->
@@ -424,7 +451,10 @@ wget_client(Config) ->
 		   end,
     wget_req_file(FileName,URL,Iter),
     [KeepAlive, FileName, URL, Protocol, ProtocolOpts, Iter].
-wget_client([KeepAlive, WgetFile, _URL, Protocol, ProtocolOpts, _], _) ->
+
+%% This will receive arguments (Args, N) where N is iterations count,
+%% with Args produced by wget_client/1 above.
+wget_client([KeepAlive, WgetFile, _URL, Protocol, ProtocolOpts, _], _Iter) ->
     process_flag(trap_exit, true),
     Cmd = wget_N(KeepAlive, WgetFile, Protocol, ProtocolOpts),
     %%ct:log("Wget cmd: ~p", [Cmd]),
