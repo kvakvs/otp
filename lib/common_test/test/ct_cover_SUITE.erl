@@ -74,8 +74,8 @@ all() ->
      default,
      cover_stop_true,
      cover_stop_false,
-     slave,
-     slave_start_slave,
+     peer,
+     peer_start_peer,
      cover_node_option,
      ct_cover_add_remove_nodes,
      otp_9956,
@@ -115,16 +115,16 @@ cover_stop_false(Config) ->
 
 %% Let test node start a slave node - check that cover is collected
 %% from both nodes
-slave(Config) ->
-    {ok,Events} = run_test(slave,slave,[],Config),
-    check_calls(Events,2),
+peer(Config) ->
+    {ok, Events} = run_test(peer, peer, [], Config),
+    check_calls(Events, 2),
     ok.
 
 %% Let test node start a slave node which in turn starts another slave
 %% node - check that cover is collected from all three nodes
-slave_start_slave(Config) ->
-    {ok,Events} = run_test(slave_start_slave,slave_start_slave,[],Config),
-    check_calls(Events,3),
+peer_start_peer(Config) ->
+    {ok, Events} = run_test(peer_start_peer, peer_start_peer, [], Config),
+    check_calls(Events, 3),
     ok.
 
 %% Start a slave node before test starts - the node is listed in cover

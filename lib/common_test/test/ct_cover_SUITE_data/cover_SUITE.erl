@@ -76,34 +76,37 @@ default_no_cover(_Config) ->
     cover_test_mod:foo(),
     ok.
 
-slave(_Config) ->
-    cover_compiled = code:which(cover_test_mod),
-    cover_test_mod:foo(),
-    N1 = nodename(slave,1),
-    {ok,Node} = start_slave(N1),
-    cover_compiled = rpc:call(Node,code,which,[cover_test_mod]),
-    rpc:call(Node,cover_test_mod,foo,[]),
-    {ok,Node} = ct_slave:stop(N1),
-    ok.
-slave(cleanup,_Config) ->
-    kill_slaves([nodename(slave,1)]).
+%% Node name for the peer/1 test, which will be spawned
+-define(peer_CONTROL_NODE, cover_SUITE_peer_node).
 
-slave_start_slave(_Config) ->
+peer(_Config) ->
     cover_compiled = code:which(cover_test_mod),
     cover_test_mod:foo(),
-    N1 = nodename(slave_start_slave,1),
-    N2 = nodename(slave_start_slave,2),
-    {ok,Node} = start_slave(N1),
+    N1 = nodename(?FUNCTION_NAME, 1),
+    {ok, Node} = start_peer_node(N1),
+    cover_compiled = rpc:call(Node, code, which, [cover_test_mod]),
+    rpc:call(Node, cover_test_mod, foo, []),
+    {ok, Node} = ct_slave:stop(N1),
+    ok.
+peer(cleanup,_Config) ->
+    stop_peer_nodes([nodename(cover_SUITE_peer_node,1)]).
+
+peer_start_peer(_Config) ->
+    cover_compiled = code:which(cover_test_mod),
+    cover_test_mod:foo(),
+    N1 = nodename(?FUNCTION_NAME,1),
+    N2 = nodename(?FUNCTION_NAME,2),
+    {ok,Node} = start_peer_node(N1),
     cover_compiled = rpc:call(Node,code,which,[cover_test_mod]),
     rpc:call(Node,cover_test_mod,foo,[]),
-    {ok,Node2} = start_slave(Node,N2), % start slave N2 from node Node
+    {ok,Node2} = start_peer_node(Node,N2), % start slave N2 from node Node
     rpc:call(Node2,cover_test_mod,foo,[]),
     {ok,Node2} = rpc:call(Node,ct_slave,stop,[N2]),
     {ok,Node} = ct_slave:stop(N1),
     ok.
-slave_start_slave(cleanup,_Config) ->
-    kill_slaves([nodename(slave_start_slave,1),
-		 nodename(slave_start_slave,2)]).
+peer_start_peer(cleanup,_Config) ->
+    stop_peer_nodes([nodename(?FUNCTION_NAME,1),
+		 nodename(?FUNCTION_NAME,2)]).
 
 cover_node_option(_Config) ->
     cover_compiled = code:which(cover_test_mod),
@@ -141,27 +144,33 @@ otp_9956(Config) ->
 
 %%%-----------------------------------------------------------------
 %%% Internal
+
+any_to_list(A) when is_atom(A) -> atom_to_list(A);
+any_to_list(S) when is_list(S) -> S.
+
+%% Can use either any atom or ?FUNCTION_NAME for Case
 nodename(Case,N) ->
     list_to_atom(nodeprefix(Case) ++ integer_to_list(N)).
 
+%% Can use either any atom or ?FUNCTION_NAME for Case
 nodeprefix(Case) ->
-    atom_to_list(?MODULE) ++ "_" ++ atom_to_list(Case) ++ "_node".
+    any_to_list(?MODULE) ++ "_" ++ any_to_list(Case) ++ "_node".
 
 
 fullname(Name) ->
     {ok,Host} = inet:gethostname(),
     list_to_atom(atom_to_list(Name) ++ "@" ++ Host).
 
-kill_slaves([Name|Names]) ->
+stop_peer_nodes([Name|Names]) ->
     _ = rpc:call(fullname(Name),erlang,halt,[]),
-    kill_slaves(Names);
-kill_slaves([]) ->
+    stop_peer_nodes(Names);
+stop_peer_nodes([]) ->
     ok.
 
-start_slave(Name) ->
-    start_slave(node(),Name).
+start_peer_node(Name) ->
+    start_peer_node(node(), Name).
 
-start_slave(FromNode,Name) ->
+start_peer_node(FromNode,Name) ->
     {ok, HostStr}=inet:gethostname(),
     Host = list_to_atom(HostStr),
     rpc:call(FromNode,ct_slave,start,
