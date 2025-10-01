@@ -58,15 +58,17 @@ end_per_suite(Config) ->
 
 init_per_testcase(no_crashing, Config) ->
     Opts = ct_test_support:start_peer(ctX, Config, 50),
-    XNode = proplists:get_value(ct_node, Opts),
+    XNode    = proplists:get_value(ct_node,     Opts),
+    XPeerPid = proplists:get_value(ct_peer_pid, Opts),
     ct:pal("Node ~p started!", [XNode]),
-    [{xnode,XNode} | Config];
+    [{xnode, XNode}, {xnode_peer_pid, XPeerPid} | Config];
 init_per_testcase(TestCase, Config) ->
     ct_test_support:init_per_testcase(TestCase, Config).
 
 end_per_testcase(no_crashing, Config) ->
-    XNode = proplists:get_value(xnode, Config),
-    ct_test_support:slave_stop(XNode),
+    XNode    = proplists:get_value(xnode,          Config),
+    XPeerPid = proplists:get_value(xnode_peer_pid, Config),
+    ct_test_support:stop_peer(XNode, XPeerPid),
     ct:pal("Node ~p stopped!", [XNode]),
     ok;
 end_per_testcase(TestCase, Config) ->
@@ -205,13 +207,13 @@ possible_deadlock(Config) ->
 %%%-----------------------------------------------------------------
 %%%
 no_crashing(Config) ->
-    XNode = proplists:get_value(xnode, Config),
-    ok = rpc:call(XNode, ct, print, ["hello",[]]),
-    ok = rpc:call(XNode, ct, pal, ["hello",[]]),
-    ok = rpc:call(XNode, ct, log, ["hello",[]]),
+    XPeerPid = proplists:get_value(xnode_peer_pid, Config),
+    ok = peer:call(XPeerPid, ct, print, ["hello",[]]),
+    ok = peer:call(XPeerPid, ct, pal, ["hello",[]]),
+    ok = peer:call(XPeerPid, ct, log, ["hello",[]]),
     Data = io_lib:format("hello", []),
-    {badrpc,{'EXIT',{noproc,_}}} =
-	(catch rpc:call(XNode, test_server_io, print_unexpected, [Data])),
+    {badrpc, {'EXIT', {noproc, _}}} =
+        (catch peer:call(XPeerPid, test_server_io, print_unexpected, [Data])),
     ok.	
 
 

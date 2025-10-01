@@ -33,13 +33,13 @@
 	 init_per_testcase/2, end_per_testcase/2,
 	 write_testspec/2, write_testspec/3,
 	 run/2, run/3, run/4, run_ct_run_test/2, run_ct_script_start/2,
-	 get_opts/1, wait_for_ct_stop/1]).
+	 get_opts/1]).
 
 -export([handle_event/2, start_event_receiver/1, get_events/2,
 	 verify_events/3, verify_events/4, reformat/2, log_events/4,
 	 join_abs_dirs/2]).
 
--export([start_peer/3, slave_stop/1]).
+-export([start_peer/3, stop_peer/2]).
 
 -export([ct_test_halt/1, ct_rpc/2]).
 
@@ -95,11 +95,11 @@ start_peer(NodeName, Config, Level) ->
     [_,Host] = string:lexemes(atom_to_list(node()), "@"),
     test_server:format(0, "Trying to start ~s~n",
 		       [atom_to_list(NodeName)++"@"++Host]),
-    PR = proplists:get_value(printable_range,Config,io:printable_range()),
-    case slave:start(Host, NodeName, "+pc " ++ atom_to_list(PR)) of
-	{error,Reason} ->
+    PR = proplists:get_value(printable_range, Config, io:printable_range()),
+    case ?CT_PEER(#{name => NodeName, args => ["+pc", atom_to_list(PR)]}) of
+	{error, Reason} ->
 	    ct:fail(Reason);
-	{ok,CTNode} ->
+        {ok, CTPeerPid, CTNode} ->
 	    test_server:format(0, "Node ~p started~n", [CTNode]),
 	    IsCover = test_server:is_cover(),
 	    if IsCover ->
@@ -121,14 +121,14 @@ start_peer(NodeName, Config, Level) ->
 			  end,
 	    TestSupDir = filename:dirname(code:which(?MODULE)),
 	    PathDirs = [PrivDir,TSDir,TestSupDir | AddPathDirs],
-	    [true = rpc:call(CTNode, code, add_patha, [D]) || D <- PathDirs],
+	    [true = peer:call(CTPeerPid, code, add_patha, [D]) || D <- PathDirs],
 	    test_server:format(Level, "Dirs added to code path (on ~w):~n",
 			       [CTNode]),
 	    [io:format("~ts~n", [D]) || D <- PathDirs],
 	    
 	    case proplists:get_value(start_sasl, Config) of
 		true ->
-		    rpc:call(CTNode, application, start, [sasl]),
+		    peer:call(CTPeerPid, application, start, [sasl]),
 		    test_server:format(Level, "SASL started on ~w~n", [CTNode]);
 		_ ->
 		    ok
@@ -137,12 +137,14 @@ start_peer(NodeName, Config, Level) ->
 	    case file:read_file_info(TraceFile) of
 		{ok,_} -> 
 		    [{trace_level,0},
+                     {ct_peer_pid, CTPeerPid}, % controlling pid for the CTNode
 		     {ct_opts,[{ct_trace,TraceFile}]},
 		     {ct_node,CTNode} | Config];
-		_ -> 
-		    [{trace_level,Level},
-		     {ct_opts,[]},
-		     {ct_node,CTNode} | Config]     
+		_ ->
+		    [{trace_level, Level},
+                     {ct_peer_pid, CTPeerPid}, % controlling pid for the CTNode
+		     {ct_opts, []},
+		     {ct_node, CTNode} | Config]
 	    end
     end.
 
@@ -150,10 +152,13 @@ start_peer(NodeName, Config, Level) ->
 %%% end_per_suite/1
 
 end_per_suite(Config) ->
-    CTNode = proplists:get_value(ct_node, Config),
-    PrivDir = proplists:get_value(priv_dir, Config),
-    true = rpc:call(CTNode, code, del_path, [filename:join(PrivDir,"")]),
-    slave_stop(CTNode),
+    CTNode    = proplists:get_value(ct_node,     Config),
+    CTPeerPid = proplists:get_value(ct_peer_pid, Config),
+    PrivDir   = proplists:get_value(priv_dir,    Config),
+    true = peer:call(CTPeerPid,
+        code, del_path, [filename:join(PrivDir,"")]
+    ),
+    stop_peer(CTNode, CTPeerPid),
     ok.
 
 %%%-----------------------------------------------------------------
@@ -180,11 +185,12 @@ init_per_testcase(_TestCase, Config) ->
 %%% end_per_testcase/2
 
 end_per_testcase(_TestCase, Config) ->
-    CTNode = proplists:get_value(ct_node, Config),
-    case wait_for_ct_stop(CTNode) of
+    CTNode    = proplists:get_value(ct_node,     Config),
+    CTPeerPid = proplists:get_value(ct_peer_pid, Config),
+    case wait_for_ct_stop(CTNode, CTPeerPid) of
 	%% Common test was not stopped to we restart node.
 	false ->
-	    slave_stop(CTNode),
+	    stop_peer(CTNode, CTPeerPid),
 	    start_peer(Config,proplists:get_value(trace_level,Config)),
 	    {fail, "Could not stop common_test"};
 	true ->
@@ -285,18 +291,19 @@ run(Opts0, Config) when is_list(Opts0) ->
     check_result(CtRunTestResult,ExitStatus,Opts).
 
 run_ct_run_test(Opts,Config) ->
-    CTNode = proplists:get_value(ct_node, Config),
-    Level = proplists:get_value(trace_level, Config),
+    CTNode    = proplists:get_value(ct_node,     Config),
+    CTPeerPid = proplists:get_value(ct_peer_pid, Config),
+    Level     = proplists:get_value(trace_level, Config),
     test_server:format(Level, "~n[RUN #1] Calling ct:run_test(~tp) on ~p~n",
 		       [Opts, CTNode]),
     
     T0 = erlang:monotonic_time(),
-    CtRunTestResult = rpc:call(CTNode, ct, run_test, [Opts]),
+    CtRunTestResult = peer:call(CTPeerPid, ct, run_test, [Opts]),
     T1 = erlang:monotonic_time(),
     Elapsed = erlang:convert_time_unit(T1-T0, native, milli_seconds),
     test_server:format(Level, "~n[RUN #1] Got return value ~tp after ~p ms~n",
 		       [CtRunTestResult,Elapsed]),
-    case rpc:call(CTNode, erlang, whereis, [ct_util_server]) of
+    case peer:call(CTPeerPid, erlang, whereis, [ct_util_server]) of
 	undefined ->
 	    ok;
 	_ ->
@@ -304,22 +311,23 @@ run_ct_run_test(Opts,Config) ->
 			       "ct_util_server not stopped on ~p yet, waiting 5 s...~n",
 			       [CTNode]),
 	    timer:sleep(5000),
-	    undefined = rpc:call(CTNode, erlang, whereis, [ct_util_server])
+	    undefined = peer:call(CTPeerPid, erlang, whereis, [ct_util_server])
     end,
     CtRunTestResult.
 
 run_ct_script_start(Opts, Config) ->
-    CTNode = proplists:get_value(ct_node, Config),
-    Level = proplists:get_value(trace_level, Config),
+    CTNode    = proplists:get_value(ct_node,     Config),
+    CTPeerPid = proplists:get_value(ct_peer_pid, Config),
+    Level     = proplists:get_value(trace_level, Config),
     Opts1 = [{halt_with,{?MODULE,ct_test_halt}} | Opts],
     test_server:format(Level, "Saving start opts on ~p: ~tp~n",
 		       [CTNode, Opts1]),
-    rpc:call(CTNode, application, set_env,
+    peer:call(CTPeerPid, application, set_env,
 	     [common_test, run_test_start_opts, Opts1]),
     test_server:format(Level, "[RUN #2] Calling ct_run:script_start() on ~p~n",
 		       [CTNode]),
     T0 = erlang:monotonic_time(),
-    ExitStatus = rpc:call(CTNode, ct_run, script_start, []),
+    ExitStatus = peer:call(CTPeerPid, ct_run, script_start, []),
     T1 = erlang:monotonic_time(),
     Elapsed = erlang:convert_time_unit(T1-T0, native, milli_seconds),
     test_server:format(Level, "[RUN #2] Got exit status value ~tp after ~p ms~n",
@@ -364,41 +372,42 @@ run(M, F, A, Config) ->
     run({M,F,A}, [], Config).
 
 run({M,F,A}, InitCalls, Config) ->
-    CTNode = proplists:get_value(ct_node, Config),
-    Level = proplists:get_value(trace_level, Config),
+    CTNode    = proplists:get_value(ct_node,     Config),
+    CTPeerPid = proplists:get_value(ct_peer_pid, Config),
+    Level     = proplists:get_value(trace_level, Config),
     lists:foreach(
       fun({IM,IF,IA}) ->
 	      test_server:format(Level, "~nInit call ~w:~tw(~tp) on ~p...~n",
 				 [IM, IF, IA, CTNode]),
-	      Result = rpc:call(CTNode, IM, IF, IA),
+	      Result = peer:call(CTPeerPid, IM, IF, IA),
 	      test_server:format(Level, "~n...with result: ~tp~n", [Result])
       end, InitCalls),
     test_server:format(Level, "~nStarting test with ~w:~tw(~tp) on ~p~n",
 		       [M, F, A, CTNode]),
-    rpc:call(CTNode, M, F, A).
+    peer:call(CTPeerPid, M, F, A).
 
 %% this is the last function that ct_run:script_start() calls, so the
-%% return value here is what rpc:call/4 above returns
+%% return value here is what peer:call/4 above returns
 ct_test_halt(ExitStatus) ->
     ExitStatus.	    
 
 %%%-----------------------------------------------------------------
 %%% wait_for_ct_stop/1
 
-wait_for_ct_stop(CTNode) ->
+wait_for_ct_stop(CTNode, CTPeerPid) ->
     %% Give CT at least 15 sec to stop (in case of bad make).
-    wait_for_ct_stop(5, CTNode).
+    wait_for_ct_stop(5, CTNode, CTPeerPid).
 
-wait_for_ct_stop(0, CTNode) ->
+wait_for_ct_stop(0, CTNode, _CTPeerPid) ->
     test_server:format(0, "Giving up! Stopping ~p.", [CTNode]),
     false;
-wait_for_ct_stop(Retries, CTNode) ->
-    case rpc:call(CTNode, erlang, whereis, [ct_util_server]) of
+wait_for_ct_stop(Retries, CTNode, CTPeerPid) ->
+    case peer:call(CTPeerPid, erlang, whereis, [ct_util_server]) of
 	undefined ->
 	    true;
 	Pid ->
 	    Info = (catch process_info(Pid)),
-	    test_server:format(0, "Waiting for CT (~p) to finish (~p)...", 
+	    test_server:format(0, "Waiting for CT (~p) to finish (~p)...",
 			       [Pid,Retries]),
 	    test_server:format(0, "Process info for ~p:~n~tp", [Pid,Info]),
 	    timer:sleep(5000),
@@ -407,12 +416,13 @@ wait_for_ct_stop(Retries, CTNode) ->
 
 %%%-----------------------------------------------------------------
 %%% ct_rpc/1
-ct_rpc({M,F,A}, Config) ->
-    CTNode = proplists:get_value(ct_node, Config),
-    Level = proplists:get_value(trace_level, Config),
+ct_rpc({M, F, A}, Config) ->
+    CTNode    = proplists:get_value(ct_node,     Config),
+    CTPeerPid = proplists:get_value(ct_peer_pid, Config),
+    Level     = proplists:get_value(trace_level, Config),
     test_server:format(Level, "~nCalling ~w:~tw(~tp) on ~p...",
 		       [M,F,A, CTNode]),
-    rpc:call(CTNode, M, F, A).
+    peer:call(CTPeerPid, M, F, A).
 
 
 %%%-----------------------------------------------------------------
@@ -1456,13 +1466,14 @@ unique_timestamp(TS0, N) ->
 
 %%%-----------------------------------------------------------------
 %%%
-slave_stop(Node) ->
+%% Stops the node by name and peer controlling pid (used in peer:* calls)
+stop_peer(Node, PeerPid) ->
     Cover = test_server:is_cover(),
     if Cover-> cover:flush(Node);
        true -> ok
     end,
     erlang:monitor_node(Node, true),
-    slave:stop(Node),
+    peer:stop(PeerPid),
     receive
 	{nodedown, Node} ->
 	    if Cover -> cover:stop(Node);
@@ -1478,9 +1489,8 @@ slave_stop(Node) ->
 %%%#
 %%%# Tracing
 %%%#
-handle_trace(ct,
-             {return_from, {?MODULE, start_slave, 3}, Return},
-             Stack) ->
-    {io_lib:format("CT Node = ~p",
-                   [proplists:get_value(ct_node, Return, not_found)]), Stack}.
-
+handle_trace(ct, {return_from, {?MODULE, start_peer, 3}, Return}, Stack) ->
+    Message = io_lib:format("CT Node = ~p", [
+        proplists:get_value(ct_node, Return, not_found)
+    ]),
+    {Message, Stack}.

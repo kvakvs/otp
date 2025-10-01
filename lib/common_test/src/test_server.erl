@@ -2846,12 +2846,7 @@ start_peer(#{name := Name} = Opts, Module) ->
             CoverMain = cover:get_main_node(),
             %% next line is a way to trick Dialyzer into not complaining over undocumented type
             Shutdown = binary_to_term(term_to_binary({10000, CoverMain})),
-            case peer:start_link(Opts#{args => FullArgs, shutdown => Shutdown}) of
-                {ok, Peer, Node} ->
-                    {ok, Peer, Node};
-                Other ->
-                    Other
-            end;
+            peer:start_link(Opts#{args => FullArgs, shutdown => Shutdown});
         false ->
             peer:start_link(Opts#{args => FullArgs})
     end.
