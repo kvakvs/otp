@@ -39,7 +39,7 @@
 	 verify_events/3, verify_events/4, reformat/2, log_events/4,
 	 join_abs_dirs/2]).
 
--export([start_slave/3, slave_stop/1]).
+-export([start_peer/3, slave_stop/1]).
 
 -export([ct_test_halt/1, ct_rpc/2]).
 
@@ -86,12 +86,12 @@ init_per_suite(Config, Level) ->
 	    ok
     end,
 
-    start_slave(Config, Level).
+    start_peer(Config, Level).
 
-start_slave(Config, Level) ->
-    start_slave(ct, Config, Level).
+start_peer(Config, Level) ->
+    start_peer(ct, Config, Level).
 
-start_slave(NodeName, Config, Level) ->
+start_peer(NodeName, Config, Level) ->
     [_,Host] = string:lexemes(atom_to_list(node()), "@"),
     test_server:format(0, "Trying to start ~s~n",
 		       [atom_to_list(NodeName)++"@"++Host]),
@@ -185,7 +185,7 @@ end_per_testcase(_TestCase, Config) ->
 	%% Common test was not stopped to we restart node.
 	false ->
 	    slave_stop(CTNode),
-	    start_slave(Config,proplists:get_value(trace_level,Config)),
+	    start_peer(Config,proplists:get_value(trace_level,Config)),
 	    {fail, "Could not stop common_test"};
 	true ->
 	    ok

@@ -57,7 +57,7 @@ end_per_suite(Config) ->
     ct_test_support:end_per_suite(Config).
 
 init_per_testcase(no_crashing, Config) ->
-    Opts = ct_test_support:start_slave(ctX, Config, 50),
+    Opts = ct_test_support:start_peer(ctX, Config, 50),
     XNode = proplists:get_value(ct_node, Opts),
     ct:pal("Node ~p started!", [XNode]),
     [{xnode,XNode} | Config];

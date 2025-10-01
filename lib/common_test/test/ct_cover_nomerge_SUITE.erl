@@ -94,10 +94,8 @@ remote(Config) ->
     DataDir = ?config(data_dir, Config),
     Spec = filename:join(DataDir, "remote.spec"),
     %% extending some timers for slow test hosts
-    {ok,Node} = ct_slave:start(ct_nomerge,[{boot_timeout,15},
-					   {init_timeout,15},
-					   {startup_timeout,15}]),
-    
+    {ok, _PeerRef, Node} = ?CT_PEER(#{name => ct_nomerge}), % start_link node stops with the test
+
     CoverSpec = [{nodes,[Node]},
 		 {incl_mods,[?mod]}],
     CoverFile = create_cover_file(remote,CoverSpec,Config),
@@ -106,17 +104,12 @@ remote(Config) ->
     false = check_cover(Config),
     check_calls(Events,2),
     ok.
-remote(cleanup,_Config) ->
-    {ok,_} = ct_slave:stop(ct_nomerge),
-    ok.
 
 remote_nostop(Config) ->
     DataDir = ?config(data_dir, Config),
     Spec = filename:join(DataDir, "remote_nostop.spec"),
     %% extending some timers for slow test hosts
-    {ok,Node} = ct_slave:start(ct_nomerge,[{boot_timeout,15},
-					   {init_timeout,15},
-					   {startup_timeout,15}]),
+    {ok, _PeerRef, Node} = ?CT_PEER(#{name => ct_nomerge}), % start_link node stops with the test
     
     CoverSpec = [{nodes,[Node]},
 		 {incl_mods,[?mod]}],
@@ -131,7 +124,6 @@ remote_nostop(Config) ->
 remote_nostop(cleanup,Config) ->
     CtNode = ?config(ct_node,Config),
     ok = rpc:call(CtNode,cover,stop,[]),
-    {ok,_} = ct_slave:stop(ct_nomerge),
     ok.
     
 
