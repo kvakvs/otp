@@ -87,7 +87,17 @@ PRIVDIR = ../priv
 OBJDIR = $(PRIVDIR)/obj/$(TARGET)
 LIBDIR = $(PRIVDIR)/lib/$(TARGET)
 
-CRYPTO_OBJS = $(OBJDIR)/crypto$(TYPEMARKER).o \
+CRYPTO_OBJS = \
+	$(OBJDIR)/algorithms_collection$(TYPEMARKER).cpp.o \
+	$(OBJDIR)/probe_digest$(TYPEMARKER).cpp.o \
+	$(OBJDIR)/probe_pkey$(TYPEMARKER).cpp.o \
+	$(OBJDIR)/probe_curve$(TYPEMARKER).cpp.o \
+	$(OBJDIR)/probe_kem$(TYPEMARKER).cpp.o \
+	$(OBJDIR)/probe_rsaopt$(TYPEMARKER).cpp.o \
+	$(OBJDIR)/probe_mac$(TYPEMARKER).cpp.o \
+	$(OBJDIR)/probe_cipher$(TYPEMARKER).cpp.o \
+	$(OBJDIR)/auto_openssl_resource$(TYPEMARKER).cpp.o \
+	$(OBJDIR)/crypto$(TYPEMARKER).o \
 	$(OBJDIR)/aead$(TYPEMARKER).o \
 	$(OBJDIR)/aes$(TYPEMARKER).o \
 	$(OBJDIR)/algorithms$(TYPEMARKER).o \
@@ -119,7 +129,9 @@ CRYPTO_OBJS = $(OBJDIR)/crypto$(TYPEMARKER).o \
 	$(OBJDIR)/pbkdf2_hmac$(TYPEMARKER).o
 
 CALLBACK_OBJS = $(OBJDIR)/crypto_callback$(TYPEMARKER).o
-CRYPTO_STATIC_OBJS = $(patsubst $(OBJDIR)/%$(TYPEMARKER).o,$(OBJDIR)/%_static$(TYPEMARKER).o,$(CRYPTO_OBJS) $(CALLBACK_OBJS))
+CRYPTO_STATIC_OBJS = \
+	$(patsubst $(OBJDIR)/%$(TYPEMARKER).o,$(OBJDIR)/%_static$(TYPEMARKER).o,$(CRYPTO_OBJS) $(CALLBACK_OBJS)) \
+	$(patsubst $(OBJDIR)/%$(TYPEMARKER).cpp.o,$(OBJDIR)/%_static$(TYPEMARKER).cpp.o,$(CRYPTO_OBJS) $(CALLBACK_OBJS))
 
 NIF_ARCHIVE = $(LIBDIR)/crypto$(TYPEMARKER).a
 
@@ -179,8 +191,12 @@ endif
 
 CONFIGURE_ARGS = -DDISABLE_EVP_DH=@DISABLE_EVP_DH@ -DDISABLE_EVP_HMAC=@DISABLE_EVP_HMAC@
 
-ALL_CFLAGS = $(TYPE_FLAGS) $(EXTRA_FLAGS) $(CONFIGURE_ARGS) $(INCLUDES)
+ALL_CFLAGS = $(TYPE_FLAGS) $(EXTRA_FLAGS) $(CONFIGURE_ARGS) $(INCLUDES) -std=gnu99
+ALL_CXXFLAGS = $(TYPE_FLAGS) $(EXTRA_FLAGS) $(CONFIGURE_ARGS) $(INCLUDES) -std=c++14
+
 ALL_STATIC_CFLAGS = @DED_STATIC_CFLAGS@ $(TYPE_EXTRA_CFLAGS) $(CONFIGURE_ARGS) $(INCLUDES)
+# Substitution removes an option: -Wdeclaration-after-statement, allowed in C99 and C++
+ALL_STATIC_CFLAGS := $(filter-out -Wdeclaration-after-statement,$(ALL_STATIC_CFLAGS))
 
 # ----------------------------------------------------
 # Targets
@@ -221,6 +237,10 @@ $(OBJDIR)/pkey$(TYPEMARKER).o: pkey.c
 	$(V_CC) -c -o $@ $(ALL_CFLAGS) $(CRYPTO_NO_DEPRECATE_WARN) $<
 
 # ---- End of Hard-coded removal of deprecated warning for ENGINE function calls
+
+$(OBJDIR)/%$(TYPEMARKER).cpp.o: %.cpp
+	$(V_at)$(INSTALL_DIR) $(OBJDIR)
+	$(V_CXX) -MMD -c -o $@ $(ALL_CXXFLAGS) $<
 
 $(OBJDIR)/%$(TYPEMARKER).o: %.c
 	$(V_at)$(INSTALL_DIR) $(OBJDIR)
