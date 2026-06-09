@@ -176,6 +176,8 @@ extras =
   |> Enum.uniq()
 
 annotations = Access.get(local_config, :annotations_for_docs, fn _ -> [] end)
+# The extra configuration for doctest code blocks, for example optional prolog/epilog code
+doctest_contexts = Access.get(local_config, :doctest_contexts, [])
 
 current_datetime = System.os_time() |> DateTime.from_unix!(:native)
 
@@ -212,13 +214,99 @@ search_config =
     []
   end
 
+global_assets_dir = Path.join(__DIR__, "ex_doc_assets")
+
+get_doctest_context_value = fn context, key ->
+  value =
+    cond do
+      Keyword.keyword?(context) ->
+        Keyword.get(context, key)
+
+      is_map(context) ->
+        Map.get(context, key) || Map.get(context, Atom.to_string(key))
+
+      true ->
+        nil
+    end
+
+  case value do
+    nil -> ""
+    value when is_binary(value) -> value
+    value -> to_string(value)
+  end
+end
+
+doctest_contexts =
+  doctest_contexts
+  |> Enum.into(%{}, fn {name, context} ->
+    {to_string(name),
+     %{
+       "prolog" => get_doctest_context_value.(context, :prolog),
+       "epilog" => get_doctest_context_value.(context, :epilog)
+     }}
+  end)
+
+json_escape = fn value ->
+  value
+  |> String.replace("\\", "\\\\")
+  |> String.replace("\"", "\\\"")
+  |> String.replace("\b", "\\b")
+  |> String.replace("\f", "\\f")
+  |> String.replace("\n", "\\n")
+  |> String.replace("\r", "\\r")
+  |> String.replace("\t", "\\t")
+  |> String.replace("<", "\\u003C")
+  |> String.replace(">", "\\u003E")
+  |> String.replace("&", "\\u0026")
+end
+
+json_encode =
+  fn
+    value, _encode when is_binary(value) ->
+      ~s("#{json_escape.(value)}")
+
+    value, encode when is_map(value) ->
+      entries =
+        value
+        |> Enum.map(fn {key, item} ->
+          "#{encode.(to_string(key), encode)}:#{encode.(item, encode)}"
+        end)
+        |> Enum.join(",")
+
+      "{#{entries}}"
+  end
+
+doctest_contexts_json = json_encode.(doctest_contexts, json_encode)
+
+doctest_contexts_head_tag = fn
+  :html ->
+    """
+    <link rel="stylesheet" href="assets/otp/otp-doctest-contexts.css">
+    <script type="application/json" id="otp-doctest-contexts-data">#{doctest_contexts_json}</script>
+    <style>.dark img { background-color: white; }</style>
+    """
+
+  :epub ->
+    """
+    <style>.dark img { background-color: white; }</style>
+    <style type="text/css">
+      .content-inner pre code.mermaid {
+        display: none;
+      }
+    </style>
+    """
+
+  _ ->
+    "<style>.dark img { background-color: white; }</style>"
+end
+
 config =
   [
     proglang: :erlang,
     source_url_pattern: source_url_pattern,
-    assets: %{Path.join(cwd, "/assets") => "assets"},
+    assets: %{Path.join(cwd, "/assets") => "assets", global_assets_dir => "assets/otp"},
     logo: Path.join(:code.root_dir(), "system/doc/assets/erlang-logo.png"),
-    before_closing_head_tag: fn _ -> "<style>.dark img { background-color: white; }</style>" end,
+    before_closing_head_tag: doctest_contexts_head_tag,
     before_closing_footer_tag: fn _ ->
       ~s'<p>Copyright © 1996-#{current_datetime.year} <a href="https://www.ericsson.com">Ericsson AB</a></p>'
     end,
@@ -280,19 +368,7 @@ config =
               }
           });
           </script>
-        """
-
-      _ ->
-        ""
-    end,
-    before_closing_head_tag: fn
-      :epub ->
-        """
-        <style type="text/css">
-          .content-inner pre code.mermaid {
-            display: none;
-          }
-        </style>
+          <script defer src="assets/otp/otp-doctest-contexts.js"></script>
         """
 
       _ ->
@@ -303,5 +379,5 @@ config =
 
 Keyword.merge(
   config,
-  local_config |> Keyword.drop([:extras, :groups_for_extras, :group_for_docs])
+  local_config |> Keyword.drop([:extras, :groups_for_extras, :group_for_docs, :doctest_contexts])
 )

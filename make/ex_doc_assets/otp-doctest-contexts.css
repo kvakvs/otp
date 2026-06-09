@@ -1,0 +1,40 @@
+.otp-doctest-context-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 -0.25rem;
+}
+
+.otp-doctest-context-toggle {
+  border: 1px solid var(--border-color, #d8dee4);
+  border-radius: 4px;
+  background: var(--code-background, #f6f8fa);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  padding: 0.25rem 0.5rem;
+}
+
+.otp-doctest-context-toggle:hover,
+.otp-doctest-context-toggle:focus {
+  background: var(--sidebar-background, #eef2f6);
+}
+
+.otp-doctest-context-toggle:focus {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.otp-doctest-context-block {
+  border-style: dashed;
+  margin-bottom: 0;
+}
+
+.otp-doctest-context-block + .otp-doctest-context-main {
+  margin-top: 0;
+}
+
+.otp-doctest-context-main + .otp-doctest-context-block {
+  margin-top: 0;
+}

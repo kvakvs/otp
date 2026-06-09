@@ -131,7 +131,8 @@ else
 DOC_VSN=$(VSN)
 endif
 
-HTML_DEPS?=$(wildcard $(APP_EBIN_DIR)/*.beam) $(wildcard *.md) $(filter-out $(wildcard html/*.md),$(wildcard */*.md)) $(wildcard assets/*)
+EX_DOC_ASSETS=$(wildcard $(ERL_TOP)/make/ex_doc_assets/*)
+HTML_DEPS?=$(wildcard $(APP_EBIN_DIR)/*.beam) $(wildcard *.md) $(filter-out $(wildcard html/*.md),$(wildcard */*.md)) $(wildcard assets/*) $(EX_DOC_ASSETS)
 
 $(HTMLDIR)/index.html: $(HTML_DEPS) docs.exs $(ERL_TOP)/make/ex_doc.exs
 	$(gen_verbose)EX_DOC_WARNINGS_AS_ERRORS=$(EX_DOC_WARNINGS_AS_ERRORS) ERL_FLAGS="-pz $(ERL_TOP)/erts/ebin" \
